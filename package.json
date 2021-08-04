@@ -1,11 +1,11 @@
 {
-  "name": "@atlaskit/editor-core",
-  "version": "134.0.1",
+  "name": "cozy-editor-core",
+  "version": "134.0.2",
   "description": "A package contains Atlassian editor core functionality",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "repository": "https://bitbucket.org/atlassian/atlassian-frontend",
+  "repository": "https://github.com/cozy/editor-core",
   "author": "Atlassian Pty Ltd",
   "license": "Apache-2.0",
   "main": "dist/cjs/index.js",
