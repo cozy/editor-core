@@ -8,6 +8,7 @@ cache:
 jobs:
   include:
   - stage: deploy
+    if: branch = master AND type = push AND fork = false
     script: "./scripts/deploy.sh"
 env:
   global:
