@@ -1,12 +1,15 @@
 language: node_js
 node_js:
 - 10
-matrix:
-  exclude:
-    node_js: '10'
+cache:
+  yarn: true
+  directories:
+  - node_modules
 jobs:
   include:
   - stage: deploy
+    if: branch = master AND type = push AND fork = false
+    script: "./scripts/deploy.sh"
 env:
   global:
   # GITHUB_TOKEN (logged in as cozy-bot, token: create-cozy-app publication)
