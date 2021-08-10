@@ -5,7 +5,7 @@ import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   decisionItem,
   decisionList,
@@ -20,7 +20,8 @@ import {
   tr,
   td,
   th,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 
@@ -39,7 +40,7 @@ describe('tasks and decisions', () => {
 
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,
@@ -61,7 +62,7 @@ describe('tasks and decisions', () => {
     uuid.setStatic(false);
   });
 
-  scenarios.forEach(scenario => {
+  scenarios.forEach((scenario) => {
     describe('quick insert', () => {
       let editorView: EditorView;
       let sel: number;
@@ -103,7 +104,7 @@ describe('tasks and decisions', () => {
         { name: 'ol', list: ol },
       ];
 
-      listTypes.forEach(listType => {
+      listTypes.forEach((listType) => {
         const list = listType.list;
         describe(`${listType.name} with single list item`, () => {
           let editorView: EditorView;
@@ -236,7 +237,10 @@ describe('tasks and decisions', () => {
 
       describe('when inside table', () => {
         let editorView: EditorView;
-        const shouldNotJoinContent = (view: EditorView, targetDoc: any) => {
+        const shouldNotJoinContent = (
+          view: EditorView,
+          targetDoc: DocBuilder,
+        ) => {
           it('should not join nodes outside of current cell', () => {
             // Forward delete
             sendKeyToPm(view, 'Delete');

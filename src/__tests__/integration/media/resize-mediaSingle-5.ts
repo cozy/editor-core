@@ -1,6 +1,6 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import Page, { BrowserObject } from '@atlaskit/webdriver-runner/wd-wrapper';
-import { goToEditorTestingExample } from '../../__helpers/testing-example-helpers';
+import { goToEditorTestingWDExample } from '../../__helpers/testing-example-helpers';
 import {
   addLayout,
   allBreakoutTypes,
@@ -16,9 +16,14 @@ import { assertWidthBeforeAndAfter, setupEditor } from './resize-mediaSingle-1';
 
 BrowserTestCase(
   'resize-mediaSingle.ts: Image is resized in the layout',
-  { skip: [] },
+  /**
+   * FIXME: This test times out for all browsers. It needs to be split up.
+   * @see https://product-fabric.atlassian.net/browse/EDM-1541
+   * @see https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/6614/afp-2188-prevent-inaccurate-jest-results
+   */
+  { skip: ['chrome', 'firefox', 'edge', 'safari'] },
   async (browserObject: BrowserObject) => {
-    let page: Page = await goToEditorTestingExample(browserObject);
+    let page: Page = await goToEditorTestingWDExample(browserObject);
     // This 1500 is important for Safari to work for mysterious reasons. Yes, :magic:
     // But seriously, for some reason, I can't click second column after big image was deleted in a first column.
     await page.setWindowSize(1980, 1500);

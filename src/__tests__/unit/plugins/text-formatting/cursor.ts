@@ -1,11 +1,12 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   code,
   strong,
   emoji,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import textFormattingCursorPlugin from '../../../../plugins/text-formatting/pm-plugins/cursor';
 import { EditorView } from 'prosemirror-view';
 import { ProviderFactory } from '@atlaskit/editor-common';
@@ -21,7 +22,7 @@ let handleClick: HandleClick = textFormattingCursorPlugin.spec!.props!
 describe('text-formatting', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: {

@@ -1,5 +1,6 @@
 import { EditorView } from 'prosemirror-view';
-import createEditorFactory, {
+import {
+  createEditorFactory,
   Options as CreateEditorOptions,
 } from '@atlaskit/editor-test-helpers/create-editor';
 import {
@@ -8,7 +9,8 @@ import {
   media,
   p,
   Refs,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { getFreshMediaProvider } from '../media/_utils';
 import { pluginKey as mediaEditorPluginKey } from '../../../../plugins/media/pm-plugins/media-editor-plugin-factory';
@@ -32,7 +34,10 @@ describe('media alt text', () => {
 
   const mediaProvider = getFreshMediaProvider();
 
-  const editor = (doc: any, createEditorOptions?: CreateEditorOptions) => {
+  const editor = (
+    doc: DocBuilder,
+    createEditorOptions?: CreateEditorOptions,
+  ) => {
     return createEditor({
       ...createEditorOptions,
       doc,

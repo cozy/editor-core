@@ -1,5 +1,5 @@
 import { Rect } from '@atlaskit/editor-tables/table-map';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -9,7 +9,8 @@ import {
   tdEmpty,
   tdCursor,
   td,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
@@ -53,7 +54,7 @@ describe('Table analytic events', () => {
   const createEditor = createEditorFactory<TablePluginState>();
   let createAnalyticsEvent: jest.Mock<UIAnalyticsEvent>;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     const tableOptions = {
       allowNumberColumn: true,
       allowHeaderRow: true,

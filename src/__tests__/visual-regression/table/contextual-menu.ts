@@ -15,9 +15,9 @@ import { pressKeyCombo } from '../../__helpers/page-objects/_keyboard';
 
 describe('Table contextual menu: fullpage', () => {
   let page: PuppeteerPage;
-  const pageInit = async () => {
+  const pageInit = async (viewport?: { width: number; height: number }) => {
     page = global.page;
-    await initFullPageEditorWithAdf(page, adf);
+    await initFullPageEditorWithAdf(page, adf, undefined, viewport);
     await clickFirstCell(page);
   };
 
@@ -25,7 +25,9 @@ describe('Table contextual menu: fullpage', () => {
     beforeAll(async () => {
       await pageInit();
     });
-    it('toggles the context menu correctly', async () => {
+    // FIXME: Inconsistent doing the Puppeteer's upgrade
+    // https://product-fabric.atlassian.net/browse/ED-13503
+    it.skip('toggles the context menu correctly', async () => {
       await clickCellOptions(page);
       await snapshot(page);
       await clickCellOptions(page);
@@ -62,6 +64,16 @@ describe('Table contextual menu: fullpage', () => {
 
       // undo to re-merge
       await pressKeyCombo(page, ['Meta', 'KeyZ']);
+      await snapshot(page);
+    });
+  });
+  describe('contextual menu position in smaller viewport', () => {
+    beforeEach(async () => {
+      await pageInit({ width: 768, height: 768 });
+    });
+    it('ensures context menu is positioned correctly when there is not enought space right side of menu button ', async () => {
+      await navigateToTableCell(page, 1, 3);
+      await clickCellOptions(page);
       await snapshot(page);
     });
   });

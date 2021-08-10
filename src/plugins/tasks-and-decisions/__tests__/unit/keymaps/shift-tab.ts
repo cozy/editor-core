@@ -3,14 +3,15 @@ import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   taskItem,
   taskList,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { testKeymap } from '@atlaskit/editor-test-helpers/send-key-to-pm';
-import { MockMentionResource } from '@atlaskit/util-data-test';
+import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 
 import { ListTypes } from './_helpers';
 
@@ -36,7 +37,7 @@ describe('tasks and decisions - keymaps', () => {
   };
 
   createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
-  const editorFactory = (doc: any) => {
+  const editorFactory = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps,
@@ -276,7 +277,7 @@ describe('tasks and decisions - keymaps', () => {
   });
 
   describe('allowNestedTasks', () => {
-    let simpleFactory = (doc: any) => {
+    let simpleFactory = (doc: DocBuilder) => {
       return createEditor({
         doc,
         editorProps: { ...editorProps, allowNestedTasks: false },

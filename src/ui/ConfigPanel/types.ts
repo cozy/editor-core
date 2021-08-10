@@ -12,4 +12,8 @@ export enum FieldTypeError {
 }
 
 export type Entry<T> = [string, T];
-export type OnBlur = (name: string) => void;
+export type OnFieldChange = (name: string, isDirty: boolean) => void;
+
+export interface ValidationErrors {
+  [key: string]: any;
+}

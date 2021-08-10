@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -7,7 +7,8 @@ import {
   td,
   tdCursor,
   tdEmpty,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   getColumnsWidths,
   getRowHeights,
@@ -25,7 +26,7 @@ import { pluginKey } from '../../../../plugins/table/pm-plugins/plugin-factory';
 describe('table plugin: utils', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },
@@ -45,7 +46,7 @@ describe('table plugin: utils', () => {
           ),
         );
         const columnsWidths = getColumnsWidths(editorView);
-        columnsWidths.forEach(width => {
+        columnsWidths.forEach((width) => {
           expect(typeof width).toEqual('number');
           expect(width && width > 0).toBe(true);
         });
@@ -85,7 +86,7 @@ describe('table plugin: utils', () => {
         );
         const tableRef = editorView.dom.querySelector('table')!;
         const rowHeights = getRowHeights(tableRef);
-        rowHeights.forEach(height => {
+        rowHeights.forEach((height) => {
           expect(typeof height).toEqual('number');
           expect(height > 0).toBe(true);
         });
@@ -107,7 +108,7 @@ describe('table plugin: utils', () => {
           const tableRef = editorView.dom.querySelector('table')!;
           const rowHeights = getRowHeights(tableRef);
 
-          rowHeights.forEach(height => {
+          rowHeights.forEach((height) => {
             expect(typeof height).toEqual('number');
             expect(height > 0).toBe(true);
           });
@@ -400,7 +401,7 @@ describe('table plugin: utils', () => {
 
   describe('#getColumnClassNames', () => {
     describe('when selection is a TextSelection', () => {
-      [[0], [1], [2], [0, 1], [1, 2], [0, 2]].forEach(hoveredColumns => {
+      [[0], [1], [2], [0, 1], [1, 2], [0, 2]].forEach((hoveredColumns) => {
         describe(`when hoveredColumns = ${hoveredColumns}`, () => {
           it('return a string containing "active" substring', () => {
             const { editorView } = editor(
@@ -483,7 +484,7 @@ describe('table plugin: utils', () => {
             ),
           );
 
-          [0, 1, 2].forEach(index => {
+          [0, 1, 2].forEach((index) => {
             const classNames = getColumnClassNames(
               index,
               editorView.state.selection,
@@ -505,7 +506,7 @@ describe('table plugin: utils', () => {
                 ),
               ),
             );
-            [0, 1, 2].forEach(index => {
+            [0, 1, 2].forEach((index) => {
               const classNames = getColumnClassNames(
                 index,
                 editorView.state.selection,
@@ -522,7 +523,7 @@ describe('table plugin: utils', () => {
 
   describe('#getRowClassNames', () => {
     describe('when selection is a TextSelection', () => {
-      [[0], [1], [2], [0, 1], [1, 2], [0, 2]].forEach(hoveredRows => {
+      [[0], [1], [2], [0, 1], [1, 2], [0, 2]].forEach((hoveredRows) => {
         describe(`when hoveredRows = ${hoveredRows}`, () => {
           it('return a string containing "active" substring', () => {
             const { editorView } = editor(
@@ -605,7 +606,7 @@ describe('table plugin: utils', () => {
             ),
           );
 
-          [0, 1, 2].forEach(index => {
+          [0, 1, 2].forEach((index) => {
             const classNames = getRowClassNames(
               index,
               editorView.state.selection,
@@ -627,7 +628,7 @@ describe('table plugin: utils', () => {
                 ),
               ),
             );
-            [0, 1, 2].forEach(index => {
+            [0, 1, 2].forEach((index) => {
               const classNames = getRowClassNames(
                 index,
                 editorView.state.selection,

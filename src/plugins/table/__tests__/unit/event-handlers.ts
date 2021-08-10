@@ -11,7 +11,8 @@ import {
   tdCursor,
   tdEmpty,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import tablePlugin from '../../../table';
 import { handleMouseOut, handleMouseDown } from '../../event-handlers';
@@ -20,7 +21,7 @@ import { TableCssClassName as ClassName } from '../../types';
 
 describe('table plugin: decorations', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>().add(tablePlugin),

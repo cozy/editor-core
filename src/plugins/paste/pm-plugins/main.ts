@@ -1,7 +1,8 @@
 // @ts-ignore: outdated type definitions
 import { handlePaste as handlePasteTable } from '@atlaskit/editor-tables/utils';
 import { Schema, Slice, Node, Fragment } from 'prosemirror-model';
-import { Plugin, PluginKey, EditorState } from 'prosemirror-state';
+import { Plugin, PluginKey, EditorState, Transaction } from 'prosemirror-state';
+import uuid from 'uuid';
 import { MarkdownTransformer } from '@atlaskit/editor-markdown-transformer';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import {
@@ -42,7 +43,8 @@ import {
   transformSingleLineCodeBlockToCodeMark,
 } from '../../code-block/utils';
 import {
-  sendPasteAnalyticsEvent,
+  createPasteMeasurePayload,
+  getContentNodeTypes,
   handlePasteAsPlainTextWithAnalytics,
   handlePasteIntoTaskAndDecisionWithAnalytics,
   handleCodeBlockWithAnalytics,
@@ -52,10 +54,16 @@ import {
   handleRichTextWithAnalytics,
   handleExpandWithAnalytics,
   handleSelectedTableWithAnalytics,
+  handlePasteLinkOnSelectedTextWithAnalytics,
+  sendPasteAnalyticsEvent,
 } from './analytics';
-import { PasteTypes } from '../../analytics';
-import { insideTable } from '../../../utils';
-import { CardOptions } from '../../card';
+import {
+  analyticsPluginKey,
+  DispatchAnalyticsEvent,
+  PasteTypes,
+} from '../../analytics';
+import { insideTable, measurements } from '../../../utils';
+import { CardOptions, measureRender } from '@atlaskit/editor-common';
 import {
   transformSliceToCorrectMediaWrapper,
   unwrapNestedMediaElements,
@@ -64,11 +72,7 @@ import {
   transformSliceToRemoveColumnsWidths,
   transformSliceRemoveCellBackgroundColor,
 } from '../../table/commands/misc';
-import { upgradeTextToLists, splitParagraphs } from '../../lists/transforms';
-import {
-  upgradeTextToLists as upgradeTextToListsPredictable,
-  splitParagraphs as splitParagraphsPredictable,
-} from '../../lists-predictable/transforms';
+import { upgradeTextToLists, splitParagraphs } from '../../list/transforms';
 import { md } from '../md';
 import { getPluginState as getTablePluginState } from '../../table/pm-plugins/plugin-factory';
 import { transformUnsupportedBlockCardToInline } from '../../card/utils';
@@ -77,9 +81,9 @@ import {
   containsAnyAnnotations,
   stripNonExistingAnnotations,
 } from '../../annotation/utils';
+import { pluginKey as betterTypePluginKey } from '../../base/pm-plugins/better-type-history';
 
 export const stateKey = new PluginKey('pastePlugin');
-
 export { md } from '../md';
 
 function isHeaderRowRequired(state: EditorState) {
@@ -99,9 +103,9 @@ function isBackgroundCellAllowed(state: EditorState) {
 
 export function createPlugin(
   schema: Schema,
+  dispatchAnalyticsEvent: DispatchAnalyticsEvent,
   cardOptions?: CardOptions,
   sanitizePrivateContent?: boolean,
-  predictableLists?: boolean,
   providerFactory?: ProviderFactory,
 ) {
   const atlassianMarkDownParser = new MarkdownTransformer(schema, md);
@@ -191,7 +195,36 @@ export function createPlugin(
           event.stopPropagation();
         }
 
-        const { state, dispatch } = view;
+        const { state } = view;
+        const analyticsPlugin = analyticsPluginKey.getState(state);
+        const pasteTrackingEnabled =
+          analyticsPlugin?.performanceTracking?.pasteTracking?.enabled;
+
+        if (pasteTrackingEnabled) {
+          const content = getContentNodeTypes(slice.content);
+          const pasteId = uuid();
+          const measureName = `${measurements.PASTE}_${pasteId}`;
+          measureRender(measureName, (duration: number) => {
+            const payload = createPasteMeasurePayload(view, duration, content);
+            if (payload) {
+              dispatchAnalyticsEvent(payload);
+            }
+          });
+        }
+        // creating a custom dispatch because we want to add a meta whenever we do a paste.
+        const dispatch = (tr: Transaction) => {
+          // https://product-fabric.atlassian.net/browse/ED-12633
+          // don't add closeHistory call if we're pasting a text inside placeholder text as we want the whole action
+          // to be atomic
+          const { placeholder } = state.schema.nodes;
+          if (
+            state.doc.resolve(state.selection.$anchor.pos).nodeAfter?.type !==
+            placeholder
+          ) {
+            tr.setMeta(betterTypePluginKey, true);
+          }
+          view.dispatch(tr);
+        };
 
         slice = handleParagraphBlockMarks(state, slice);
 
@@ -216,21 +249,34 @@ export function createPlugin(
             slice.openEnd,
           );
 
-          // run macro autoconvert prior to other conversions
-          if (
-            markdownSlice &&
-            handleMacroAutoConvert(
-              text,
-              markdownSlice,
-              cardOptions,
-              extensionAutoConverter,
-            )(state, dispatch, view)
-          ) {
-            // TODO: handleMacroAutoConvert dispatch twice, so we can't use the helper
-            sendPasteAnalyticsEvent(view, event, markdownSlice, {
-              type: PasteTypes.markdown,
-            });
-            return true;
+          if (markdownSlice) {
+            // linkify text prior to converting to macro
+            if (
+              handlePasteLinkOnSelectedTextWithAnalytics(
+                view,
+                event,
+                markdownSlice,
+                PasteTypes.markdown,
+              )(state, dispatch)
+            ) {
+              return true;
+            }
+
+            // run macro autoconvert prior to other conversions
+            if (
+              handleMacroAutoConvert(
+                text,
+                markdownSlice,
+                cardOptions,
+                extensionAutoConverter,
+              )(state, dispatch, view)
+            ) {
+              // TODO: handleMacroAutoConvert dispatch twice, so we can't use the helper
+              sendPasteAnalyticsEvent(view, event, markdownSlice, {
+                type: PasteTypes.markdown,
+              });
+              return true;
+            }
           }
         }
 
@@ -300,6 +346,18 @@ export function createPlugin(
         if (isRichText) {
           // linkify the text where possible
           slice = linkifyContent(state.schema)(slice);
+
+          if (
+            handlePasteLinkOnSelectedTextWithAnalytics(
+              view,
+              event,
+              slice,
+              PasteTypes.richText,
+            )(state, dispatch)
+          ) {
+            return true;
+          }
+
           // run macro autoconvert prior to other conversions
           if (
             handleMacroAutoConvert(
@@ -417,14 +475,8 @@ export function createPlugin(
         slice = transformSliceToDecisionList(slice, schema);
 
         // splitting linebreaks into paragraphs must happen before upgrading text to lists
-        // TODO: remove predictableLists check during rollout - https://product-fabric.atlassian.net/browse/ED-10611
-        if (predictableLists) {
-          slice = splitParagraphsPredictable(slice, schema);
-          slice = upgradeTextToListsPredictable(slice, schema);
-        } else {
-          slice = splitParagraphs(slice, schema);
-          slice = upgradeTextToLists(slice, schema);
-        }
+        slice = splitParagraphs(slice, schema);
+        slice = upgradeTextToLists(slice, schema);
 
         if (
           slice.content.childCount &&

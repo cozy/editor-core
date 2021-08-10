@@ -2,18 +2,18 @@ import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import { editable, getDocFromElement, comment, insertMedia } from '../_helpers';
 import {
   mountEditor,
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
 } from '../../__helpers/testing-example-helpers';
 
-[comment].forEach(editor => {
+[comment].forEach((editor) => {
   BrowserTestCase(
     `insert-mediaGroup.ts: Inserts a media group on ${editor.name}`,
-    { skip: ['edge', 'safari'] },
+    { skip: ['edge'] },
     async (
-      client: Parameters<typeof goToEditorTestingExample>[0],
+      client: Parameters<typeof goToEditorTestingWDExample>[0],
       testName: string,
     ) => {
-      const page = await goToEditorTestingExample(client);
+      const page = await goToEditorTestingWDExample(client);
       await mountEditor(page, {
         appearance: editor.appearance,
         media: {
@@ -39,10 +39,10 @@ import {
     `Initialises correctly with a single media group on ${editor.name}`,
     { skip: ['edge'] },
     async (
-      client: Parameters<typeof goToEditorTestingExample>[0],
+      client: Parameters<typeof goToEditorTestingWDExample>[0],
       testName: string,
     ) => {
-      const page = await goToEditorTestingExample(client);
+      const page = await goToEditorTestingWDExample(client);
       await mountEditor(page, {
         appearance: editor.appearance,
         defaultValue: JSON.stringify({

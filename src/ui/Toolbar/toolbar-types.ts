@@ -25,6 +25,7 @@ export interface ToolbarProps {
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
   toolbarSize: ToolbarSize;
   containerElement: HTMLElement | null;
+  hasMinWidth?: boolean;
 }
 
 export type ToolbarWithSizeDetectorProps = Omit<ToolbarProps, 'toolbarSize'>;
@@ -33,3 +34,5 @@ export interface ToolbarInnerProps extends ToolbarProps {
   isToolbarReducedSpacing: boolean;
   isReducedSpacing?: boolean;
 }
+
+export const toolbarTestIdPrefix = 'ak-editor-toolbar-button';

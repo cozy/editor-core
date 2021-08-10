@@ -8,7 +8,8 @@ import {
   layoutColumn,
   doc,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
@@ -32,7 +33,7 @@ describe('layout actions', () => {
 
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
   let editorView: EditorView;
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     const preset = new Preset<LightEditorPlugin>()
       .add(layoutPlugin)
@@ -55,7 +56,7 @@ describe('layout actions', () => {
     };
 
     describe('detecting exact layout', () => {
-      layouts.forEach(layout => {
+      layouts.forEach((layout) => {
         it(`should detect "${layout.name}" layout`, () => {
           expect(getLayoutForWidths(layout.widths)).toBe(layout.name);
         });
@@ -64,8 +65,8 @@ describe('layout actions', () => {
   });
 
   describe('#setPresetLayout', () => {
-    layouts.forEach(currentLayout => {
-      layouts.forEach(newLayout => {
+    layouts.forEach((currentLayout) => {
+      layouts.forEach((newLayout) => {
         if (currentLayout.name !== newLayout.name) {
           it(`handles switching from "${currentLayout.name}" to "${newLayout.name}"`, () => {
             ({ editorView } = editor(

@@ -1,17 +1,12 @@
 import { Schema } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 
-import {
-  createInputRule,
-  instrumentedInputRule,
-  leafNodeReplacementCharacter,
-} from '../../../utils/input-rules';
+import { createRule, createPlugin } from '../../../utils/input-rules';
+import { leafNodeReplacementCharacter } from '@atlaskit/prosemirror-input-rules';
 import { TypeAheadHandler } from '../types';
+import type { FeatureFlags } from '../../../types/feature-flags';
 
-import {
-  pluginKey as typeAheadPluginKey,
-  PluginState as TypeAheadPluginState,
-} from './main';
+import { pluginKey as typeAheadPluginKey, TypeAheadPluginState } from './main';
 
 // We cannot set a proper plugin key on input rule plugins, so instead, once
 // the plugin is created we save its key to this variable
@@ -20,9 +15,10 @@ export let typeAheadInputRulesPluginKey = '';
 export function inputRulePlugin(
   schema: Schema,
   typeAheads: TypeAheadHandler[],
+  featureFlags: FeatureFlags,
 ): Plugin | undefined {
   const triggersRegex = typeAheads
-    .map(t => t.customRegex || t.trigger)
+    .map((t) => t.customRegex || t.trigger)
     .join('|');
 
   if (!triggersRegex.length) {
@@ -33,7 +29,7 @@ export function inputRulePlugin(
     `(^|[.!?\\s${leafNodeReplacementCharacter}])(${triggersRegex})$`,
   );
 
-  const typeAheadInputRule = createInputRule(regex, (state, match) => {
+  const typeAheadInputRule = createRule(regex, (state, match) => {
     const typeAheadState = typeAheadPluginKey.getState(
       state,
     ) as TypeAheadPluginState;
@@ -59,8 +55,9 @@ export function inputRulePlugin(
     );
   });
 
-  const plugin = instrumentedInputRule('type-ahead', {
-    rules: [typeAheadInputRule],
+  const plugin = createPlugin('type-ahead', [typeAheadInputRule], {
+    allowInsertTextOnDocument: false,
+    useUnpredictableInputRule: featureFlags.useUnpredictableInputRule,
   });
   typeAheadInputRulesPluginKey = (plugin as any).key;
 

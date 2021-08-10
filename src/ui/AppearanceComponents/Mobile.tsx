@@ -39,11 +39,13 @@ ContentArea.displayName = 'ContentArea';
 export type MobileAppearanceProps = React.PropsWithChildren<{
   editorView: EditorView | null;
   maxHeight?: number;
+  persistScrollGutter?: boolean;
 }>;
 
 export function MobileAppearance({
   editorView,
   maxHeight,
+  persistScrollGutter,
   children,
 }: MobileAppearanceProps) {
   const render = useCallback(
@@ -51,11 +53,12 @@ export function MobileAppearance({
       maxContentSize,
       mobileScroll,
     }: {
-      maxContentSize: MaxContentSizePluginState;
-      mobileScroll: MobileScrollPluginState;
+      maxContentSize?: MaxContentSizePluginState;
+      mobileScroll?: MobileScrollPluginState;
     }) => {
-      const maxContentSizeReached =
-        maxContentSize && maxContentSize.maxContentSizeReached;
+      const maxContentSizeReached = Boolean(
+        maxContentSize?.maxContentSizeReached,
+      );
 
       let minHeight = 100;
       if (mobileScroll) {
@@ -70,7 +73,6 @@ export function MobileAppearance({
         const paddingVh = (mobilePaddingTop * 100) / windowHeight;
         minHeight = 100 - keyboardHeightVh - paddingVh;
       }
-      const GUTTER_PADDING = 8;
       return (
         <WithFlash animate={maxContentSizeReached}>
           <MobileEditor
@@ -80,21 +82,17 @@ export function MobileAppearance({
             <ClickArea
               editorView={editorView || undefined}
               minHeight={minHeight}
+              persistScrollGutter={persistScrollGutter}
             >
               <ContentArea>
-                <div
-                  style={{ padding: `0 ${GUTTER_PADDING}px` }}
-                  className="ak-editor-content-area"
-                >
-                  {children}
-                </div>
+                <div className="ak-editor-content-area">{children}</div>
               </ContentArea>
             </ClickArea>
           </MobileEditor>
         </WithFlash>
       );
     },
-    [editorView, maxHeight, children],
+    [children, maxHeight, editorView, persistScrollGutter],
   );
 
   return (

@@ -5,7 +5,7 @@ import { MentionProvider } from '@atlaskit/mention/resource';
 import {
   tablesPlugin,
   panelPlugin,
-  listsPlugin,
+  listPlugin,
   textColorPlugin,
   breakoutPlugin,
   jiraIssuePlugin,
@@ -52,14 +52,14 @@ export function useCXHTMLPreset({
     {
       allowInlineCursorTarget: true,
       allowScrollGutter: {
-        getScrollElement: _view =>
+        getScrollElement: (_view) =>
           document.querySelector('.fabric-editor-popup-scroll-parent') || null,
       },
     },
   ]);
   preset.add([tablesPlugin, { tableOptions: { advanced: true } }]);
   preset.add([panelPlugin, { UNSAFE_allowCustomPanel: true }]);
-  preset.add(listsPlugin);
+  preset.add(listPlugin);
   preset.add(textColorPlugin);
   preset.add(breakoutPlugin);
   preset.add(jiraIssuePlugin);

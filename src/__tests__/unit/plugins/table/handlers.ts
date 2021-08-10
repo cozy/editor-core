@@ -1,13 +1,14 @@
 import { TextSelection } from 'prosemirror-state';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   table,
   tr,
   tdEmpty,
   tdCursor,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { TablePluginState } from '../../../../plugins/table/types';
 import { handleDocOrSelectionChanged } from '../../../../plugins/table/handlers';
 import { pluginKey } from '../../../../plugins/table/pm-plugins/plugin-factory';
@@ -19,7 +20,7 @@ describe('table action handlers', () => {
 
   beforeEach(() => {
     const createEditor = createEditorFactory<TablePluginState>();
-    editor = (doc: any) =>
+    editor = (doc: DocBuilder) =>
       createEditor({
         doc,
         editorProps: { allowTables: true },

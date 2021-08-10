@@ -1,15 +1,16 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   p,
   doc,
+  DocBuilder,
   code,
   hardBreak,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { clearEditorContent, insertNewLine } from '../../../commands';
 
 describe('commands', () => {
-  const createEditor = (doc: any) =>
+  const createEditor = (doc: DocBuilder) =>
     createEditorFactory()({
       doc,
     });

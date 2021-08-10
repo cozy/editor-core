@@ -3,50 +3,45 @@ import { EnumField } from '@atlaskit/editor-common/extensions';
 import CheckboxGroup from './CheckboxGroup';
 import RadioGroup from './RadioGroup';
 import Select from './Select';
-import { OnBlur } from '../types';
+import { OnFieldChange } from '../types';
 
 export default function Enum({
+  name,
   field,
   autoFocus,
-  onBlur,
-  parentName,
+  onFieldChange,
+  fieldDefaultValue,
 }: {
+  name: string;
   field: EnumField;
   autoFocus: boolean;
-  onBlur: OnBlur;
-  parentName?: string;
+  onFieldChange: OnFieldChange;
+  fieldDefaultValue?: string | string[];
 }) {
-  const { name } = field;
   switch (field.style) {
     case 'checkbox':
       return (
         <CheckboxGroup
-          key={name}
-          parentName={parentName}
+          name={name}
           field={field}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
         />
       );
 
     case 'radio':
       return (
-        <RadioGroup
-          key={name}
-          parentName={parentName}
-          field={field}
-          onBlur={onBlur}
-        />
+        <RadioGroup name={name} field={field} onFieldChange={onFieldChange} />
       );
 
     case 'select':
       return (
         <Select
-          key={name}
-          parentName={parentName}
+          name={name}
           field={field}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
           placeholder={field.placeholder}
           autoFocus={autoFocus}
+          fieldDefaultValue={fieldDefaultValue}
         />
       );
   }

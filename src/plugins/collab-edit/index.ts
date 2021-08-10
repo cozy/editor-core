@@ -35,9 +35,9 @@ const providerBuilder: ProviderBuilder = (
 };
 
 const collabEditPlugin = (options: PrivateCollabEditOptions): EditorPlugin => {
-  let providerResolver: (value?: CollabEditProvider) => void = () => {};
+  let providerResolver: (value: CollabEditProvider) => void = () => {};
   const collabEditProviderPromise: Promise<CollabEditProvider> = new Promise(
-    _providerResolver => {
+    (_providerResolver) => {
       providerResolver = _providerResolver;
     },
   );
@@ -71,7 +71,7 @@ const collabEditPlugin = (options: PrivateCollabEditOptions): EditorPlugin => {
                   providerPromise?: Promise<CollabEditProvider>,
                 ) => {
                   if (providerPromise) {
-                    providerPromise.then(provider =>
+                    providerPromise.then((provider) =>
                       providerResolver(provider),
                     );
                   }
@@ -95,7 +95,16 @@ const collabEditPlugin = (options: PrivateCollabEditOptions): EditorPlugin => {
         props.newEditorState.tr,
       );
 
-      executeProviderCode(sendTransaction(props), addErrorAnalytics);
+      executeProviderCode(
+        sendTransaction({
+          originalTransaction: props.originalTransaction,
+          transactions: props.transactions,
+          oldEditorState: props.oldEditorState,
+          newEditorState: props.newEditorState,
+          useNativePlugin: options && options.useNativePlugin!,
+        }),
+        addErrorAnalytics,
+      );
     },
   };
 };

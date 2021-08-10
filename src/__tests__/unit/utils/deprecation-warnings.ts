@@ -1,7 +1,9 @@
 import deprecationWarnings from '../../../utils/deprecation-warnings';
+import { nextMajorVersion } from '../../../version-wrapper';
 
 describe('utils -> deprecationWarnings', () => {
   let spy: jest.SpyInstance<any>;
+
   beforeAll(() => {
     spy = jest.spyOn(global.console, 'warn').mockImplementation(() => {});
   });
@@ -26,7 +28,7 @@ describe('utils -> deprecationWarnings', () => {
           property: 'prop3',
           description: '',
           type: 'removed',
-          condition: props => typeof props['prop3'] === 'string',
+          condition: (props) => typeof props['prop3'] === 'string',
         },
         { property: 'prop5', description: 'prop5 is moved', type: '' },
       ],
@@ -36,13 +38,13 @@ describe('utils -> deprecationWarnings', () => {
   it('calls toHaveBeenCalledTimes correct times with correct message', () => {
     expect(global.console.warn).toHaveBeenCalledTimes(3);
     expect(global.console.warn).toHaveBeenCalledWith(
-      'prop1 property for TestComponent is deprecated. prop1 is moved [Will be removed in editor-core@1000.0.0]',
+      `prop1 property for TestComponent is deprecated. prop1 is moved [Will be removed in editor-core@${nextMajorVersion()}]`,
     );
     expect(global.console.warn).toHaveBeenCalledWith(
-      'prop2 property for TestComponent is deprecated. prop2 is moved [Will be  in editor-core@1000.0.0]',
+      `prop2 property for TestComponent is deprecated. prop2 is moved [Will be  in editor-core@${nextMajorVersion()}]`,
     );
     expect(global.console.warn).toHaveBeenCalledWith(
-      'prop3 property for TestComponent is deprecated.  [Will be removed in editor-core@1000.0.0]',
+      `prop3 property for TestComponent is deprecated.  [Will be removed in editor-core@${nextMajorVersion()}]`,
     );
   });
 });

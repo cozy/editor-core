@@ -5,6 +5,7 @@ import { EditorView, Decoration } from 'prosemirror-view';
 import {
   RichMediaLayout as MediaSingleLayout,
   MediaADFAttrs,
+  RichMediaAttributes,
 } from '@atlaskit/adf-schema';
 import {
   MediaSingle,
@@ -23,7 +24,6 @@ import {
   getPosHandler,
   getPosHandlerNode,
   ForwardRef,
-  ReactNodeView,
 } from '../../../nodeviews/';
 import WithPluginState from '../../../ui/WithPluginState';
 import { pluginKey as widthPluginKey } from '../../width';
@@ -46,6 +46,11 @@ import {
 } from '../../../utils/rich-media-utils';
 import { getAttrsFromUrl } from '@atlaskit/media-client';
 import { isMediaBlobUrlFromAttrs } from '../utils/media-common';
+import { getMediaFeatureFlag } from '@atlaskit/media-common';
+import ReactNodeView from '../../../nodeviews/ReactNodeView';
+import CaptionPlaceholder from '../ui/CaptionPlaceholder';
+import { NodeSelection } from 'prosemirror-state';
+import { insertAndSelectCaptionFromMediaSinglePos } from '../commands/captions';
 
 export interface MediaSingleNodeState {
   width?: number;
@@ -205,10 +210,6 @@ export default class MediaSingleNode extends Component<
     return dispatch(tr);
   };
 
-  forwardInnerRef = (elem: HTMLElement) => {
-    this.props.forwardRef(elem);
-  };
-
   render() {
     const {
       selected,
@@ -220,7 +221,10 @@ export default class MediaSingleNode extends Component<
       view,
     } = this.props;
 
-    const { layout, width: mediaSingleWidth } = node.attrs;
+    const {
+      layout,
+      width: mediaSingleWidth,
+    } = node.attrs as RichMediaAttributes;
     const childNode = node.firstChild!;
     const attrs = childNode.attrs as MediaADFAttrs;
     let { width, height } = attrs;
@@ -258,9 +262,8 @@ export default class MediaSingleNode extends Component<
       lineLength: this.props.lineLength,
       pctWidth: mediaSingleWidth,
       fullWidthMode,
+      hasFallbackContainer: false,
     };
-
-    const MediaChild = <FigureWrapper innerRef={this.forwardInnerRef} />;
 
     let canResize = !!this.props.mediaOptions.allowResizing;
 
@@ -278,6 +281,23 @@ export default class MediaSingleNode extends Component<
     const lineLength =
       this.getLineLength(view, getPos()) || this.props.lineLength;
 
+    const isSelected = selected();
+
+    const shouldShowPlaceholder =
+      getMediaFeatureFlag('captions', mediaOptions.featureFlags) &&
+      node.childCount !== 2 &&
+      isSelected &&
+      state.selection instanceof NodeSelection;
+
+    const MediaChildren = (
+      <FigureWrapper>
+        <div ref={this.props.forwardRef} />
+        {shouldShowPlaceholder && (
+          <CaptionPlaceholder onClick={this.clickPlaceholder} />
+        )}
+      </FigureWrapper>
+    );
+
     return canResize ? (
       <ResizableMediaSingle
         {...mediaSingleProps}
@@ -291,15 +311,28 @@ export default class MediaSingleNode extends Component<
         allowBreakoutSnapPoints={
           mediaOptions && mediaOptions.allowBreakoutSnapPoints
         }
-        selected={selected()}
+        selected={isSelected}
         dispatchAnalyticsEvent={this.props.dispatchAnalyticsEvent}
       >
-        {MediaChild}
+        {MediaChildren}
       </ResizableMediaSingle>
     ) : (
-      <MediaSingle {...mediaSingleProps}>{MediaChild}</MediaSingle>
+      <MediaSingle {...mediaSingleProps}>{MediaChildren}</MediaSingle>
     );
   }
+
+  private clickPlaceholder = () => {
+    const { view, getPos, node } = this.props;
+
+    if (typeof getPos === 'boolean') {
+      return;
+    }
+
+    insertAndSelectCaptionFromMediaSinglePos(getPos(), node)(
+      view.state,
+      view.dispatch,
+    );
+  };
 
   private getLineLength = (view: EditorView, pos: number): number | null => {
     if (isRichMediaInsideOfBlockNode(view, pos)) {
@@ -345,6 +378,7 @@ class MediaSingleNodeView extends ReactNodeView<MediaSingleNodeViewProps> {
 
   getContentDOM() {
     const dom = document.createElement('div');
+    dom.classList.add(`media-content-wrap`);
     return { dom };
   }
 
@@ -361,6 +395,11 @@ class MediaSingleNodeView extends ReactNodeView<MediaSingleNodeViewProps> {
     if (this.selectionType !== this.checkAndUpdateSelectionType()) {
       return true;
     }
+
+    if (this.node.childCount !== nextNode.childCount) {
+      return true;
+    }
+
     return super.viewShouldUpdate(nextNode);
   }
 
@@ -430,8 +469,8 @@ class MediaSingleNodeView extends ReactNodeView<MediaSingleNodeViewProps> {
               render={({ width, mediaPluginState }) => {
                 return (
                   <MediaSingleNode
-                    width={width.width}
-                    lineLength={width.lineLength}
+                    width={width!.width}
+                    lineLength={width!.lineLength}
                     node={this.node}
                     getPos={getPos}
                     mediaProvider={mediaProvider}

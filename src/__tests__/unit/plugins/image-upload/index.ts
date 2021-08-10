@@ -1,5 +1,5 @@
 import { ProviderFactory } from '@atlaskit/editor-common';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import createEvent from '@atlaskit/editor-test-helpers/create-event';
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
 import {
@@ -8,7 +8,8 @@ import {
   mediaSingle,
   p,
   code_block,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { setNodeSelection } from '../../../../utils';
 import {
   insertExternalImage,
@@ -24,7 +25,7 @@ describe('image-upload', () => {
     'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
   const testImg = () =>
     mediaSingle()(media({ type: 'external', url: testImgSrc })());
-  const editor = (doc: any, imageUploadProvider?: any) =>
+  const editor = (doc: DocBuilder, imageUploadProvider?: any) =>
     createEditor({
       doc,
       editorProps: {

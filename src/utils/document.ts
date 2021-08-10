@@ -11,6 +11,8 @@ import {
 } from '@atlaskit/editor-common';
 import { JSONDocNode } from '@atlaskit/editor-json-transformer';
 import { DispatchAnalyticsEvent } from '../plugins/analytics/types/dispatch-analytics-event';
+import { getBreakoutMode } from './node-width';
+import { BreakoutMarkAttrs } from '@atlaskit/adf-schema';
 
 /**
  * Checks if node is an empty paragraph.
@@ -67,14 +69,14 @@ export function isNodeEmpty(node?: Node): boolean {
   const block: Node[] = [];
   const nonBlock: Node[] = [];
 
-  node.forEach(child => {
+  node.forEach((child) => {
     child.isInline ? nonBlock.push(child) : block.push(child);
   });
 
   return (
     !nonBlock.length &&
     !block.filter(
-      childNode =>
+      (childNode) =>
         (!!childNode.childCount &&
           !(
             childNode.childCount === 1 && isEmptyParagraph(childNode.firstChild)
@@ -251,7 +253,7 @@ export const getStepRange = (
   let from = -1;
   let to = -1;
 
-  transaction.steps.forEach(step => {
+  transaction.steps.forEach((step) => {
     step.getMap().forEach((_oldStart, _oldEnd, newStart, newEnd) => {
       from = newStart < from || from === -1 ? newStart : from;
       to = newEnd < to || to === -1 ? newEnd : to;
@@ -292,14 +294,49 @@ export const isSelectionEndOfParagraph = (state: EditorState): boolean =>
   state.selection.$to.parent.type === state.schema.nodes.paragraph &&
   state.selection.$to.pos === state.doc.resolve(state.selection.$to.pos).end();
 
+export type ChangedFn = (
+  node: Node<any>,
+  pos: number,
+  parent: Node<any>,
+  index: number,
+) => boolean | null | undefined | void;
+
+export function getChangedNodesIn({
+  tr,
+  doc,
+}: {
+  tr: Transaction;
+  doc: Node;
+}): { node: Node; pos: number }[] {
+  const nodes: { node: Node; pos: number }[] = [];
+  const stepRange = getStepRange(tr);
+
+  if (!stepRange) {
+    return nodes;
+  }
+
+  const from = Math.min(doc.nodeSize - 2, stepRange.from);
+  const to = Math.min(doc.nodeSize - 2, stepRange.to);
+
+  doc.nodesBetween(from, to, (node, pos) => {
+    nodes.push({ node, pos });
+  });
+
+  return nodes;
+}
+
+export function getChangedNodes(
+  tr: Transaction,
+): { node: Node; pos: number }[] {
+  return getChangedNodesIn({
+    tr: tr,
+    doc: tr.doc,
+  });
+}
+
 export function nodesBetweenChanged(
   tr: Transaction,
-  f: (
-    node: Node<any>,
-    pos: number,
-    parent: Node<any>,
-    index: number,
-  ) => boolean | null | undefined | void,
+  f: ChangedFn,
   startPos?: number,
 ) {
   const stepRange = getStepRange(tr);
@@ -313,9 +350,34 @@ export function nodesBetweenChanged(
 export function getNodesCount(node: Node): Record<string, number> {
   let count: Record<string, number> = {};
 
-  node.nodesBetween(0, node.nodeSize - 2, node => {
+  node.nodesBetween(0, node.nodeSize - 2, (node) => {
     count[node.type.name] = (count[node.type.name] || 0) + 1;
   });
 
   return count;
+}
+
+/**
+ * Returns a set of active child breakout modes
+ */
+export function getChildBreakoutModes(
+  doc: Node,
+  schema: Schema,
+  filter: BreakoutMarkAttrs['mode'][] = ['wide', 'full-width'],
+): BreakoutMarkAttrs['mode'][] {
+  const breakoutModes = new Set<string>();
+
+  if (doc.type.name === 'doc' && doc.childCount) {
+    for (let i = 0; i < doc.childCount; ++i) {
+      if (breakoutModes.size === filter.length) {
+        break;
+      }
+
+      const breakoutMode = getBreakoutMode(doc.child(i), schema.marks.breakout);
+      if (breakoutMode && filter.includes(breakoutMode)) {
+        breakoutModes.add(breakoutMode);
+      }
+    }
+  }
+  return [...breakoutModes] as BreakoutMarkAttrs['mode'][];
 }

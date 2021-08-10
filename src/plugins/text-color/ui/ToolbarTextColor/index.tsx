@@ -17,7 +17,7 @@ import {
   Separator,
   TriggerWrapper,
 } from '../../../../ui/styles';
-import ToolbarButton from '../../../../ui/ToolbarButton';
+import ToolbarButton, { TOOLBAR_BUTTON } from '../../../../ui/ToolbarButton';
 import {
   ACTION,
   ACTION_SUBJECT,
@@ -27,9 +27,9 @@ import {
   EVENT_TYPE,
 } from '../../../analytics';
 import {
-  ExperimentalTextColorSelectedAEP,
-  ExperimentalTextColorShowMoreToggleAEP,
-  ExperimentalTextColorShowPaletteToggleAEP,
+  TextColorSelectedAEP,
+  TextColorShowMoreToggleAEP,
+  TextColorShowPaletteToggleAEP,
   TextColorSelectedAttr,
   TextColorShowMoreToggleAttr,
   TextColorShowPaletteToggleAttr,
@@ -148,6 +148,7 @@ class ToolbarTextColor extends React.Component<
           fitWidth={fitWidth}
           trigger={
             <ToolbarButton
+              buttonId={TOOLBAR_BUTTON.TEXT_COLOR}
               spacing={isReducedSpacing ? 'none' : 'default'}
               disabled={disabled || pluginState.disabled}
               selected={isOpen}
@@ -169,7 +170,7 @@ class ToolbarTextColor extends React.Component<
                     />
                   </TextColorIconWrapper>
                   <ExpandIconWrapper>
-                    <ExpandIcon label={labelTextColor} />
+                    <ExpandIcon label="" />
                   </ExpandIconWrapper>
                 </TriggerWrapper>
               }
@@ -178,7 +179,9 @@ class ToolbarTextColor extends React.Component<
         >
           <ColorPalette
             palette={palette}
-            onClick={color => this.changeTextColor(color, pluginState.disabled)}
+            onClick={(color) =>
+              this.changeTextColor(color, pluginState.disabled)
+            }
             selectedColor={pluginState.color}
           />
           {showMoreColorsToggle && (
@@ -211,14 +214,14 @@ class ToolbarTextColor extends React.Component<
 
       // we store color names in analytics
       const swatch = (paletteExpanded || palette).find(
-        sw => sw.value === color,
+        (sw) => sw.value === color,
       );
       const isNewColor =
         color !== defaultColor &&
-        !originalTextColors.some(col => col.value === color);
+        !originalTextColors.some((col) => col.value === color);
 
       this.dispatchAnalyticsEvent(
-        this.buildExperimentalAnalyticsSelectColor({
+        this.buildAnalyticsSelectColor({
           color: (swatch ? swatch.label : color).toLowerCase(),
           isShowingMoreColors,
           isNewColor,
@@ -250,7 +253,7 @@ class ToolbarTextColor extends React.Component<
 
     // pre-expand if a non-standard colour has been selected
     const isExtendedPaletteSelected: boolean = !palette.find(
-      swatch => swatch.value === color,
+      (swatch) => swatch.value === color,
     );
 
     this.setState({
@@ -260,14 +263,10 @@ class ToolbarTextColor extends React.Component<
 
     if (logCloseEvent) {
       this.dispatchAnalyticsEvent(
-        this.buildExperimentalAnalyticsPalette(
-          isOpen ? ACTION.OPENED : ACTION.CLOSED,
-          {
-            isShowingMoreColors:
-              isExtendedPaletteSelected || isShowingMoreColors,
-            noSelect: isOpen === false,
-          },
-        ),
+        this.buildAnalyticsPalette(isOpen ? ACTION.OPENED : ACTION.CLOSED, {
+          isShowingMoreColors: isExtendedPaletteSelected || isShowingMoreColors,
+          noSelect: isOpen === false,
+        }),
       );
     }
   };
@@ -282,7 +281,7 @@ class ToolbarTextColor extends React.Component<
     }
     if (isOpen === true) {
       this.dispatchAnalyticsEvent(
-        this.buildExperimentalAnalyticsPalette(ACTION.CLOSED, {
+        this.buildAnalyticsPalette(ACTION.CLOSED, {
           isShowingMoreColors,
           noSelect: true,
         }),
@@ -298,9 +297,9 @@ class ToolbarTextColor extends React.Component<
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
 
-    this.setState(state => {
+    this.setState((state) => {
       this.dispatchAnalyticsEvent(
-        this.buildExperimentalAnalyticsShowMore(
+        this.buildAnalyticsShowMore(
           state.isShowingMoreColors ? ACTION.CLOSED : ACTION.OPENED,
           {
             showMoreButton: !state.isShowingMoreColors,
@@ -315,7 +314,7 @@ class ToolbarTextColor extends React.Component<
     });
   };
 
-  private getCommonExperimentalAnalyticsAttributes() {
+  private getCommonAnalyticsAttributes() {
     const { showMoreColorsToggle } = this.props;
     return {
       experiment: EXPERIMENT_NAME,
@@ -325,48 +324,48 @@ class ToolbarTextColor extends React.Component<
     };
   }
 
-  private buildExperimentalAnalyticsPalette(
+  private buildAnalyticsPalette(
     action: ACTION.OPENED | ACTION.CLOSED,
     data: TextColorShowPaletteToggleAttr,
-  ): ExperimentalTextColorShowPaletteToggleAEP {
+  ): TextColorShowPaletteToggleAEP {
     return {
       action,
       actionSubject: ACTION_SUBJECT.TOOLBAR,
       actionSubjectId: ACTION_SUBJECT_ID.FORMAT_COLOR,
       eventType: EVENT_TYPE.TRACK,
       attributes: {
-        ...this.getCommonExperimentalAnalyticsAttributes(),
+        ...this.getCommonAnalyticsAttributes(),
         ...data,
       },
     };
   }
 
-  private buildExperimentalAnalyticsShowMore(
+  private buildAnalyticsShowMore(
     action: ACTION.OPENED | ACTION.CLOSED,
     data: TextColorShowMoreToggleAttr,
-  ): ExperimentalTextColorShowMoreToggleAEP {
+  ): TextColorShowMoreToggleAEP {
     return {
       action,
       actionSubject: ACTION_SUBJECT.TOOLBAR,
       actionSubjectId: ACTION_SUBJECT_ID.FORMAT_COLOR,
       eventType: EVENT_TYPE.TRACK,
       attributes: {
-        ...this.getCommonExperimentalAnalyticsAttributes(),
+        ...this.getCommonAnalyticsAttributes(),
         ...data,
       },
     };
   }
 
-  private buildExperimentalAnalyticsSelectColor(
+  private buildAnalyticsSelectColor(
     data: TextColorSelectedAttr,
-  ): ExperimentalTextColorSelectedAEP {
+  ): TextColorSelectedAEP {
     return {
       action: ACTION.FORMATTED,
       actionSubject: ACTION_SUBJECT.TEXT,
       actionSubjectId: ACTION_SUBJECT_ID.FORMAT_COLOR,
       eventType: EVENT_TYPE.TRACK,
       attributes: {
-        ...this.getCommonExperimentalAnalyticsAttributes(),
+        ...this.getCommonAnalyticsAttributes(),
         ...data,
       },
     };

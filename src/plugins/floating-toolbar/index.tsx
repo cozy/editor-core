@@ -1,6 +1,5 @@
 import React from 'react';
 import { EditorView } from 'prosemirror-view';
-import rafSchedule from 'raf-schd';
 import {
   Plugin,
   PluginKey,
@@ -10,8 +9,9 @@ import {
   AllSelection,
 } from 'prosemirror-state';
 import { findDomRefAtPos, findSelectedNodeOfType } from 'prosemirror-utils';
-import { Popup, ProviderFactory } from '@atlaskit/editor-common';
 import { Node } from 'prosemirror-model';
+import camelCase from 'lodash/camelCase';
+import { Popup, ProviderFactory } from '@atlaskit/editor-common';
 // AFP-2532 TODO: Fix automatic suppressions below
 // eslint-disable-next-line @atlassian/tangerine/import/entry-points
 import { Position } from '@atlaskit/editor-common/src/ui/Popup/utils';
@@ -19,15 +19,33 @@ import { Position } from '@atlaskit/editor-common/src/ui/Popup/utils';
 import WithPluginState from '../../ui/WithPluginState';
 import { EditorPlugin } from '../../types';
 import { Dispatch } from '../../event-dispatcher';
-import { ToolbarLoader } from './ui/ToolbarLoader';
-import { FloatingToolbarHandler, FloatingToolbarConfig } from './types';
-
 import {
-  pluginKey as editorDisabledPluginKey,
-  EditorDisabledPluginState,
-} from '../editor-disabled';
-import { findNode } from './utils';
+  DispatchAnalyticsEvent,
+  AnalyticsEventPayload,
+  CONTENT_COMPONENT,
+  FLOATING_CONTROLS_TITLE,
+} from '../analytics/types';
+import { ACTION, ACTION_SUBJECT, EVENT_TYPE } from '../analytics';
+import { pluginKey as extensionsPluginKey } from '../extension/plugin-key';
+import { pluginKey as editorDisabledPluginKey } from '../editor-disabled';
+import { pluginKey as dataPluginKey } from './pm-plugins/toolbar-data/plugin-key';
+import { createPlugin as floatingToolbarDataPluginFactory } from './pm-plugins/toolbar-data/plugin';
+import { hideConfirmDialog } from './pm-plugins/toolbar-data/commands';
 
+import { ConfirmationModal } from './ui/ConfirmationModal';
+import { ToolbarLoader } from './ui/ToolbarLoader';
+import {
+  FloatingToolbarHandler,
+  FloatingToolbarConfig,
+  FloatingToolbarButton,
+} from './types';
+import { findNode } from './utils';
+import { ErrorBoundary } from '../../ui/ErrorBoundary';
+
+export type FloatingToolbarPluginState = Record<
+  'getConfigWithNodeInfo',
+  (state: EditorState) => ConfigWithNodeInfo | null | undefined
+>;
 type ConfigWithNodeInfo = {
   config: FloatingToolbarConfig | undefined;
   pos: number;
@@ -40,7 +58,7 @@ export const getRelevantConfig = (
 ): ConfigWithNodeInfo | undefined => {
   // node selections always take precedence, see if
   let configPair: ConfigWithNodeInfo | undefined;
-  configs.find(config => {
+  configs.find((config) => {
     const node = findSelectedNodeOfType(config.nodeType)(selection);
     if (node) {
       configPair = {
@@ -59,9 +77,9 @@ export const getRelevantConfig = (
 
   // create mapping of node type name to configs
   const configByNodeType: Record<string, FloatingToolbarConfig> = {};
-  configs.forEach(config => {
+  configs.forEach((config) => {
     if (Array.isArray(config.nodeType)) {
-      config.nodeType.forEach(nodeType => {
+      config.nodeType.forEach((nodeType) => {
         configByNodeType[nodeType.name] = config;
       });
     } else {
@@ -85,7 +103,7 @@ export const getRelevantConfig = (
     const docNode = $from.node(0);
 
     let matchedConfig: FloatingToolbarConfig | null = null;
-    const firstChild = findNode(docNode, node => {
+    const firstChild = findNode(docNode, (node) => {
       matchedConfig = configByNodeType[node.type.name];
       return !!matchedConfig;
     });
@@ -97,11 +115,36 @@ export const getRelevantConfig = (
   return;
 };
 
-const getDomRefFromSelection = (view: EditorView) =>
-  findDomRefAtPos(
-    view.state.selection.from,
-    view.domAtPos.bind(view),
-  ) as HTMLElement;
+const getDomRefFromSelection = (
+  view: EditorView,
+  dispatchAnalyticsEvent?: DispatchAnalyticsEvent,
+) => {
+  try {
+    return findDomRefAtPos(
+      view.state.selection.from,
+      view.domAtPos.bind(view),
+    ) as HTMLElement;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(error);
+    if (dispatchAnalyticsEvent) {
+      const payload: AnalyticsEventPayload = {
+        action: ACTION.ERRORED,
+        actionSubject: ACTION_SUBJECT.CONTENT_COMPONENT,
+        eventType: EVENT_TYPE.OPERATIONAL,
+        attributes: {
+          component: CONTENT_COMPONENT.FLOATING_TOOLBAR,
+          selection: view.state.selection.toJSON(),
+          position: view.state.selection.from,
+          docSize: view.state.doc.nodeSize,
+          error: error.toString(),
+          errorStack: error.stack || undefined,
+        },
+      };
+      dispatchAnalyticsEvent(payload);
+    }
+  }
+};
 
 function filterUndefined<T>(x?: T): x is T {
   return !!x;
@@ -117,11 +160,15 @@ const floatingToolbarPlugin = (): EditorPlugin => ({
         name: 'floatingToolbar',
         plugin: ({ dispatch, reactContext, providerFactory }) =>
           floatingToolbarPluginFactory({
-            dispatch,
             floatingToolbarHandlers,
+            dispatch,
             reactContext,
             providerFactory,
           }),
+      },
+      {
+        name: 'floatingToolbarData',
+        plugin: ({ dispatch }) => floatingToolbarDataPluginFactory(dispatch),
       },
     ];
   },
@@ -138,24 +185,29 @@ const floatingToolbarPlugin = (): EditorPlugin => ({
       <WithPluginState
         plugins={{
           floatingToolbarState: pluginKey,
+          floatingToolbarData: dataPluginKey,
           editorDisabledPlugin: editorDisabledPluginKey,
+          extensionsState: extensionsPluginKey,
         }}
         render={({
           editorDisabledPlugin,
           floatingToolbarState,
-        }: {
-          floatingToolbarState?: ConfigWithNodeInfo;
-          editorDisabledPlugin: EditorDisabledPluginState;
+          floatingToolbarData,
+          extensionsState,
         }) => {
+          const configWithNodeInfo = floatingToolbarState?.getConfigWithNodeInfo(
+            editorView.state,
+          );
           if (
-            !floatingToolbarState ||
-            !floatingToolbarState.config ||
-            (typeof floatingToolbarState.config.visible !== 'undefined' &&
-              !floatingToolbarState.config.visible)
+            !configWithNodeInfo ||
+            !configWithNodeInfo.config ||
+            (typeof configWithNodeInfo.config?.visible !== 'undefined' &&
+              !configWithNodeInfo.config?.visible)
           ) {
             return null;
           }
 
+          const { config, node } = configWithNodeInfo;
           const {
             title,
             getDomRef = getDomRefFromSelection,
@@ -167,8 +219,8 @@ const floatingToolbarPlugin = (): EditorPlugin => ({
             offset = [0, 12],
             forcePlacement,
             onPositionCalculated,
-          } = floatingToolbarState.config;
-          const targetRef = getDomRef(editorView);
+          } = config;
+          const targetRef = getDomRef(editorView, dispatchAnalyticsEvent);
 
           if (
             !targetRef ||
@@ -178,9 +230,7 @@ const floatingToolbarPlugin = (): EditorPlugin => ({
           }
 
           let customPositionCalculation;
-          const toolbarItems = Array.isArray(items)
-            ? items
-            : items(floatingToolbarState.node);
+          const toolbarItems = Array.isArray(items) ? items : items(node);
 
           if (onPositionCalculated) {
             customPositionCalculation = (nextPos: Position): Position => {
@@ -188,39 +238,68 @@ const floatingToolbarPlugin = (): EditorPlugin => ({
             };
           }
 
+          const dispatchCommand = (fn?: Function) =>
+            fn && fn(editorView.state, editorView.dispatch, editorView);
+
+          // Confirm dialog
+          const { confirmDialogForItem } = floatingToolbarData || {};
+          const confirmButtonItem = confirmDialogForItem
+            ? (toolbarItems[confirmDialogForItem] as FloatingToolbarButton<
+                Function
+              >)
+            : undefined;
+
           return (
-            <Popup
-              ariaLabel={title}
-              offset={offset}
-              target={targetRef}
-              alignY="bottom"
-              forcePlacement={forcePlacement}
-              fitHeight={height}
-              fitWidth={width}
-              alignX={align}
-              stick={true}
-              mountTo={popupsMountPoint}
-              boundariesElement={popupsBoundariesElement}
-              scrollableElement={popupsScrollableElement}
-              onPositionCalculated={customPositionCalculation}
+            <ErrorBoundary
+              component={ACTION_SUBJECT.FLOATING_TOOLBAR_PLUGIN}
+              componentId={camelCase(title) as FLOATING_CONTROLS_TITLE}
+              dispatchAnalyticsEvent={dispatchAnalyticsEvent}
+              fallbackComponent={null}
             >
-              <ToolbarLoader
+              <Popup
+                ariaLabel={title}
+                offset={offset}
                 target={targetRef}
-                items={toolbarItems}
-                node={floatingToolbarState.node}
-                dispatchCommand={(fn?: Function) =>
-                  fn && fn(editorView.state, editorView.dispatch)
-                }
-                editorView={editorView}
-                className={className}
-                focusEditor={() => editorView.focus()}
-                providerFactory={providerFactory}
-                popupsMountPoint={popupsMountPoint}
-                popupsBoundariesElement={popupsBoundariesElement}
-                popupsScrollableElement={popupsScrollableElement}
-                dispatchAnalyticsEvent={dispatchAnalyticsEvent}
+                alignY="bottom"
+                forcePlacement={forcePlacement}
+                fitHeight={height}
+                fitWidth={width}
+                alignX={align}
+                stick={true}
+                mountTo={popupsMountPoint}
+                boundariesElement={popupsBoundariesElement}
+                scrollableElement={popupsScrollableElement}
+                onPositionCalculated={customPositionCalculation}
+              >
+                <ToolbarLoader
+                  target={targetRef}
+                  items={toolbarItems}
+                  node={node}
+                  dispatchCommand={dispatchCommand}
+                  editorView={editorView}
+                  className={className}
+                  focusEditor={() => editorView.focus()}
+                  providerFactory={providerFactory}
+                  popupsMountPoint={popupsMountPoint}
+                  popupsBoundariesElement={popupsBoundariesElement}
+                  popupsScrollableElement={popupsScrollableElement}
+                  dispatchAnalyticsEvent={dispatchAnalyticsEvent}
+                  extensionsProvider={extensionsState?.extensionProvider}
+                />
+              </Popup>
+
+              <ConfirmationModal
+                options={confirmButtonItem?.confirmDialog}
+                onConfirm={() => {
+                  dispatchCommand(confirmButtonItem!.onClick);
+                  dispatchCommand(hideConfirmDialog());
+                }}
+                // When closed without clicking OK or cancel buttons
+                onClose={() => {
+                  dispatchCommand(hideConfirmDialog());
+                }}
               />
-            </Popup>
+            </ErrorBoundary>
           );
         }}
       />
@@ -235,11 +314,11 @@ export default floatingToolbarPlugin;
  * ProseMirror Plugin
  *
  */
-
 // We throttle update of this plugin with RAF.
 // So from other plugins you will always get the previous state.
-// To prevent the confusion we are not exporting the plugin key.
-const pluginKey = new PluginKey('floatingToolbarPluginKey');
+export const pluginKey = new PluginKey<FloatingToolbarPluginState>(
+  'floatingToolbarPluginKey',
+);
 
 /**
  * Clean up floating toolbar configs from undesired properties.
@@ -260,7 +339,7 @@ function sanitizeFloatingToolbarConfig(
 
 function floatingToolbarPluginFactory(options: {
   floatingToolbarHandlers: Array<FloatingToolbarHandler>;
-  dispatch: Dispatch<ConfigWithNodeInfo | undefined>;
+  dispatch: Dispatch<FloatingToolbarPluginState>;
   reactContext: () => { [key: string]: any };
   providerFactory: ProviderFactory;
 }) {
@@ -270,40 +349,33 @@ function floatingToolbarPluginFactory(options: {
     reactContext,
     providerFactory,
   } = options;
-
-  const apply = (
-    _tr: Transaction,
-    _pluginState: any,
-    _oldState: EditorState<any>,
-    newState: EditorState<any>,
-  ) => {
-    const { intl } = reactContext();
+  const { intl } = reactContext();
+  const getConfigWithNodeInfo = (editorState: EditorState) => {
     const activeConfigs = floatingToolbarHandlers
-      .map(handler => handler(newState, intl, providerFactory))
+      .map((handler) => handler(editorState, intl, providerFactory))
       .filter(filterUndefined)
-      .map(config => sanitizeFloatingToolbarConfig(config));
+      .map((config) => sanitizeFloatingToolbarConfig(config));
 
     const relevantConfig =
-      activeConfigs && getRelevantConfig(newState.selection, activeConfigs);
-
-    dispatch(pluginKey, relevantConfig);
+      activeConfigs && getRelevantConfig(editorState.selection, activeConfigs);
     return relevantConfig;
   };
 
-  const rafApply = rafSchedule(apply);
+  const apply = (tr: Transaction, pluginState: any) => {
+    const newPluginState = { getConfigWithNodeInfo };
+    dispatch(pluginKey, newPluginState);
+    return newPluginState;
+  };
 
   return new Plugin({
     key: pluginKey,
     state: {
       init: () => {
+        // Use this point to preload the UI
         ToolbarLoader.preload();
+        return { getConfigWithNodeInfo };
       },
-      apply: rafApply,
+      apply,
     },
-    view: () => ({
-      destroy: () => {
-        rafApply.cancel();
-      },
-    }),
   });
 }

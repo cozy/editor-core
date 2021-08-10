@@ -5,9 +5,10 @@ import styled from 'styled-components';
 // eslint-disable-next-line @atlassian/tangerine/import/entry-points
 import { fontSizeSmall } from '@atlaskit/theme';
 import { N20, N800, N100 } from '@atlaskit/theme/colors';
+import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 import { LinkSearchListItemData } from './types';
-import distanceInWords from 'date-fns/distance_in_words';
-import differenceInCalendarDays from 'date-fns/difference_in_calendar_days';
+import formatDistance from 'date-fns/formatDistance';
+import differenceInCalendarDays from 'date-fns/differenceInCalendarDays';
 import format from 'date-fns/format';
 
 import { injectIntl, InjectedIntlProps } from 'react-intl';
@@ -41,7 +42,7 @@ export const Name: ComponentClass<HTMLAttributes<{}>> = styled.div`
 export const ContainerName: ComponentClass<React.HTMLAttributes<{}>> = styled.div`
   color: ${N100};
   line-height: 14px;
-  font-size: ${fontSizeSmall()}px;
+  font-size: ${relativeFontSizeToBase16(fontSizeSmall())};
 `;
 
 const Icon: ComponentClass<HTMLAttributes<{}>> = styled.span`
@@ -58,7 +59,9 @@ export interface Props {
   item: LinkSearchListItemData;
   selected: boolean;
   onSelect: (href: string, text: string) => void;
-  onMouseMove: (objectId: string) => void;
+  onMouseMove?: (objectId: string) => void;
+  onMouseEnter?: (objectId: string) => void;
+  onMouseLeave?: (objectId: string) => void;
 }
 
 class LinkSearchListItem extends React.PureComponent<
@@ -73,7 +76,17 @@ class LinkSearchListItem extends React.PureComponent<
 
   handleMouseMove = () => {
     const { onMouseMove, item } = this.props;
-    onMouseMove(item.objectId);
+    onMouseMove && onMouseMove(item.objectId);
+  };
+
+  handleMouseEnter = () => {
+    const { onMouseEnter, item } = this.props;
+    onMouseEnter && onMouseEnter(item.objectId);
+  };
+
+  handleMouseLeave = () => {
+    const { onMouseLeave, item } = this.props;
+    onMouseLeave && onMouseLeave(item.objectId);
   };
 
   private renderIcon() {
@@ -130,12 +143,12 @@ class LinkSearchListItem extends React.PureComponent<
     if (differenceInCalendarDays(timeStamp, Date.now()) < -7) {
       return this.renderWithSpaces(
         pageActionText,
-        format(timeStamp, 'MMMM DD, YYYY'),
+        format(timeStamp, 'MMMM dd, yyyy'),
       );
     }
     return this.renderWithSpaces(
       pageActionText,
-      distanceInWords(timeStamp, Date.now()),
+      formatDistance(timeStamp, Date.now()),
       intl.formatMessage(messages.timeAgo),
     );
   }
@@ -157,6 +170,8 @@ class LinkSearchListItem extends React.PureComponent<
         data-testid="link-search-list-item"
         selected={selected}
         onMouseMove={this.handleMouseMove}
+        onMouseEnter={this.handleMouseEnter}
+        onMouseLeave={this.handleMouseLeave}
         onClick={this.handleSelect}
       >
         {this.renderIcon()}

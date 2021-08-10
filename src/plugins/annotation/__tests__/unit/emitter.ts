@@ -4,7 +4,8 @@ import {
   doc,
   p,
   annotation,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -37,7 +38,7 @@ describe('annotation emitter', () => {
   const createEditor = createProsemirrorEditorFactory();
   let editorView: EditorView;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       pluginKey: inlineCommentPluginKey,

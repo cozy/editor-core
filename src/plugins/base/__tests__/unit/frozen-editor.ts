@@ -11,7 +11,7 @@ import {
   EVENT_TYPE,
 } from '../../../analytics';
 import { SEVERITY } from '@atlaskit/editor-common';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import basePlugin from '../../';
 import * as frozenEditor from '../../pm-plugins/frozen-editor';
 import * as utils from '../../utils/frozen-editor';
@@ -19,14 +19,14 @@ import * as utils from '../../utils/frozen-editor';
 describe('frozen editor', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>().add([
         basePlugin,
         {
           inputTracking: { enabled: true },
-          bFreezeTracking: {
+          browserFreezeTracking: {
             trackInteractionType: true,
             trackSeverity: true,
             severityNormalThreshold: frozenEditor.NORMAL_SEVERITY_THRESHOLD,

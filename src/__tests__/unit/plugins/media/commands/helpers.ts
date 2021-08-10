@@ -1,10 +1,10 @@
-import { testMediaSingle } from '@atlaskit/editor-test-helpers';
+import { testMediaSingle } from '@atlaskit/editor-test-helpers/media-mock';
 import {
   doc,
   media,
   mediaGroup,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   findMediaNode,
   findAllMediaSingleNodes,

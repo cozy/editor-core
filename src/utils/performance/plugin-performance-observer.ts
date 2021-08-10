@@ -1,12 +1,18 @@
 import {
+  NodesCount,
   PluginPerformanceReportData,
   PluginPerformanceReport,
   PluginPerformanceReportOptions,
 } from './plugin-performance-report';
-
+import {
+  DEFAULT_USE_PERFORMANCE_MARK,
+  EVENT_NAME_DISPATCH_TRANSACTION,
+  TransactionTracker,
+} from './track-transactions';
+import { SimpleMeasurementLogger } from './simple-measure-to-entries';
 export class PluginPerformanceObserver implements PerformanceObserver {
-  private getNodeCounts: () => [{ [name: string]: number }, number] = () => [
-    {},
+  private getNodeCounts: () => [NodesCount, number] = () => [
+    { nodeCount: {}, extensionNodeCount: {} },
     0,
   ];
   private getPlugins: () => string[] = () => [];
@@ -15,12 +21,30 @@ export class PluginPerformanceObserver implements PerformanceObserver {
   > = () => ({});
 
   private reportCount = 0;
+  private simpleObserver = new SimpleMeasurementLogger();
+  private observer: PerformanceObserver;
+  private getTransactionTracker?: () => TransactionTracker;
 
-  constructor(
-    private callback: (report: PluginPerformanceReportData) => void,
-  ) {}
+  constructor(private callback: (report: PluginPerformanceReportData) => void) {
+    this.observer = window.PerformanceObserver
+      ? new PerformanceObserver(this.onObserveration)
+      : {
+          observe() {},
+          disconnect() {},
+          takeRecords() {
+            return [];
+          },
+        };
+  }
 
-  public withNodeCounts(getNodeCounts: () => { [name: string]: number }): this {
+  private get isSimpleTracking(): boolean {
+    const {
+      usePerformanceMarks = DEFAULT_USE_PERFORMANCE_MARK,
+    } = this.getOptions();
+    return !usePerformanceMarks;
+  }
+
+  public withNodeCounts(getNodeCounts: () => NodesCount): this {
     this.getNodeCounts = () => {
       const start = performance.now();
       const result = getNodeCounts();
@@ -41,10 +65,17 @@ export class PluginPerformanceObserver implements PerformanceObserver {
     return this;
   }
 
-  private onObserveration: PerformanceObserverCallback = entries => {
+  public withTransactionTracker(
+    getTransactionTracker: () => TransactionTracker,
+  ): this {
+    this.getTransactionTracker = getTransactionTracker;
+    return this;
+  }
+
+  private onObserveration: PerformanceObserverCallback = (entries) => {
     const reports: PluginPerformanceReportData[] = entries
-      .getEntriesByName('🦉 ReactEditorView::dispatchTransaction')
-      .map(entry =>
+      .getEntriesByName(EVENT_NAME_DISPATCH_TRANSACTION)
+      .map((entry) =>
         PluginPerformanceReport.fromEntry(entry)
           .withCount(++this.reportCount)
           .withEntryList(entries)
@@ -55,36 +86,47 @@ export class PluginPerformanceObserver implements PerformanceObserver {
       );
 
     reports
-      .filter(report => report.trigger !== 'none')
-      .forEach(report => this.callback(report));
+      .filter((report) => report.trigger !== 'none')
+      .forEach((report) => this.callback(report));
   };
 
-  private observer = window.PerformanceObserver
-    ? new PerformanceObserver(this.onObserveration)
-    : {
-        observe() {},
-        disconnect() {},
-        takeRecords() {
-          return [];
-        },
-      };
-
   public observe() {
-    try {
-      this.observer.observe({
-        buffered: false,
-        type: 'measure',
+    if (this.isSimpleTracking) {
+      this.simpleObserver.setPluginNames(this.getPlugins());
+      this.simpleObserver.setOnObservation((entries) => {
+        this.onObserveration(entries, this.observer);
       });
-    } catch (err) {
-      // Older API implementations do not support the simpler type init
-      this.observer.observe({
-        entryTypes: ['measure'],
-      });
+
+      // can trigger a callback when stopMeasure() measures something.
+      // use that to trigger this.onObservation()
+      this.getTransactionTracker &&
+        this.getTransactionTracker().addMeasureListener(
+          this.simpleObserver.observed,
+        );
+    } else {
+      try {
+        this.observer.observe({
+          buffered: false,
+          type: 'measure',
+        });
+      } catch (err) {
+        // Older API implementations do not support the simpler type init
+        this.observer.observe({
+          entryTypes: ['measure'],
+        });
+      }
     }
   }
 
   public disconnect() {
-    this.observer.disconnect();
+    if (this.isSimpleTracking) {
+      this.getTransactionTracker &&
+        this.getTransactionTracker().removeMeasureListener(
+          this.simpleObserver.observed,
+        );
+    } else {
+      this.observer.disconnect();
+    }
   }
 
   public takeRecords() {

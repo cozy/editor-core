@@ -1,13 +1,15 @@
 import { ProviderFactory } from '@atlaskit/editor-common';
 import { IntlProvider } from 'react-intl';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   inlineCard,
   blockCard,
   embedCard,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+  expand,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { floatingToolbar } from '../../../../plugins/card/toolbar';
 import { pluginKey } from '../../../../plugins/card/pm-plugins/main';
 
@@ -22,22 +24,24 @@ import UnlinkIcon from '@atlaskit/icon/glyph/editor/unlink';
 
 import { FloatingToolbarButton } from '../../../../plugins/floating-toolbar/types';
 import { Command } from '../../../../types';
-import { getToolbarItems } from '../floating-toolbar/_helpers';
+import { getToolbarItems } from '../../../../plugins/floating-toolbar/__tests__/_helpers';
+import * as CardUtils from '../../../../plugins/card/utils';
 
 describe('card', () => {
   const createEditor = createEditorFactory();
   const providerFactory = new ProviderFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       providerFactory,
       editorProps: {
-        UNSAFE_cards: {
+        smartLinks: {
           allowBlockCards: true,
           allowEmbeds: true,
           allowResizing: true,
         },
+        allowExpand: true,
       },
       pluginKey,
     });
@@ -70,7 +74,34 @@ describe('card', () => {
       })(editorView.state, intl, providerFactory);
       const toolbarItems = getToolbarItems(toolbar!, editorView);
       expect(toolbar).toBeDefined();
-      expect(toolbarItems).toHaveLength(7);
+      expect(toolbarItems).toHaveLength(9);
+      expect(toolbarItems).toMatchSnapshot();
+    });
+
+    it('displays toolbar items in correct order for inlineCard on mobile', () => {
+      const { editorView } = editor(
+        doc(
+          p(
+            '{<node>}',
+            inlineCard({
+              url: 'http://www.atlassian.com/',
+            })(),
+          ),
+        ),
+      );
+
+      const toolbar = floatingToolbar(
+        {
+          allowBlockCards: true,
+          allowEmbeds: true,
+          allowResizing: true,
+        },
+        'mobile',
+      )(editorView.state, intl, providerFactory);
+      const toolbarItems = getToolbarItems(toolbar!, editorView);
+      expect(toolbarItems[2].type).not.toBe('custom');
+      expect(toolbar).toBeDefined();
+      expect(toolbarItems).toHaveLength(9);
       expect(toolbarItems).toMatchSnapshot();
     });
 
@@ -117,6 +148,60 @@ describe('card', () => {
       expect(toolbarItems).toMatchSnapshot();
     });
 
+    it('displays toolbar items in correct order for embedCard inside an expand', () => {
+      const { editorView } = editor(
+        doc(
+          '{<node>}',
+          expand()(
+            embedCard({
+              url: 'http://www.atlassian.com/',
+              layout: 'center',
+            })(),
+          ),
+        ),
+      );
+
+      const toolbar = floatingToolbar({
+        allowBlockCards: true,
+        allowEmbeds: true,
+        allowResizing: true,
+      })(editorView.state, intl, providerFactory);
+      const toolbarItems = getToolbarItems(toolbar!, editorView);
+      expect(toolbar).toBeDefined();
+      expect(toolbarItems).toMatchSnapshot();
+    });
+
+    it('metadata correctly resolves url and title from plugin state', () => {
+      const { editorView } = editor(
+        doc(
+          p(
+            '{<node>}',
+            inlineCard({
+              url: 'http://www.atlassian.com/',
+            })(),
+          ),
+        ),
+      );
+
+      jest.spyOn(CardUtils, 'findCardInfo').mockImplementationOnce(() => {
+        return {
+          title: 'hey hey hey',
+          pos: 1,
+        };
+      });
+
+      const toolbar = floatingToolbar({
+        allowBlockCards: true,
+        allowEmbeds: true,
+        allowResizing: true,
+      })(editorView.state, intl, providerFactory);
+      const toolbarItems = getToolbarItems(toolbar!, editorView);
+      expect(toolbar).toBeDefined();
+      expect(
+        toolbarItems.filter((object) => object.hasOwnProperty('metadata')),
+      ).toMatchSnapshot();
+    });
+
     it('has an unlink button for inlineCard', () => {
       const { editorView } = editor(
         doc(
@@ -137,7 +222,7 @@ describe('card', () => {
       expect(toolbar).toBeDefined();
 
       const unlinkButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === unlinkTitle,
+        (item) => item.type === 'button' && item.title === unlinkTitle,
       );
 
       expect(unlinkButton).toBeDefined();
@@ -164,7 +249,7 @@ describe('card', () => {
       expect(toolbar).toBeDefined();
 
       const removeButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === removeTitle,
+        (item) => item.type === 'button' && item.title === removeTitle,
       );
 
       expect(removeButton).toBeDefined();
@@ -193,7 +278,7 @@ describe('card', () => {
       expect(toolbar).toBeDefined();
 
       const removeButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === removeTitle,
+        (item) => item.type === 'button' && item.title === removeTitle,
       );
 
       expect(removeButton).toBeDefined();
@@ -223,7 +308,7 @@ describe('card', () => {
       expect(toolbar).toBeDefined();
 
       const visitButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === visitTitle,
+        (item) => item.type === 'button' && item.title === visitTitle,
       );
 
       expect(visitButton).toBeDefined();
@@ -254,7 +339,7 @@ describe('card', () => {
       );
 
       const visitButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === visitTitle,
+        (item) => item.type === 'button' && item.title === visitTitle,
       ) as FloatingToolbarButton<Command>;
 
       visitButton.onClick(editorView.state, editorView.dispatch);
@@ -284,7 +369,7 @@ describe('card', () => {
         providerFactory,
       );
       const visitButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === visitTitle,
+        (item) => item.type === 'button' && item.title === visitTitle,
       ) as FloatingToolbarButton<Command>;
 
       visitButton.onClick(editorView.state, editorView.dispatch);
@@ -309,7 +394,7 @@ describe('card', () => {
         providerFactory,
       );
       const removeButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === removeTitle,
+        (item) => item.type === 'button' && item.title === removeTitle,
       ) as FloatingToolbarButton<Command>;
 
       removeButton.onClick(editorView.state, editorView.dispatch);
@@ -339,7 +424,7 @@ describe('card', () => {
         providerFactory,
       );
       const unlinkButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === unlinkTitle,
+        (item) => item.type === 'button' && item.title === unlinkTitle,
       ) as FloatingToolbarButton<Command>;
 
       unlinkButton.onClick(editorView.state, editorView.dispatch);
@@ -367,7 +452,7 @@ describe('card', () => {
         providerFactory,
       );
       const removeButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === removeTitle,
+        (item) => item.type === 'button' && item.title === removeTitle,
       ) as FloatingToolbarButton<Command>;
 
       removeButton.onClick(editorView.state, editorView.dispatch);

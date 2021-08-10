@@ -1,12 +1,13 @@
 import { ProviderFactory } from '@atlaskit/editor-common';
-import { testMediaSingle } from '@atlaskit/editor-test-helpers';
+import { testMediaSingle } from '@atlaskit/editor-test-helpers/media-mock';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   mediaSingle,
   media,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { stateKey as mediaPluginKey } from '../../../../../plugins/media/pm-plugins/main';
 import { getFreshMediaProvider, testCollectionName } from '../_utils';
 import { MediaAttributes } from '@atlaskit/adf-schema';
@@ -32,7 +33,7 @@ describe('Media plugin commands', () => {
   });
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     editorProps = {},
     dropzoneContainer: HTMLElement = document.body,
   ) => {

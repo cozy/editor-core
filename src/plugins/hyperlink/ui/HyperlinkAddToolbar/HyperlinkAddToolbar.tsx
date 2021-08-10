@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { RefObject } from 'react';
 import { ActivityItem, ActivityProvider } from '@atlaskit/activity-provider';
 import { SearchProvider, QuickSearchResult } from '@atlaskit/editor-common';
 import { isSafeUrl } from '@atlaskit/adf-schema';
@@ -43,6 +43,8 @@ import { HyperlinkState } from '../../pm-plugins/main';
 import { hideLinkToolbar } from '../../commands';
 import { EditorView } from 'prosemirror-view';
 import { LinkInputType } from '../../types';
+import { hideLinkToolbar as cardHideLinkToolbar } from '../../../card/pm-plugins/actions';
+import { ScreenReaderText } from '../../styles';
 
 export const RECENT_SEARCH_LIST_SIZE = 5;
 
@@ -80,16 +82,21 @@ export const messages = defineMessages({
     defaultMessage: 'Clear link',
     description: 'Clears link in the link toolbar',
   },
+  searchLinkAriaDescription: {
+    id: 'fabric.editor.hyperlink.searchLinkAriaDescription',
+    defaultMessage: 'Suggestions will appear below as you type into the field',
+    description:
+      'Describes what the search field does for screen reader users.',
+  },
+  searchLinkResults: {
+    id: 'fabric.editor.hyperlink.searchLinkResults',
+    defaultMessage:
+      '{count, plural, =0 {no results} one {# result} other {# results}} found',
+    description: 'Announce search results for screen-reader users.',
+  },
 });
 
 interface BaseProps {
-  onBlur?: (
-    type: string,
-    url: string,
-    title: string | undefined,
-    displayText: string | undefined,
-    isTabPressed?: boolean,
-  ) => void;
   onSubmit?: (
     href: string,
     title: string | undefined,
@@ -164,16 +171,12 @@ const mapSearchProviderResultToLinkSearchItemData = ({
 });
 
 export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
-  /* To not fire on-blur on tab-press */
-  private isTabPressed: boolean = false;
-
-  /* To prevent firing blur callback on submit */
+  /* To prevent double submit */
   private submitted: boolean = false;
 
   private urlInputContainer: PanelTextInput | null = null;
   private displayTextInputContainer: PanelTextInput | null = null;
-  private urlBlur: () => void;
-  private textBlur: () => void;
+  private wrapperRef: RefObject<HTMLDivElement> = React.createRef();
   private handleClearText: () => void;
   private handleClearDisplayText: () => void;
   private debouncedQuickSearch: (
@@ -197,11 +200,9 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     } as State;
 
     /* Cache functions */
-    this.urlBlur = this.handleBlur.bind(this, 'url');
-    this.textBlur = this.handleBlur.bind(this, 'text');
-
     this.handleClearText = this.createClearHandler('displayUrl');
     this.handleClearDisplayText = this.createClearHandler('displayText');
+
     this.debouncedQuickSearch = debounce(this.quickSearch, 400);
 
     this.fireCustomAnalytics = fireAnalyticsEvent(props.createAnalyticsEvent);
@@ -209,6 +210,9 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
 
   async componentDidMount() {
     const { pluginState } = this.props;
+
+    document.addEventListener('mousedown', this.handleClickOutside);
+
     this.fireAnalytics({
       action: ACTION.VIEWED,
       actionSubject: ACTION_SUBJECT.CREATE_LINK_INLINE_DIALOG,
@@ -219,16 +223,21 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
       },
       eventType: EVENT_TYPE.SCREEN,
     });
+
     const [activityProvider, searchProvider] = await Promise.all([
       this.props.activityProvider,
       this.props.searchProvider,
     ]);
     this.setState({ activityProvider, searchProvider });
+
     await this.loadInitialLinkSearchResult();
   }
 
   componentWillUnmount() {
     const { pluginState } = this.props;
+
+    document.removeEventListener('mousedown', this.handleClickOutside);
+
     if (!this.submitted) {
       this.fireAnalytics({
         action: ACTION.DISMISSED,
@@ -281,7 +290,7 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
           preQueryRequestDurationMs: duration,
           searchSessionId: pluginState.searchSessionId ?? '',
           resultCount: items.length,
-          results: activityRecentItems.map(item => ({
+          results: activityRecentItems.map((item) => ({
             resultContentId: item.objectId,
             resultType: item.type ?? '',
           })),
@@ -412,7 +421,7 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
           postQueryRequestDurationMs: duration,
           searchSessionId: pluginState.searchSessionId ?? '',
           resultCount: searchProviderResultItems.length,
-          results: searchProviderResultItems.map(item => ({
+          results: searchProviderResultItems.map((item) => ({
             resultContentId: item.objectId,
             resultType: item.contentType,
           })),
@@ -503,6 +512,17 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     };
   };
 
+  private handleClickOutside = (event: Event) => {
+    if (
+      event.target instanceof Element &&
+      this.wrapperRef.current &&
+      !this.wrapperRef.current.contains(event.target)
+    ) {
+      const { view } = this.props;
+      hideLinkToolbar()(view.state, view.dispatch);
+    }
+  };
+
   render() {
     const {
       items,
@@ -526,25 +546,28 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     );
     const formatClearLinkText = formatMessage(messages.clearLink);
     const formatDisplayText = formatMessage(messages.displayText);
-
+    const screenReaderDescriptionId = 'search-recent-links-field-description';
     return (
       <div className="recent-list">
-        <Container provider={!!activityProvider}>
+        <Container provider={!!activityProvider} innerRef={this.wrapperRef}>
           <UrlInputWrapper>
             <IconWrapper>
               <Tooltip content={formatLinkAddressText}>
                 <LinkIcon label={formatLinkAddressText} />
               </Tooltip>
             </IconWrapper>
+            <ScreenReaderText aria-hidden="true" id={screenReaderDescriptionId}>
+              {formatMessage(messages.searchLinkAriaDescription)}
+            </ScreenReaderText>
             <PanelTextInput
-              ref={ele => (this.urlInputContainer = ele)}
+              describedById={screenReaderDescriptionId}
+              ref={(ele) => (this.urlInputContainer = ele)}
               placeholder={placeholder}
               testId={'link-url'}
               onSubmit={this.handleSubmit}
               onChange={this.updateInput}
               autoFocus={{ preventScroll: true }}
               onCancel={this.handleCancel}
-              onBlur={this.urlBlur}
               defaultValue={displayUrl}
               onKeyDown={this.handleKeyDown}
             />
@@ -563,16 +586,15 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
               </Tooltip>
             </IconWrapper>
             <PanelTextInput
-              ref={ele => (this.displayTextInputContainer = ele)}
+              ref={(ele) => (this.displayTextInputContainer = ele)}
               placeholder={formatDisplayText}
               ariaLabel={'Link label'}
               testId={'link-label'}
-              onChange={this.handleTextKeyDown}
+              onChange={this.updateTextInput}
               onCancel={this.handleCancel}
-              onBlur={this.textBlur}
               defaultValue={displayText}
               onSubmit={this.handleSubmit}
-              onKeyDown={this.handleKeyDown}
+              onKeyDown={this.handleTextKeyDown}
             />
             {displayText && (
               <Tooltip content={formatMessage(messages.clearText)}>
@@ -582,17 +604,50 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
               </Tooltip>
             )}
           </TextInputWrapper>
+          <ScreenReaderText
+            aria-live="assertive"
+            id="fabric.editor.hyperlink.suggested.results"
+          >
+            {displayUrl &&
+              formatMessage(messages.searchLinkResults, {
+                count: items.length,
+              })}
+          </ScreenReaderText>
           <LinkSearchList
+            ariaControls="fabric.editor.hyperlink.suggested.results"
             items={items}
             isLoading={isLoading}
             selectedIndex={selectedIndex}
             onSelect={this.handleSelected}
-            onMouseMove={this.handleMouseMove}
+            onMouseEnter={this.handleMouseEnterResultItem}
+            onMouseLeave={this.handleMouseLeaveResultItem}
           />
         </Container>
       </div>
     );
   }
+
+  private isUrlPopulatedWithSelectedItem = () => {
+    /**
+     * When we use ArrowKey to navigate through result items,
+     * the URL field will be populated with the content of
+     * selected item.
+     * This function will check if the URL field is populated
+     * with selected item.
+     * It can be useful to detect whether we want to insert a
+     * smartlink or a hyperlink with customized title
+     */
+    const { items, selectedIndex, displayUrl } = this.state;
+
+    const selectedItem: LinkSearchListItemData | undefined =
+      items[selectedIndex];
+
+    if (selectedItem && selectedItem.url === displayUrl) {
+      return true;
+    }
+
+    return false;
+  };
 
   private handleSelected = (href: string, text: string) => {
     this.handleInsert(href, text, INPUT_METHOD.TYPEAHEAD, 'click');
@@ -611,48 +666,62 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
       onSubmit(href, title, displayText, inputType);
     }
 
-    const selectedItem = items[selectedIndex];
-    if (typeof selectedItem === 'undefined') {
+    if (interaction === 'click' || this.isUrlPopulatedWithSelectedItem()) {
       /**
-       * No item has been selected. This could happen when user
-       * types in the URL by themselves or when editing the URL.
+       * When it's a mouse click even or the selectedItem.url matches displayUrl, we think
+       * it's selected from the result list and fire the
+       * analytic
        */
-      return;
+      const selectedItem = items[selectedIndex];
+      this.fireAnalytics({
+        action: ACTION.SELECTED,
+        actionSubject: ACTION_SUBJECT.SEARCH_RESULT,
+        attributes: {
+          source: this.analyticSource,
+          searchSessionId: pluginState.searchSessionId ?? '',
+          trigger: interaction,
+          resultCount: items.length,
+          selectedResultId: selectedItem.objectId,
+          selectedRelativePosition: selectedIndex,
+        },
+        eventType: EVENT_TYPE.UI,
+      });
     }
+  };
 
-    this.fireAnalytics({
-      action: ACTION.SELECTED,
-      actionSubject: ACTION_SUBJECT.SEARCH_RESULT,
-      attributes: {
-        source: this.analyticSource,
-        searchSessionId: pluginState.searchSessionId ?? '',
-        trigger: interaction,
-        resultCount: items.length,
-        selectedResultId: selectedItem.objectId,
-        selectedRelativePosition: selectedIndex,
-      },
-      eventType: EVENT_TYPE.UI,
+  private handleMouseEnterResultItem = (objectId: string) => {
+    const { items } = this.state;
+
+    const index = findIndex(items, (item) => item.objectId === objectId);
+    this.setState({
+      selectedIndex: index,
     });
   };
 
-  private handleMouseMove = (objectId: string) => {
-    const { items } = this.state;
+  private handleMouseLeaveResultItem = (objectId: string) => {
+    const { items, selectedIndex } = this.state;
 
-    if (items) {
-      const index = findIndex(items, item => item.objectId === objectId);
+    const index = findIndex(items, (item) => item.objectId === objectId);
+    // This is to avoid updating index that was set by other mouseenter event
+    if (selectedIndex === index) {
       this.setState({
-        selectedIndex: index,
+        selectedIndex: -1,
       });
     }
   };
 
   private handleSubmit = () => {
-    const { items, displayUrl, selectedIndex } = this.state;
-    // add the link selected in the dropdown if there is one, otherwise submit the value of the input field
-    if (items && items.length > 0 && selectedIndex > -1) {
-      const item = items[selectedIndex];
-      const url = normalizeUrl(item.url);
-      this.handleInsert(url, item.name, INPUT_METHOD.TYPEAHEAD, 'keyboard');
+    const { displayUrl, selectedIndex, items } = this.state;
+
+    const selectedItem: LinkSearchListItemData | undefined =
+      items[selectedIndex];
+    if (this.isUrlPopulatedWithSelectedItem()) {
+      this.handleInsert(
+        normalizeUrl(selectedItem.url),
+        selectedItem.name,
+        INPUT_METHOD.TYPEAHEAD,
+        'keyboard',
+      );
     } else if (displayUrl && displayUrl.length > 0) {
       const url = normalizeUrl(displayUrl);
       if (url) {
@@ -661,10 +730,43 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     }
   };
 
-  private handleKeyDown = (e: KeyboardEvent<any>) => {
+  private handleTextKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    const KEY_CODE_TAB = 9;
+    const { keyCode } = event;
+    if (keyCode === KEY_CODE_TAB) {
+      if (!this.submitted) {
+        const { displayUrl, displayText } = this.state;
+        const url = normalizeUrl(displayUrl);
+        this.handleInsert(
+          url,
+          displayText || displayUrl,
+          INPUT_METHOD.MANUAL,
+          'notselected',
+        );
+      }
+      event.preventDefault();
+      return;
+    }
+
+    this.handleKeyDown(event);
+  };
+
+  private handleKeyDown = (event: KeyboardEvent<any>) => {
     const { items, selectedIndex } = this.state;
     const { pluginState, view } = this.props;
-    this.isTabPressed = e.keyCode === 9;
+    const { keyCode } = event;
+    const KEY_CODE_ESCAPE = 27;
+    const KEY_CODE_ARROW_DOWN = 40;
+    const KEY_CODE_ARROW_UP = 38;
+
+    if (keyCode === KEY_CODE_ESCAPE) {
+      // escape
+      event.preventDefault();
+      hideLinkToolbar()(view.state, view.dispatch);
+
+      view.dispatch(cardHideLinkToolbar(view.state.tr));
+      return;
+    }
 
     if (!items || !items.length) {
       return;
@@ -672,24 +774,24 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
 
     let updatedIndex = selectedIndex;
 
-    if (e.keyCode === 40) {
+    if (keyCode === KEY_CODE_ARROW_DOWN) {
       // down
-      e.preventDefault();
+      event.preventDefault();
       updatedIndex = (selectedIndex + 1) % items.length;
-    } else if (e.keyCode === 38) {
+    } else if (keyCode === KEY_CODE_ARROW_UP) {
       // up
-      e.preventDefault();
+      event.preventDefault();
       updatedIndex = selectedIndex > 0 ? selectedIndex - 1 : items.length - 1;
-    } else if (e.keyCode === 27) {
-      // escape
-      e.preventDefault();
-      hideLinkToolbar()(view.state, view.dispatch);
     }
-    this.setState({
-      selectedIndex: updatedIndex,
-    });
 
-    if (items[updatedIndex]) {
+    if (
+      [KEY_CODE_ARROW_DOWN, KEY_CODE_ARROW_UP].includes(keyCode) &&
+      items[updatedIndex]
+    ) {
+      this.setState({
+        selectedIndex: updatedIndex,
+        displayUrl: items[updatedIndex].url,
+      });
       this.fireAnalytics({
         action: ACTION.HIGHLIGHTED,
         actionSubject: ACTION_SUBJECT.SEARCH_RESULT,
@@ -704,7 +806,7 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     }
   };
 
-  private handleTextKeyDown = (displayText: string) => {
+  private updateTextInput = (displayText: string) => {
     this.setState({
       displayText,
     });
@@ -715,22 +817,9 @@ export class HyperlinkLinkAddToolbar extends PureComponent<Props, State> {
     e.preventDefault();
     hideLinkToolbar()(view.state, view.dispatch);
   };
-
-  private handleBlur = (type: string) => {
-    const url = normalizeUrl(this.state.displayUrl);
-    if (this.props.onBlur && !this.submitted && url) {
-      this.props.onBlur(
-        type,
-        url,
-        this.state.displayText || this.state.displayUrl,
-        this.state.displayText,
-        this.isTabPressed,
-      );
-    }
-  };
 }
 
-const findIndex = (array: any[], predicate: (item: any) => boolean): number => {
+function findIndex<T>(array: T[], predicate: (item: T) => boolean): number {
   let index = -1;
   array.some((item, i) => {
     if (predicate(item)) {
@@ -741,7 +830,7 @@ const findIndex = (array: any[], predicate: (item: any) => boolean): number => {
   });
 
   return index;
-};
+}
 
 function limit<T>(items: Array<T>) {
   return items.slice(0, RECENT_SEARCH_LIST_SIZE);

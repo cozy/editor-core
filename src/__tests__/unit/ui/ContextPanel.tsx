@@ -1,8 +1,8 @@
 import React from 'react';
 import { mount, ReactWrapper } from 'enzyme';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 
 import ContextPanel, {
   Content,
@@ -11,10 +11,24 @@ import ContextPanel, {
 } from '../../../ui/ContextPanel';
 import EditorContext from '../../../ui/EditorContext';
 
+import {
+  akEditorDefaultLayoutWidth,
+  akEditorFullWidthLayoutWidth,
+  akEditorFullWidthLayoutLineLength,
+} from '@atlaskit/editor-shared-styles';
 import { EditorPlugin } from '../../../types';
 import { EventDispatcher } from '../../../event-dispatcher';
 import EditorActions from '../../../actions';
 import contextPanelPlugin from '../../../plugins/context-panel';
+import {
+  ContextPanelConsumer,
+  ContextPanelWidthProvider,
+} from '../../../ui/ContextPanel/context';
+
+import {
+  isPushingEditorContent,
+  editorWithWideBreakoutAndSidebarWidth,
+} from '../../__helpers/page-objects/_context-panel';
 
 describe('SwappableContentArea', () => {
   const Component: React.FC = jest.fn(() => null);
@@ -36,19 +50,6 @@ describe('SwappableContentArea', () => {
     expect(wrapper.find(Component).length).toBe(1);
   });
 
-  it('passes through width prop', () => {
-    wrapper = mount(
-      <SwappableContentArea width={69} visible>
-        <Component></Component>
-      </SwappableContentArea>,
-    );
-    const panel = wrapper.find(Panel);
-    const content = wrapper.find(Content);
-
-    expect(getComputedStyle(panel.getDOMNode()).width).toEqual('69px');
-    expect(getComputedStyle(content.getDOMNode()).width).toEqual('69px');
-  });
-
   // ContextPanel animates by doing a CSS transition on the container's width,
   // and inside the container, sliding the content off screen.
   //
@@ -57,19 +58,14 @@ describe('SwappableContentArea', () => {
 
   describe('container', () => {
     it('displays content when visible is true', () => {
-      wrapper = mount(
-        <SwappableContentArea width={69} visible></SwappableContentArea>,
-      );
+      wrapper = mount(<SwappableContentArea visible></SwappableContentArea>);
       const panel = wrapper.find(Panel);
-      expect(getComputedStyle(panel.getDOMNode()).width).toEqual('69px');
+      expect(getComputedStyle(panel.getDOMNode()).width).toEqual('320px');
     });
 
     it('hides content when visible is false', () => {
       wrapper = mount(
-        <SwappableContentArea
-          width={69}
-          visible={false}
-        ></SwappableContentArea>,
+        <SwappableContentArea visible={false}></SwappableContentArea>,
       );
       const panel = wrapper.find(Panel);
       expect(getComputedStyle(panel.getDOMNode()).width).toEqual('0px');
@@ -80,8 +76,103 @@ describe('SwappableContentArea', () => {
       const style = getComputedStyle(wrapper.find(Panel).getDOMNode());
       expect(style.overflow).toEqual('hidden');
     });
-  });
 
+    it('should push the editor content if it will overlap the editor', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: akEditorDefaultLayoutWidth,
+            containerWidth: akEditorDefaultLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: [],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeTruthy();
+    });
+
+    it('should not push the editor content if it will not overlap the editor', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: akEditorFullWidthLayoutWidth,
+            containerWidth: akEditorFullWidthLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: [],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeFalsy();
+    });
+
+    it('should push the editor content if there are full-width editor breakout content', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: akEditorFullWidthLayoutWidth,
+            containerWidth: akEditorFullWidthLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: ['full-width'],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeTruthy();
+    });
+
+    it('should not push the editor content if there are wide breakout editor content but panel will not overlap the editor', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: akEditorFullWidthLayoutWidth,
+            containerWidth: akEditorFullWidthLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: ['wide'],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeFalsy();
+    });
+
+    it('should push the editor cotent if there are wide breakout editor content and panel will overlap the editor', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: editorWithWideBreakoutAndSidebarWidth,
+            containerWidth: editorWithWideBreakoutAndSidebarWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: ['wide'],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeTruthy();
+    });
+
+    it('should push the content if editor is in full width mode', () => {
+      wrapper = mount(
+        <SwappableContentArea
+          visible
+          editorWidth={{
+            width: akEditorFullWidthLayoutWidth,
+            containerWidth: akEditorFullWidthLayoutWidth,
+            lineLength: akEditorFullWidthLayoutLineLength,
+            contentBreakoutModes: [],
+          }}
+        />,
+      );
+      const panelElement = wrapper.find(Panel).getDOMNode();
+      expect(isPushingEditorContent(panelElement)).toBeTruthy();
+    });
+  });
   describe('content', () => {
     it('is scrollable up/down', () => {
       wrapper = mount(<SwappableContentArea visible />);
@@ -91,7 +182,114 @@ describe('SwappableContentArea', () => {
   });
 });
 
-// ContextPanel uses WithEditorActions
+describe('ContextPanelWidthProvider', () => {
+  let wrapper: ReactWrapper | undefined;
+
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.unmount();
+      wrapper = undefined;
+    }
+  });
+  it('should broadcast width', () => {
+    let broadCast: (wdith: number) => void = (width) => {};
+    wrapper = mount(
+      <ContextPanelWidthProvider>
+        <ContextPanelConsumer>
+          {({ width, broadcastWidth }) => {
+            broadCast = broadcastWidth;
+            return <div>{width}</div>;
+          }}
+        </ContextPanelConsumer>
+      </ContextPanelWidthProvider>,
+    );
+    broadCast(320);
+    wrapper.update();
+    expect(wrapper.text()).toBe('320');
+  });
+
+  it('should broadcast positionedOverEditor', () => {
+    let broadCast: (positionedOverEditor: boolean) => void = (
+      positionedOverEditor,
+    ) => {};
+    wrapper = mount(
+      <ContextPanelWidthProvider>
+        <ContextPanelConsumer>
+          {({ positionedOverEditor, broadcastPosition }) => {
+            broadCast = broadcastPosition;
+            return <div>{positionedOverEditor ? 'true' : 'false'}</div>;
+          }}
+        </ContextPanelConsumer>
+      </ContextPanelWidthProvider>,
+    );
+    broadCast(true);
+    wrapper.update();
+    expect(wrapper.text()).toBe('true');
+  });
+
+  it('should broadcast width with SwappableContentArea', () => {
+    wrapper = mount(
+      <ContextPanelWidthProvider>
+        <SwappableContentArea visible>
+          <ContextPanelConsumer>
+            {({ width }) => {
+              return <div>{width}</div>;
+            }}
+          </ContextPanelConsumer>
+        </SwappableContentArea>
+      </ContextPanelWidthProvider>,
+    );
+    expect(wrapper.text()).toBe('320');
+  });
+
+  it('should broadcast positionOverEditor to be true if panel is not pushing Editor', () => {
+    wrapper = mount(
+      <ContextPanelWidthProvider>
+        <SwappableContentArea
+          editorWidth={{
+            width: akEditorFullWidthLayoutWidth,
+            containerWidth: akEditorFullWidthLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: [],
+          }}
+          visible
+        >
+          <ContextPanelConsumer>
+            {({ positionedOverEditor }) => {
+              return <div>{positionedOverEditor ? 'true' : 'false'}</div>;
+            }}
+          </ContextPanelConsumer>
+        </SwappableContentArea>
+      </ContextPanelWidthProvider>,
+    );
+    expect(wrapper.text()).toBe('true');
+  });
+
+  it('should broadcast positionOverEditor to be false if panel is pushing Editor', () => {
+    wrapper = mount(
+      <ContextPanelWidthProvider>
+        <SwappableContentArea
+          editorWidth={{
+            width: akEditorDefaultLayoutWidth,
+            containerWidth: akEditorDefaultLayoutWidth,
+            lineLength: akEditorDefaultLayoutWidth,
+            contentBreakoutModes: [],
+          }}
+          visible
+        >
+          <ContextPanelConsumer>
+            {({ positionedOverEditor }) => {
+              return <div>{positionedOverEditor ? 'true' : 'false'}</div>;
+            }}
+          </ContextPanelConsumer>
+        </SwappableContentArea>
+      </ContextPanelWidthProvider>,
+    );
+    expect(wrapper.text()).toBe('false');
+  });
+});
+
+//ContextPanel uses WithEditorActions
 const mountWithContext = (node: React.ReactNode, actions?: EditorActions) =>
   mount(<EditorContext editorActions={actions}>{node}</EditorContext>);
 
@@ -100,7 +298,7 @@ const editorFactory = createEditorFactory();
 const mockContextPanelPlugin: EditorPlugin = {
   name: 'mockContextPanelPlugin',
   pluginsOptions: {
-    contextPanel: state => <p>mario saxaphone</p>,
+    contextPanel: (state) => <p>mario saxaphone</p>,
   },
 };
 
@@ -116,7 +314,7 @@ describe('ContextPanel', () => {
 
   it('renders SwappableContentArea', () => {
     wrapper = mountWithContext(
-      <ContextPanel visible={true} width={420}>
+      <ContextPanel visible={true}>
         <div>yoshi bongo</div>
       </ContextPanel>,
     );
@@ -126,19 +324,18 @@ describe('ContextPanel', () => {
 
   it('passes top-level props and children to SwappableContentArea', () => {
     wrapper = mountWithContext(
-      <ContextPanel visible={true} width={420}>
+      <ContextPanel visible={true}>
         <div>yoshi bongo</div>
       </ContextPanel>,
     );
     const contentArea = wrapper.find(SwappableContentArea);
     expect(contentArea.prop('visible')).toBe(true);
-    expect(contentArea.prop('width')).toBe(420);
     expect(wrapper.text().indexOf('yoshi bongo')).toBeGreaterThan(-1);
   });
 
   it('provides no pluginContent if no EventDispatcher', () => {
     wrapper = mountWithContext(
-      <ContextPanel visible={true} width={420}>
+      <ContextPanel visible={true}>
         <div>yoshi bongo</div>
       </ContextPanel>,
     );
@@ -153,7 +350,7 @@ describe('ContextPanel', () => {
 
     editorActions._privateRegisterEditor(editor.editorView, eventDispatcher);
     wrapper = mountWithContext(
-      <ContextPanel visible={true} width={420}>
+      <ContextPanel visible={true}>
         <div>yoshi bongo</div>
       </ContextPanel>,
       editorActions,
@@ -173,7 +370,7 @@ describe('ContextPanel', () => {
 
     editorActions._privateRegisterEditor(editor.editorView, eventDispatcher);
     wrapper = mountWithContext(
-      <ContextPanel visible={true} width={420}>
+      <ContextPanel visible={true}>
         <div>yoshi bongo</div>
       </ContextPanel>,
       editorActions,

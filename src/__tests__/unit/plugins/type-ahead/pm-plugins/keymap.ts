@@ -1,9 +1,9 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   typeAheadQuery,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { pluginKey } from '../../../../../plugins/type-ahead/pm-plugins/main';
 import { createTypeAheadPlugin } from './_create-type-ahead-plugin';

@@ -54,12 +54,7 @@ const headingPluginOptions = (
       priority: 1300,
       keywords: [`h${level}`],
       keyshortcut,
-      icon: () => (
-        <IconHeading
-          level={level}
-          label={formatMessage(descriptionDescriptor)}
-        />
-      ),
+      icon: () => <IconHeading level={level} />,
       action(insert: QuickInsertActionInsert, state: EditorState) {
         const tr = insert(state.schema.nodes.heading.createChecked({ level }));
         return addAnalytics(state, tr, {
@@ -92,7 +87,7 @@ const blockquotePluginOptions = (
       description: formatMessage(messages.blockquoteDescription),
       priority: 1300,
       keyshortcut: keymaps.tooltip(keymaps.toggleBlockQuote),
-      icon: () => <IconQuote label={formatMessage(messages.blockquote)} />,
+      icon: () => <IconQuote />,
       action(insert, state) {
         const tr = insert(
           state.schema.nodes.blockquote.createChecked(
@@ -129,7 +124,7 @@ const blockTypePlugin = (options?: BlockTypePluginOptions): EditorPlugin => ({
       const exclude = options.allowBlockType.exclude
         ? options.allowBlockType.exclude
         : [];
-      return nodes.filter(node => exclude.indexOf(node.name) === -1);
+      return nodes.filter((node) => exclude.indexOf(node.name) === -1);
     }
 
     return nodes;
@@ -144,13 +139,15 @@ const blockTypePlugin = (options?: BlockTypePluginOptions): EditorPlugin => ({
       },
       {
         name: 'blockTypeInputRule',
-        plugin: ({ schema }) => inputRulePlugin(schema),
+        plugin: ({ schema, featureFlags }) =>
+          inputRulePlugin(schema, featureFlags),
       },
       // Needs to be lower priority than editor-tables.tableEditing
       // plugin as it is currently swallowing right/down arrow events inside tables
       {
         name: 'blockTypeKeyMap',
-        plugin: ({ schema }) => keymapPlugin(schema),
+        plugin: ({ schema, featureFlags }) =>
+          keymapPlugin(schema, featureFlags),
       },
     ];
   },
@@ -165,7 +162,10 @@ const blockTypePlugin = (options?: BlockTypePluginOptions): EditorPlugin => ({
     isToolbarReducedSpacing,
     eventDispatcher,
   }) {
-    const isSmall = toolbarSize < ToolbarSize.XL;
+    const isSmall =
+      options && options.isUndoRedoButtonsEnabled
+        ? toolbarSize < ToolbarSize.XXL
+        : toolbarSize < ToolbarSize.XL;
     const boundSetBlockType = (name: string) =>
       setBlockTypeWithAnalytics(name, INPUT_METHOD.TOOLBAR)(
         editorView.state,
@@ -186,7 +186,7 @@ const blockTypePlugin = (options?: BlockTypePluginOptions): EditorPlugin => ({
               isDisabled={disabled}
               isReducedSpacing={isToolbarReducedSpacing}
               setBlockType={boundSetBlockType}
-              pluginState={pluginState}
+              pluginState={pluginState!}
               popupsMountPoint={popupsMountPoint}
               popupsBoundariesElement={popupsBoundariesElement}
               popupsScrollableElement={popupsScrollableElement}
@@ -198,7 +198,7 @@ const blockTypePlugin = (options?: BlockTypePluginOptions): EditorPlugin => ({
   },
 
   pluginsOptions: {
-    quickInsert: intl => {
+    quickInsert: (intl) => {
       const exclude =
         options && options.allowBlockType && options.allowBlockType.exclude
           ? options.allowBlockType.exclude

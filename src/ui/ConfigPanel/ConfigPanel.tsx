@@ -1,4 +1,10 @@
-import React from 'react';
+import React, {
+  FunctionComponent,
+  useCallback,
+  ReactElement,
+  useRef,
+  useEffect,
+} from 'react';
 import memoizeOne from 'memoize-one';
 import {
   withAnalyticsContext,
@@ -7,12 +13,13 @@ import {
 } from '@atlaskit/analytics-next';
 import { ExtensionManifest } from '@atlaskit/editor-common';
 import Form from '@atlaskit/form';
-
 import {
   FieldDefinition,
   Parameters,
   OnSaveCallback,
+  isTabGroup,
 } from '@atlaskit/editor-common/extensions';
+import _isEqual from 'lodash/isEqual';
 
 import {
   fireAnalyticsEvent,
@@ -23,9 +30,134 @@ import {
 
 import LoadingState from './LoadingState';
 import Header from './Header';
-import ConfigForm from './Form';
 import ErrorMessage from './ErrorMessage';
 import { serialize, deserialize } from './transformers';
+
+import { InjectedIntlProps, injectIntl } from 'react-intl';
+import ButtonGroup from '@atlaskit/button/button-group';
+import Button from '@atlaskit/button/custom-theme-button';
+import { FormFooter } from '@atlaskit/form';
+
+import { pluginKey as extensionPluginKey } from '../../plugins/extension/plugin-key';
+import WithPluginState from '../WithPluginState';
+import FormContent from './FormContent';
+import { messages } from './messages';
+import { OnFieldChange, ValidationErrors } from './types';
+
+function ConfigForm({
+  canSave,
+  errorMessage,
+  extensionManifest,
+  fields,
+  firstVisibleFieldName,
+  hasParsedParameters,
+  intl,
+  isLoading,
+  onCancel,
+  onFieldChange,
+  parameters,
+  submitting,
+}: {
+  canSave: boolean;
+  errorMessage: string | null;
+  extensionManifest: ExtensionManifest;
+  fields?: FieldDefinition[];
+  firstVisibleFieldName?: string;
+  hasParsedParameters: boolean;
+  isLoading: boolean;
+  onCancel: () => void;
+  onFieldChange: OnFieldChange;
+  parameters: Parameters;
+  submitting: boolean;
+} & InjectedIntlProps) {
+  if (isLoading || (!hasParsedParameters && errorMessage === null)) {
+    return <LoadingState />;
+  }
+
+  if (errorMessage || !fields) {
+    return <ErrorMessage errorMessage={errorMessage || ''} />;
+  }
+
+  return (
+    <WithPluginState
+      plugins={{ extension: extensionPluginKey }}
+      render={({ extension }) => (
+        <>
+          <FormContent
+            fields={fields}
+            parameters={parameters}
+            extensionManifest={extensionManifest}
+            onFieldChange={onFieldChange}
+            firstVisibleFieldName={firstVisibleFieldName}
+            contextIdentifierProvider={extension?.contextIdentifierProvider}
+          />
+          <div style={canSave ? {} : { display: 'none' }}>
+            <FormFooter align="start">
+              <ButtonGroup>
+                <Button type="submit" appearance="primary">
+                  {intl.formatMessage(messages.submit)}
+                </Button>
+                <Button
+                  appearance="default"
+                  isDisabled={submitting}
+                  onClick={onCancel}
+                >
+                  {intl.formatMessage(messages.cancel)}
+                </Button>
+              </ButtonGroup>
+            </FormFooter>
+          </div>
+        </>
+      )}
+    />
+  );
+}
+
+const ConfigFormIntl = injectIntl(ConfigForm);
+
+const WithOnFieldChange: FunctionComponent<{
+  getState: () => { values: Parameters; errors: Record<string, any> };
+  autoSave: boolean;
+  handleSubmit: (parameters: Parameters) => void;
+  children: (onFieldChange: OnFieldChange) => ReactElement;
+}> = ({ getState, autoSave, handleSubmit, children }) => {
+  const getStateRef = useRef<
+    () => { values: Parameters; errors: ValidationErrors }
+  >(getState);
+
+  useEffect(() => {
+    getStateRef.current = getState;
+  }, [getState]);
+
+  const handleFieldChange = useCallback(
+    (name: string, isDirty: boolean) => {
+      if (!autoSave) {
+        return;
+      }
+
+      // Don't trigger submit if nothing actually changed
+      if (!isDirty) {
+        return;
+      }
+
+      const { errors, values } = getStateRef.current();
+
+      // Get only values that does not contain errors
+      const validValues: Parameters = {};
+      for (const key of Object.keys(values)) {
+        if (!errors[key]) {
+          // not has error
+          validValues[key] = values[key];
+        }
+      }
+
+      handleSubmit(validValues);
+    },
+    [autoSave, handleSubmit],
+  );
+
+  return children(handleFieldChange);
+};
 
 type Props = {
   extensionManifest?: ExtensionManifest;
@@ -48,8 +180,11 @@ type State = {
 };
 
 class ConfigPanel extends React.Component<Props, State> {
+  onFieldChange: OnFieldChange | null;
+
   constructor(props: Props) {
     super(props);
+
     this.state = {
       hasParsedParameters: false,
       currentParameters: {},
@@ -57,6 +192,8 @@ class ConfigPanel extends React.Component<Props, State> {
         ? this.getFirstVisibleFieldName(props.fields)
         : undefined,
     };
+
+    this.onFieldChange = null;
   }
 
   componentDidMount() {
@@ -85,21 +222,23 @@ class ConfigPanel extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    const { parameters, fields } = this.props;
+    const { parameters, fields, autoSaveTrigger } = this.props;
 
     if (
       (parameters && parameters !== prevProps.parameters) ||
-      (fields &&
-        (!prevProps.fields || fields.length !== prevProps.fields.length))
+      (fields && (!prevProps.fields || !_isEqual(fields, prevProps.fields)))
     ) {
       this.parseParameters(fields, parameters);
     }
 
-    if (
-      fields &&
-      (!prevProps.fields || fields.length !== prevProps.fields.length)
-    ) {
+    if (fields && (!prevProps.fields || !_isEqual(fields, prevProps.fields))) {
       this.setFirstVisibleFieldName(fields);
+    }
+
+    if (prevProps.autoSaveTrigger !== autoSaveTrigger) {
+      if (this.onFieldChange) {
+        this.onFieldChange('', true);
+      }
     }
   }
 
@@ -109,8 +248,29 @@ class ConfigPanel extends React.Component<Props, State> {
     }
   };
 
-  handleSubmit = async (formData: FormData) => {
-    const { fields, extensionManifest } = this.props;
+  // https://product-fabric.atlassian.net/browse/DST-2697
+  // workaround for DST-2697, remove this function once fix.
+  backfillTabFormData = (
+    fields: FieldDefinition[],
+    formData: Parameters,
+    currentParameters: Parameters,
+  ): Parameters => {
+    const mergedTabGroups = fields.filter(isTabGroup).reduce(
+      (acc, field) => ({
+        ...acc,
+        [field.name]: {
+          ...(currentParameters[field.name] || {}),
+          ...(formData[field.name] || {}),
+        },
+      }),
+      {},
+    );
+
+    return { ...formData, ...mergedTabGroups };
+  };
+
+  handleSubmit = async (formData: Parameters) => {
+    const { fields, extensionManifest, onChange } = this.props;
     if (!extensionManifest || !fields) {
       return;
     }
@@ -118,11 +278,15 @@ class ConfigPanel extends React.Component<Props, State> {
     try {
       const serializedData = await serialize(
         extensionManifest,
-        formData,
+        this.backfillTabFormData(
+          fields,
+          formData,
+          this.state.currentParameters,
+        ),
         fields,
       );
 
-      this.props.onChange(serializedData);
+      onChange(serializedData);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(`Error serializing parameters`, error);
@@ -173,42 +337,6 @@ class ConfigPanel extends React.Component<Props, State> {
     );
   });
 
-  renderBody = (extensionManifest: ExtensionManifest, submitting: boolean) => {
-    const {
-      autoSave,
-      autoSaveTrigger,
-      errorMessage,
-      fields,
-      isLoading,
-      onCancel,
-    } = this.props;
-
-    const {
-      currentParameters,
-      hasParsedParameters,
-      firstVisibleFieldName,
-    } = this.state;
-
-    if (isLoading || (!hasParsedParameters && errorMessage === null)) {
-      return <LoadingState />;
-    }
-
-    return errorMessage || !fields ? (
-      <ErrorMessage errorMessage={errorMessage || ''} />
-    ) : (
-      <ConfigForm
-        extensionManifest={extensionManifest}
-        fields={fields}
-        parameters={currentParameters}
-        onCancel={onCancel}
-        autoSave={autoSave}
-        autoSaveTrigger={autoSaveTrigger}
-        submitting={submitting}
-        firstVisibleFieldName={firstVisibleFieldName}
-      />
-    );
-  };
-
   getFirstVisibleFieldName = memoizeOne((fields: FieldDefinition[]) => {
     function nonHidden(field: FieldDefinition) {
       if ('isHidden' in field) {
@@ -255,19 +383,50 @@ class ConfigPanel extends React.Component<Props, State> {
       return <LoadingState />;
     }
 
+    const { autoSave, errorMessage, fields, isLoading, onCancel } = this.props;
+    const {
+      currentParameters,
+      hasParsedParameters,
+      firstVisibleFieldName,
+    } = this.state;
+    const { handleSubmit, handleKeyDown } = this;
+
     return (
-      <Form onSubmit={this.handleSubmit}>
-        {({ formProps, submitting }) => {
+      <Form onSubmit={handleSubmit}>
+        {({ formProps, getState, submitting }) => {
           return (
-            <form
-              {...formProps}
-              noValidate
-              onKeyDown={this.handleKeyDown}
-              data-testid="extension-config-panel"
+            <WithOnFieldChange
+              autoSave={!!autoSave}
+              getState={getState}
+              handleSubmit={handleSubmit}
             >
-              {this.renderHeader(extensionManifest)}
-              {this.renderBody(extensionManifest, submitting)}
-            </form>
+              {(onFieldChange) => {
+                this.onFieldChange = onFieldChange;
+                return (
+                  <form
+                    {...formProps}
+                    noValidate
+                    onKeyDown={handleKeyDown}
+                    data-testid="extension-config-panel"
+                  >
+                    {this.renderHeader(extensionManifest)}
+                    <ConfigFormIntl
+                      canSave={!autoSave}
+                      errorMessage={errorMessage}
+                      extensionManifest={extensionManifest}
+                      fields={fields}
+                      firstVisibleFieldName={firstVisibleFieldName}
+                      hasParsedParameters={hasParsedParameters}
+                      isLoading={isLoading || false}
+                      onCancel={onCancel}
+                      onFieldChange={onFieldChange}
+                      parameters={currentParameters}
+                      submitting={submitting}
+                    />
+                  </form>
+                );
+              }}
+            </WithOnFieldChange>
           );
         }}
       </Form>

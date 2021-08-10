@@ -58,7 +58,7 @@ export async function extensionProviderToQuickInsertProvider(
     getItems: () => {
       const quickInsertItems = getQuickInsertItemsFromModule<QuickInsertItem>(
         extensions,
-        item => {
+        (item) => {
           const Icon = Loadable<{ label: string }, any>({
             loader: item.icon,
             loading: () => null,
@@ -67,13 +67,13 @@ export async function extensionProviderToQuickInsertProvider(
           return {
             title: item.title,
             description: item.description,
-            icon: () => <Icon label={item.title} />,
+            icon: () => <Icon label="" />,
             keywords: item.keywords,
             featured: item.featured,
             categories: item.categories,
-            action: insert => {
+            action: (insert) => {
               if (typeof item.node === 'function') {
-                resolveImport(item.node()).then(node => {
+                resolveImport(item.node()).then((node) => {
                   sendExtensionQuickInsertAnalytics(item, createAnalyticsEvent);
 
                   if (node) {

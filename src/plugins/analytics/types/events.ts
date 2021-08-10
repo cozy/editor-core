@@ -8,22 +8,33 @@ import { MediaEventPayload } from './media-events';
 import { TableEventPayload } from './table-events';
 import { PasteEventPayload } from './paste-events';
 import { CutCopyEventPayload } from './cut-copy-events';
-import { HistoryEventPayload } from './history-events';
 import { ListEventPayload } from './list-events';
 import { ExperimentalEventPayload } from './experimental-events';
 import { FindReplaceEventPayload } from './find-replace-events';
 import { ConfigPanelEventPayload } from './config-panel-events';
 import { ElementBrowserEventPayload } from './element-browser-events';
 import { OperationalAEP } from './utils';
-import { ACTION, ACTION_SUBJECT, ACTION_SUBJECT_ID } from './enums';
+import {
+  ACTION,
+  ACTION_SUBJECT,
+  ACTION_SUBJECT_ID,
+  CONTENT_COMPONENT,
+  FLOATING_CONTROLS_TITLE,
+} from './enums';
 import { SimplifiedNode } from '../../../utils/document-logger';
 import { DateEventPayload } from './date-events';
 import { SelectionEventPayload } from './selection-events';
 import { CreateLinkInlineDialogEventPayload } from './link-tool-bar-events';
-import { UnsupportedContentPayload } from '@atlaskit/editor-common';
+import { ExtensionEventPayload } from './extension-events';
+import {
+  UnsupportedContentPayload,
+  UserBrowserExtensionResults,
+} from '@atlaskit/editor-common';
+import { AvatarEventPayload } from './avatar';
 
-export type AnalyticsEventPayload =
-  | GeneralEventPayload
+export type AnalyticsEventPayload<T = void> =
+  | AvatarEventPayload
+  | GeneralEventPayload<T>
   | FormatEventPayload
   | SubstituteEventPayload
   | InsertEventPayload
@@ -33,7 +44,6 @@ export type AnalyticsEventPayload =
   | PasteEventPayload
   | CutCopyEventPayload
   | ErrorEventPayload
-  | HistoryEventPayload
   | ExperimentalEventPayload // Used for A/B testing
   | FindReplaceEventPayload
   | DateEventPayload
@@ -42,7 +52,9 @@ export type AnalyticsEventPayload =
   | ConfigPanelEventPayload
   | ElementBrowserEventPayload
   | CreateLinkInlineDialogEventPayload
-  | UnsupportedContentPayload;
+  | UnsupportedContentPayload
+  | ExtensionEventPayload
+  | TransactionEventPayload;
 
 export type AnalyticsEventPayloadWithChannel = {
   channel: string;
@@ -53,6 +65,9 @@ export type AnalyticsDispatch = Dispatch<{
   payload: AnalyticsEventPayload;
   channel?: string;
 }>;
+
+// Error events need to be in this file as they reference AnalyticsEventPayloadWithChannel
+// and so there would be a circular dependency if they were in their own file
 
 type InvalidTransactionErrorAEP = OperationalAEP<
   ACTION.DISPATCHED_INVALID_TRANSACTION,
@@ -65,6 +80,14 @@ type InvalidTransactionErrorAEP = OperationalAEP<
   undefined
 >;
 
+type DispatchedValidTransactionAEP = OperationalAEP<
+  ACTION.DISPATCHED_VALID_TRANSACTION,
+  ACTION_SUBJECT.EDITOR,
+  undefined,
+  undefined,
+  undefined
+>;
+
 type InvalidTransactionStepErrorAEP = OperationalAEP<
   ACTION.DISCARDED_INVALID_STEPS_FROM_TRANSACTION,
   ACTION_SUBJECT.EDITOR,
@@ -74,6 +97,8 @@ type InvalidTransactionStepErrorAEP = OperationalAEP<
   },
   undefined
 >;
+
+export type TransactionEventPayload = DispatchedValidTransactionAEP;
 
 type FailedToUnmountErrorAEP = OperationalAEP<
   ACTION.FAILED_TO_UNMOUNT,
@@ -95,6 +120,8 @@ type SynchronyErrorAEP = OperationalAEP<
   undefined,
   {
     error: Error;
+    docStructure?: string | SimplifiedNode;
+    browserExtensions?: UserBrowserExtensionResults;
   },
   undefined
 >;
@@ -110,9 +137,47 @@ type SynchronyEntityErrorAEP = OperationalAEP<
   undefined
 >;
 
+type ContentComponentErrorAEP = OperationalAEP<
+  ACTION.ERRORED,
+  ACTION_SUBJECT.CONTENT_COMPONENT,
+  undefined,
+  {
+    component: CONTENT_COMPONENT;
+    error: string;
+    errorStack?: string;
+    selection: { [key: string]: string };
+    position: number;
+    docSize: number;
+  },
+  undefined
+>;
+
+type ComponentCrashErrorAEP = OperationalAEP<
+  ACTION.EDITOR_CRASHED,
+  | ACTION_SUBJECT.FLOATING_CONTEXTUAL_BUTTON
+  | ACTION_SUBJECT.PLUGIN_SLOT
+  | ACTION_SUBJECT.REACT_NODE_VIEW
+  | ACTION_SUBJECT.TABLES_PLUGIN
+  | ACTION_SUBJECT.FLOATING_TOOLBAR_PLUGIN
+  | ACTION_SUBJECT.EDITOR,
+  ACTION_SUBJECT_ID | FLOATING_CONTROLS_TITLE,
+  {
+    error: Error;
+    errorInfo: React.ErrorInfo;
+    product?: string;
+    browserInfo?: string;
+    errorId?: string;
+    docStructure?: string | SimplifiedNode;
+    browserExtensions?: UserBrowserExtensionResults;
+  },
+  undefined
+>;
+
 export type ErrorEventPayload =
   | InvalidTransactionErrorAEP
   | InvalidTransactionStepErrorAEP
   | FailedToUnmountErrorAEP
   | SynchronyErrorAEP
-  | SynchronyEntityErrorAEP;
+  | SynchronyEntityErrorAEP
+  | ContentComponentErrorAEP
+  | ComponentCrashErrorAEP;

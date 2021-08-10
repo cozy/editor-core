@@ -25,16 +25,17 @@ export const extensionStyles = css`
 
     &:not(.danger).${akEditorSelectedNodeClassName} {
       & > span > .extension-container {
-        ${getSelectionStyles([
-          SelectionStyle.BoxShadow,
-          SelectionStyle.Blanket,
-        ])}
+        ${getSelectionStyles([SelectionStyle.BoxShadow])}
       }
     }
 
     &.danger > span > .extension-container {
       box-shadow: 0 0 0 ${akEditorSelectedBorderSize}px ${akEditorDeleteBorder};
       background-color: ${akEditorDeleteBackground};
+    }
+
+    &.inline {
+      word-wrap: break-all;
     }
   }
 

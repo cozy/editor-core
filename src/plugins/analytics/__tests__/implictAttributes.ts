@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -8,7 +8,8 @@ import {
   tr,
   td,
   expand,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   analyticsPluginKey,
   findInsertLocation,
@@ -29,7 +30,7 @@ describe('analytics implicitAttributes', () => {
   let createAnalyticsEvent: jest.Mock;
   let fireMock: jest.Mock;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     fireMock = jest.fn();
     createAnalyticsEvent = jest.fn(() => ({ fire: fireMock }));
     return createEditor({
@@ -135,6 +136,7 @@ describe('analytics implicitAttributes', () => {
         });
       });
     });
+
     describe('insertLocation', () => {
       it('cursor selection', () => {
         const { editorView } = editor(doc(panel()(p('Hello{<>}World'))));

@@ -20,6 +20,14 @@ export const fromEntries = <T>(iterable: Entry<T>[]): Parameters => {
   }, {});
 };
 
+export const toEntries = (parameters: Parameters): [string, unknown][] =>
+  Array.isArray(parameters)
+    ? parameters.reduce<[string, unknown][]>(
+        (prev, curr) => [...prev, ...Object.entries(curr)],
+        [],
+      )
+    : Object.entries(parameters);
+
 const isEmptyString = <T>(value: T) =>
   typeof value === 'string' && value === '';
 const isEmptyArray = <T>(value: T) =>
@@ -53,10 +61,10 @@ export const getOptionFromValue = (
   }
 
   if (Array.isArray(value)) {
-    return options.filter(option => value.includes(option.value));
+    return options.filter((option) => value.includes(option.value));
   }
 
-  return options.find(option => value === option.value);
+  return options.find((option) => value === option.value);
 };
 
 // Atlaskit uses final-form to power the form.
@@ -71,4 +79,22 @@ export const getSafeParentedName = (
   }
 
   return name;
+};
+
+const duplicateFieldRegex = /:[0-9]+$/;
+
+export const isDuplicateField = (key: string) => duplicateFieldRegex.test(key);
+
+export const getNameFromDuplicateField = (key: string) =>
+  key.replace(duplicateFieldRegex, '');
+
+/* 
+    ColorPickerButton only accepts 8 digit hex alpha values, for example:
+    #123fffaa (8 digits, hex alpha)
+    */
+
+export const isValidHex = (color: string): boolean => {
+  const hexRegexPattern = new RegExp('^#([a-fA-F0-9]{8})$');
+
+  return hexRegexPattern.test(color);
 };

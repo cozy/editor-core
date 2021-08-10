@@ -11,7 +11,9 @@ import { MediaLinkingState, InitialState } from './types';
 import reducer from './reducer';
 import { LinkAttributes } from '@atlaskit/adf-schema';
 
-export const mediaLinkingPluginKey = new PluginKey('mediaLinking');
+export const mediaLinkingPluginKey = new PluginKey<MediaLinkingState>(
+  'mediaLinking',
+);
 
 const initialState: InitialState = {
   visible: false,
@@ -46,7 +48,7 @@ function onSelectionChanged(tr: Transaction): MediaLinkingState {
     return initialState;
   }
 
-  const mark = node.marks.find(mark => mark.type.name === 'link');
+  const mark = node.marks.find((mark) => mark.type.name === 'link');
   if (mark) {
     return {
       ...initialState,

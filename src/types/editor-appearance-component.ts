@@ -1,4 +1,5 @@
 import { EditorView } from 'prosemirror-view';
+import { RefObject } from 'react';
 import { ProviderFactory, ExtensionHandlers } from '@atlaskit/editor-common';
 import { EventDispatcher } from '../event-dispatcher';
 import EditorActions from '../actions';
@@ -10,6 +11,7 @@ import { DispatchAnalyticsEvent } from '../plugins/analytics';
 import { EditorAppearance } from './editor-appearance';
 import { MenuItem } from '../ui/DropdownMenu/types';
 import { ReactElement } from 'react';
+import { FeatureFlags } from './feature-flags';
 
 export interface EditorAppearanceComponentProps {
   appearance?: EditorAppearance;
@@ -49,4 +51,10 @@ export interface EditorAppearanceComponentProps {
 
   allowDynamicTextSizing?: boolean;
   allowAnnotation?: boolean;
+  persistScrollGutter?: boolean;
+
+  enableToolbarMinWidth?: boolean;
+
+  featureFlags?: FeatureFlags;
+  useStickyToolbar?: boolean | RefObject<HTMLElement>;
 }

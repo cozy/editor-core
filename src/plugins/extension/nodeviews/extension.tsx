@@ -1,16 +1,18 @@
 import React from 'react';
 import { EditorView, NodeView } from 'prosemirror-view';
 import { Node as PmNode } from 'prosemirror-model';
-import {
-  ProviderFactory,
-  ExtensionHandlers,
-  ZERO_WIDTH_SPACE,
-} from '@atlaskit/editor-common';
+import { ProviderFactory, ExtensionHandlers } from '@atlaskit/editor-common';
+import { EditorAppearance } from '../../../types/editor-appearance';
 import { ReactNodeView } from '../../../nodeviews';
 import Extension from '../ui/Extension';
+import ExtensionNodeWrapper from '../ui/Extension/ExtensionNodeWrapper';
 import { PortalProviderAPI } from '../../../ui/PortalProvider';
 import { ForwardRef, getPosHandler } from '../../../nodeviews/';
 import { EventDispatcher } from '../../../event-dispatcher';
+
+interface ExtensionNodeViewOptions {
+  appearance?: EditorAppearance;
+}
 
 export interface Props {
   node: PmNode;
@@ -18,7 +20,7 @@ export interface Props {
   view: EditorView;
 }
 
-class ExtensionNode extends ReactNodeView {
+export class ExtensionNode extends ReactNodeView {
   ignoreMutation(
     mutation: MutationRecord | { type: 'selection'; target: Element },
   ) {
@@ -47,20 +49,22 @@ class ExtensionNode extends ReactNodeView {
     props: {
       providerFactory: ProviderFactory;
       extensionHandlers: ExtensionHandlers;
+      // referentiality plugin won't utilise appearance just yet
+      extensionNodeViewOptions?: ExtensionNodeViewOptions;
     },
     forwardRef: ForwardRef,
   ) {
     return (
-      <span>
+      <ExtensionNodeWrapper nodeType={this.node.type.name}>
         <Extension
           editorView={this.view}
           node={this.node}
           providerFactory={props.providerFactory}
           handleContentDOMRef={forwardRef}
           extensionHandlers={props.extensionHandlers}
+          editorAppearance={props.extensionNodeViewOptions?.appearance}
         />
-        {this.node.type.name === 'inlineExtension' && ZERO_WIDTH_SPACE}
-      </span>
+      </ExtensionNodeWrapper>
     );
   }
 }
@@ -70,6 +74,7 @@ export default function ExtensionNodeView(
   eventDispatcher: EventDispatcher,
   providerFactory: ProviderFactory,
   extensionHandlers: ExtensionHandlers,
+  extensionNodeViewOptions: ExtensionNodeViewOptions,
 ) {
   return (node: PmNode, view: EditorView, getPos: getPosHandler): NodeView => {
     return new ExtensionNode(
@@ -81,6 +86,7 @@ export default function ExtensionNodeView(
       {
         providerFactory,
         extensionHandlers,
+        extensionNodeViewOptions,
       },
     ).init();
   };

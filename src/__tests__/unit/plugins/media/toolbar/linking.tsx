@@ -9,7 +9,7 @@ import { ActivityItem } from '@atlaskit/activity-provider';
 import { ProviderFactory, ErrorMessage } from '@atlaskit/editor-common';
 import { activityProviderFactory } from '@atlaskit/editor-test-helpers/mock-activity-provider';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import { render, fireEvent } from '@testing-library/react';
 
@@ -27,7 +27,8 @@ import {
   layoutSection,
   media,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { ReactWrapper } from 'enzyme';
 import { EditorView } from 'prosemirror-view';
@@ -61,7 +62,7 @@ import {
   testCollectionName,
 } from '../_utils';
 import safeUnmount from '../../../../__helpers/safeUnmount';
-import { getToolbarItems } from '../../floating-toolbar/_helpers';
+import { getToolbarItems } from '../../../../../plugins/floating-toolbar/__tests__/_helpers';
 import { MediaFloatingToolbarOptions } from '../../../../../plugins/media/types';
 import PanelTextInput from '../../../../../ui/PanelTextInput';
 import { MediaPluginState } from '../../../../../plugins/media/pm-plugins/types';
@@ -96,7 +97,7 @@ describe('media', () => {
   const createEditor = createEditorFactory<MediaPluginState>();
   const createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
 
-  const editor = (doc: any, mediaPropsOverride: MediaOptions = {}) => {
+  const editor = (doc: DocBuilder, mediaPropsOverride: MediaOptions = {}) => {
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
     const mediaProvider = getFreshMediaProvider();
     const providerFactory = ProviderFactory.create({
@@ -186,7 +187,7 @@ describe('media', () => {
   );
 
   async function setupToolbar(
-    doc: any,
+    doc: DocBuilder,
     options: MediaFloatingToolbarOptions,
     pos: number = 0,
   ): Promise<ToolbarWrapper> {
@@ -205,7 +206,9 @@ describe('media', () => {
     if (toolbar?.items) {
       const customLinkingToolbar = (toolbar.items as FloatingToolbarItem<
         Command
-      >[]).find(item => item.type === 'custom') as FloatingToolbarCustom;
+      >[]).find((item) => item.type === 'custom') as FloatingToolbarCustom<
+        Command
+      >;
 
       linkToolbarAppearance = customLinkingToolbar
         ? (customLinkingToolbar.render(editorView, 1) as ReactElement<
@@ -250,8 +253,8 @@ describe('media', () => {
     });
 
     const linkingToolbarComponent = getToolbarItems(toolbar!, editorView).find(
-      item => item.type === 'custom',
-    ) as FloatingToolbarCustom;
+      (item) => item.type === 'custom',
+    ) as FloatingToolbarCustom<Command>;
 
     const linkingToolbar = mountWithIntl<LinkAddToolbarProps, any>(
       linkingToolbarComponent.render(editorView) as ReactElement<any>,
@@ -438,7 +441,7 @@ describe('media', () => {
                 ['javascript://invalid.link'],
                 ['http//test/com'],
                 [''],
-              ])('should not allow <<%s>>', invalidValue => {
+              ])('should not allow <<%s>>', (invalidValue) => {
                 onSubmit(invalidValue);
                 linkingToolbar.update();
 
@@ -455,7 +458,7 @@ describe('media', () => {
                 ['https://www.atlassian.com'],
                 ['http://atlassian.com'],
                 ['atlassian.com'],
-              ])('should allow <<%s>>', validValue => {
+              ])('should allow <<%s>>', (validValue) => {
                 onSubmit(validValue);
 
                 linkingToolbar.update();

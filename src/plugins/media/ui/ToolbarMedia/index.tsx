@@ -2,14 +2,14 @@ import React from 'react';
 import { PluginKey } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import AttachmentIcon from '@atlaskit/icon/glyph/editor/attachment';
-import ToolbarButton from '../../../../ui/ToolbarButton';
+import ToolbarButton, { TOOLBAR_BUTTON } from '../../../../ui/ToolbarButton';
 import WithPluginState from '../../../../ui/WithPluginState';
 import { EventDispatcher } from '../../../../event-dispatcher';
 import { MediaPluginState } from '../../pm-plugins/types';
 
-export interface Props {
+export interface Props<T extends MediaPluginState> {
   editorView: EditorView;
-  pluginKey: PluginKey;
+  pluginKey: PluginKey<T>;
   eventDispatcher: EventDispatcher;
   isDisabled?: boolean;
   isReducedSpacing?: boolean;
@@ -20,26 +20,27 @@ const onClickMediaButton = (pluginState: MediaPluginState) => () => {
   return true;
 };
 
-const ToolbarMedia = ({
+const ToolbarMedia = <T extends MediaPluginState>({
   editorView,
   eventDispatcher,
   pluginKey,
   isDisabled,
   isReducedSpacing,
-}: Props) => (
+}: Props<T>) => (
   <WithPluginState
     editorView={editorView}
     eventDispatcher={eventDispatcher}
     plugins={{
       mediaPlugin: pluginKey,
     }}
-    render={({ mediaPlugin }: { mediaPlugin: MediaPluginState }) => {
-      if (!mediaPlugin.allowsUploads) {
+    render={({ mediaPlugin }) => {
+      if (!mediaPlugin?.allowsUploads) {
         return null;
       }
 
       return (
         <ToolbarButton
+          buttonId={TOOLBAR_BUTTON.MEDIA}
           onClick={onClickMediaButton(mediaPlugin)}
           disabled={isDisabled}
           title="Files & images"

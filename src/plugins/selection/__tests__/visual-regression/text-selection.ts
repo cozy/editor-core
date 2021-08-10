@@ -1,4 +1,7 @@
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import {
+  PuppeteerPage,
+  waitForLoadedBackgroundImages,
+} from '@atlaskit/visual-regression/helper';
 import {
   snapshot,
   initEditorWithAdf,
@@ -10,6 +13,7 @@ import { selectAtPosWithProseMirror } from '../../../../__tests__/__helpers/page
 import selectionKitchenSink1Adf from './__fixtures__/kitchen-sink-1.adf.json';
 import selectionKitchenSink2Adf from './__fixtures__/kitchen-sink-2.adf.json';
 import selectionKitchenSink3Adf from './__fixtures__/kitchen-sink-3.adf.json';
+import { emojiSelectors } from '../../../../__tests__/__helpers/page-objects/_emoji';
 
 describe('Selection:', () => {
   let page: PuppeteerPage;
@@ -87,7 +91,7 @@ describe('Selection:', () => {
         beforeSnapshot: async (page: PuppeteerPage) => {
           // Need to wait for min-width to be calculated
           // and applied on inline-extension
-          await page.waitFor(1000);
+          await page.waitForTimeout(1000);
         },
       },
     ],
@@ -119,6 +123,17 @@ describe('Selection:', () => {
         });
         await page.focus(pmSelector);
 
+        const hasEmojiInDoc = await page.evaluate(
+          (emojiNodeSelector: string) => {
+            return document.querySelector(emojiNodeSelector);
+          },
+          emojiSelectors.node,
+        );
+
+        if (hasEmojiInDoc) {
+          await waitForLoadedBackgroundImages(page, emojiSelectors.standard);
+        }
+
         if (beforeSelect) {
           await beforeSelect(page);
         }
@@ -126,7 +141,7 @@ describe('Selection:', () => {
         // Unfortunately need to wait not just for decoration classes to apply,
 
         // but also for the selection styles to paint
-        await page.waitFor(1000);
+        await page.waitForTimeout(1000);
 
         if (beforeSnapshot) {
           await beforeSnapshot(page);

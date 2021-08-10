@@ -5,7 +5,7 @@ import { EditorView } from 'prosemirror-view';
 
 import Item from '@atlaskit/item';
 import { EmojiPicker as AkEmojiPicker } from '@atlaskit/emoji';
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
 import Button from '@atlaskit/button/standard-button';
 import {
   CreateUIAnalyticsEvent,
@@ -24,8 +24,9 @@ import {
   decisionItem,
   taskList,
   taskItem,
-} from '@atlaskit/editor-test-helpers/schema-builder';
-import { taskDecision } from '@atlaskit/util-data-test';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { uuid } from '@atlaskit/adf-schema';
 import layoutPlugin from '../../../../../plugins/layout';
@@ -80,7 +81,7 @@ type ToolbarOptionWrapper = ReactWrapper<
   ToolbarInsertBlockProps & InjectedIntlProps
 >;
 
-const emojiProvider = emojiData.testData.getEmojiResourcePromise();
+const emojiProvider = getTestEmojiResource();
 
 const mediaProvider: Promise<MediaProvider> = Promise.resolve({
   viewMediaClientConfig: {} as any,
@@ -97,10 +98,7 @@ const getToolbarButton = (
 ): ReactWrapper =>
   toolbarOption
     .find(ToolbarButton)
-    .filterWhere(
-      toolbarButton =>
-        toolbarButton.find('Icon').find({ label: title }).length > 0,
-    )
+    .filterWhere((toolbarButton) => toolbarButton.find('Memo(Icon)').length > 0)
     .find(Button);
 
 const getInsertMenuButton = (
@@ -110,7 +108,7 @@ const getInsertMenuButton = (
   openInsertMenu(toolbarOption);
   return toolbarOption
     .find<any>(Item)
-    .filterWhere(n => n.text().indexOf(title) > -1);
+    .filterWhere((n) => n.text().indexOf(title) > -1);
 };
 
 const clickToolbarButton = (
@@ -154,12 +152,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
   const providerFactory = ProviderFactory.create({
     mediaProvider,
-    taskDecisionProvider: Promise.resolve(
-      taskDecision.getMockTaskDecisionResource(),
-    ),
+    taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
   });
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,
@@ -251,7 +247,27 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
       });
     });
   });
+
   describe('plus menu', () => {
+    it('should not render for zero items', () => {
+      jest.mock(
+        '../../../../../plugins/insert-block/ui/ToolbarInsertBlock/create-items',
+        () => ({
+          createItems: () => [],
+        }),
+      );
+
+      buildToolbar({
+        insertMenuItems: [],
+      });
+
+      expect(toolbarOption.find(DropdownMenu)).toHaveLength(0);
+
+      jest.unmock(
+        '../../../../../plugins/insert-block/ui/ToolbarInsertBlock/create-items',
+      );
+    });
+
     describe('legacy', () => {
       describe('sort dropdown items', () => {
         it('should sort non macro items alphabetically', () => {
@@ -280,8 +296,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map(item => item.content)).toEqual(expected);
+          expect(items.items.map((item) => item.content)).toEqual(expected);
         });
+
         it('should sort alphabetically with non-macro items at end', () => {
           const customItemsWithMacros = [
             {
@@ -306,8 +323,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItemsWithMacros,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map(item => item.content)).toEqual(sortedItems);
+          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
         });
+
         it('macro browser should always be last item if there is no slash-onboarding', () => {
           const customItems = [
             {
@@ -332,8 +350,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map(item => item.content)).toEqual(sortedItems);
+          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
         });
+
         it('slash onboarding should always be last item', () => {
           const customItems = [
             {
@@ -358,7 +377,7 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map(item => item.content)).toEqual(sortedItems);
+          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
         });
 
         it('should render a DropDown', () => {
@@ -391,6 +410,30 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
           expect(toolbarOption.find(DropdownMenu).length).toEqual(1);
           expect(toolbarOption.find(InsertMenu).length).toEqual(0);
+        });
+
+        it('should render dropdown content into popupsMountPoint dom node if passed', () => {
+          const customItems = [
+            {
+              content: 'Some help text',
+              value: { name: 'slash-onboarding' },
+            },
+          ];
+
+          const popupTarget = document.createElement('div');
+          popupTarget.classList.add('popup-target');
+          document.body.appendChild(popupTarget);
+
+          buildToolbar({
+            insertMenuItems: customItems,
+            replacePlusMenuWithElementBrowser: false,
+            popupsMountPoint: popupTarget,
+          });
+
+          toolbarOption.setState({ isPlusMenuOpen: true });
+          toolbarOption.update();
+
+          expect(popupTarget.innerText).toContain(customItems[0].content);
         });
       });
     });
@@ -543,7 +586,7 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
     });
   });
 
-  menus.forEach(menu => {
+  menus.forEach((menu) => {
     describe(`for menu type ${menu.name}`, () => {
       const buildToolbarForMenu = (props: Partial<ToolbarInsertBlockProps>) =>
         buildToolbar({ buttons: menu.numButtons, ...props });
@@ -831,7 +874,7 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
           title: blockTypeMessages.blockquote.defaultMessage,
         },
       ];
-      blockTypes.forEach(blockType => {
+      blockTypes.forEach((blockType) => {
         const { type, title } = blockType;
         describe(`click ${type.name} option`, () => {
           let insertBlockTypeSpy: jest.Mock;

@@ -15,7 +15,7 @@ import {
   withAnalytics,
 } from '../../analytics';
 import { EditorView } from 'prosemirror-view';
-import { Slice, Node } from 'prosemirror-model';
+import { Slice, Node, Fragment } from 'prosemirror-model';
 import { getPasteSource } from '../util';
 import {
   handlePasteAsPlainText,
@@ -27,6 +27,7 @@ import {
   handleRichText,
   handleExpand,
   handleSelectedTable,
+  handlePasteLinkOnSelectedText,
 } from '../handlers';
 import { Command } from '../../../types';
 import { pipe } from '../../../utils';
@@ -94,7 +95,7 @@ const nodeToActionSubjectId: { [name: string]: PASTE_ACTION_SUBJECT_ID } = {
   taskList: ACTION_SUBJECT_ID.PASTE_TASK_LIST,
 };
 
-function getContent(state: EditorState, slice: Slice): PasteContent {
+export function getContent(state: EditorState, slice: Slice): PasteContent {
   const {
     schema: {
       nodes: { paragraph },
@@ -238,8 +239,8 @@ export function createPasteAnalyticsPayload(
   // If we have a link among the pasted content, grab the
   // domain and send it up with the analytics event
   if (content === PasteContents.url || content === PasteContents.mixed) {
-    mapSlice(slice, node => {
-      const linkMark = node.marks.find(mark => mark.type.name === 'link');
+    mapSlice(slice, (node) => {
+      const linkMark = node.marks.find((mark) => mark.type.name === 'link');
       if (linkMark) {
         linkUrls.push(linkMark.attrs.href);
       }
@@ -398,3 +399,52 @@ export const handleSelectedTableWithAnalytics = (
       type: PasteTypes.richText,
     }),
   )(slice);
+
+export const handlePasteLinkOnSelectedTextWithAnalytics = (
+  view: EditorView,
+  event: ClipboardEvent,
+  slice: Slice,
+  type: PasteType,
+): Command =>
+  pipe(
+    handlePasteLinkOnSelectedText,
+    pasteCommandWithAnalytics(view, event, slice, {
+      type,
+    }),
+  )(slice);
+
+export const createPasteMeasurePayload = (
+  view: EditorView,
+  duration: number,
+  content: Array<string>,
+): AnalyticsEventPayload => {
+  const pasteIntoNode = getActionSubjectId(view);
+  return {
+    action: ACTION.PASTED_TIMED,
+    actionSubject: ACTION_SUBJECT.EDITOR,
+    eventType: EVENT_TYPE.OPERATIONAL,
+    attributes: {
+      pasteIntoNode,
+      content,
+      time: duration,
+    },
+  };
+};
+
+export const getContentNodeTypes = (content: Fragment): string[] => {
+  let nodeTypes = new Set<string>();
+
+  if (content.size) {
+    content.forEach((node) => {
+      if (node.content && node.content.size) {
+        nodeTypes = new Set([
+          ...nodeTypes,
+          ...getContentNodeTypes(node.content),
+        ]);
+      }
+      nodeTypes.add(node.type.name);
+    });
+  }
+
+  return Array.from(nodeTypes);
+};

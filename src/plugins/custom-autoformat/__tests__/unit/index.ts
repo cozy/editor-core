@@ -3,7 +3,13 @@ import {
   ProviderFactory,
   AutoformattingProvider,
 } from '@atlaskit/editor-common/provider-factory';
-import { doc, p, ul, li } from '@atlaskit/editor-test-helpers/schema-builder';
+import {
+  doc,
+  p,
+  ul,
+  li,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import {
@@ -16,7 +22,7 @@ import { pluginKey } from '../../utils';
 // Editor plugins
 import customAutoformatPlugin from '../../index';
 import basePlugin from '../../../base';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 
 describe('custom-autoformat', () => {
   const createEditor = createProsemirrorEditorFactory();
@@ -40,7 +46,7 @@ describe('custom-autoformat', () => {
   const promises: Array<Promise<ADFEntity>> = [];
   const providerFactory = new ProviderFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()
@@ -124,6 +130,60 @@ describe('custom-autoformat', () => {
       expect(editorView.state.doc).toEqualDocument(
         doc(ul(li(p('hello nice')), li(p('after')))),
       );
+    });
+
+    it('autoformats after pressing comma', async () => {
+      const { editorView } = editor(doc(p('hello {<>}')));
+
+      // await the provider to resolve
+      await autoformattingProvider;
+      await niceProvider.getRules();
+
+      // should queue the format
+      insertText(editorView, 'za,');
+
+      // resolve the autoformatting
+      await Promise.all(promises);
+
+      insertText(editorView, 'after');
+
+      expect(editorView.state.doc).toEqualDocument(doc(p('hello nice,after')));
+    });
+
+    it('autoformats after pressing period', async () => {
+      const { editorView } = editor(doc(p('hello {<>}')));
+
+      // await the provider to resolve
+      await autoformattingProvider;
+      await niceProvider.getRules();
+
+      // should queue the format
+      insertText(editorView, 'za.');
+
+      // resolve the autoformatting
+      await Promise.all(promises);
+
+      insertText(editorView, 'after');
+
+      expect(editorView.state.doc).toEqualDocument(doc(p('hello nice.after')));
+    });
+
+    it('does not autoformat after pressing any other character', async () => {
+      const { editorView } = editor(doc(p('hello {<>}')));
+
+      // await the provider to resolve
+      await autoformattingProvider;
+      await niceProvider.getRules();
+
+      // should queue the format
+      insertText(editorView, 'za*');
+
+      // resolve the autoformatting
+      await Promise.all(promises);
+
+      insertText(editorView, 'after');
+
+      expect(editorView.state.doc).toEqualDocument(doc(p('hello za*after')));
     });
 
     it('does not autoformat if text changes', async () => {

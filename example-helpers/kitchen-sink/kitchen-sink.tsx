@@ -2,13 +2,11 @@ import React from 'react';
 
 import { addLocaleData } from 'react-intl';
 import { ADFEntity, scrubAdf } from '@atlaskit/adf-utils';
-import {
-  ProviderFactory,
-  combineExtensionProviders,
-} from '@atlaskit/editor-common';
+import { Checkbox } from '@atlaskit/checkbox';
+import { ProviderFactory } from '@atlaskit/editor-common';
 import Flag from '@atlaskit/flag';
 import { AtlaskitThemeProvider } from '@atlaskit/theme/components';
-import { addGlobalEventEmitterListeners } from '@atlaskit/media-test-helpers';
+import { addGlobalEventEmitterListeners } from '@atlaskit/media-test-helpers/globalEventEmitterListeners';
 import Warning from '@atlaskit/icon/glyph/warning';
 
 import {
@@ -16,19 +14,22 @@ import {
   mediaProvider,
   LOCALSTORAGE_defaultDocKey,
 } from '../../examples/5-full-page';
-import { EditorAppearance } from '../../src/types';
+import { EditorAppearance, EditorPlugin } from '../../src/types';
 import { EditorActions, ContextPanel } from '../../src';
 
-import { fromLocation, encode, check, Message } from '../adf-url';
+import * as ADFUrl from '../adf-url';
+import * as FeatureFlagUrl from '../feature-flag-url';
+
 import { copy } from '../copy';
 import { Error, ErrorReport } from '../ErrorReport';
-import { getXProductExtensionProvider } from '../fake-x-product-extensions';
-import { getConfluenceMacrosExtensionProvider } from '../confluence-macros';
 import { KitchenSinkControls } from './kitchen-sink-controls';
 import { KitchenSinkAdfInput } from './kitchen-sink-adf-input';
 import { Container, EditorColumn, Column, Rail } from './kitchen-sink-styles';
 import { KitchenSinkRenderer } from './kitchen-sink-renderer';
 import { KitchenSinkEditor } from './kitchen-sink-editor';
+import { isEmptyDocument } from '../../src/utils/document';
+import { getExampleExtensionProviders } from '../get-example-extension-providers';
+import { exampleSelectionDebugger } from '../example-editor-plugins';
 
 addGlobalEventEmitterListeners();
 
@@ -55,12 +56,12 @@ const appearanceOptions = [
 
 const docOptions = [
   { label: 'Empty document', value: null },
-  { label: 'Example document', value: 'example-document.ts' },
-  { label: 'With huge table', value: 'example-doc-with-huge-table.ts' },
-  { label: 'With table', value: 'example-doc-with-table.ts' },
+  { label: 'Example document', value: './adf/example.adf.json' },
+  { label: 'With huge table', value: './adf/huge-table.adf.json' },
+  { label: 'With table', value: './adf/table.adf.json' },
   {
     label: 'Different extension types',
-    value: 'example-doc-with-different-extension-types.ts',
+    value: './adf/extension-types.adf.json',
   },
 ];
 
@@ -84,6 +85,7 @@ export type KitchenSinkProps = {
 export type KitchenSinkState = {
   adf: object | undefined;
   adfInput: string;
+  featureFlagInput: string;
 
   appearance: EditorAppearance;
   showADF: boolean;
@@ -96,7 +98,8 @@ export type KitchenSinkState = {
   waitingToValidate: boolean;
   theme: Theme;
 
-  warning?: Message;
+  warning?: ADFUrl.Message;
+  positionDebuggerEnabled?: boolean;
 };
 
 function getInitialTheme(): Theme {
@@ -108,6 +111,24 @@ function getInitialTheme(): Theme {
   return themeOptions[0].value;
 }
 
+function scrubAdfSafely(data: any): any {
+  try {
+    return scrubAdf(data);
+  } catch (err) {
+    return {
+      message: err.message,
+      stack: err.stack || [],
+    };
+  }
+}
+
+function parseSafely<T>(input: string): T | {} {
+  try {
+    return JSON.parse(input);
+  } catch (err) {
+    return {};
+  }
+}
 export class KitchenSink extends React.Component<
   KitchenSinkProps,
   KitchenSinkState
@@ -126,7 +147,7 @@ export class KitchenSink extends React.Component<
   };
 
   private getDefaultADF = () => {
-    const maybeAdf = fromLocation<object>(window.parent.location);
+    const maybeAdf = ADFUrl.fromLocation<object>(window.parent.location);
     const adf = maybeAdf instanceof window.Error ? undefined : maybeAdf;
 
     if (maybeAdf instanceof window.Error) {
@@ -149,6 +170,32 @@ export class KitchenSink extends React.Component<
         content: [],
       })
     );
+  };
+
+  private getDefaultFeatureFlagInput = () => {
+    const maybeFeatureFlagInput = FeatureFlagUrl.fromLocation<string>(
+      window.parent.location,
+    );
+    const featureFlagInput =
+      maybeFeatureFlagInput instanceof window.Error
+        ? undefined
+        : maybeFeatureFlagInput;
+
+    if (maybeFeatureFlagInput instanceof window.Error) {
+      window.setTimeout(() => {
+        this.setState({
+          warning: {
+            type: 'warn',
+            title: "Couldn't load feature flags from URL",
+            message: maybeFeatureFlagInput.message,
+          },
+        });
+      }, 1000);
+
+      return '{}';
+    }
+
+    return featureFlagInput;
   };
 
   private getDefaultOrientation = () => {
@@ -176,6 +223,7 @@ export class KitchenSink extends React.Component<
   public state: KitchenSinkState = {
     adf: this.getDefaultADF(),
     adfInput: JSON.stringify(this.getDefaultADF(), null, 2),
+    featureFlagInput: this.getDefaultFeatureFlagInput() ?? '{}',
     appearance: this.getDefaultAppearance(),
     showADF: this.params.get('show-adf') === 'true',
     disabled: this.params.get('disabled') === 'true',
@@ -188,17 +236,13 @@ export class KitchenSink extends React.Component<
     waitingToValidate: false,
     scrubContent: this.params.get('scrub') === 'true',
     theme: getInitialTheme(),
+    positionDebuggerEnabled: false,
   };
 
   private dataProviders = ProviderFactory.create({
     ...providers,
     mediaProvider,
-    extensionProvider: Promise.resolve(
-      combineExtensionProviders([
-        getXProductExtensionProvider(),
-        getConfluenceMacrosExtensionProvider(),
-      ]),
-    ),
+    extensionProvider: Promise.resolve(getExampleExtensionProviders()),
   });
 
   private popupMountPoint?: HTMLElement | null;
@@ -264,9 +308,24 @@ export class KitchenSink extends React.Component<
   };
 
   private onCopyLink = async () => {
-    const value = await this.props.actions.getValue();
+    const view = this.props.actions._privateGetEditorView();
     const url = new URL(window.location.href);
-    url.searchParams.set('adf', encode(value));
+    const value = await this.props.actions.getValue();
+
+    if (view && !isEmptyDocument(view?.state.doc)) {
+      url.searchParams.set('adf', ADFUrl.encode(value));
+    } else {
+      url.searchParams.delete('adf');
+    }
+
+    if (this.state.featureFlagInput !== '{}') {
+      url.searchParams.set(
+        'ff',
+        FeatureFlagUrl.encode(this.state.featureFlagInput),
+      );
+    } else {
+      url.searchParams.delete('ff');
+    }
 
     if (this.state.disabled) {
       url.searchParams.set('disabled', 'true');
@@ -307,7 +366,7 @@ export class KitchenSink extends React.Component<
     );
     copy(result);
 
-    const warning = check(result);
+    const warning = ADFUrl.check(result);
 
     if (warning) {
       this.setState({ warning });
@@ -324,9 +383,8 @@ export class KitchenSink extends React.Component<
       return;
     }
 
-    const docModule = await import(`../${opt.value}`);
-    const adf = docModule.exampleDocument;
-
+    const response = await fetch(opt.value);
+    const adf = await response.json();
     this.props.actions.replaceDocument(adf, false);
   };
 
@@ -349,6 +407,27 @@ export class KitchenSink extends React.Component<
   private onInputSubmit = () => {
     this.props.actions.replaceDocument(this.state.adfInput, false);
   };
+
+  private onFeatureFlagChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    this.setState({ featureFlagInput: event.target.value });
+  };
+
+  private onPositionDebuggerEnabled = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    this.setState({ positionDebuggerEnabled: event.target.checked });
+  };
+
+  private customPlugins = [exampleSelectionDebugger()];
+  private noopPlugins = [];
+
+  private editorPlugins(): EditorPlugin[] {
+    return this.state.positionDebuggerEnabled
+      ? this.customPlugins
+      : this.noopPlugins;
+  }
 
   private loadLocale = async (locale: string) => {
     const localeData = await import(
@@ -405,9 +484,10 @@ export class KitchenSink extends React.Component<
                 loadLocale={this.loadLocale}
                 appearance={this.state.appearance}
                 disabled={this.state.disabled}
-                extensionProviders={editorActions => [
-                  getXProductExtensionProvider(),
-                  getConfluenceMacrosExtensionProvider(editorActions),
+                featureFlags={parseSafely(this.state.featureFlagInput)}
+                editorPlugins={this.editorPlugins()}
+                extensionProviders={(editorActions) => [
+                  getExampleExtensionProviders(editorActions),
                 ]}
               />
             </EditorColumn>
@@ -422,6 +502,7 @@ export class KitchenSink extends React.Component<
                 dataProviders={this.dataProviders}
                 isFullPage={this.state.appearance.startsWith('full')}
                 locale={this.props.locale}
+                featureFlags={parseSafely(this.state.featureFlagInput)}
               />
             </Column>
             {this.state.showADF ? (
@@ -433,6 +514,14 @@ export class KitchenSink extends React.Component<
                         <ErrorReport errors={this.state.errors} />
                       )}
                     </Container>
+                    <label>
+                      Feature flags
+                      <KitchenSinkAdfInput
+                        value={this.state.featureFlagInput}
+                        onChange={this.onFeatureFlagChange}
+                      />
+                    </label>
+                    <br />
                     <label>
                       Plain
                       <KitchenSinkAdfInput
@@ -446,12 +535,21 @@ export class KitchenSink extends React.Component<
                       Scrubbed
                       <KitchenSinkAdfInput
                         value={JSON.stringify(
-                          scrubAdf(this.state.adf as ADFEntity),
+                          scrubAdfSafely(this.state.adf as ADFEntity),
                           null,
                           '  ',
                         )}
                       />
                     </label>
+                    <div>
+                      <label>Options</label>
+                      <Checkbox
+                        onChange={this.onPositionDebuggerEnabled}
+                        isChecked={this.state.positionDebuggerEnabled}
+                        label="Position debugger enabled"
+                        size="large"
+                      />
+                    </div>
                   </div>
                 </ContextPanel>
               </Rail>

@@ -23,7 +23,8 @@ import {
   tdCursor,
   thEmpty,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { pmNodeBuilder } from '@atlaskit/editor-test-helpers/schema-element-builder';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
@@ -38,7 +39,7 @@ import tasksDecisionsPlugin from '../../../../plugins/tasks-and-decisions';
 import selectionPlugin from '../../../../plugins/selection';
 import mediaPlugin from '../../../../plugins/media';
 import analyticsPlugin from '../../../../plugins/analytics';
-import listsPlugin from '../../../../plugins/lists';
+import listPlugin from '../../../../plugins/list';
 import blockTypePlugin from '../../../../plugins/block-type';
 import codeBlockPlugin from '../../../../plugins/code-block';
 import rulePlugin from '../../../../plugins/rule';
@@ -52,6 +53,7 @@ import statusPlugin from '../../../../plugins/status';
 import tablePlugin from '../../../../plugins/table';
 import { TablePluginState } from '../../../../plugins/table/types';
 import { pluginKey } from '../../../../plugins/table/pm-plugins/plugin-factory';
+import featureFlagsPlugin from '../../../../plugins/feature-flags-context';
 
 describe('table keymap', () => {
   const createAnalyticsEvent: CreateUIAnalyticsEvent = jest.fn(
@@ -65,7 +67,7 @@ describe('table keymap', () => {
     .add(expandPlugin)
     .add(tasksDecisionsPlugin)
     .add(panelPlugin)
-    .add(listsPlugin)
+    .add(listPlugin)
     .add(blockTypePlugin)
     .add(codeBlockPlugin)
     .add(rulePlugin)
@@ -77,9 +79,10 @@ describe('table keymap', () => {
     .add(layoutPlugin)
     .add([statusPlugin, { menuDisabled: false }])
     .add([mediaPlugin, { allowMediaSingle: true }])
-    .add([analyticsPlugin, { createAnalyticsEvent }]);
+    .add([analyticsPlugin, { createAnalyticsEvent }])
+    .add([featureFlagsPlugin]);
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<TablePluginState, PluginKey>({
       doc,
       preset,
@@ -247,7 +250,7 @@ describe('table keymap', () => {
 
       const excludeNodes = ['doc', 'table', 'bodiedExtension'];
 
-      Object.keys(defaultSchema.nodes).forEach(nodeName => {
+      Object.keys(defaultSchema.nodes).forEach((nodeName) => {
         const node = defaultSchema.nodes[nodeName];
         if (
           node.spec.group !== 'block' ||
@@ -316,7 +319,7 @@ describe('table keymap', () => {
       });
     });
 
-    [0, 1, 2].forEach(index => {
+    [0, 1, 2].forEach((index) => {
       describe(`when row ${index + 1} is selected`, () => {
         it(`should empty cells in the row ${
           index + 1

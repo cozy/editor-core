@@ -2,12 +2,14 @@ import React from 'react';
 import { Component } from 'react';
 import { EditorView } from 'prosemirror-view';
 import { Node as PMNode } from 'prosemirror-model';
+import { ADFEntity } from '@atlaskit/adf-utils';
 import {
   ProviderFactory,
   WithProviders,
   ExtensionHandlers,
   Providers,
 } from '@atlaskit/editor-common';
+import { EditorAppearance } from '../../../../types/editor-appearance';
 import ExtensionComponent from './ExtensionComponent';
 
 export interface Props {
@@ -16,6 +18,8 @@ export interface Props {
   providerFactory?: ProviderFactory;
   handleContentDOMRef: (node: HTMLElement | null) => void;
   extensionHandlers: ExtensionHandlers;
+  refNode?: ADFEntity;
+  editorAppearance?: EditorAppearance;
 }
 
 export default class Extension extends Component<Props, any> {
@@ -42,15 +46,19 @@ export default class Extension extends Component<Props, any> {
       editorView,
       handleContentDOMRef,
       extensionHandlers,
+      refNode,
+      editorAppearance,
     } = this.props;
 
     return (
       <ExtensionComponent
         editorView={editorView}
         node={node}
+        refNode={refNode}
         extensionProvider={extensionProvider}
         handleContentDOMRef={handleContentDOMRef}
         extensionHandlers={extensionHandlers}
+        editorAppearance={editorAppearance}
       />
     );
   };

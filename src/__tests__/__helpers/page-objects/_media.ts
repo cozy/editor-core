@@ -8,12 +8,12 @@ import commonMessages, {
   linkMessages,
 } from '../../../messages';
 import { toolbarMessages as mediaLayoutToolbarMessages } from '../../../ui/MediaAndEmbedsToolbar/toolbar-messages';
-import { mediaLinkToolbarMessages } from '../../../plugins/media/ui/MediaLinkingToolbar';
 import { waitForLoadedImageElements } from '@atlaskit/visual-regression/helper';
 import { MediaPickerPageObject } from '@atlaskit/media-integration-test-helpers';
 import Page, { BrowserObject } from '@atlaskit/webdriver-runner/wd-wrapper';
 import { messages as insertBlockMessages } from '../../../plugins/insert-block/ui/ToolbarInsertBlock/messages';
 import { KEY } from './_keyboard';
+import { mediaLinkToolbarMessages } from '../../../plugins/media/ui/media-linking-toolbar-messages';
 
 export enum MediaLayout {
   center,
@@ -98,7 +98,7 @@ const LayoutSelectors = {
   },
 };
 
-const mediaResizeSelectors = {
+export const mediaResizeSelectors = {
   [MediaResizeSide.right]: '.richMedia-resize-handle-right',
   [MediaResizeSide.left]: '.richMedia-resize-handle-left',
 };
@@ -135,7 +135,7 @@ export async function clickOnToolbarButton(
 
 export async function waitForActivityItems(page: PuppeteerPage, items: number) {
   const itemsSelector = `[aria-label="Media floating controls"] .recent-list ul li`;
-  await page.waitFor(
+  await page.waitForFunction(
     (selector: string, items: number) =>
       document.querySelectorAll(selector).length === items,
     {},
@@ -173,7 +173,7 @@ export async function clickMediaInPosition(
   await page.waitForSelector(mediaImageSelected);
 }
 
-const pickupHandle = async (
+export const pickupHandle = async (
   page: PuppeteerPage,
   side: MediaResizeSide = MediaResizeSide.right,
 ) => {

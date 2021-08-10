@@ -2,8 +2,8 @@ import { shallow, ShallowWrapper } from 'enzyme';
 import { ProviderFactory } from '@atlaskit/editor-common';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import { PanelType } from '@atlaskit/adf-schema';
-import { doc, p, panel } from '@atlaskit/editor-test-helpers/schema-builder';
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { doc, p, panel } from '@atlaskit/editor-test-helpers/doc-builder';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
 import { Emoji } from '@atlaskit/editor-common';
 import { ResourcedEmoji } from '@atlaskit/emoji/element';
 import {
@@ -26,8 +26,7 @@ describe('Panel - NodeView', () => {
   const createEditor = createProsemirrorEditorFactory();
   const renderEmojiSpy = jest.fn();
   let providerFactory: ProviderFactory;
-  const { testData } = emojiData;
-  const emojiProvider = testData.getEmojiResourcePromise();
+  const emojiProvider = getTestEmojiResource();
   ((ResourcedEmoji as unknown) as jest.Mock).mockImplementation(() => {
     return {
       render: renderEmojiSpy,
@@ -68,7 +67,7 @@ describe('Panel - NodeView', () => {
 
   describe('PanelIcon', () => {
     const standardPanelTypes = Object.values(PanelType).filter(
-      panelType => panelType !== PanelType.CUSTOM,
+      (panelType) => panelType !== PanelType.CUSTOM,
     );
     let panelIcon: ShallowWrapper;
 
@@ -80,7 +79,7 @@ describe('Panel - NodeView', () => {
 
     it.each<PanelType>(standardPanelTypes)(
       'renders panelIcon according to standard panel type %s',
-      panelType => {
+      (panelType) => {
         panelIcon = shallow(
           <PanelIcon
             panelAttributes={{

@@ -10,8 +10,13 @@ jest.mock('prosemirror-history');
 import { closeHistory } from 'prosemirror-history';
 
 import { CardProvider } from '@atlaskit/editor-common/provider-factory';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p, a } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import {
+  DocBuilder,
+  doc,
+  p,
+  a,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { pluginKey } from '../../../../plugins/card/pm-plugins/main';
 
@@ -24,18 +29,18 @@ import { INPUT_METHOD } from '../../../../plugins/analytics';
 describe('card', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps: {
-        UNSAFE_cards: {},
+        smartLinks: {},
       },
       pluginKey,
     });
   };
 
   beforeAll(() => {
-    (closeHistory as jest.Mock).mockImplementation(tr => {
+    (closeHistory as jest.Mock).mockImplementation((tr) => {
       return tr;
     });
   });
@@ -61,7 +66,7 @@ describe('card', () => {
       beforeEach(() => {
         provider = new (class implements CardProvider {
           resolve(): Promise<any> {
-            const promise = new Promise(resolve => resolve(cardAdf));
+            const promise = new Promise((resolve) => resolve(cardAdf));
             promises.push(promise);
             return promise;
           }
@@ -107,11 +112,9 @@ describe('card', () => {
           await Promise.all(promises);
 
           expect(closeHistory).toBeCalledTimes(1);
-          expect(rafSchd).toBeCalledTimes(2);
-          // // From floating toolbar.
-          expect(rafSchd).nthCalledWith(1, expect.any(Function));
+          expect(rafSchd).toBeCalledTimes(1);
           // // From Smart Link Node View.
-          expect(rafSchd).nthCalledWith(2, expect.any(Function));
+          expect(rafSchd).nthCalledWith(1, expect.any(Function));
         });
       });
     });

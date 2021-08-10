@@ -8,7 +8,7 @@ import {
 } from '../ContextPanel/context';
 
 export interface Props {
-  editorView: EditorView;
+  editorView?: EditorView;
 }
 
 type CallbacksType = {
@@ -66,6 +66,7 @@ const WidthEmitter = ({ editorView }: Props) => {
 
     tr.setMeta(widthPluginKey, {
       width,
+      containerWidth,
       lineLength: dom ? dom.clientWidth : undefined,
     });
 

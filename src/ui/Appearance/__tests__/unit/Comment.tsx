@@ -1,11 +1,8 @@
 import React from 'react';
-import {
-  createEditorFactory,
-  doc,
-  p,
-  mountWithIntl,
-  sleep,
-} from '@atlaskit/editor-test-helpers';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
+import { sleep } from '@atlaskit/editor-test-helpers/sleep';
+import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import Comment from '../../Comment';
 import { getDefaultMediaClientConfig } from '@atlaskit/media-test-helpers/fakeMediaClient';
 import { ProviderFactory } from '@atlaskit/editor-common';
@@ -18,7 +15,7 @@ import { MediaOptions } from '../../../../plugins/media/types';
 describe('comment editor', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowExtension: true },
@@ -33,7 +30,7 @@ describe('comment editor', () => {
       />,
     );
     fullPage
-      .findWhere(elm => elm.name() === 'ClickWrapper')
+      .findWhere((elm) => elm.name() === 'ClickWrapper')
       .simulate('click', { clientY: 200 });
     expect(editorView.state.doc).toEqualDocument(
       doc(p('Hello world'), p('Hello world'), p('')),
@@ -50,7 +47,7 @@ describe('comment editor', () => {
       />,
     );
     fullPage
-      .findWhere(elm => elm.name() === 'ClickWrapper')
+      .findWhere((elm) => elm.name() === 'ClickWrapper')
       .simulate('click', { clientY: 200 })
       .simulate('click', { clientY: 200 });
     expect(editorView.state.doc).toEqualDocument(doc(p('Hello world'), p('')));
@@ -66,7 +63,7 @@ describe('comment editor', () => {
       />,
     );
     fullPage
-      .findWhere(elm => elm.name() === 'ContentArea')
+      .findWhere((elm) => elm.name() === 'ContentArea')
       .childAt(0)
       .simulate('click');
     expect(editorView.state.doc).toEqualDocument(doc(p('Hello world')));
@@ -143,6 +140,79 @@ describe('comment editor', () => {
       } = mediaPluginState.mediaOptions as MediaOptions;
       expect(alignLeftOnInsert).toBe(true);
       expect(allowAdvancedToolBarOptions).toBe(true);
+    });
+  });
+  describe('secondary toolbar', () => {
+    it('should render the secondary toolbar if there is a save button', () => {
+      const { editorView } = editor(doc(p('Hello world')));
+      const fullPage = mountWithIntl(
+        <Comment
+          editorView={editorView}
+          onSave={true as any}
+          providerFactory={{} as any}
+          editorDOMElement={<div />}
+        />,
+      );
+      fullPage
+        .findWhere((elm) => elm.name() === 'ContentArea')
+        .childAt(0)
+        .simulate('click');
+      expect(
+        fullPage.findWhere((elm) => elm.name() === 'SecondaryToolbar').exists(),
+      ).toBe(true);
+    });
+    it('should render the secondary toolbar if there is a cancel button', () => {
+      const { editorView } = editor(doc(p('Hello world')));
+      const fullPage = mountWithIntl(
+        <Comment
+          editorView={editorView}
+          onCancel={true as any}
+          providerFactory={{} as any}
+          editorDOMElement={<div />}
+        />,
+      );
+      fullPage
+        .findWhere((elm) => elm.name() === 'ContentArea')
+        .childAt(0)
+        .simulate('click');
+      expect(
+        fullPage.findWhere((elm) => elm.name() === 'SecondaryToolbar').exists(),
+      ).toBe(true);
+    });
+    it('should render the secondary toolbar if there is a custom secondary toolbar button', () => {
+      const { editorView } = editor(doc(p('Hello world')));
+      const fullPage = mountWithIntl(
+        <Comment
+          editorView={editorView}
+          customSecondaryToolbarComponents={true as any}
+          providerFactory={{} as any}
+          editorDOMElement={<div />}
+        />,
+      );
+      fullPage
+        .findWhere((elm) => elm.name() === 'ContentArea')
+        .childAt(0)
+        .simulate('click');
+      expect(
+        fullPage.findWhere((elm) => elm.name() === 'SecondaryToolbar').exists(),
+      ).toBe(true);
+    });
+    it('should not render the secondary toolbar if there is no save, cancel or custom button', () => {
+      const { editorView } = editor(doc(p('Hello world')));
+      const fullPage = mountWithIntl(
+        <Comment
+          editorView={editorView}
+          providerFactory={{} as any}
+          editorDOMElement={<div />}
+        />,
+      );
+      fullPage
+        .findWhere((elm) => elm.name() === 'ContentArea')
+        .childAt(0)
+        .simulate('click');
+      expect(
+        fullPage.findWhere((elm) => elm.name() === 'SecondaryToolbar').exists(),
+      ).toBe(false);
     });
   });
 });

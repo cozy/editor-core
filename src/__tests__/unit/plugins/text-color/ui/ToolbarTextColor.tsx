@@ -1,12 +1,13 @@
 import React from 'react';
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import {
   doc,
   code_block,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import { ReactWrapper } from 'enzyme';
 import Button from '@atlaskit/button/custom-theme-button';
@@ -66,7 +67,7 @@ function clickColor(
 
   toolbarTextColor
     .find(`ColorPalette Color`)
-    .filterWhere(n => n.prop('value') === color.hexCode)
+    .filterWhere((n) => n.prop('value') === color.hexCode)
     .find('button')
     .simulate('click');
 }
@@ -96,7 +97,7 @@ describe('ToolbarTextColor', () => {
   let createAnalyticsEvent: jest.MockInstance<UIAnalyticsEvent, any>;
   let toolbarTextColor: ReactWrapper<ToolbarTextColorProps>;
 
-  const editor = (doc: any, props: any = {}) => {
+  const editor = (doc: DocBuilder, props: any = {}) => {
     createAnalyticsEvent = createAnalyticsEventMock();
     return createEditor({
       doc,
@@ -190,7 +191,7 @@ describe('ToolbarTextColor', () => {
       });
     });
 
-    it('should create experimental analytics when palette shown', () => {
+    it('should create analytics when palette shown', () => {
       clickToolbarButton(toolbarTextColor);
 
       expect(mockDispatchAnalytics).toHaveBeenCalledWith(
@@ -209,7 +210,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when palette shown and closed', () => {
+    it('should create analytics when palette shown and closed', () => {
       clickToolbarButton(toolbarTextColor);
       clickToolbarButton(toolbarTextColor);
 
@@ -229,7 +230,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when a color is selected', () => {
+    it('should create analytics when a color is selected', () => {
       const { palette } = pluginState;
       const color = getColorFromPalette(palette, 2);
 
@@ -311,7 +312,7 @@ describe('ToolbarTextColor', () => {
     beforeEach(() => {
       const props = {
         allowTextColor: {
-          EXPERIMENTAL_allowMoreTextColors: true,
+          allowMoreTextColors: true,
         },
       };
       const { editorView } = editor(doc(p('text')), props);
@@ -391,7 +392,7 @@ describe('ToolbarTextColor', () => {
       expect(toolbarTextColor.state('isShowingMoreColors')).toBe(true);
     });
 
-    it('should create experimental analytics when palette shown', () => {
+    it('should create analytics when palette shown', () => {
       clickToolbarButton(toolbarTextColor);
 
       expect(mockDispatchAnalytics).toHaveBeenCalledWith(
@@ -410,7 +411,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when palette opened and closed without selection', () => {
+    it('should create analytics when palette opened and closed without selection', () => {
       clickToolbarButton(toolbarTextColor);
       clickToolbarButton(toolbarTextColor);
 
@@ -430,7 +431,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when palette opened, expanded and closed without selection', () => {
+    it('should create analytics when palette opened, expanded and closed without selection', () => {
       clickToolbarButton(toolbarTextColor);
       clickTogglePaletteButton(toolbarTextColor);
       clickToolbarButton(toolbarTextColor);
@@ -451,7 +452,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when show more colors clicked', () => {
+    it('should create analytics when show more colors clicked', () => {
       clickToolbarButton(toolbarTextColor);
       clickTogglePaletteButton(toolbarTextColor);
 
@@ -471,7 +472,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when palette opened, expanded, closed without selection and stay expanded when re-opened', () => {
+    it('should create analytics when palette opened, expanded, closed without selection and stay expanded when re-opened', () => {
       clickToolbarButton(toolbarTextColor);
       clickTogglePaletteButton(toolbarTextColor);
       clickToolbarButton(toolbarTextColor);
@@ -493,7 +494,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics when show less colors clicked', () => {
+    it('should create analytics when show less colors clicked', () => {
       clickToolbarButton(toolbarTextColor);
       clickTogglePaletteButton(toolbarTextColor);
       clickTogglePaletteButton(toolbarTextColor);
@@ -514,7 +515,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics event when old color selected', () => {
+    it('should create analytics event when old color selected', () => {
       const { palette } = pluginState;
       const color = getColorFromPalette(palette, 2); // Teal
 
@@ -538,7 +539,7 @@ describe('ToolbarTextColor', () => {
       );
     });
 
-    it('should create experimental analytics event when new color selected', () => {
+    it('should create analytics event when new color selected', () => {
       const { paletteExpanded = [] } = pluginState;
       const color = getColorFromPalette(
         paletteExpanded,

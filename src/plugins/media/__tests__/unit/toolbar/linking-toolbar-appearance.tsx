@@ -35,12 +35,12 @@ const waitForStateUpdate = async () => {
 
 import { MediaLinkingState } from '../../../pm-plugins/linking';
 
-import { RefsNode } from '@atlaskit/editor-test-helpers';
+import { RefsNode } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   doc,
   mediaSingle,
   media,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { linkToolbarMessages } from '../../../../../messages';
 
 const defaultMediaLinkingState: MediaLinkingState = {
@@ -93,7 +93,6 @@ const setup = async (
       onAddLink={jest.fn()}
       onEditLink={jest.fn()}
       onOpenLink={jest.fn()}
-      showSeparatorLeft={true}
     />,
   );
 

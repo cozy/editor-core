@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { scrollIntoView } from '@atlaskit/editor-test-helpers/transactions';
 import { EditorView } from 'prosemirror-view';
 import createStub from 'raf-stub';
@@ -57,7 +57,7 @@ describe('Mobile Scroll Plugin', () => {
     jest.spyOn(window, 'requestAnimationFrame').mockImplementation(rafStub.add);
 
     ({ editorView, plugin, contentComponents } = editor());
-    contentComponents.forEach(component => {
+    contentComponents.forEach((component) => {
       component({ editorView });
     });
     appendTrSpy = jest.spyOn(plugin.spec, 'appendTransaction');

@@ -1,13 +1,10 @@
 import {
   extension,
-  extensionWithLocalId,
   bodiedExtension,
-  bodiedExtensionWithLocalId,
   inlineExtension,
-  inlineExtensionWithLocalId,
 } from '@atlaskit/adf-schema';
 import { ExtensionHandlers } from '@atlaskit/editor-common/extensions';
-import { EditorPlugin } from '../../types';
+import { EditorPlugin, EditorAppearance } from '../../types';
 import { LongPressSelectionPluginOptions } from '../selection/types';
 import { createPlugin } from './pm-plugins/main';
 import keymapPlugin from './pm-plugins/keymap';
@@ -17,11 +14,11 @@ import { getContextPanel } from './context-panel';
 
 interface ExtensionPluginOptions extends LongPressSelectionPluginOptions {
   allowAutoSave?: boolean;
-  allowLocalIdGeneration?: boolean;
   breakoutEnabled?: boolean;
   extensionHandlers?: ExtensionHandlers;
   // TODO: Remove this @see ED-8585
   stickToolbarToBottom?: boolean;
+  appearance?: EditorAppearance;
 }
 
 const extensionPlugin = (
@@ -33,19 +30,15 @@ const extensionPlugin = (
     return [
       {
         name: 'extension',
-        node: options.allowLocalIdGeneration ? extensionWithLocalId : extension,
+        node: extension,
       },
       {
         name: 'bodiedExtension',
-        node: options.allowLocalIdGeneration
-          ? bodiedExtensionWithLocalId
-          : bodiedExtension,
+        node: bodiedExtension,
       },
       {
         name: 'inlineExtension',
-        node: options.allowLocalIdGeneration
-          ? inlineExtensionWithLocalId
-          : inlineExtension,
+        node: inlineExtension,
       },
     ];
   },
@@ -69,6 +62,9 @@ const extensionPlugin = (
             portalProviderAPI,
             eventDispatcher,
             options.useLongPressSelection,
+            {
+              appearance: options.appearance,
+            },
           );
         },
       },
@@ -78,8 +74,7 @@ const extensionPlugin = (
       },
       {
         name: 'extensionUniqueId',
-        plugin: () =>
-          options.allowLocalIdGeneration ? createUniqueIdPlugin() : undefined,
+        plugin: () => createUniqueIdPlugin(),
       },
     ];
   },

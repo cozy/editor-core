@@ -1,6 +1,6 @@
 // Common Translations will live here
 import { defineMessages } from 'react-intl';
-import { linkMessages } from '@atlaskit/editor-common';
+import { linkMessages } from '@atlaskit/editor-common/messages';
 
 export { linkMessages };
 
@@ -27,8 +27,8 @@ export const linkToolbarMessages = defineMessages({
   },
   placeholder: {
     id: 'fabric.editor.hyperlinkToolbarPlaceholder',
-    defaultMessage: 'Paste link or search recently viewed',
-    description: 'Paste link or search recently viewed',
+    defaultMessage: 'Paste or search for link',
+    description: 'Paste or search for link',
   },
   linkPlaceholder: {
     id: 'fabric.editor.linkPlaceholder',
@@ -116,6 +116,11 @@ export default defineMessages({
     id: 'fabric.editor.tooltip.taskList',
     defaultMessage: 'an action item',
     description: 'an action item in the Editor',
+  },
+  bulletList: {
+    id: 'fabric.editor.tooltip.bulletList',
+    defaultMessage: 'a list',
+    description: 'a list item in the Editor',
   },
   nestedExpand: {
     id: 'fabric.editor.tooltip.nestedExpand',

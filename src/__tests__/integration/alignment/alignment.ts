@@ -2,7 +2,7 @@ import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import { getDocFromElement, editable, quickInsert } from '../_helpers';
 import { TableCssClassName as ClassName } from '../../../plugins/table/types';
 import {
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
   mountEditor,
 } from '../../__helpers/testing-example-helpers';
 import { messages } from '../../../plugins/block-type/messages';
@@ -23,7 +23,7 @@ BrowserTestCase(
   'alignment: should be able to add alignment to paragraphs',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     await mountEditor(page, {
       appearance: 'full-page',
@@ -38,11 +38,12 @@ BrowserTestCase(
   },
 );
 
+// TODO: https://product-fabric.atlassian.net/browse/ED-13150
 BrowserTestCase(
   'alignment: should be able to add alignment to headings',
-  { skip: ['edge'] },
+  { skip: ['*'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     await mountEditor(page, {
       appearance: 'full-page',
@@ -60,14 +61,13 @@ BrowserTestCase(
     ).toMatchCustomDocSnapshot(testName);
   },
 );
-
 // https://product-fabric.atlassian.net/browse/ED-6802
 // TODO: test failing on safari and edge
 BrowserTestCase(
   'alignment: disabled when inside special nodes',
   { skip: ['safari', 'edge'] },
   async (client: any) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: 'full-page',
       allowTextAlignment: true,
@@ -86,7 +86,7 @@ BrowserTestCase(
   'alignment: disabled when editor is disabled',
   { skip: ['safari', 'edge'] },
   async (client: any) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: 'full-page',
       allowTextAlignment: true,
@@ -101,7 +101,7 @@ BrowserTestCase(
   'alignment: should maintain alignment when hit return',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: 'full-page',
       allowTextAlignment: true,
@@ -128,7 +128,7 @@ BrowserTestCase(
   // @see ED-10292
   { skip: ['edge', 'safari'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     const CELL = 'tbody td:first-child';
 
     await mountEditor(page, {

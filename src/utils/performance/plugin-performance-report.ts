@@ -1,4 +1,10 @@
 import { outlier } from './outlier';
+import {
+  EVENT_NAME_STATE_APPLY,
+  EVENT_NAME_UPDATE_STATE,
+  EVENT_NAME_ON_CHANGE,
+  EVENT_NAME_VIEW_STATE_UPDATED,
+} from './track-transactions';
 
 export interface PluginMethodReport {
   stateApply: number;
@@ -18,7 +24,8 @@ export interface PluginsReport {
 export interface PluginPerformanceReportData {
   trigger: string;
   duration: number;
-  nodes: { [name: string]: number };
+  nodes: NodeCount;
+  extensionNodes: NodeCount;
   plugins: PluginsReport;
   slowPlugins: PluginsReport;
   stepDurations: {
@@ -31,11 +38,19 @@ export interface PluginPerformanceReportData {
 }
 
 export interface PluginPerformanceReportOptions {
+  usePerformanceMarks?: boolean;
   samplingRate: number;
   slowThreshold: number;
   outlierThreshold: number;
   outlierFactor: number;
 }
+
+type NodeCount = Record<string, number>;
+
+export type NodesCount = {
+  nodeCount: NodeCount;
+  extensionNodeCount: NodeCount;
+};
 
 export class PluginPerformanceReport {
   private count = 0;
@@ -47,7 +62,8 @@ export class PluginPerformanceReport {
   private onChangeCalled?: PerformanceEntry;
   private onEditorViewStateUpdatedCalled?: PerformanceEntry;
 
-  private nodes: { [name: string]: number } = {};
+  private nodes: NodeCount = {};
+  private extensionNodes: NodeCount = {};
   private nodesDuration: number = 0;
 
   private plugins: PluginsReport = {};
@@ -117,21 +133,12 @@ export class PluginPerformanceReport {
 
   public withEntryList(entryList: PerformanceObserverEntryList): this {
     this.entryList = entryList;
-    this.stateApplied = this.getEntryByName(
-      entryList,
-      '🦉 EditorView::state::apply',
-    );
-    this.viewUpdated = this.getEntryByName(
-      entryList,
-      '🦉 EditorView::updateState',
-    );
-    this.onChangeCalled = this.getEntryByName(
-      entryList,
-      '🦉 ReactEditorView::onChange',
-    );
+    this.stateApplied = this.getEntryByName(entryList, EVENT_NAME_STATE_APPLY);
+    this.viewUpdated = this.getEntryByName(entryList, EVENT_NAME_UPDATE_STATE);
+    this.onChangeCalled = this.getEntryByName(entryList, EVENT_NAME_ON_CHANGE);
     this.onEditorViewStateUpdatedCalled = this.getEntryByName(
       entryList,
-      '🦉 ReactEditorView::onEditorViewStateUpdated',
+      EVENT_NAME_VIEW_STATE_UPDATED,
     );
     this.withPlugins(this.pluginNames);
     return this;
@@ -200,11 +207,9 @@ export class PluginPerformanceReport {
     return this;
   }
 
-  public withNodes(
-    nodes: { [name: string]: number },
-    nodesDuration: number = 0,
-  ): this {
-    this.nodes = nodes;
+  public withNodes(nodesCount: NodesCount, nodesDuration: number = 0): this {
+    this.nodes = nodesCount.nodeCount;
+    this.extensionNodes = nodesCount.extensionNodeCount;
     this.nodesDuration = nodesDuration;
     return this;
   }
@@ -224,6 +229,7 @@ export class PluginPerformanceReport {
       trigger: this.trigger,
       duration: this.entry.duration,
       nodes: this.nodes,
+      extensionNodes: this.extensionNodes,
       plugins: this.plugins,
       slowPlugins: this.slowPlugins,
       stepDurations: {

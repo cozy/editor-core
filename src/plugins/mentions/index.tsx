@@ -9,6 +9,7 @@ import {
   isResolvingMentionProvider,
   MentionDescription,
   SLI_EVENT_TYPE,
+  SMART_EVENT_TYPE,
   buildSliPayload,
   MentionProvider,
   TeamMentionProvider,
@@ -32,7 +33,7 @@ import WithPluginState from '../../ui/WithPluginState';
 import {
   createInitialPluginState,
   pluginKey as typeAheadPluginKey,
-  PluginState as TypeAheadPluginState,
+  TypeAheadPluginState,
 } from '../type-ahead/pm-plugins/main';
 import InviteItem, { INVITE_ITEM_DESCRIPTION } from './ui/InviteItem';
 import ToolbarMention from './ui/ToolbarMention';
@@ -126,7 +127,7 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
   };
 
   let shouldTrackInviteItemExposure = false;
-  let inviteExperimentLastQueryWithResults = '';
+  let inviteExperimentFirstQueryWithNoResults = '';
   const debouncedFireEvent = debounce(fireEvent, 200);
 
   return {
@@ -169,9 +170,6 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
           render={({
             typeAheadState = createInitialPluginState(),
             mentionState = {},
-          }: {
-            typeAheadState: TypeAheadPluginState;
-            mentionState: MentionPluginState;
           }) =>
             !mentionState.mentionProvider ? null : (
               <ToolbarMention
@@ -193,7 +191,7 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
           keywords: ['team', 'user'],
           priority: 400,
           keyshortcut: '@',
-          icon: () => <IconMention label={formatMessage(messages.mention)} />,
+          icon: () => <IconMention />,
           action(insert, state) {
             const mark = state.schema.mark('typeAheadQuery', {
               trigger: '@',
@@ -216,6 +214,11 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
         // so it's possible to use it without needing to scan through all triggers again
         customRegex: '\\(?(@)',
         getHighlight: (state: EditorState) => {
+          const CustomHighlightComponent = options?.HighlightComponent;
+          if (CustomHighlightComponent) {
+            return <CustomHighlightComponent />;
+          }
+
           const pluginState = getMentionPluginState(state);
           const provider = pluginState.mentionProvider;
           if (provider) {
@@ -274,13 +277,14 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
             pluginState.mentionProvider.filter(query || '', mentionContext);
           }
 
-          const mentionItems = mentions.map(mention =>
+          const mentionItems = mentions.map((mention) =>
             memoizedToItem.call(mention),
           );
 
           // to show invite teammate item only if there is 2 or less mentionable user/team available
           if (pluginState.mentionProvider && !!query && mentions.length <= 2) {
             const {
+              inviteExperimentCohort,
               shouldEnableInvite,
               userRole,
             } = pluginState.mentionProvider;
@@ -292,6 +296,7 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
                   !!shouldEnableInvite,
                   sessionId,
                   pluginState.contextIdentifierProvider,
+                  inviteExperimentCohort,
                   userRole,
                 ),
               );
@@ -299,15 +304,20 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
             }
 
             if (shouldEnableInvite) {
-              if (mentions.length > 0) {
-                inviteExperimentLastQueryWithResults = query;
+              if (
+                inviteExperimentFirstQueryWithNoResults === '' &&
+                mentions.length === 0
+              ) {
+                inviteExperimentFirstQueryWithNoResults = query;
               }
 
-              const querySuffix = query.slice(
-                inviteExperimentLastQueryWithResults.length,
-              );
-
-              if (querySuffix.indexOf(' ') > -1) {
+              if (
+                mentions.length === 0 &&
+                !shouldKeepInviteItem(
+                  query,
+                  inviteExperimentFirstQueryWithNoResults,
+                )
+              ) {
                 return mentionItems;
               }
 
@@ -347,11 +357,9 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
           return mentionItems;
         },
         selectItem(state, item, insert, { mode }) {
-          inviteExperimentLastQueryWithResults = '';
           const sanitizePrivateContent =
             options && options.sanitizePrivateContent;
-          const mentionInsertDisplayName =
-            options && options.mentionInsertDisplayName;
+          const mentionInsertDisplayName = options && options.insertDisplayName;
 
           const { schema } = state;
 
@@ -389,24 +397,28 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
             mentionProvider.shouldEnableInvite &&
             isInviteItem(item.mention)
           ) {
-            // fire a different ui event for invite teammate item to prevent from data pollution
-            fireEvent(
-              buildTypeAheadInviteItemClickedPayload(
-                pickerElapsedTime,
-                typeAheadPluginState.upKeyCount,
-                typeAheadPluginState.downKeyCount,
-                sessionId,
-                mode,
-                typeAheadPluginState.query || '',
-                pluginState.contextIdentifierProvider,
-                mentionProvider.userRole,
-              ),
-            );
+            // Don't fire event and the callback with selection by space press
+            if (mode !== 'space') {
+              fireEvent(
+                buildTypeAheadInviteItemClickedPayload(
+                  pickerElapsedTime,
+                  typeAheadPluginState.upKeyCount,
+                  typeAheadPluginState.downKeyCount,
+                  sessionId,
+                  mode,
+                  typeAheadPluginState.query || '',
+                  pluginState.contextIdentifierProvider,
+                  mentionProvider.userRole,
+                ),
+              );
 
-            if (mentionProvider.onInviteItemClick) {
-              mentionProvider.onInviteItemClick('mention');
+              if (mentionProvider.onInviteItemClick) {
+                mentionProvider.onInviteItemClick('mention');
+              }
+
+              // reset the query cache upon selection
+              inviteExperimentFirstQueryWithNoResults = '';
             }
-
             return state.tr;
           }
 
@@ -460,7 +472,14 @@ const mentionsPlugin = (options?: MentionPluginOptions): EditorPlugin => {
           );
         },
         dismiss(state) {
-          inviteExperimentLastQueryWithResults = '';
+          const pluginState = getMentionPluginState(state);
+          const { mentionProvider } = pluginState;
+
+          if (mentionProvider && mentionProvider.shouldEnableInvite) {
+            // reset the query cache upon dismiss
+            inviteExperimentFirstQueryWithNoResults = '';
+          }
+
           const typeAheadPluginState = typeAheadPluginKey.getState(
             state,
           ) as TypeAheadPluginState;
@@ -548,7 +567,9 @@ export const setContext = (
  *
  */
 
-export const mentionPluginKey = new PluginKey('mentionPlugin');
+export const mentionPluginKey = new PluginKey<MentionPluginState>(
+  'mentionPlugin',
+);
 
 export function getMentionPluginState(state: EditorState) {
   return mentionPluginKey.getState(state) as MentionPluginState;
@@ -568,9 +589,12 @@ function mentionPluginFactory(
     event: string,
     actionSubject: string,
     action: string,
+    attributes?: {
+      [key: string]: any;
+    },
   ): void => {
-    if (event === SLI_EVENT_TYPE) {
-      fireEvent(buildSliPayload(actionSubject, action));
+    if (event === SLI_EVENT_TYPE || event === SMART_EVENT_TYPE) {
+      fireEvent(buildSliPayload(actionSubject, action, attributes));
     }
   };
 
@@ -643,7 +667,7 @@ function mentionPluginFactory(
             }
 
             (providerPromise as Promise<MentionProvider>)
-              .then(provider => {
+              .then((provider) => {
                 if (mentionProvider) {
                   mentionProvider.unsubscribe('mentionPlugin');
                 }
@@ -664,13 +688,13 @@ function mentionPluginFactory(
                       // is from primary mention endpoint which could be just user mentions or user/team mentions
                       duration = stats && stats.duration;
                       teams = null;
-                      userOrTeamIds = mentions.map(mention => mention.id);
+                      userOrTeamIds = mentions.map((mention) => mention.id);
                     } else {
                       // is from dedicated team-only mention endpoint
                       duration = stats && stats.teamMentionDuration;
                       userOrTeamIds = null;
                       teams = mentions
-                        .map(mention =>
+                        .map((mention) =>
                           isTeamType(mention.userType)
                             ? {
                                 teamId: mention.id,
@@ -679,7 +703,7 @@ function mentionPluginFactory(
                               }
                             : null,
                         )
-                        .filter(m => !!m) as TeamInfoAttrAnalytics[];
+                        .filter((m) => !!m) as TeamInfoAttrAnalytics[];
                     }
 
                     const payload = buildTypeAheadRenderedPayload(
@@ -709,7 +733,7 @@ function mentionPluginFactory(
               );
             }
             (providerPromise as Promise<ContextIdentifierProvider>).then(
-              provider => {
+              (provider) => {
                 setContext(provider)(editorView.state, editorView.dispatch);
               },
             );
@@ -798,3 +822,19 @@ const isTeamMentionProvider = (p: any): p is TeamMentionProvider =>
     (p as TeamMentionProvider).mentionTypeaheadHighlightEnabled &&
     (p as TeamMentionProvider).mentionTypeaheadCreateTeamPath
   );
+
+export const shouldKeepInviteItem = (
+  query: string,
+  firstQueryWithoutResults: string,
+): boolean => {
+  if (!firstQueryWithoutResults) {
+    return true;
+  }
+  let lastIndexWithResults = firstQueryWithoutResults.length - 1;
+  let suffix = query.slice(lastIndexWithResults);
+  if (query[lastIndexWithResults - 1] === ' ') {
+    suffix = ' ' + suffix;
+  }
+  const depletedExtraWords = /\s[^\s]+\s/.test(suffix);
+  return !depletedExtraWords;
+};

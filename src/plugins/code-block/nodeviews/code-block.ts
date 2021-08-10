@@ -1,29 +1,27 @@
 import rafSchedule from 'raf-schd';
 import { EditorView } from 'prosemirror-view';
 import { Node, DOMSerializer, DOMOutputSpec } from 'prosemirror-model';
-import { browser } from '@atlaskit/editor-common';
 import { getPosHandlerNode, getPosHandler } from '../../../nodeviews/';
 import { codeBlockClassNames } from '../ui/class-names';
 
 const MATCH_NEWLINES = new RegExp('\n', 'g');
 
-// For browsers <= IE11, we apply style overrides to render a basic code box
-const isIE11 = browser.ie && browser.ie_version <= 11;
 const toDOM = (node: Node) =>
   [
     'div',
-    { class: 'code-block' + (isIE11 ? ' ie11' : '') },
+    { class: 'code-block' },
     ['div', { class: codeBlockClassNames.gutter, contenteditable: 'false' }],
     [
       'div',
       { class: codeBlockClassNames.content },
       [
-        'pre',
-        [
-          'code',
-          { 'data-language': node.attrs.language || '', spellcheck: 'false' },
-          0,
-        ],
+        'code',
+        {
+          'data-language': node.attrs.language || '',
+          spellcheck: 'false',
+          contenteditable: 'true',
+        },
+        0,
       ],
     ],
   ] as DOMOutputSpec;
@@ -52,7 +50,7 @@ export class CodeBlockView {
 
   private ensureLineNumbers = rafSchedule(() => {
     let lines = 1;
-    this.node.forEach(node => {
+    this.node.forEach((node) => {
       const text = node.text;
       if (text) {
         lines += (node.text!.match(MATCH_NEWLINES) || []).length;

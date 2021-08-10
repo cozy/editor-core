@@ -11,8 +11,12 @@ import { cardProvider } from '@atlaskit/editor-test-helpers/card-provider';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
 import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
-import { mention, emoji, taskDecision } from '@atlaskit/util-data-test';
-import { EmojiProvider } from '@atlaskit/emoji/resource';
+import {
+  currentUser,
+  getEmojiProvider,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
@@ -24,8 +28,8 @@ import BreadcrumbsMiscActions from '../example-helpers/breadcrumbs-misc-actions'
 import {
   defaultCollectionName,
   defaultMediaPickerCollectionName,
-  videoFileId,
-} from '@atlaskit/media-test-helpers';
+} from '@atlaskit/media-test-helpers/collectionNames';
+import { videoFileId } from '@atlaskit/media-test-helpers/exampleMediaItems';
 import { ProviderFactory } from '@atlaskit/editor-common';
 import { getFileStreamsCache } from '@atlaskit/media-client';
 
@@ -64,7 +68,7 @@ const createSaveAndCancelButtons = (collectionName: string) => (props: {
           return;
         }
 
-        props.editorActions.getValue().then(value => {
+        props.editorActions.getValue().then((value) => {
           // eslint-disable-next-line no-console
           console.log(value);
           localStorage.setItem(
@@ -118,16 +122,12 @@ const getProviders = (collectionName: string): Providers => {
       product: `${collectionName}-atlaskit-examples`,
     });
     const editorProviders: any = {
-      emojiProvider: emoji.storyData.getEmojiResource({
+      emojiProvider: getEmojiProvider({
         uploadSupported: true,
-        currentUser: {
-          id: emoji.storyData.loggedUser,
-        },
-      }) as Promise<EmojiProvider>,
-      mentionProvider: Promise.resolve(mention.storyData.resourceProvider),
-      taskDecisionProvider: Promise.resolve(
-        taskDecision.getMockTaskDecisionResource(),
-      ),
+        currentUser,
+      }),
+      mentionProvider: Promise.resolve(mentionResourceProvider),
+      taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
       contextIdentifierProvider,
       activityProvider: Promise.resolve(new MockActivityResource()),
       macroProvider: Promise.resolve(macroProvider),
@@ -135,7 +135,7 @@ const getProviders = (collectionName: string): Providers => {
     };
     const mediaProvider = storyMediaProviderFactory({
       collectionName,
-      includeUserAuthProvider: true,
+      includeUserAuthProvider: false,
     });
     providers = {
       mediaProvider,
@@ -300,7 +300,7 @@ class ExampleEditorComponent extends React.Component<
   async componentDidMount() {
     const { mediaOptions } = this.state;
     // Simulate adding mediaProvider async
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       this.mediaProviderTimeoutId = window.setTimeout(resolve, 1000);
     });
     mediaOptions.set(
@@ -386,7 +386,7 @@ class ExampleEditorComponent extends React.Component<
           <h2>Editor ({collectionName})</h2>
           <SmartCardProvider>
             <WithEditorActions
-              render={actions => (
+              render={(actions) => (
                 <Editor
                   analyticsHandler={analyticsHandler}
                   allowAnalyticsGASV3={true}
@@ -413,7 +413,7 @@ class ExampleEditorComponent extends React.Component<
                   allowIndentation={true}
                   allowDynamicTextSizing={true}
                   allowTemplatePlaceholders={{ allowInserting: true }}
-                  UNSAFE_cards={{
+                  smartLinks={{
                     provider: Promise.resolve(cardProvider),
                   }}
                   allowStatus={true}

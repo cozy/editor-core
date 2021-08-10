@@ -1,5 +1,5 @@
 import React from 'react';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { DocBuilder, doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -43,7 +43,7 @@ const MobileWithExternalWidth: React.FC<ExternalWidthUpdateProps> = ({
 describe('mobile editor', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>().add(widthPlugin),

@@ -11,11 +11,12 @@ import {
   td,
   underline,
   strong,
-} from '@atlaskit/editor-test-helpers/schema-builder';
-import schema from '@atlaskit/editor-test-helpers/src/schema';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import schema from '@atlaskit/editor-test-helpers/schema';
 import { getDocStructure } from '../../../utils/document-logger';
 
-const checkDocument = (doc: any, expected: any) => {
+const checkDocument = (doc: DocBuilder, expected: any) => {
   const document = doc(schema);
   expect(getDocStructure(document)).toEqual(expected);
 };

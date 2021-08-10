@@ -1,8 +1,6 @@
 import { DecorationSet } from 'prosemirror-view';
 import { PluginKey } from 'prosemirror-state';
 
-export const findReplacePluginKey = new PluginKey('findReplace');
-
 export interface FindReplacePluginState {
   /** Whether find/replace is active, i.e. displayed */
   isActive: boolean;
@@ -21,11 +19,13 @@ export interface FindReplacePluginState {
   matches: Match[];
   /** Decorations for the search results */
   decorationSet: DecorationSet;
-  /** Element (if any) that has focus in find/replace popup */
-  focusElementRef: React.RefObject<HTMLElement> | undefined;
   /** Whether find/replace should match case when searching for results */
   shouldMatchCase: boolean;
 }
+
+export const findReplacePluginKey = new PluginKey<FindReplacePluginState>(
+  'findReplace',
+);
 
 export type Match = {
   /** Start position */

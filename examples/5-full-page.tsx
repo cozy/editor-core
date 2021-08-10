@@ -6,7 +6,7 @@ import { MockActivityResource } from '../example-helpers/activity-provider';
 import { createSearchProvider, Scope } from '@atlassian/search-provider';
 import ExamplesErrorBoundary from '../example-helpers/ExamplesErrorBoundary';
 
-import { AtlassianIcon } from '@atlaskit/logo';
+import { AtlassianIcon } from '@atlaskit/logo/atlassian-icon';
 import Flag from '@atlaskit/flag';
 import Warning from '@atlaskit/icon/glyph/warning';
 
@@ -17,12 +17,14 @@ import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
 import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
 import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
-import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers';
+import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers/exampleMediaFeatureFlags';
 import {
   ProviderFactory,
   ExtensionProvider,
   combineExtensionProviders,
   Providers,
+  TTI_SEVERITY_THRESHOLD_DEFAULTS,
+  TTI_FROM_INVOCATION_SEVERITY_THRESHOLD_DEFAULTS,
 } from '@atlaskit/editor-common';
 
 import { EmojiProvider } from '@atlaskit/emoji/resource';
@@ -30,12 +32,14 @@ import {
   Provider as SmartCardProvider,
   Client as SmartCardClient,
 } from '@atlaskit/smart-card';
+
 import {
-  mention,
-  emoji,
-  taskDecision,
-  profilecard as profilecardUtils,
-} from '@atlaskit/util-data-test';
+  currentUser,
+  getEmojiProvider,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
+import { getMockProfilecardClient } from '@atlaskit/util-data-test/get-mock-profilecard-client';
 
 import Editor, { EditorProps, EditorAppearance } from './../src/editor';
 import EditorContext from './../src/ui/EditorContext';
@@ -47,6 +51,7 @@ import {
   check,
   Message,
 } from '../example-helpers/adf-url';
+import * as FeatureFlagUrl from '../example-helpers/feature-flag-url';
 import { copy } from '../example-helpers/copy';
 import quickInsertProviderFactory from '../example-helpers/quick-insert-provider';
 import { DevTools } from '../example-helpers/DevTools';
@@ -61,7 +66,6 @@ import {
   PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
   PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
 } from '../src/create-editor/consts';
-import withSentry from '../example-helpers/withSentry';
 import BreadcrumbsMiscActions from '../example-helpers/breadcrumbs-misc-actions';
 import {
   DEFAULT_MODE,
@@ -69,11 +73,12 @@ import {
 } from '../example-helpers/example-constants';
 import { ReactRenderer } from '@atlaskit/renderer';
 import { ProfileClient, modifyResponse } from '@atlaskit/profilecard';
+import { addGlobalEventEmitterListeners } from '@atlaskit/media-test-helpers/globalEventEmitterListeners';
 import {
-  addGlobalEventEmitterListeners,
   isMediaMockOptedIn,
   mediaMock,
-} from '@atlaskit/media-test-helpers';
+} from '@atlaskit/media-test-helpers/media-mock';
+import { MediaFeatureFlags } from '@atlaskit/media-common';
 
 addGlobalEventEmitterListeners();
 if (isMediaMockOptedIn()) {
@@ -106,6 +111,11 @@ Content.displayName = 'Content';
 
 // eslint-disable-next-line no-console
 const SAVE_ACTION = () => console.log('Save');
+
+const defaultMediaFeatureFlags: MediaFeatureFlags = {
+  ...exampleMediaFeatureFlags,
+  captions: true,
+};
 
 export const LOCALSTORAGE_defaultDocKey = 'fabric.editor.example.full-page';
 export const LOCALSTORAGE_defaultTitleKey =
@@ -178,16 +188,12 @@ const searchProvider = createSearchProvider(
 );
 
 export const providers: Partial<Providers> = {
-  emojiProvider: emoji.storyData.getEmojiResource({
+  emojiProvider: getEmojiProvider({
     uploadSupported: true,
-    currentUser: {
-      id: emoji.storyData.loggedUser,
-    },
+    currentUser,
   }) as Promise<EmojiProvider>,
-  mentionProvider: Promise.resolve(mention.storyData.resourceProvider),
-  taskDecisionProvider: Promise.resolve(
-    taskDecision.getMockTaskDecisionResource(),
-  ),
+  mentionProvider: Promise.resolve(mentionResourceProvider),
+  taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
   contextIdentifierProvider: storyContextIdentifierProviderFactory(),
   activityProvider: Promise.resolve(new MockActivityResource()),
   searchProvider: Promise.resolve(searchProvider),
@@ -196,7 +202,7 @@ export const providers: Partial<Providers> = {
 };
 
 export const mediaProvider = storyMediaProviderFactory({
-  includeUserAuthProvider: true,
+  includeUserAuthProvider: false,
 });
 
 export const quickInsertProvider = quickInsertProviderFactory();
@@ -220,7 +226,6 @@ export interface ExampleProps {
 }
 
 const smartCardClient = new SmartCardClient('staging');
-
 export class ExampleEditorComponent extends React.Component<
   EditorProps & ExampleProps,
   State
@@ -252,6 +257,10 @@ export class ExampleEditorComponent extends React.Component<
       this.setState(() => ({
         appearance: this.props.appearance || 'full-page',
       }));
+    }
+
+    if (prevProps.defaultValue !== this.props.defaultValue) {
+      this.editorActions?.replaceDocument(this.props.defaultValue, false);
     }
   }
 
@@ -290,22 +299,27 @@ export class ExampleEditorComponent extends React.Component<
   };
 
   render() {
+    const { media } = this.props;
+    const mediaEditorProps = media
+      ? media.featureFlags
+      : defaultMediaFeatureFlags;
     return (
       <ExamplesErrorBoundary>
         <Wrapper>
           <Content>
             <SmartCardProvider client={smartCardClient}>
               <Editor
-                UNSAFE_predictableLists={true}
+                UNSAFE_allowUndoRedoButtons={true}
                 allowAnalyticsGASV3={true}
                 quickInsert={{ provider: Promise.resolve(quickInsertProvider) }}
                 allowTextColor={{
-                  EXPERIMENTAL_allowMoreTextColors: true,
+                  allowMoreTextColors: true,
                 }}
                 allowTables={{
                   advanced: true,
                   allowColumnSorting: true,
                   stickyHeaders: true,
+                  tableCellOptimization: true,
                 }}
                 allowBreakout={true}
                 allowJiraIssue={true}
@@ -323,10 +337,12 @@ export class ExampleEditorComponent extends React.Component<
                 allowIndentation={true}
                 allowDynamicTextSizing={true}
                 allowTemplatePlaceholders={{ allowInserting: true }}
-                UNSAFE_cards={{
+                smartLinks={{
                   provider: Promise.resolve(cardProviderStaging),
                   allowBlockCards: true,
                   allowEmbeds: true,
+                  allowResizing: true,
+                  useAlternativePreloader: false,
                 }}
                 allowExpand={{
                   allowInsertion: true,
@@ -361,8 +377,8 @@ export class ExampleEditorComponent extends React.Component<
                     }
                     return errors;
                   },
-                  useMediaPickerPopup: true,
-                  featureFlags: exampleMediaFeatureFlags,
+                  useMediaPickerPopup: false,
+                  featureFlags: mediaEditorProps,
                 }}
                 allowHelpDialog
                 placeholder="Use markdown shortcuts to format your page as you type, like * for lists, # for headers, and *** for a horizontal rule."
@@ -383,7 +399,7 @@ export class ExampleEditorComponent extends React.Component<
                 }
                 contentComponents={
                   <WithEditorActions
-                    render={actions => (
+                    render={(actions) => (
                       <>
                         <BreadcrumbsMiscActions
                           appearance={this.state.appearance}
@@ -406,7 +422,7 @@ export class ExampleEditorComponent extends React.Component<
                 primaryToolbarComponents={[
                   <WithEditorActions
                     key={1}
-                    render={actions => {
+                    render={(actions) => {
                       this.editorActions = actions;
 
                       return (
@@ -439,7 +455,18 @@ export class ExampleEditorComponent extends React.Component<
                 insertMenuItems={customInsertMenuItems}
                 extensionHandlers={extensionHandlers}
                 performanceTracking={{
-                  ttiTracking: { enabled: true },
+                  ttiTracking: {
+                    enabled: true,
+                    trackSeverity: true,
+                    ttiSeverityNormalThreshold:
+                      TTI_SEVERITY_THRESHOLD_DEFAULTS.NORMAL,
+                    ttiSeverityDegradedThreshold:
+                      TTI_SEVERITY_THRESHOLD_DEFAULTS.DEGRADED,
+                    ttiFromInvocationSeverityNormalThreshold:
+                      TTI_FROM_INVOCATION_SEVERITY_THRESHOLD_DEFAULTS.NORMAL,
+                    ttiFromInvocationSeverityDegradedThreshold:
+                      TTI_FROM_INVOCATION_SEVERITY_THRESHOLD_DEFAULTS.DEGRADED,
+                  },
                   transactionTracking: { enabled: true },
                   uiTracking: { enabled: true },
                   nodeViewTracking: { enabled: true },
@@ -455,10 +482,35 @@ export class ExampleEditorComponent extends React.Component<
                     severityNormalThreshold: PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
                     severityDegradedThreshold: PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
                   },
+                  contentRetrievalTracking: {
+                    enabled: true,
+                    successSamplingRate: 2,
+                    failureSamplingRate: 1,
+                    reportErrorStack: true,
+                  },
+                  onEditorReadyCallbackTracking: { enabled: true },
+                  pasteTracking: { enabled: true },
+                  renderTracking: {
+                    editor: {
+                      enabled: true,
+                      useShallow: false,
+                    },
+                    reactEditorView: {
+                      enabled: true,
+                      useShallow: false,
+                    },
+                  },
                 }}
                 {...this.props}
+                featureFlags={{
+                  'local-id-generation-on-tables': true,
+                  'data-consumer-mark': true,
+                  // Spread here as we want to make sure we can still override flags added above
+                  ...this.props.featureFlags,
+                }}
                 appearance={this.state.appearance}
                 onEditorReady={this.onEditorReady}
+                trackValidTransactions={{ samplingRate: 100 }}
               />
             </SmartCardProvider>
           </Content>
@@ -527,12 +579,9 @@ export class ExampleEditorComponent extends React.Component<
   };
 }
 
-export const ExampleEditor = withSentry<EditorProps & ExampleProps>(
-  ExampleEditorComponent,
-);
+export const ExampleEditor = ExampleEditorComponent;
 
-const { getMockProfileClient: getMockProfileClientUtil } = profilecardUtils;
-const MockProfileClient = getMockProfileClientUtil(
+const MockProfileClient = getMockProfilecardClient(
   ProfileClient,
   modifyResponse,
 );
@@ -543,7 +592,7 @@ const mentionProvider = Promise.resolve({
   },
 } as MentionProvider);
 
-const emojiProvider = emoji.storyData.getEmojiResource();
+const emojiProvider = getEmojiProvider();
 
 const profilecardProvider = Promise.resolve({
   cloudId: 'DUMMY-CLOUDID',
@@ -567,9 +616,7 @@ const profilecardProvider = Promise.resolve({
   },
 });
 
-const taskDecisionProvider = Promise.resolve(
-  taskDecision.getMockTaskDecisionResource(),
-);
+const taskDecisionProvider = Promise.resolve(getMockTaskDecisionResource());
 
 const contextIdentifierProvider = storyContextIdentifierProviderFactory();
 
@@ -588,6 +635,7 @@ const Renderer = (props: {
   extensionProviders?: (ExtensionProvider | Promise<ExtensionProvider>)[];
   allowCustomPanel?: boolean;
   clickToEdit?: boolean;
+  mediaFeatureFlags?: MediaFeatureFlags;
 }) => {
   if (props.extensionProviders && props.extensionProviders.length > 0) {
     providerFactory.setProvider(
@@ -601,6 +649,10 @@ const Renderer = (props: {
     : typeof props.document === 'string'
     ? JSON.parse(props.document)
     : props.document;
+
+  const mediaFeatureFlags = props.mediaFeatureFlags
+    ? props.mediaFeatureFlags
+    : defaultMediaFeatureFlags;
 
   return (
     <div
@@ -632,12 +684,12 @@ const Renderer = (props: {
           document={document}
           appearance={getAppearance()}
           media={{
-            featureFlags: exampleMediaFeatureFlags,
+            featureFlags: mediaFeatureFlags,
           }}
           UNSAFE_allowCustomPanels={props.allowCustomPanel}
           eventHandlers={{
             onUnhandledClick: props.clickToEdit
-              ? e => {
+              ? (e) => {
                   console.log('onUnhandledClick called');
                   props.setMode(true);
                 }
@@ -659,11 +711,33 @@ export default function Example(props: EditorProps & ExampleProps) {
     (localStorage && localStorage.getItem(LOCALSTORAGE_defaultDocKey)) ||
     undefined;
 
+  const maybeFlags = FeatureFlagUrl.fromLocation<string>(
+    window.parent.location,
+  );
+
+  const defaultFeatureFlags = {
+    mouseMoveOptimization: true,
+    initialRenderOptimization: true,
+    tableRenderOptimization: true,
+    stickyHeadersOptimization: true,
+    tableOverflowShadowsOptimization: true,
+  };
+
+  const featureFlags =
+    !maybeFlags || maybeFlags instanceof window.Error
+      ? defaultFeatureFlags
+      : JSON.parse(maybeFlags ?? '{}');
+
   let allowCustomPanel = false;
   if (props.allowPanel && typeof props.allowPanel === 'object') {
     allowCustomPanel =
       (props.allowPanel as PanelPluginConfig).UNSAFE_allowCustomPanel || false;
   }
+
+  const { media } = props;
+  const mediaProps = media?.featureFlags
+    ? media.featureFlags
+    : defaultMediaFeatureFlags;
 
   return (
     <EditorContext>
@@ -672,6 +746,7 @@ export default function Example(props: EditorProps & ExampleProps) {
         {isEditingMode ? (
           <ExampleEditor
             {...props}
+            featureFlags={featureFlags}
             defaultValue={doc || localDraft}
             setMode={setMode}
           />
@@ -686,6 +761,7 @@ export default function Example(props: EditorProps & ExampleProps) {
             }
             allowCustomPanel={allowCustomPanel}
             clickToEdit={props.clickToEdit}
+            mediaFeatureFlags={mediaProps}
           />
         )}
       </div>

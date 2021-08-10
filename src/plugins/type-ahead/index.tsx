@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { typeAheadQuery } from '@atlaskit/adf-schema';
+import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
 
 import { EditorPlugin } from '../../types';
 import WithPluginState from '../../ui/WithPluginState';
@@ -11,12 +12,16 @@ import {
   createInitialPluginState,
   createPlugin,
   pluginKey as typeAheadPluginKey,
-  PluginState as TypeAheadPluginState,
+  TypeAheadPluginState,
 } from './pm-plugins/main';
 import { TypeAheadHandler } from './types';
 import { TypeAhead } from './ui/TypeAhead';
 
-const typeAheadPlugin = (): EditorPlugin => ({
+export type TypeAheadPluginOptions = {
+  createAnalyticsEvent?: CreateUIAnalyticsEvent;
+};
+
+const typeAheadPlugin = (options?: TypeAheadPluginOptions): EditorPlugin => ({
   name: 'typeAhead',
 
   marks() {
@@ -32,7 +37,8 @@ const typeAheadPlugin = (): EditorPlugin => ({
       },
       {
         name: 'typeAheadInputRule',
-        plugin: ({ schema }) => inputRulePlugin(schema, typeAhead),
+        plugin: ({ schema, featureFlags }) =>
+          inputRulePlugin(schema, typeAhead, featureFlags),
       },
       {
         name: 'typeAheadKeymap',
@@ -55,7 +61,7 @@ const typeAheadPlugin = (): EditorPlugin => ({
         render={({
           typeAhead = createInitialPluginState(),
         }: {
-          typeAhead: TypeAheadPluginState;
+          typeAhead?: TypeAheadPluginState;
         }) => {
           if (
             typeAhead.typeAheadHandler &&
@@ -93,6 +99,8 @@ const typeAheadPlugin = (): EditorPlugin => ({
               items={typeAhead.items}
               currentIndex={typeAhead.currentIndex}
               highlight={typeAhead.highlight}
+              createAnalyticsEvent={options?.createAnalyticsEvent}
+              query={typeAhead.query}
             />
           );
         }}

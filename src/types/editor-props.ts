@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, RefObject } from 'react';
 import { Node, Schema } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import EditorActions from '../actions';
@@ -21,7 +21,7 @@ import { PluginConfig as TablesPluginConfig } from '../plugins/table/types';
 import { TextColorPluginConfig } from '../plugins/text-color/pm-plugins/main';
 import { MediaOptions, MediaState } from '../plugins/media/types';
 import { CollabEditOptions } from '../plugins/collab-edit/types';
-import { CardOptions } from '../plugins/card/types';
+import { CardOptions } from '@atlaskit/editor-common';
 import { QuickInsertOptions } from '../plugins/quick-insert/types';
 import { AnnotationProviders } from '../plugins/annotation/types';
 import { TextFormattingOptions } from '../plugins/text-formatting/types';
@@ -34,11 +34,10 @@ import { ExtensionConfig } from './extension-config';
 import { EditorAppearance } from './editor-appearance';
 import { MenuItem } from '../ui/DropdownMenu/types';
 import { EditorOnChangeHandler } from './editor-onchange';
-import {
-  TransactionTracking,
-  PerformanceTracking,
-} from './performance-tracking';
+import { PerformanceTracking } from './performance-tracking';
 import { PanelPluginConfig } from './../plugins/panel/types';
+import { EditorPlugin } from './editor-plugin';
+import { MentionPluginConfig } from './../plugins/mentions/types';
 
 export type ReactComponents = ReactElement<any> | ReactElement<any>[];
 
@@ -56,6 +55,9 @@ export type FeedbackInfo = {
   packageVersion?: string;
   packageName?: string;
   labels?: Array<string>;
+  sessionId?: string;
+  contentId?: string;
+  tabId?: string;
 };
 
 export interface EditorProps {
@@ -161,12 +163,17 @@ export interface EditorProps {
   // You can use the object form to enable additional individual features e.g. case-matching toggle.
   allowFindReplace?: boolean | FindReplaceOptions;
 
+  persistScrollGutter?: boolean;
+
   // Set to enable the quick insert menu i.e. '/' key trigger.
   // You can also provide your own insert menu options that will be shown in addition to the enabled
   // editor features e.g. Confluence uses this to provide its macros.
   quickInsert?: QuickInsertOptions;
 
+  /** @deprecated Use smartLinks instead. */
   UNSAFE_cards?: CardOptions;
+
+  smartLinks?: CardOptions;
 
   allowExpand?:
     | boolean
@@ -202,6 +209,7 @@ export interface EditorProps {
 
   legacyImageUploadProvider?: Providers['imageUploadProvider'];
   mentionProvider?: Promise<MentionProvider>;
+  mention?: MentionPluginConfig;
 
   // Allows you to define custom autoformatting rules.
   autoformattingProvider?: Providers['autoformattingProvider'];
@@ -279,8 +287,11 @@ export interface EditorProps {
   // Flag to remove private content such as mention names
   sanitizePrivateContent?: boolean;
 
-  // flag to indicate display name instead of nick name should be inserted for mentions
-  // default: false, which inserts the nick name
+  /**
+   * flag to indicate display name instead of nick name should be inserted for mentions
+   * default: false, which inserts the nick name
+   * @deprecated Use mention.mentionInsertDisplayName instead
+   */
   mentionInsertDisplayName?: boolean;
 
   /**
@@ -294,20 +305,9 @@ export interface EditorProps {
   // This eventually is going to replace `quickInsert.provider`, `extensionHandlers`, `macroProvider`.
   extensionProviders?: ExtensionProvidersProp;
 
-  // New work on replacing list behaviours with a more predictable experience
-  // Eventually this will be removed and turned on permanently
-  // default: false, which falls back on the current list behaviour
-  UNSAFE_predictableLists?: boolean;
-
   // Experimental support for modern React Context for @atlaskit/analytics-next.
   // Enables re-providing of AnalyticsContext for all ReactNodeViews.
   UNSAFE_useAnalyticsContext?: boolean;
-
-  /**
-   * @default 100
-   * @deprecated Use performanceTracking.transactionTracking instead https://product-fabric.atlassian.net/browse/ED-8985
-   */
-  transactionTracking?: TransactionTracking;
 
   /**
    * @description Control performance metric measurements and tracking
@@ -317,7 +317,71 @@ export interface EditorProps {
   elementBrowser?: {
     showModal?: boolean;
     replacePlusMenu?: boolean;
+    helpUrl?: string;
   };
 
   codeBlock?: CodeBlockOptions;
+
+  // Enable undo/redo buttons within the editor.
+  UNSAFE_allowUndoRedoButtons?: boolean;
+
+  /**
+   * @default undefined
+   * @description Enables valid transaction events to be tracked in analytics (at a sampled rate)
+   */
+  trackValidTransactions?:
+    | {
+        samplingRate: number;
+      }
+    | boolean;
+
+  /**
+   * @default undefined
+   * @description
+   * Enables the sticky toolbar in the comment/standard editor.
+   * If a boolean is specified and it's `true`, the sticky toolbar will be enabled, sticking to the top of the scroll parent.
+   * Instead a reference can be specified to an existing sticky toolbar on the page that the editor toolbar should stay below (experimental).
+   */
+  useStickyToolbar?: boolean | RefObject<HTMLElement>;
+
+  /**
+   * @default undefined
+   * @description
+   * Short lived feature flags for experiments and gradual rollouts
+   * Flags are expected to follow these rules or they are filtered out
+   *
+   * 1. cased in kebab-case (match [a-z-])
+   * 2. have boolean values
+   *
+   * @example
+   * ```tsx
+   * (<Editor featureFlags={{ 'my-feature': true }} />);
+   * getFeatureFlags()?.myFeature === true;
+   * ```
+   *
+   * @example
+   * ```tsx
+   * (<Editor featureFlags={{ 'my-feature': 'thing' }} />);
+   * getFeatureFlags()?.myFeature === undefined;
+   * ```
+   *
+   * @example
+   * ```tsx
+   * (<Editor featureFlags={{ 'product.my-feature': false }} />);
+   * getFeatureFlags()?.myFeature === undefined;
+   * getFeatureFlags()?.productMyFeature === undefined;
+   * ```
+   */
+  featureFlags?: { [featureFlag: string]: string | boolean };
+
+  /**
+   * @deprecated Do not use outside of Editor team.
+   * This has subtle side effects - you __WILL__ break functionality without implementer knowledge of editor-core internals
+   */
+  dangerouslyAppendPlugins?: {
+    /**
+     * @deprecated Do not use outside of Editor team.
+     */
+    __plugins: EditorPlugin[];
+  };
 }

@@ -38,7 +38,6 @@ export type {
   ErrorEventPayload,
   FormatEventPayload,
   GeneralEventPayload,
-  HistoryEventPayload,
   InputMethodInsertLink,
   InputMethodInsertMedia,
   InsertEventPayload,
@@ -60,7 +59,7 @@ export {
   getAnalyticsEventsFromTransaction,
   getSelectionType,
   getStateContext,
-  ruleWithAnalytics,
+  mapActionSubjectIdToAttributes,
 } from './utils';
 
 export const analyticsPluginKey = pluginKey;

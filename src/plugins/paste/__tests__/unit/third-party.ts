@@ -19,7 +19,7 @@ import {
   createProsemirrorEditorFactory,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import { smallImage, dataURItoBlob } from '@atlaskit/media-test-helpers';
 import pastePlugin from '../../index';
 import textColorPlugin from '../../../text-color';
@@ -27,13 +27,13 @@ import tablesPlugin from '../../../table';
 import blockTypePlugin from '../../../block-type';
 import hyperlinkPlugin from '../../../hyperlink';
 import { textFormattingPlugin } from '../../../index';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 import codeBlockPlugin from '../../../code-block';
 
 describe('paste plugin: third-party', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()

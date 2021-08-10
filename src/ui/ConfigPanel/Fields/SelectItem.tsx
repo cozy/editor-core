@@ -14,7 +14,18 @@ const ItemWrapper = styled.div`
   small {
     margin: 0;
     display: block;
+    color: currentColor;
   }
+`;
+
+const IconWrapper = styled.span<{ context: 'menu' | 'value' }>`
+  ${({ context }) =>
+    context === 'menu' &&
+    `
+    align-self: flex-start;
+    margin-top: 3px;
+  `}
+  line-height: 1;
 `;
 
 const getIconSize = (context: 'menu' | 'value', description?: string) => {
@@ -31,15 +42,17 @@ export const formatOptionLabel = (
 ) => {
   return (
     <ItemWrapper>
-      {typeof icon === 'string' ? (
-        <Avatar
-          src={icon}
-          size={getIconSize(context, description)}
-          appearance="square"
-        />
-      ) : (
-        icon
-      )}
+      <IconWrapper context={context}>
+        {typeof icon === 'string' ? (
+          <Avatar
+            src={icon}
+            size={getIconSize(context, description)}
+            appearance="square"
+          />
+        ) : (
+          icon
+        )}
+      </IconWrapper>
       <div style={{ paddingLeft: icon ? gridSize() : 0 }}>
         <p>
           {label}

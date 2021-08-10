@@ -1,6 +1,6 @@
 import * as sinon from 'sinon';
 import { defaultSchema } from '@atlaskit/adf-schema';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -8,7 +8,8 @@ import {
   tr,
   tdEmpty,
   tdCursor,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import TableView from '../../../../plugins/table/nodeviews/table';
 import {
   TablePluginState,
@@ -20,7 +21,7 @@ import { EventDispatcher } from '../../../../event-dispatcher';
 describe('TableView', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     const tableOptions = {
       allowNumberColumn: true,
       allowHeaderRow: true,

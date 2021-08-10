@@ -1,5 +1,5 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import { doc, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
@@ -19,12 +19,12 @@ import { LAYOUT_TYPE } from '../../../analytics/types/node-events';
 import {
   getToolbarItems,
   findToolbarBtn,
-} from '../../../../__tests__/unit/plugins/floating-toolbar/_helpers';
+} from '../../../floating-toolbar/__tests__/_helpers';
 
 describe('layout toolbar', () => {
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
   const createEditor = createEditorFactory();
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,
@@ -119,7 +119,7 @@ describe('layout toolbar', () => {
 
     it('displays only 2 original layout buttons', () => {
       stdLayoutButtons.forEach(assertToolbarButtonPresent);
-      sidebarLayoutButtons.forEach(button => {
+      sidebarLayoutButtons.forEach((button) => {
         expect(
           findToolbarBtn(items, intl.formatMessage(button.message)),
         ).not.toBeDefined();
@@ -147,7 +147,7 @@ describe('layout toolbar', () => {
       items = getToolbarItems(toolbar, editorView);
     });
 
-    [...stdLayoutButtons, ...sidebarLayoutButtons].forEach(button => {
+    [...stdLayoutButtons, ...sidebarLayoutButtons].forEach((button) => {
       describe(`for "${button.name}" layout`, () => {
         let previousLayout: LAYOUT_TYPE;
 

@@ -1,6 +1,9 @@
 import { EditorView } from 'prosemirror-view';
 import { Schema } from 'prosemirror-model';
-import { RefsNode } from '@atlaskit/editor-test-helpers';
+import {
+  RefsNode,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
 import {
@@ -8,7 +11,7 @@ import {
   p,
   annotation,
   strong,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   Preset,
@@ -47,7 +50,7 @@ describe('commands', () => {
     .add(textFormatting)
     .add([annotationPlugin, { inlineComment: { ...inlineCommentProvider } }]);
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       pluginKey: inlineCommentPluginKey,
@@ -56,7 +59,7 @@ describe('commands', () => {
 
   const nextTick = async () => {
     // Let the getState promise resolve
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       process.nextTick(resolve);
     });
   };
@@ -221,8 +224,8 @@ describe('commands', () => {
         editorView.dispatch,
       );
       let inlineCommentTransactionCalls = 0;
-      dispatchSpy.mock.calls.forEach(call => {
-        call.forEach(tr => {
+      dispatchSpy.mock.calls.forEach((call) => {
+        call.forEach((tr) => {
           tr.getMeta(inlineCommentPluginKey) && inlineCommentTransactionCalls++;
         });
       });
@@ -307,8 +310,8 @@ describe('commands', () => {
         RESOLVE_METHOD.COMPONENT,
       )(editorView.state, editorView.dispatch);
       let inlineCommentTransactionCalls = 0;
-      dispatchSpy.mock.calls.forEach(call => {
-        call.forEach(tr => {
+      dispatchSpy.mock.calls.forEach((call) => {
+        call.forEach((tr) => {
           tr.getMeta(inlineCommentPluginKey) && inlineCommentTransactionCalls++;
         });
       });

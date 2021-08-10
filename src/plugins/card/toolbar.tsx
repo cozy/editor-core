@@ -27,7 +27,8 @@ import commonMessages from '../../messages';
 import { Node } from 'prosemirror-model';
 import { hoverDecoration } from '../base/pm-plugins/decoration';
 import { changeSelectedCardToText } from './pm-plugins/doc';
-import { CardPluginState, CardOptions } from './types';
+import { CardPluginState } from './types';
+import { CardOptions } from '@atlaskit/editor-common';
 import { pluginKey } from './pm-plugins/main';
 import { ProviderFactory, richMediaClassName } from '@atlaskit/editor-common';
 import {
@@ -129,18 +130,10 @@ const generateDeleteButton = (
   node: Node,
   state: EditorState,
   intl: InjectedIntl,
-): FloatingToolbarItem<Command> => {
+): Array<FloatingToolbarItem<Command>> => {
   const { inlineCard } = state.schema.nodes;
-  if (node.type === inlineCard) {
-    return {
-      type: 'button',
-      title: intl.formatMessage(linkToolbarMessages.unlink),
-      icon: UnlinkIcon,
-      onClick: unlinkCard(node, state),
-    };
-  }
-
-  return {
+  const removeButton: FloatingToolbarItem<Command> = {
+    id: 'editor.link.delete',
     type: 'button',
     appearance: 'danger',
     icon: RemoveIcon,
@@ -149,6 +142,21 @@ const generateDeleteButton = (
     title: intl.formatMessage(commonMessages.remove),
     onClick: removeCard,
   };
+  if (node.type === inlineCard) {
+    const unlinkButtonWithSeparator: Array<FloatingToolbarItem<Command>> = [
+      {
+        id: 'editor.link.unlink',
+        type: 'button',
+        title: intl.formatMessage(linkToolbarMessages.unlink),
+        icon: UnlinkIcon,
+        onClick: unlinkCard(node, state),
+      },
+      { type: 'separator' },
+    ];
+    return [...unlinkButtonWithSeparator, removeButton];
+  }
+
+  return [removeButton];
 };
 
 const generateToolbarItems = (
@@ -159,15 +167,23 @@ const generateToolbarItems = (
   platform?: CardPlatform,
 ) => (node: Node): Array<FloatingToolbarItem<Command>> => {
   const { url } = titleUrlPairFromNode(node);
+  let metadata = {};
   if (url && !isSafeUrl(url)) {
     return [];
+  } else {
+    const { title } = displayInfoForCard(node, findCardInfo(state));
+    metadata = {
+      url: url,
+      title: title,
+    };
   }
 
   const pluginState: CardPluginState = pluginKey.getState(state);
 
   const currentAppearance = appearanceForNodeType(node.type);
 
-  if (pluginState.showLinkingToolbar) {
+  /* mobile builds toolbar natively using toolbarItems */
+  if (pluginState.showLinkingToolbar && platform !== 'mobile') {
     return [
       buildEditLinkToolbar({
         providerFactory,
@@ -177,28 +193,37 @@ const generateToolbarItems = (
   } else {
     const toolbarItems: Array<FloatingToolbarItem<Command>> = [
       {
+        id: 'editor.link.edit',
         type: 'button',
         selected: false,
+        metadata: metadata,
         title: intl.formatMessage(linkToolbarMessages.editLink),
         showTitle: true,
+        testId: 'link-toolbar-edit-link-button',
         onClick: editLink,
       },
       { type: 'separator' },
       {
+        id: 'editor.link.openLink',
         type: 'button',
         icon: OpenIcon,
+        metadata: metadata,
         className: 'hyperlink-open-link',
         title: intl.formatMessage(linkMessages.openLink),
         onClick: visitCardLink,
       },
       { type: 'separator' },
-      generateDeleteButton(node, state, intl),
+      ...generateDeleteButton(node, state, intl),
     ];
 
     if (currentAppearance === 'embed') {
-      toolbarItems.unshift(...buildAlignmentOptions(state, intl), {
-        type: 'separator',
-      });
+      const alignmentOptions = buildAlignmentOptions(state, intl);
+      if (alignmentOptions.length) {
+        alignmentOptions.push({
+          type: 'separator',
+        });
+      }
+      toolbarItems.unshift(...alignmentOptions);
     }
     const { allowBlockCards, allowEmbeds } = cardOptions;
 
@@ -206,7 +231,8 @@ const generateToolbarItems = (
       toolbarItems.unshift(
         {
           type: 'custom',
-          render: editorView => (
+          fallback: [],
+          render: (editorView) => (
             <LinkToolbarAppearance
               key="link-appearance"
               url={url}
@@ -263,9 +289,9 @@ export const floatingToolbar = (
       title: intl.formatMessage(messages.card),
       nodeType,
       ...toolbarOffset,
-      getDomRef: view => {
+      getDomRef: (view) => {
         const element = findDomRefAtPos(
-          state.selection.from,
+          view.state.selection.from,
           view.domAtPos.bind(view),
         ) as HTMLElement;
         if (!element) {

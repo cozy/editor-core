@@ -2,7 +2,7 @@ import React from 'react';
 
 import { EditorView } from 'prosemirror-view';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { shallowWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import {
   doc,
@@ -12,7 +12,7 @@ import {
   tdEmpty,
   th,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { getPluginState } from '../../../pm-plugins/plugin-factory';
 import FloatingContextualMenu from '../index';

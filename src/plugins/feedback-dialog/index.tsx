@@ -28,20 +28,31 @@ const hashFeedbackInfo = (feedbackInfo: FeedbackInfo): string => {
 export const openFeedbackDialog = async (feedbackInfo?: FeedbackInfo) =>
   new Promise(async (resolve, reject) => {
     const combinedFeedbackInfo = {
+      // default value assignment
+      ...{
+        product: 'n/a',
+        labels: [],
+        packageName: '',
+        packageVersion: '',
+        sessionId: '',
+        contentId: '',
+        tabId: '',
+      },
       ...defaultFeedbackInfo,
       ...feedbackInfo,
     };
     const newFeedbackInfoHash = hashFeedbackInfo(combinedFeedbackInfo);
+
     if (!showJiraCollectorDialog || feedbackInfoHash !== newFeedbackInfoHash) {
       try {
         showJiraCollectorDialog = await loadJiraCollectorDialogScript(
-          [
-            combinedFeedbackInfo.product || 'n/a',
-            ...(combinedFeedbackInfo.labels || []),
-          ],
-          combinedFeedbackInfo.packageName || '',
+          [combinedFeedbackInfo.product, ...combinedFeedbackInfo.labels],
+          combinedFeedbackInfo.packageName,
           coreVersion,
-          combinedFeedbackInfo.packageVersion || '',
+          combinedFeedbackInfo.packageVersion,
+          combinedFeedbackInfo.sessionId,
+          combinedFeedbackInfo.contentId,
+          combinedFeedbackInfo.tabId,
         );
 
         feedbackInfoHash = newFeedbackInfoHash;
@@ -68,9 +79,7 @@ const feedbackDialog = (feedbackInfo: FeedbackInfo): EditorPlugin => {
           description: formatMessage(messages.feedbackDialogDescription),
           priority: 400,
           keywords: ['bug'],
-          icon: () => (
-            <IconFeedback label={formatMessage(messages.feedbackDialog)} />
-          ),
+          icon: () => <IconFeedback />,
           action(insert, state) {
             const tr = insert('');
             openFeedbackDialog(feedbackInfo);

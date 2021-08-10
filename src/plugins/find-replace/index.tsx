@@ -1,5 +1,5 @@
 import React from 'react';
-import { createPlugin, getPluginState } from './plugin';
+import { createPlugin } from './plugin';
 import { findReplacePluginKey } from './types';
 import keymapPlugin from './keymap';
 import { EditorPlugin, Command } from '../../types';
@@ -13,12 +13,14 @@ import {
   findPrevWithAnalytics,
   activateWithAnalytics,
 } from './commands-with-analytics';
-import { blur, updateFocusElementRef, toggleMatchCase } from './commands';
+import { blur, toggleMatchCase } from './commands';
 import FindReplaceToolbarButton from './ui/FindReplaceToolbarButton';
 import { TRIGGER_METHOD } from '../analytics';
 import { getFeatureFlags } from '../feature-flags-context';
 
-export const findReplacePlugin = (): EditorPlugin => {
+export const findReplacePlugin = (props: {
+  takeFullWidth: boolean;
+}): EditorPlugin => {
   return {
     name: 'findReplace',
 
@@ -48,13 +50,12 @@ export const findReplacePlugin = (): EditorPlugin => {
       // so we focus it while we run the command, then put focus back into
       // whatever element was previously focused in find replace component
       const runWithEditorFocused = (fn: Function) => {
+        const activeElement = document.activeElement as HTMLElement | null;
         editorView.focus();
         fn();
-        const { focusElementRef } = getPluginState(editorView.state);
-        if (focusElementRef && focusElementRef.current) {
-          focusElementRef.current.focus();
-        }
+        activeElement?.focus();
       };
+
       const dispatchCommand = (cmd: Command) => {
         const { state, dispatch } = editorView;
         cmd(state, dispatch);
@@ -126,9 +127,6 @@ export const findReplacePlugin = (): EditorPlugin => {
         dispatchCommand(cancelSearchWithAnalytics({ triggerMethod }));
         editorView.focus();
       };
-      const handleFocusElementRefSet = (ref: React.RefObject<HTMLElement>) => {
-        dispatchCommand(updateFocusElementRef(ref));
-      };
       const handleToggleMatchCase = () => {
         dispatchCommand(toggleMatchCase());
       };
@@ -137,6 +135,7 @@ export const findReplacePlugin = (): EditorPlugin => {
 
       return (
         <WithPluginState
+          debounce={false}
           plugins={{
             findReplaceState: findReplacePluginKey,
           }}
@@ -144,14 +143,14 @@ export const findReplacePlugin = (): EditorPlugin => {
             return (
               <FindReplaceToolbarButton
                 allowMatchCase={findReplaceMatchCase}
-                shouldMatchCase={findReplaceState.shouldMatchCase}
+                shouldMatchCase={findReplaceState!.shouldMatchCase}
                 onToggleMatchCase={handleToggleMatchCase}
-                isActive={findReplaceState.isActive}
-                findText={findReplaceState.findText}
-                index={findReplaceState.index}
-                numMatches={findReplaceState.matches.length}
-                replaceText={findReplaceState.replaceText}
-                shouldFocus={findReplaceState.shouldFocus}
+                isActive={findReplaceState!.isActive}
+                findText={findReplaceState!.findText}
+                index={findReplaceState!.index}
+                numMatches={findReplaceState!.matches.length}
+                replaceText={findReplaceState!.replaceText}
+                shouldFocus={findReplaceState!.shouldFocus}
                 popupsBoundariesElement={popupsBoundariesElement}
                 popupsMountPoint={popupsMountPoint}
                 popupsScrollableElement={popupsScrollableElement}
@@ -165,7 +164,7 @@ export const findReplacePlugin = (): EditorPlugin => {
                 onFindPrev={handleFindPrev}
                 onReplace={handleReplace}
                 onReplaceAll={handleReplaceAll}
-                onFocusElementRefSet={handleFocusElementRefSet}
+                takeFullWidth={props.takeFullWidth}
               />
             );
           }}

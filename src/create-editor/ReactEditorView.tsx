@@ -20,6 +20,7 @@ import {
 
 import { createDispatch, Dispatch, EventDispatcher } from '../event-dispatcher';
 import { processRawValue } from '../utils';
+import { RenderTracking } from '../utils/react-hooks/use-component-renderer-tracking';
 import {
   findChangedNodesFromTransaction,
   validateNodes,
@@ -33,15 +34,13 @@ import {
   AnalyticsEventPayload,
   DispatchAnalyticsEvent,
   EVENT_TYPE,
+  fireAnalyticsEvent,
   FULL_WIDTH_MODE,
   getAnalyticsEventsFromTransaction,
   PLATFORMS,
 } from '../plugins/analytics';
-import { fireAnalyticsEvent } from '../plugins/analytics/fire-analytics-event';
-import {
-  getEnabledFeatureFlagKeys,
-  createFeatureFlagsFromProps,
-} from '../plugins/feature-flags-context/feature-flags-from-props';
+import { createFeatureFlagsFromProps } from '../plugins/feature-flags-context/feature-flags-from-props';
+import { getEnabledFeatureFlagKeys } from '../plugins/feature-flags-context/get-enabled-feature-flag-keys';
 import {
   EditorAppearance,
   EditorConfig,
@@ -49,6 +48,7 @@ import {
   EditorPlugin,
   EditorProps,
 } from '../types';
+import { FeatureFlags } from '../types/feature-flags';
 import { PortalProviderAPI } from '../ui/PortalProvider';
 import {
   createErrorReporter,
@@ -65,12 +65,21 @@ import { PluginPerformanceObserver } from '../utils/performance/plugin-performan
 import { PluginPerformanceReportData } from '../utils/performance/plugin-performance-report';
 import { getParticipantsCount } from '../plugins/collab-edit/get-participants-count';
 import { countNodes } from '../utils/count-nodes';
-import { shouldTrackTransaction } from '../utils/performance/should-track-transaction';
+import { TransactionTracker } from '../utils/performance/track-transactions';
+import {
+  EVENT_NAME_DISPATCH_TRANSACTION,
+  EVENT_NAME_STATE_APPLY,
+  EVENT_NAME_UPDATE_STATE,
+  EVENT_NAME_VIEW_STATE_UPDATED,
+  EVENT_NAME_ON_CHANGE,
+} from '../utils/performance/track-transactions';
 import {
   PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
   PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
+  DEFAULT_SAMPLING_RATE_VALID_TRANSACTIONS,
 } from './consts';
 import { getContextIdentifier } from '../plugins/base/pm-plugins/context-identifier';
+import { FireAnalyticsCallback } from '../plugins/analytics/fire-analytics-event';
 
 export interface EditorViewProps {
   editorProps: EditorProps;
@@ -110,6 +119,42 @@ function handleEditorFocus(view: EditorView): number | undefined {
     view.focus();
   }, 0);
 }
+
+const EMPTY: EditorPlugin[] = [];
+
+export function shouldReconfigureState(
+  props: EditorProps,
+  nextProps: EditorProps,
+) {
+  const prevPlugins = props.dangerouslyAppendPlugins?.__plugins ?? EMPTY;
+  const nextPlugins = nextProps.dangerouslyAppendPlugins?.__plugins ?? EMPTY;
+
+  if (
+    nextPlugins.length !== prevPlugins.length ||
+    prevPlugins.some((p) =>
+      nextPlugins.some((n) => n.name === p.name && n !== p),
+    )
+  ) {
+    return true;
+  }
+
+  const mobileProperties: Array<keyof EditorProps> =
+    props.appearance === 'mobile' ? ['featureFlags', 'quickInsert'] : [];
+
+  const properties: Array<keyof EditorProps> = [
+    'appearance',
+    'persistScrollGutter',
+    'UNSAFE_allowUndoRedoButtons',
+    'placeholder',
+    ...mobileProperties,
+  ];
+
+  return properties.reduce(
+    (acc, curr) => acc || props[curr] !== nextProps[curr],
+    false,
+  );
+}
+
 export default class ReactEditorView<T = {}> extends React.Component<
   EditorViewProps & T,
   {},
@@ -122,11 +167,9 @@ export default class ReactEditorView<T = {}> extends React.Component<
   editorState: EditorState;
   errorReporter: ErrorReporter;
   dispatch: Dispatch;
-  analyticsEventHandler!: (payloadChannel: {
-    payload: AnalyticsEventPayload;
-    channel?: string;
-  }) => void;
   proseMirrorRenderedSeverity?: SEVERITY;
+  transactionTracker: TransactionTracker;
+  validTransactionCount: number;
 
   static contextTypes = {
     getAtlaskitAnalyticsEventHandlers: PropTypes.func,
@@ -139,12 +182,9 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
   private focusTimeoutId: number | undefined;
 
-  private pluginPerformanceObserver = new PluginPerformanceObserver(report =>
-    this.onPluginObservation(report, this.editorState),
-  )
-    .withPlugins(() => this.getPluginNames())
-    .withNodeCounts(() => this.countNodes())
-    .withOptions(() => this.transactionTrackingOptions);
+  private pluginPerformanceObserver: PluginPerformanceObserver;
+
+  private featureFlags: FeatureFlags;
 
   private onPluginObservation = (
     report: PluginPerformanceReportData,
@@ -161,18 +201,12 @@ export default class ReactEditorView<T = {}> extends React.Component<
     });
   };
 
-  // TODO: https://product-fabric.atlassian.net/browse/ED-8985
-  get transactionTrackingProp() {
-    const { editorProps } = this.props;
-    const { transactionTracking } = editorProps.performanceTracking
-      ? editorProps.performanceTracking
-      : editorProps;
-    return transactionTracking || { enabled: false };
-  }
-
-  get transactionTrackingOptions() {
-    const { enabled, ...tracking } = this.transactionTrackingProp;
-    return enabled ? tracking : {};
+  get transactionTracking() {
+    return (
+      this.props.editorProps.performanceTracking?.transactionTracking ?? {
+        enabled: false,
+      }
+    );
   }
 
   private getPluginNames() {
@@ -187,28 +221,44 @@ export default class ReactEditorView<T = {}> extends React.Component<
     super(props, context);
 
     this.eventDispatcher = new EventDispatcher();
+
     this.dispatch = createDispatch(this.eventDispatcher);
     this.errorReporter = createErrorReporter(
       props.editorProps.errorReporterHandler,
     );
 
+    this.transactionTracker = new TransactionTracker();
+    this.pluginPerformanceObserver = new PluginPerformanceObserver((report) =>
+      this.onPluginObservation(report, this.editorState),
+    )
+      .withPlugins(() => this.getPluginNames())
+      .withNodeCounts(() => this.countNodes())
+      .withOptions(() => this.transactionTracking)
+      .withTransactionTracker(() => this.transactionTracker);
+
+    this.validTransactionCount = 0;
+
+    this.featureFlags = createFeatureFlagsFromProps(this.props.editorProps);
+    const featureFlagsEnabled = this.featureFlags
+      ? getEnabledFeatureFlagKeys(this.featureFlags)
+      : [];
+
+    // START TEMPORARY CODE ED-10584
+    if (this.props.createAnalyticsEvent) {
+      (this.props
+        .createAnalyticsEvent as any).__queueAnalytics = this.featureFlags.queueAnalytics;
+    }
+    // END TEMPORARY CODE ED-10584
+
     // This needs to be before initialising editorState because
     // we dispatch analytics events in plugin initialisation
-    const { createAnalyticsEvent, allowAnalyticsGASV3 } = props;
-    if (allowAnalyticsGASV3) {
-      this.activateAnalytics(createAnalyticsEvent);
-    }
+    this.eventDispatcher.on(analyticsEventKey, this.handleAnalyticsEvent);
 
     this.editorState = this.createEditorState({
       props,
       context,
       replaceDoc: true,
     });
-
-    const featureFlags = createFeatureFlagsFromProps(this.props.editorProps);
-    const featureFlagsEnabled = featureFlags
-      ? getEnabledFeatureFlagKeys(featureFlags)
-      : [];
 
     this.dispatchAnalyticsEvent({
       action: ACTION.STARTED,
@@ -222,13 +272,24 @@ export default class ReactEditorView<T = {}> extends React.Component<
   }
 
   UNSAFE_componentWillReceiveProps(nextProps: EditorViewProps) {
+    // START TEMPORARY CODE ED-10584
+    if (
+      nextProps.createAnalyticsEvent &&
+      nextProps.createAnalyticsEvent !== this.props.createAnalyticsEvent
+    ) {
+      const featureFlags = createFeatureFlagsFromProps(nextProps.editorProps);
+      (nextProps.createAnalyticsEvent as any).__queueAnalytics =
+        featureFlags.queueAnalytics;
+    }
+    // END TEMPORARY CODE ED-10584
+
     if (
       this.view &&
       this.props.editorProps.disabled !== nextProps.editorProps.disabled
     ) {
       // Disables the contentEditable attribute of the editor if the editor is disabled
       this.view.setProps({
-        editable: _state => !nextProps.editorProps.disabled,
+        editable: (_state) => !nextProps.editorProps.disabled,
       } as DirectEditorProps);
 
       if (
@@ -239,28 +300,14 @@ export default class ReactEditorView<T = {}> extends React.Component<
       }
     }
 
-    // Activate or deactivate analytics if change property
-    if (this.props.allowAnalyticsGASV3 !== nextProps.allowAnalyticsGASV3) {
-      if (nextProps.allowAnalyticsGASV3) {
-        this.activateAnalytics(nextProps.createAnalyticsEvent);
-      } else {
-        this.deactivateAnalytics();
-      }
-    } else {
-      // Allow analytics is the same, check if we receive a new create analytics prop
-      if (
-        this.props.allowAnalyticsGASV3 &&
-        nextProps.createAnalyticsEvent !== this.props.createAnalyticsEvent
-      ) {
-        this.deactivateAnalytics(); // Deactivate the old one
-        this.activateAnalytics(nextProps.createAnalyticsEvent); // Activate the new one
-      }
-    }
-
     const { appearance } = this.props.editorProps;
     const { appearance: nextAppearance } = nextProps.editorProps;
-    if (nextAppearance !== appearance) {
+
+    if (shouldReconfigureState(this.props.editorProps, nextProps.editorProps)) {
       this.reconfigureState(nextProps);
+    }
+
+    if (nextAppearance !== appearance) {
       if (nextAppearance === 'full-width' || appearance === 'full-width') {
         this.dispatchAnalyticsEvent({
           action: ACTION.CHANGED_FULL_WIDTH_MODE,
@@ -274,7 +321,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
       }
     }
 
-    if (!this.transactionTrackingProp.enabled) {
+    if (!this.transactionTracking.enabled) {
       this.pluginPerformanceObserver.disconnect();
     }
   }
@@ -304,7 +351,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
       this.getPlugins(
         props.editorProps,
         this.props.editorProps,
-        props.createAnalyticsEvent,
+        this.props.createAnalyticsEvent,
       ),
     );
 
@@ -319,9 +366,9 @@ export default class ReactEditorView<T = {}> extends React.Component<
       portalProviderAPI: props.portalProviderAPI,
       reactContext: () => this.context,
       dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
-      performanceTracking: props.editorProps.performanceTracking || {
-        transactionTracking: this.transactionTrackingProp,
-      },
+      performanceTracking: props.editorProps.performanceTracking,
+      transactionTracker: this.transactionTracker,
+      featureFlags: createFeatureFlagsFromProps(props.editorProps),
     });
 
     const newState = state.reconfigure({ plugins });
@@ -333,25 +380,12 @@ export default class ReactEditorView<T = {}> extends React.Component<
     return this.view.update({ ...this.view.props, state: newState });
   };
 
-  /**
-   * Deactivate analytics event handler, if exist any.
-   */
-  deactivateAnalytics() {
-    if (this.analyticsEventHandler) {
-      this.eventDispatcher.off(analyticsEventKey, this.analyticsEventHandler);
+  handleAnalyticsEvent: FireAnalyticsCallback = (payload) => {
+    if (!this.props.allowAnalyticsGASV3) {
+      return;
     }
-  }
-
-  /**
-   * Create analytics event handler, if createAnalyticsEvent exist
-   * @param createAnalyticsEvent
-   */
-  activateAnalytics(createAnalyticsEvent?: CreateUIAnalyticsEvent) {
-    if (createAnalyticsEvent) {
-      this.analyticsEventHandler = fireAnalyticsEvent(createAnalyticsEvent);
-      this.eventDispatcher.on(analyticsEventKey, this.analyticsEventHandler);
-    }
-  }
+    fireAnalyticsEvent(this.props.createAnalyticsEvent)(payload);
+  };
 
   componentDidMount() {
     // Transaction dispatching is already enabled by default prior to
@@ -363,7 +397,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
     // ProseMirror transactions when a dismount is imminent.
     this.canDispatchTransactions = true;
 
-    if (this.transactionTrackingProp.enabled) {
+    if (this.transactionTracking.enabled) {
       this.pluginPerformanceObserver.observe();
     }
   }
@@ -386,7 +420,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
     if (this.view) {
       // Destroy the state if the Editor is being unmounted
       const editorState = this.view.state;
-      editorState.plugins.forEach(plugin => {
+      editorState.plugins.forEach((plugin) => {
         const state = plugin.getState(editorState);
         if (state && state.destroy) {
           state.destroy();
@@ -394,6 +428,8 @@ export default class ReactEditorView<T = {}> extends React.Component<
       });
     }
     // this.view will be destroyed when React unmounts in handleEditorViewRef
+
+    this.eventDispatcher.off(analyticsEventKey, this.handleAnalyticsEvent);
   }
 
   // Helper to allow tests to inject plugins directly
@@ -402,7 +438,18 @@ export default class ReactEditorView<T = {}> extends React.Component<
     prevEditorProps?: EditorProps,
     createAnalyticsEvent?: CreateUIAnalyticsEvent,
   ): EditorPlugin[] {
-    return createPluginList(editorProps, prevEditorProps, createAnalyticsEvent);
+    const editorPlugins = editorProps.dangerouslyAppendPlugins?.__plugins ?? [];
+    const builtinPlugins = createPluginList(
+      editorProps,
+      prevEditorProps,
+      createAnalyticsEvent,
+    );
+
+    if (editorPlugins && editorPlugins.length > 0) {
+      builtinPlugins.push(...editorPlugins);
+    }
+
+    return builtinPlugins;
   }
 
   createEditorState = (options: {
@@ -449,9 +496,9 @@ export default class ReactEditorView<T = {}> extends React.Component<
       portalProviderAPI: this.props.portalProviderAPI,
       reactContext: () => options.context,
       dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
-      performanceTracking: this.props.editorProps.performanceTracking || {
-        transactionTracking: this.transactionTrackingProp,
-      },
+      performanceTracking: this.props.editorProps.performanceTracking,
+      transactionTracker: this.transactionTracker,
+      featureFlags: this.featureFlags,
     });
 
     this.contentTransformer = contentTransformerProvider
@@ -472,7 +519,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
     }
     let selection: Selection | undefined;
     if (doc) {
-      // ED-4759: Don't set selection at end for full-page editor - should be at start
+      // ED-4759: Don't set selection at end for full-page editor - should be at start.
       selection = isFullPage(options.props.editorProps.appearance)
         ? Selection.atStart(doc)
         : Selection.atEnd(doc);
@@ -491,23 +538,49 @@ export default class ReactEditorView<T = {}> extends React.Component<
   };
 
   private onEditorViewStateUpdated = ({
-    transaction,
+    originalTransaction,
+    transactions,
     oldEditorState,
     newEditorState,
   }: {
-    transaction: Transaction;
+    originalTransaction: Transaction;
+    transactions: Transaction[];
     oldEditorState: EditorState;
     newEditorState: EditorState;
   }) => {
-    const { enabled: trackinEnabled } = this.transactionTrackingProp;
+    const { enabled: trackinEnabled } = this.transactionTracking;
 
-    this.config.onEditorViewStateUpdatedCallbacks.forEach(entry => {
+    this.config.onEditorViewStateUpdatedCallbacks.forEach((entry) => {
       trackinEnabled &&
         startMeasure(`🦉 ${entry.pluginName}::onEditorViewStateUpdated`);
-      entry.callback({ transaction, oldEditorState, newEditorState });
+      entry.callback({
+        originalTransaction,
+        transactions,
+        oldEditorState,
+        newEditorState,
+      });
       trackinEnabled &&
         stopMeasure(`🦉 ${entry.pluginName}::onEditorViewStateUpdated`);
     });
+  };
+
+  private trackValidTransactions = () => {
+    const { editorProps } = this.props;
+    if (editorProps?.trackValidTransactions) {
+      this.validTransactionCount++;
+      const samplingRate =
+        (typeof editorProps.trackValidTransactions === 'object' &&
+          editorProps.trackValidTransactions.samplingRate) ||
+        DEFAULT_SAMPLING_RATE_VALID_TRANSACTIONS;
+      if (this.validTransactionCount >= samplingRate) {
+        this.dispatchAnalyticsEvent({
+          action: ACTION.DISPATCHED_VALID_TRANSACTION,
+          actionSubject: ACTION_SUBJECT.EDITOR,
+          eventType: EVENT_TYPE.OPERATIONAL,
+        });
+        this.validTransactionCount = 0;
+      }
+    }
   };
 
   private dispatchTransaction = (transaction: Transaction) => {
@@ -515,8 +588,12 @@ export default class ReactEditorView<T = {}> extends React.Component<
       return;
     }
 
-    const shouldTrack = shouldTrackTransaction(this.transactionTrackingProp);
-    shouldTrack && startMeasure(`🦉 ReactEditorView::dispatchTransaction`);
+    this.transactionTracker.bumpDispatchCounter(this.transactionTracking);
+    const {
+      startMeasure,
+      stopMeasure,
+    } = this.transactionTracker.getMeasureHelpers(this.transactionTracking);
+    startMeasure(EVENT_NAME_DISPATCH_TRANSACTION);
 
     const nodes: PMNode[] = findChangedNodesFromTransaction(transaction);
     const changedNodesValid = validateNodes(nodes);
@@ -525,38 +602,65 @@ export default class ReactEditorView<T = {}> extends React.Component<
       const oldEditorState = this.view.state;
 
       // go ahead and update the state now we know the transaction is good
-      shouldTrack && startMeasure(`🦉 EditorView::state::apply`);
-      const editorState = this.view.state.apply(transaction);
-      shouldTrack && stopMeasure(`🦉 EditorView::state::apply`);
+      startMeasure(EVENT_NAME_STATE_APPLY);
+      const {
+        state: editorState,
+        transactions,
+      } = this.view.state.applyTransaction(transaction);
+      stopMeasure(EVENT_NAME_STATE_APPLY);
+
+      this.trackValidTransactions();
 
       if (editorState === oldEditorState) {
         return;
       }
 
-      shouldTrack && startMeasure(`🦉 EditorView::updateState`);
+      startMeasure(EVENT_NAME_UPDATE_STATE);
       this.view.updateState(editorState);
-      shouldTrack && stopMeasure(`🦉 EditorView::updateState`);
+      stopMeasure(EVENT_NAME_UPDATE_STATE);
 
-      shouldTrack && startMeasure(`🦉 EditorView::onEditorViewStateUpdated`);
+      startMeasure(EVENT_NAME_VIEW_STATE_UPDATED);
       this.onEditorViewStateUpdated({
-        transaction,
+        originalTransaction: transaction,
+        transactions,
         oldEditorState,
         newEditorState: editorState,
       });
-      shouldTrack && stopMeasure(`🦉 EditorView::onEditorViewStateUpdated`);
+      stopMeasure(EVENT_NAME_VIEW_STATE_UPDATED);
 
       if (this.props.editorProps.onChange && transaction.docChanged) {
         const source = transaction.getMeta('isRemote') ? 'remote' : 'local';
 
-        shouldTrack && startMeasure(`🦉 ReactEditorView::onChange`);
+        startMeasure(EVENT_NAME_ON_CHANGE);
         this.props.editorProps.onChange(this.view, { source });
-        shouldTrack && stopMeasure(`🦉 ReactEditorView::onChange`);
+        stopMeasure(
+          EVENT_NAME_ON_CHANGE,
+          (duration: number, startTime: number) => {
+            if (
+              this.props.editorProps.performanceTracking
+                ?.onChangeCallbackTracking?.enabled !== true
+            ) {
+              return;
+            }
+            this.dispatchAnalyticsEvent({
+              action: ACTION.ON_CHANGE_CALLBACK,
+              actionSubject: ACTION_SUBJECT.EDITOR,
+              eventType: EVENT_TYPE.OPERATIONAL,
+              attributes: {
+                duration,
+                startTime,
+              },
+            });
+          },
+        );
       }
       this.editorState = editorState;
     } else {
       const invalidNodes = nodes
-        .filter(node => !validNode(node))
-        .map<SimplifiedNode | string>(node => getDocStructure(node));
+        .filter((node) => !validNode(node))
+        .map<SimplifiedNode | string>((node) =>
+          getDocStructure(node, { compact: true }),
+        );
 
       this.dispatchAnalyticsEvent({
         action: ACTION.DISPATCHED_INVALID_TRANSACTION,
@@ -571,8 +675,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
       });
     }
 
-    shouldTrack &&
-      stopMeasure(`🦉 ReactEditorView::dispatchTransaction`, () => {});
+    stopMeasure(EVENT_NAME_DISPATCH_TRANSACTION);
   };
 
   getDirectEditorProps = (state?: EditorState): DirectEditorProps => {
@@ -587,7 +690,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
         }
       },
       // Disables the contentEditable attribute of the editor if the editor is disabled
-      editable: _state => !this.props.editorProps.disabled,
+      editable: (_state) => !this.props.editorProps.disabled,
       attributes: { 'data-gramm': 'false' },
     };
   };
@@ -684,20 +787,40 @@ export default class ReactEditorView<T = {}> extends React.Component<
       className={getUAPrefix()}
       key="ProseMirror"
       ref={this.handleEditorViewRef}
+      aria-label="Main content area"
+      role="textbox"
     />
   );
 
   render() {
-    return this.props.render
-      ? this.props.render({
-          editor: this.editor,
-          view: this.view,
-          config: this.config,
-          eventDispatcher: this.eventDispatcher,
-          transformer: this.contentTransformer,
-          dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
-        })
-      : this.editor;
+    const renderTracking = this.props.editorProps.performanceTracking
+      ?.renderTracking?.reactEditorView;
+    const renderTrackingEnabled = renderTracking?.enabled;
+    const useShallow = renderTracking?.useShallow;
+
+    return (
+      <React.Fragment>
+        {renderTrackingEnabled && (
+          <RenderTracking
+            componentProps={this.props}
+            action={ACTION.RE_RENDERED}
+            actionSubject={ACTION_SUBJECT.REACT_EDITOR_VIEW}
+            handleAnalyticsEvent={this.handleAnalyticsEvent}
+            useShallow={useShallow}
+          />
+        )}
+        {this.props.render
+          ? this.props.render({
+              editor: this.editor,
+              view: this.view,
+              config: this.config,
+              eventDispatcher: this.eventDispatcher,
+              transformer: this.contentTransformer,
+              dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
+            })
+          : this.editor}
+      </React.Fragment>
+    );
   }
 }
 

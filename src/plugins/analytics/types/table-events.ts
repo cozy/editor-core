@@ -1,6 +1,6 @@
 import { TableAEP, UIAEP } from './utils';
 import { INPUT_METHOD, ACTION_SUBJECT } from './enums';
-import { SortOrder } from '../../table/types';
+import { TableSortOrder as SortOrder } from '@atlaskit/adf-schema/steps';
 
 //#region Constants
 export enum TABLE_ACTION {
@@ -22,6 +22,7 @@ export enum TABLE_ACTION {
   SORTED_COLUMN = 'sortedColumn',
   REPLACED = 'replaced',
   ATTEMPTED_TABLE_WIDTH_CHANGE = 'attemptedTableWidthChange',
+  DISTRIBUTED_COLUMNS_WIDTHS = 'distributedColumnsWidths',
 }
 
 export enum TABLE_BREAKOUT {
@@ -72,7 +73,10 @@ type TableDeleteAEP = TableAEP<
 type TableClearAEP = TableAEP<
   TABLE_ACTION.CLEARED,
   {
-    inputMethod: INPUT_METHOD.KEYBOARD | INPUT_METHOD.CONTEXT_MENU;
+    inputMethod:
+      | INPUT_METHOD.KEYBOARD
+      | INPUT_METHOD.CONTEXT_MENU
+      | INPUT_METHOD.FLOATING_TB;
   } & HorizontalAndVerticalCells &
     TotalRowAndColCount,
   undefined
@@ -121,7 +125,8 @@ type TableAddRowOrColumnAEP = TableAEP<
       | INPUT_METHOD.SHORTCUT
       | INPUT_METHOD.CONTEXT_MENU
       | INPUT_METHOD.BUTTON
-      | INPUT_METHOD.KEYBOARD;
+      | INPUT_METHOD.KEYBOARD
+      | INPUT_METHOD.FLOATING_TB;
     position: number;
   } & TotalRowAndColCount,
   undefined
@@ -130,7 +135,20 @@ type TableAddRowOrColumnAEP = TableAEP<
 type TableDeleteRowOrColumnAEP = TableAEP<
   TABLE_ACTION.DELETED_ROW | TABLE_ACTION.DELETED_COLUMN,
   {
-    inputMethod: INPUT_METHOD.CONTEXT_MENU | INPUT_METHOD.BUTTON;
+    inputMethod:
+      | INPUT_METHOD.CONTEXT_MENU
+      | INPUT_METHOD.BUTTON
+      | INPUT_METHOD.FLOATING_TB;
+    position: number;
+    count: number;
+  } & TotalRowAndColCount,
+  undefined
+>;
+
+type TableDistributeColumnsWidthsAEP = TableAEP<
+  TABLE_ACTION.DISTRIBUTED_COLUMNS_WIDTHS,
+  {
+    inputMethod: INPUT_METHOD.CONTEXT_MENU;
     position: number;
     count: number;
   } & TotalRowAndColCount,
@@ -181,4 +199,5 @@ export type TableEventPayload =
   | TableSortColumnAEP
   | TableDeleteRowOrColumnAEP
   | TableReplaceAEP
-  | TableAttemptedResizeAEP;
+  | TableAttemptedResizeAEP
+  | TableDistributeColumnsWidthsAEP;

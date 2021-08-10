@@ -51,7 +51,7 @@ export {
   sanitiseSelectionMarksForWrapping,
   sanitiseMarksInSelection,
 } from './mark';
-export { isNodeTypeParagraph } from './nodes';
+export { isParagraph, isText, isLinkMark, validateNodes } from './nodes';
 export {
   isChromeWithSelectionBug,
   normaliseNestedLayout,
@@ -66,6 +66,8 @@ export {
 export type { JSONDocNode, JSONNode };
 
 export { containsClassName } from './dom';
+
+export { default as measurements } from './performance/measure-enum';
 
 function validateNode(_node: Node): boolean {
   return false;
@@ -201,7 +203,7 @@ export function isMarkTypeAllowedInCurrentSelection(
     let allowedInActiveMarks =
       $from.depth === 0 ? state.doc.marks.every(isCompatibleMarkType) : true;
 
-    state.doc.nodesBetween($from.pos, $to.pos, node => {
+    state.doc.nodesBetween($from.pos, $to.pos, (node) => {
       allowedInActiveMarks =
         allowedInActiveMarks && node.marks.every(isCompatibleMarkType);
     });
@@ -223,7 +225,7 @@ export function canJoinDown(
   doc: any,
   nodeType: NodeType,
 ): boolean {
-  return checkNodeDown(selection, doc, node => node.type === nodeType);
+  return checkNodeDown(selection, doc, (node) => node.type === nodeType);
 }
 
 export function checkNodeDown(
@@ -459,6 +461,10 @@ export function toJSON(node: Node): JSONDocNode {
   return transformer.encode(node);
 }
 
+export function nodeToJSON(node: Node): JSONNode {
+  return transformer.encodeNode(node);
+}
+
 /**
  * Repeating string for multiple times
  */
@@ -522,7 +528,7 @@ function getSelectedWrapperNodes(state: EditorState): NodeType[] {
       taskItem,
       taskList,
     } = state.schema.nodes;
-    state.doc.nodesBetween($from.pos, $to.pos, node => {
+    state.doc.nodesBetween($from.pos, $to.pos, (node) => {
       if (
         node.isBlock &&
         [
@@ -551,7 +557,7 @@ function getSelectedWrapperNodes(state: EditorState): NodeType[] {
 export function areBlockTypesDisabled(state: EditorState): boolean {
   const nodesTypes: NodeType[] = getSelectedWrapperNodes(state);
   const { panel } = state.schema.nodes;
-  return nodesTypes.filter(type => type !== panel).length > 0;
+  return nodesTypes.filter((type) => type !== panel).length > 0;
 }
 
 export const isTemporary = (id: string): boolean => {
@@ -607,7 +613,7 @@ export const isEmptyNode = (schema: Schema) => {
         );
       case doc:
         let isEmpty = true;
-        node.content.forEach(child => {
+        node.content.forEach((child) => {
           isEmpty = isEmpty && innerIsEmptyNode(child);
         });
         return isEmpty;
@@ -669,7 +675,7 @@ export function filterChildrenBetween(
 
 export function dedupe<T>(
   list: T[] = [],
-  iteratee: (p: T) => T[keyof T] | T = p => p,
+  iteratee: (p: T) => T[keyof T] | T = (p) => p,
 ): T[] {
   /**
               .,
@@ -685,9 +691,9 @@ export function dedupe<T>(
  */
 
   const seen = new Set();
-  list.forEach(l => seen.add(iteratee(l)));
+  list.forEach((l) => seen.add(iteratee(l)));
 
-  return list.filter(l => {
+  return list.filter((l) => {
     const it = iteratee(l);
     if (seen.has(it)) {
       seen.delete(it);

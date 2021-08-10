@@ -1,17 +1,16 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import { getDocFromElement, comment, fullpage, editable } from '../_helpers';
-import { toolbarMessages as textFormattingMessages } from '../../../plugins/text-formatting/ui/ToolbarTextFormatting/toolbar-messages';
-import { toolbarMessages as advancedTextFormattingMessages } from '../../../plugins/text-formatting/ui/ToolbarAdvancedTextFormatting/toolbar-messages';
+import { toolbarMessages as textFormattingMessages } from '../../../plugins/text-formatting/ui/Toolbar/toolbar-messages';
 import { toolbarMessages as blockTypeToolbarMessages } from '../../../plugins/block-type/ui/ToolbarBlockType/toolbar-messages';
 import {
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
   mountEditor,
 } from '../../__helpers/testing-example-helpers';
 import { messages as blockTypeMessages } from '../../../plugins/block-type/messages';
 
 const input = 'helloworld ';
 // https://product-fabric.atlassian.net/browse/ED-4531
-[comment, fullpage].forEach(editor => {
+[comment, fullpage].forEach((editor) => {
   BrowserTestCase(
     `toolbar-1.ts: should be able to select normal text, bold, italics, underline style for ${editor.name} editor`,
     { skip: ['safari', 'edge'] },
@@ -20,9 +19,9 @@ const input = 'helloworld ';
       const italic = `[aria-label="${textFormattingMessages.italic.defaultMessage}"]`;
       const changeFormatting = `[aria-label="${blockTypeToolbarMessages.textStyles.defaultMessage}"]`;
       const normalText = `span=${blockTypeMessages.normal.defaultMessage}`;
-      const more = `[aria-label="${advancedTextFormattingMessages.moreFormatting.defaultMessage}"]`;
-      const underline = `span=${advancedTextFormattingMessages.underline.defaultMessage}`;
-      const page = await goToEditorTestingExample(client);
+      const more = `[aria-label="${textFormattingMessages.moreFormatting.defaultMessage}"]`;
+      const underline = `span=${textFormattingMessages.underline.defaultMessage}`;
+      const page = await goToEditorTestingWDExample(client);
       await mountEditor(page, { appearance: editor.appearance });
 
       await page.click(editable);

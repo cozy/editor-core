@@ -1,6 +1,6 @@
 import { EditorView } from 'prosemirror-view';
 import createStub from 'raf-stub';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
@@ -30,7 +30,7 @@ let rafStub: {
 };
 let rafSpy: jest.SpyInstance;
 
-const initEditor = (doc: any) => {
+const initEditor = (doc: DocBuilder) => {
   ({ editorView, refs } = editor(doc, createAnalyticsEvent));
 };
 

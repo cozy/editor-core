@@ -10,7 +10,11 @@ import { Schema } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { browser } from '@atlaskit/editor-common';
 import CrossIcon from '@atlaskit/icon/glyph/cross';
-import Modal, { ModalTransition } from '@atlaskit/modal-dialog';
+import AkModalDialog, { ModalTransition } from '@atlaskit/modal-dialog';
+import type {
+  HeaderComponentProps,
+  FooterComponentProps,
+} from '@atlaskit/modal-dialog/types';
 import {
   Header,
   Footer,
@@ -27,11 +31,11 @@ import {
 } from './styles';
 import * as keymaps from '../../../keymaps';
 import ToolbarButton from '../../../ui/ToolbarButton';
-import { toolbarMessages as textFormattingMessages } from '../../text-formatting/ui/ToolbarTextFormatting/toolbar-messages';
-import { toolbarMessages as advancedTextFormattingMessages } from '../../text-formatting/ui/ToolbarAdvancedTextFormatting/toolbar-messages';
-import { messages as listMessages } from '../../lists/messages';
+import { toolbarMessages } from '../../text-formatting/ui/Toolbar/toolbar-messages';
+import { messages as listMessages } from '../../list/messages';
 import { messages as insertBlockMessages } from '../../insert-block/ui/ToolbarInsertBlock/messages';
 import { messages as blockTypeMessages } from '../../block-type/messages';
+import { messages as undoRedoMessages } from '../../undo-redo/messages';
 import { closeHelpCommand } from '../commands';
 import { annotationMessages } from '../../annotation/toolbar';
 
@@ -56,16 +60,6 @@ const messages = defineMessages({
     defaultMessage: 'Markdown',
     description: 'It is a name of popular markup language.',
   },
-  undo: {
-    id: 'fabric.editor.undo',
-    defaultMessage: 'Undo',
-    description: '',
-  },
-  redo: {
-    id: 'fabric.editor.redo',
-    defaultMessage: 'Redo',
-    description: '',
-  },
   pastePlainText: {
     id: 'fabric.editor.pastePlainText',
     defaultMessage: 'Paste plain text',
@@ -89,8 +83,6 @@ const messages = defineMessages({
   },
 });
 
-const AkModalDialog: React.ComponentClass<any> = Modal;
-
 export interface Format {
   name: string;
   type: string;
@@ -103,45 +95,45 @@ export const formatting: (intl: InjectedIntl) => Format[] = ({
   formatMessage,
 }) => [
   {
-    name: formatMessage(textFormattingMessages.bold),
+    name: formatMessage(toolbarMessages.bold),
     type: 'strong',
     keymap: () => keymaps.toggleBold,
     autoFormatting: () => (
       <span>
         <CodeLg>
           **
-          <FormattedMessage {...textFormattingMessages.bold} />
+          <FormattedMessage {...toolbarMessages.bold} />
           **
         </CodeLg>
       </span>
     ),
   },
   {
-    name: formatMessage(textFormattingMessages.italic),
+    name: formatMessage(toolbarMessages.italic),
     type: 'em',
     keymap: () => keymaps.toggleItalic,
     autoFormatting: () => (
       <span>
         <CodeLg>
-          *<FormattedMessage {...textFormattingMessages.italic} />*
+          *<FormattedMessage {...toolbarMessages.italic} />*
         </CodeLg>
       </span>
     ),
   },
   {
-    name: formatMessage(advancedTextFormattingMessages.underline),
+    name: formatMessage(toolbarMessages.underline),
     type: 'underline',
     keymap: () => keymaps.toggleUnderline,
   },
   {
-    name: formatMessage(advancedTextFormattingMessages.strike),
+    name: formatMessage(toolbarMessages.strike),
     type: 'strike',
     keymap: () => keymaps.toggleStrikethrough,
     autoFormatting: () => (
       <span>
         <CodeLg>
           ~~
-          <FormattedMessage {...advancedTextFormattingMessages.strike} />
+          <FormattedMessage {...toolbarMessages.strike} />
           ~~
         </CodeLg>
       </span>
@@ -275,13 +267,13 @@ export const formatting: (intl: InjectedIntl) => Format[] = ({
     ),
   },
   {
-    name: formatMessage(advancedTextFormattingMessages.code),
+    name: formatMessage(toolbarMessages.code),
     type: 'code',
     keymap: () => keymaps.toggleCode,
     autoFormatting: () => (
       <span>
         <CodeLg>
-          `<FormattedMessage {...advancedTextFormattingMessages.code} />`
+          `<FormattedMessage {...toolbarMessages.code} />`
         </CodeLg>
       </span>
     ),
@@ -334,17 +326,17 @@ const otherFormatting: (intl: InjectedIntl) => Format[] = ({
   formatMessage,
 }) => [
   {
-    name: formatMessage(advancedTextFormattingMessages.clearFormatting),
+    name: formatMessage(toolbarMessages.clearFormatting),
     type: 'clearFormatting',
     keymap: () => keymaps.clearFormatting,
   },
   {
-    name: formatMessage(messages.undo),
+    name: formatMessage(undoRedoMessages.undo),
     type: 'undo',
     keymap: () => keymaps.undo,
   },
   {
-    name: formatMessage(messages.redo),
+    name: formatMessage(undoRedoMessages.redo),
     type: 'redo',
     keymap: () => keymaps.redo,
   },
@@ -393,7 +385,7 @@ export const getSupportedFormatting = (
   quickInsertEnabled?: boolean,
 ): Format[] => {
   const supportedBySchema = formatting(intl).filter(
-    format => schema.nodes[format.type] || schema.marks[format.type],
+    (format) => schema.nodes[format.type] || schema.marks[format.type],
   );
   return [
     ...supportedBySchema,
@@ -441,7 +433,7 @@ const ModalHeader = injectIntl(
     onClose,
     showKeyline,
     intl: { formatMessage },
-  }: { onClose: () => void; showKeyline: boolean } & InjectedIntlProps) => (
+  }: HeaderComponentProps & InjectedIntlProps) => (
     <Header showKeyline={showKeyline}>
       <FormattedMessage {...messages.editorHelp} />
       <div>
@@ -461,7 +453,7 @@ const ModalHeader = injectIntl(
   ),
 );
 
-const ModalFooter = ({ showKeyline }: { showKeyline: boolean }) => (
+const ModalFooter = ({ showKeyline }: FooterComponentProps) => (
   <Footer showKeyline={showKeyline}>
     <FormattedMessage
       {...messages.helpDialogTips}
@@ -523,13 +515,13 @@ class HelpDialog extends React.Component<Props & InjectedIntlProps> {
                   </Title>
                   <div>
                     {this.formatting
-                      .filter(form => {
+                      .filter((form) => {
                         const keymap = form.keymap && form.keymap(this.props);
                         return (
                           keymap && keymap[browser.mac ? 'mac' : 'windows']
                         );
                       })
-                      .map(form => (
+                      .map((form) => (
                         <Row key={`textFormatting-${form.name}`}>
                           <span>{form.name}</span>
                           {getComponentFromKeymap(form.keymap!())}
@@ -538,11 +530,11 @@ class HelpDialog extends React.Component<Props & InjectedIntlProps> {
 
                     {this.formatting
                       .filter(
-                        form =>
+                        (form) =>
                           shortcutNamesWithoutKeymap.indexOf(form.type) !== -1,
                       )
-                      .filter(form => form.autoFormatting)
-                      .map(form => (
+                      .filter((form) => form.autoFormatting)
+                      .map((form) => (
                         <Row key={`autoFormatting-${form.name}`}>
                           <span>{form.name}</span>
                           {form.autoFormatting!()}
@@ -558,11 +550,11 @@ class HelpDialog extends React.Component<Props & InjectedIntlProps> {
                   <div>
                     {this.formatting
                       .filter(
-                        form =>
+                        (form) =>
                           shortcutNamesWithoutKeymap.indexOf(form.type) === -1,
                       )
                       .map(
-                        form =>
+                        (form) =>
                           form.autoFormatting && (
                             <Row key={`autoFormatting-${form.name}`}>
                               <span>{form.name}</span>

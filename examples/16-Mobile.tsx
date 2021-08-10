@@ -7,11 +7,8 @@ import {
   MentionProvider,
 } from '@atlaskit/mention/resource';
 import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
-
-import {
-  ConfluenceCardProvider,
-  ConfluenceCardClient,
-} from './5-full-page-with-confluence-smart-cards';
+import { ConfluenceCardClient } from '@atlaskit/editor-test-helpers/confluence-card-client';
+import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
 
 const cardClient = new ConfluenceCardClient('staging');
 const cardProvider = new ConfluenceCardProvider('staging');
@@ -39,7 +36,7 @@ export function mobileEditor() {
             appearance="mobile"
             mentionProvider={Promise.resolve(new MentionProviderImpl())}
             quickInsert={true}
-            UNSAFE_cards={{
+            smartLinks={{
               provider: Promise.resolve(cardProvider),
               allowBlockCards: true,
             }}

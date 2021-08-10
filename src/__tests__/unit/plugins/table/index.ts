@@ -6,7 +6,7 @@ import {
   selectColumn,
   selectTable,
 } from '@atlaskit/editor-tables/utils';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import randomId from '@atlaskit/editor-test-helpers/random-id';
 
 import {
@@ -26,7 +26,8 @@ import {
   mediaGroup,
   mediaSingle,
   media,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import {
@@ -57,7 +58,7 @@ import {
 describe('table plugin', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     const tableOptions = {
       allowNumberColumn: true,
       allowHeaderRow: true,
@@ -82,7 +83,7 @@ describe('table plugin', () => {
     describe('when the cursor is outside the table', () => {
       it('it should create a new table and return true', () => {
         const { editorView } = editor(doc(p('{<>}')));
-        expect(createTable(editorView.state, editorView.dispatch)).toEqual(
+        expect(createTable()(editorView.state, editorView.dispatch)).toEqual(
           true,
         );
         const tableNode = table()(
@@ -97,7 +98,7 @@ describe('table plugin', () => {
     describe('when selection has a mark', () => {
       it('it should create a new table and return true', () => {
         const { editorView } = editor(doc(p(strong('text{<>}'))));
-        expect(createTable(editorView.state, editorView.dispatch)).toEqual(
+        expect(createTable()(editorView.state, editorView.dispatch)).toEqual(
           true,
         );
         expect(editorView.state.doc).toEqualDocument(
@@ -397,7 +398,7 @@ describe('table plugin', () => {
 
   describe('selectColumn(number)', () => {
     describe('when table has 3 columns', () => {
-      [0, 1, 2].forEach(column => {
+      [0, 1, 2].forEach((column) => {
         describe(`when called with ${column}`, () => {
           it(`it should select ${column} column`, () => {
             const { editorView } = editor(
@@ -423,7 +424,7 @@ describe('table plugin', () => {
 
   describe('selectRow(number)', () => {
     describe('when table has 3 rows', () => {
-      [0, 1, 2].forEach(row => {
+      [0, 1, 2].forEach((row) => {
         describe(`when called with ${row}`, () => {
           it(`it should select ${row} row`, () => {
             const { editorView } = editor(

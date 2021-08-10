@@ -4,47 +4,64 @@ import Select, { ValueType } from '@atlaskit/select';
 import { EnumSelectField, Option } from '@atlaskit/editor-common/extensions';
 
 import FieldMessages from '../FieldMessages';
-import { validate, getOptionFromValue, getSafeParentedName } from '../utils';
-import { OnBlur } from '../types';
+import { validate, getOptionFromValue } from '../utils';
+import { OnFieldChange } from '../types';
 import { formatOptionLabel } from './SelectItem';
 
 export default function SelectField({
+  name,
   field,
-  onBlur,
+  onFieldChange,
   autoFocus,
   placeholder,
-  parentName,
+  fieldDefaultValue,
 }: {
+  name: string;
   field: EnumSelectField;
-  onBlur: OnBlur;
+  onFieldChange: OnFieldChange;
   autoFocus?: boolean;
   placeholder?: string;
-  parentName?: string;
+  fieldDefaultValue?: string | string[];
 }) {
+  //ignore arrays as mutli-value select fields are always clearable
+  const hasValidSingleDefaultValue =
+    !Array.isArray(fieldDefaultValue) && fieldDefaultValue !== undefined;
+
+  const isClearable = !hasValidSingleDefaultValue || field.isMultiple;
+
   return (
     <Field<ValueType<Option>>
-      name={getSafeParentedName(field.name, parentName)}
+      name={name}
       label={field.label}
-      defaultValue={getOptionFromValue(field.items, field.defaultValue)}
-      isRequired={field.isRequired}
-      validate={(value: ValueType<Option>) =>
-        validate<ValueType<Option>>(field, value)
+      defaultValue={
+        getOptionFromValue(field.items, field.defaultValue) as ValueType<
+          Option,
+          false
+        >
       }
+      isRequired={field.isRequired}
+      validate={(value: ValueType<Option> | null | undefined) => {
+        return validate<ValueType<Option>>(field, value!);
+      }}
     >
-      {({ fieldProps, error, valid }) => (
+      {({ fieldProps, error }) => (
         <Fragment>
           <Select
             {...fieldProps}
-            onChange={value => {
+            onChange={(value) => {
               fieldProps.onChange(value);
-              onBlur(field.name);
+              onFieldChange(name, true);
             }}
-            isMulti={field.isMultiple || false}
+            // @see DST-2386 & ED-12503
+            enableAnimation={false}
+            // add type cast to avoid adding a "IsMulti" generic prop (TODO: ED-12072)
+            isMulti={(field.isMultiple || false) as false}
             options={field.items || []}
-            isClearable={false}
+            isClearable={isClearable}
             validationState={error ? 'error' : 'default'}
             formatOptionLabel={formatOptionLabel}
             autoFocus={autoFocus}
+            menuPlacement="auto"
             placeholder={placeholder}
           />
           <FieldMessages error={error} description={field.description} />

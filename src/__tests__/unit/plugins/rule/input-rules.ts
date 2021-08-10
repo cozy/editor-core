@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   hr,
@@ -6,7 +6,8 @@ import {
   code_block,
   hardBreak,
   blockquote,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
 
@@ -15,7 +16,7 @@ describe('inputrules', () => {
 
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
     return createEditor({
       doc,
@@ -125,6 +126,14 @@ describe('inputrules', () => {
       expect(editorView.state.doc).toEqualDocument(
         doc(p('test'), hr(), p('test')),
       );
+    });
+
+    it('should convert "---" at the end of a document', () => {
+      const { editorView, sel } = editor(doc(p('{<>}')));
+
+      insertText(editorView, '---', sel);
+
+      expect(editorView.state.doc).toEqualDocument(doc(hr()));
     });
 
     it('should fire analytics event when convert "---" to rule', () => {

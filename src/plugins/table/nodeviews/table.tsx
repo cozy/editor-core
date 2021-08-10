@@ -1,5 +1,4 @@
 import React from 'react';
-
 import {
   DOMOutputSpec,
   DOMSerializer,
@@ -24,12 +23,21 @@ import { generateColgroup } from '../pm-plugins/table-resizing/utils';
 
 import TableComponent from './TableComponent';
 import { Props, TableOptions } from './types';
+import { setTableSize } from '../commands';
+import { getFeatureFlags } from '../../feature-flags-context';
+import type { TableColumnOrdering } from '@atlaskit/adf-schema/steps';
+import { EmitterEvents } from '../../../extensibility';
 
-const tableAttributes = (node: PmNode) => {
+const tableAttributes = (node: PmNode, allowLocalId: boolean) => {
+  const localIdAttr = allowLocalId
+    ? { 'data-table-local-id': node.attrs.localId || 'local-table' }
+    : {};
+
   return {
     'data-number-column': node.attrs.isNumberColumnEnabled,
     'data-layout': node.attrs.layout,
     'data-autosize': node.attrs.__autoSize,
+    ...localIdAttr,
   };
 };
 
@@ -42,7 +50,7 @@ const toDOM = (node: PmNode, props: Props) => {
 
   return [
     'table',
-    tableAttributes(node),
+    tableAttributes(node, props.options?.allowLocalIdGeneration ?? false),
     colgroup,
     ['tbody', 0],
   ] as DOMOutputSpec;
@@ -50,6 +58,11 @@ const toDOM = (node: PmNode, props: Props) => {
 
 export default class TableView extends ReactNodeView<Props> {
   private table: HTMLElement | undefined;
+  private resizeObserver?: ResizeObserver;
+  private editorView: EditorView;
+  private tableRenderOptimization?: boolean;
+  eventDispatcher?: EventDispatcher;
+
   getPos: getPosHandlerNode;
 
   constructor(props: Props) {
@@ -62,6 +75,9 @@ export default class TableView extends ReactNodeView<Props> {
       props,
     );
     this.getPos = props.getPos;
+    this.editorView = props.view;
+    this.tableRenderOptimization = props.tableRenderOptimization;
+    this.eventDispatcher = props.eventDispatcher;
   }
 
   getContentDOM() {
@@ -74,6 +90,28 @@ export default class TableView extends ReactNodeView<Props> {
       this.table = rendered.dom as HTMLElement;
     }
 
+    if (
+      this.tableRenderOptimization &&
+      this.table &&
+      !this.resizeObserver &&
+      window?.ResizeObserver
+    ) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          const height = entry.contentRect
+            ? entry.contentRect.height
+            : (entry.target as HTMLElement).offsetHeight;
+          const width = entry.contentRect
+            ? entry.contentRect.width
+            : (entry.target as HTMLElement).offsetWidth;
+          setTableSize(height, width)(
+            this.editorView.state,
+            this.editorView.dispatch,
+          );
+        }
+      });
+      this.resizeObserver.observe(this.table);
+    }
     return rendered;
   }
 
@@ -82,11 +120,18 @@ export default class TableView extends ReactNodeView<Props> {
       return;
     }
 
-    const attrs = tableAttributes(node);
-    (Object.keys(attrs) as Array<keyof typeof attrs>).forEach(attr => {
+    const attrs = tableAttributes(
+      node,
+      this.reactComponentProps?.options?.allowLocalIdGeneration ?? false,
+    );
+    (Object.keys(attrs) as Array<keyof typeof attrs>).forEach((attr) => {
       this.table!.setAttribute(attr, attrs[attr]);
     });
   }
+
+  getNode = () => {
+    return this.node;
+  };
 
   render(props: Props, forwardRef: ForwardRef) {
     return (
@@ -97,21 +142,75 @@ export default class TableView extends ReactNodeView<Props> {
           tableResizingPluginState: tableResizingPluginKey,
         }}
         editorView={props.view}
-        render={pluginStates => (
-          <TableComponent
-            {...props}
-            {...pluginStates}
-            node={this.node}
-            width={pluginStates.containerWidth.width}
-            contentDOM={forwardRef}
-          />
-        )}
+        render={(pluginStates) => {
+          const {
+            tableResizingPluginState,
+            pluginState,
+            containerWidth,
+          } = pluginStates;
+          const tableActive = props.getPos() === pluginState!.tablePos;
+          return (
+            <TableComponent
+              view={props.view}
+              allowColumnResizing={props.allowColumnResizing}
+              eventDispatcher={props.eventDispatcher}
+              getPos={props.getPos}
+              options={props.options}
+              allowControls={pluginState!.pluginConfig.allowControls!}
+              isHeaderRowEnabled={pluginState!.isHeaderRowEnabled}
+              isHeaderColumnEnabled={pluginState!.isHeaderColumnEnabled}
+              tableActive={tableActive}
+              ordering={pluginState!.ordering as TableColumnOrdering}
+              tableResizingPluginState={tableResizingPluginState}
+              getNode={this.getNode}
+              containerWidth={containerWidth!}
+              contentDOM={forwardRef}
+            />
+          );
+        }}
       />
     );
   }
 
+  private hasHoveredRows = false;
+  viewShouldUpdate(nextNode: PmNode) {
+    if (this.tableRenderOptimization) {
+      const { hoveredRows } = getPluginState(this.view.state);
+      const hoveredRowsChanged = !!hoveredRows?.length !== this.hasHoveredRows;
+      if (nextNode.attrs.isNumberColumnEnabled && hoveredRowsChanged) {
+        this.hasHoveredRows = !!hoveredRows?.length;
+        return true;
+      }
+
+      const node = this.getNode();
+      if (typeof node.attrs !== typeof nextNode.attrs) {
+        return true;
+      }
+      const attrKeys = Object.keys(node.attrs);
+      const nextAttrKeys = Object.keys(nextNode.attrs);
+      if (attrKeys.length !== nextAttrKeys.length) {
+        return true;
+      }
+      return attrKeys.some((key) => {
+        return node.attrs[key] !== nextNode.attrs[key];
+      });
+    }
+
+    return super.viewShouldUpdate(nextNode);
+  }
+
   ignoreMutation() {
     return true;
+  }
+
+  destroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+
+    this.eventDispatcher?.emit(EmitterEvents.TABLE_DELETED, this.node);
+
+    super.destroy();
   }
 }
 
@@ -125,6 +224,7 @@ export const createTableView = (
 ): NodeView => {
   const { pluginConfig } = getPluginState(view.state);
   const { allowColumnResizing } = getPluginConfig(pluginConfig);
+  const { tableRenderOptimization } = getFeatureFlags(view.state) || {};
   return new TableView({
     node,
     view,
@@ -133,5 +233,6 @@ export const createTableView = (
     eventDispatcher,
     getPos: getPos as getPosHandlerNode,
     options,
+    tableRenderOptimization,
   }).init();
 };

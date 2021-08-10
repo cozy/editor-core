@@ -31,13 +31,13 @@ export default class LanguagePicker extends Component<Props> {
           boundariesElement="scrollParent"
           triggerButtonProps={{
             iconBefore: <WorldIcon label="Language Picker" />,
-            iconAfter: <ChevronDownIcon label="Language Picker" />,
+            iconAfter: <ChevronDownIcon label="" />,
             shouldFitContainer: true,
           }}
           shouldFitContainer
         >
           <DropdownItemGroup>
-            {Object.keys(languages).map(l => (
+            {Object.keys(languages).map((l) => (
               <DropdownItem key={l} onClick={() => this.handleClick(l)}>
                 {languages[l]}
               </DropdownItem>

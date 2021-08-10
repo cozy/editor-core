@@ -1,15 +1,31 @@
+const mockStopMeasureDuration = 1234;
+jest.mock('@atlaskit/editor-common', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common'),
+  startMeasure: jest.fn(),
+  measureRender: jest.fn(),
+  stopMeasure: jest.fn(
+    (
+      measureName: string,
+      onMeasureComplete?: (duration: number, startTime: number) => void,
+    ) => {
+      onMeasureComplete && onMeasureComplete(mockStopMeasureDuration, 1);
+    },
+  ),
+  isPerformanceAPIAvailable: jest.fn(() => true),
+}));
+
 import React from 'react';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import { EditorView } from 'prosemirror-view';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   measureRender,
   ProviderFactory,
   SEVERITY,
 } from '@atlaskit/editor-common';
 import { toJSON } from '../../../utils';
-import ReactEditorView from '../../ReactEditorView';
+import ReactEditorView, { shouldReconfigureState } from '../../ReactEditorView';
 import { EditorConfig } from '../../../types/editor-config';
 import { ReactWrapper, shallow } from 'enzyme';
 import { TextSelection } from 'prosemirror-state';
@@ -20,8 +36,8 @@ import {
   media,
   mediaGroup,
   mention,
-} from '@atlaskit/editor-test-helpers/schema-builder';
-import { mention as mentionData } from '@atlaskit/util-data-test';
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { MentionProvider } from '@atlaskit/mention/resource';
 import { EventDispatcher } from '../../../event-dispatcher';
 
@@ -35,7 +51,7 @@ import {
   EVENT_TYPE,
   INPUT_METHOD,
 } from '../../../plugins/analytics';
-import { EditorAppearance } from '../../../types';
+import { EditorAppearance, EditorProps } from '../../../types';
 import {
   analyticsEventKey,
   editorAnalyticsChannel,
@@ -46,11 +62,6 @@ import {
 } from '../../consts';
 
 import * as FireAnalyticsEvent from '../../../plugins/analytics/fire-analytics-event';
-
-jest.mock('@atlaskit/editor-common', () => ({
-  ...jest.requireActual<Object>('@atlaskit/editor-common'),
-  measureRender: jest.fn(),
-}));
 
 const portalProviderAPI: any = {
   render() {},
@@ -248,16 +259,194 @@ describe('@atlaskit/editor-core', () => {
         wrapper.unmount();
         expect(unmountSpy).toHaveBeenCalledTimes(2);
       });
+
+      describe('valid analytics events with perf tracking and no sampling', () => {
+        const performanceNowFixedTime = 100;
+        let wrapper: ReactWrapper;
+
+        const setupEditor = (
+          performanceTracking?: EditorProps['performanceTracking'],
+        ) => {
+          let validTr;
+          wrapper = mountWithIntl(
+            <ReactEditorView
+              {...requiredProps()}
+              {...analyticsProps()}
+              editorProps={{
+                allowDate: true,
+                ...analyticsProps(),
+                performanceTracking,
+                onChange: () => {}, // For testing onChange analytics
+              }}
+            />,
+          );
+          let editor: any = wrapper.instance() as ReactEditorView;
+
+          const dispatchValidTransaction = () => {
+            const { tr } = editor.view.state;
+            validTr = tr.insertText('hello');
+            editor.view.dispatch(validTr);
+          };
+          const dispatchValidTransactionNthTimes = (times: number) => {
+            for (let count = 0; count < times; count++) {
+              dispatchValidTransaction();
+            }
+          };
+          // @ts-ignore This violated type definition upgrade of @types/jest to v24.0.18 & ts-jest v24.1.0.
+          //See BUILDTOOLS-210-clean: https://bitbucket.org/atlassian/atlaskit-mk-2/pull-requests/7178/buildtools-210-clean/diff
+          mockFire.mockClear();
+          return {
+            dispatchValidTransactionNthTimes,
+          };
+        };
+
+        beforeEach(() => {
+          jest
+            .spyOn(window.performance, 'now')
+            .mockReturnValue(performanceNowFixedTime);
+        });
+
+        afterEach(() => {
+          wrapper.unmount();
+          jest.spyOn(window.performance, 'now').mockRestore();
+        });
+
+        it(`doesn't send onChange analytics event when performance object doesn't include onChangeCallbackTracking`, () => {
+          const { dispatchValidTransactionNthTimes } = setupEditor();
+          dispatchValidTransactionNthTimes(1);
+          const onChangeEvents = (mockFire as jest.Mock).mock.calls.filter(
+            (mockCall) => mockCall[0].payload.action === 'onChangeCalled',
+          );
+          expect(onChangeEvents.length).toBe(0);
+        });
+
+        it(`doesn't send onChange analytics event when TransactionTracking not enabled`, () => {
+          const { dispatchValidTransactionNthTimes } = setupEditor({
+            onChangeCallbackTracking: { enabled: true },
+          });
+          dispatchValidTransactionNthTimes(1);
+          const onChangeEvents = (mockFire as jest.Mock).mock.calls.filter(
+            (mockCall) => mockCall[0].payload.action === 'onChangeCalled',
+          );
+          expect(onChangeEvents.length).toBe(0);
+        });
+
+        it('sends onChange analytics event when enabled and TransactionTracking enabled', () => {
+          const { dispatchValidTransactionNthTimes } = setupEditor({
+            transactionTracking: { enabled: true, samplingRate: 1 },
+            onChangeCallbackTracking: { enabled: true },
+          });
+          dispatchValidTransactionNthTimes(1);
+          const onChangeEvents = (mockFire as jest.Mock).mock.calls.filter(
+            (mockCall) => mockCall[0].payload.action === 'onChangeCalled',
+          );
+          expect(onChangeEvents.length).toBe(1);
+          expect(onChangeEvents[0]).toEqual([
+            {
+              payload: {
+                action: 'onChangeCalled',
+                actionSubject: 'editor',
+                eventType: 'operational',
+                attributes: {
+                  duration: 0,
+                  startTime: 100,
+                },
+              },
+            },
+          ]);
+        });
+      });
+
+      describe('valid transaction analytic events (with sampling)', () => {
+        let wrapper: ReactWrapper;
+        const setupEditor = (
+          trackValidTransactions: EditorProps['trackValidTransactions'],
+        ) => {
+          let validTr;
+          wrapper = mountWithIntl(
+            <ReactEditorView
+              {...requiredProps()}
+              {...analyticsProps()}
+              editorProps={{
+                allowDate: true,
+                ...analyticsProps(),
+                ...(trackValidTransactions && { trackValidTransactions }),
+              }}
+            />,
+          );
+          let editor: any = wrapper.instance() as ReactEditorView;
+
+          const dispatchValidTransaction = () => {
+            const { tr } = editor.view.state;
+            validTr = tr.insertText('hello');
+            editor.view.dispatch(validTr);
+          };
+          const dispatchValidTransactionNthTimes = (times: number) => {
+            for (let count = 0; count < times; count++) {
+              dispatchValidTransaction();
+            }
+          };
+          // @ts-ignore This violated type definition upgrade of @types/jest to v24.0.18 & ts-jest v24.1.0.
+          //See BUILDTOOLS-210-clean: https://bitbucket.org/atlassian/atlaskit-mk-2/pull-requests/7178/buildtools-210-clean/diff
+          mockFire.mockClear();
+          return {
+            dispatchValidTransactionNthTimes,
+          };
+        };
+        const expectedTransactionEvent = {
+          payload: {
+            action: 'dispatchedValidTransaction',
+            actionSubject: 'editor',
+            eventType: 'operational',
+          },
+        };
+
+        afterEach(() => {
+          wrapper.unmount();
+        });
+
+        it('sends V3 analytics event on valid transactions at the custom samplingRate', () => {
+          const trackValidTransactions = { samplingRate: 3 };
+          const { dispatchValidTransactionNthTimes } = setupEditor(
+            trackValidTransactions,
+          );
+          dispatchValidTransactionNthTimes(10);
+          expect(mockFire).toHaveBeenCalledTimes(3);
+          const expectedDispatchedEvents = new Array(3).fill([
+            expectedTransactionEvent,
+          ]);
+          expect((mockFire as jest.Mock).mock.calls).toEqual(
+            expectedDispatchedEvents,
+          );
+        });
+        it('sends V3 analytics event on valid transactions at the default samplingRate if custom samplingRate is not defined', () => {
+          const trackValidTransactions = true;
+          const { dispatchValidTransactionNthTimes } = setupEditor(
+            trackValidTransactions,
+          );
+          dispatchValidTransactionNthTimes(120);
+          expect(mockFire).toHaveBeenCalledTimes(1);
+          const expectedDispatchedEvents = new Array(1).fill([
+            expectedTransactionEvent,
+          ]);
+          expect((mockFire as jest.Mock).mock.calls).toEqual(
+            expectedDispatchedEvents,
+          );
+        });
+        it('does not send V3 analytics event on valid transactions if trackValidTransactions editorProp is not set', () => {
+          const trackValidTransactions = undefined;
+          const { dispatchValidTransactionNthTimes } = setupEditor(
+            trackValidTransactions,
+          );
+          dispatchValidTransactionNthTimes(120);
+          expect(mockFire).toHaveBeenCalledTimes(0);
+        });
+      });
     });
 
     describe('when an invalid transaction is dispatched', () => {
-      function createInvalidCodeBlock(offset = 0) {
-        return {
-          type: 'codeBlock',
-          pos: offset,
-          nodeSize: 3,
-          content: [{ type: 'date', pos: offset, nodeSize: 1 }],
-        };
+      function createInvalidCodeBlock() {
+        return 'codebl(date())';
       }
 
       /** dispatches an invalid transaction which adds a code block with a date node child */
@@ -575,22 +764,15 @@ describe('@atlaskit/editor-core', () => {
       });
     });
 
-    it('should re-setup analytics event forwarding when createAnalyticsEvent prop changes', () => {
+    it('should disable analytics event forwarding on unmount', () => {
       const wrapper = mountWithIntl(
         <ReactEditorView {...requiredProps()} {...analyticsProps()} />,
       );
       const { eventDispatcher } = wrapper.instance() as ReactEditorView;
-      jest.spyOn(eventDispatcher, 'on');
       jest.spyOn(eventDispatcher, 'off');
 
-      const newCreateAnalyticsEvent = jest.fn();
-      wrapper.setProps({ createAnalyticsEvent: newCreateAnalyticsEvent });
-
+      wrapper.unmount();
       expect(eventDispatcher.off).toHaveBeenCalled();
-      expect(eventDispatcher.on).toHaveBeenCalled();
-      expect(FireAnalyticsEvent.fireAnalyticsEvent).toHaveBeenCalledWith(
-        newCreateAnalyticsEvent,
-      );
     });
 
     describe('dispatch analytics event', () => {
@@ -640,7 +822,7 @@ describe('@atlaskit/editor-core', () => {
     )(defaultSchema);
 
     const mentionProvider: Promise<MentionProvider> = Promise.resolve(
-      mentionData.storyData.resourceProvider,
+      mentionResourceProvider,
     );
 
     it('mentions should be sanitized when sanitizePrivateContent true', () => {
@@ -843,5 +1025,73 @@ describe('@atlaskit/editor-core', () => {
         expect(wrapper.instance().proseMirrorRenderedSeverity).toBe(severity);
       },
     );
+  });
+
+  describe('shouldReconfigureState', () => {
+    const props: EditorProps = {
+      appearance: 'full-width',
+    };
+
+    it('should return TRUE when appearance changed', () => {
+      const nextProps: EditorProps = {
+        ...props,
+        appearance: 'full-page',
+      };
+
+      const actual = shouldReconfigureState(props, nextProps);
+
+      expect(actual).toBe(true);
+    });
+
+    it('should return TRUE when UNSAFE_allowUndoRedoButtons is changed', () => {
+      const nextProps: EditorProps = {
+        ...props,
+        UNSAFE_allowUndoRedoButtons: true,
+      };
+
+      const actual = shouldReconfigureState(props, nextProps);
+
+      expect(actual).toBe(true);
+    });
+
+    it('should return TRUE when persistScrollGutter changed', () => {
+      const nextProps: EditorProps = {
+        ...props,
+        persistScrollGutter: true,
+      };
+
+      const actual = shouldReconfigureState(props, nextProps);
+
+      expect(actual).toBe(true);
+    });
+
+    it('should return FALSE when relevant properties is not changed', () => {
+      const nextProps = {
+        ...props,
+        inputSamplingLimit: 5,
+      };
+
+      const actual = shouldReconfigureState(props, nextProps);
+
+      expect(actual).toBe(false);
+    });
+  });
+
+  describe('dangerouslyAppendPlugins', () => {
+    it('should call pmPlugins factory of passed plugin', () => {
+      const pmPlugins = jest.fn(() => []);
+      const __plugins = [{ name: 'dangerouslyAppendPlugins', pmPlugins }];
+
+      mountWithIntl(
+        <ReactEditorView
+          {...requiredProps()}
+          editorProps={{
+            dangerouslyAppendPlugins: { __plugins },
+          }}
+        />,
+      );
+
+      expect(pmPlugins).toHaveBeenCalled();
+    });
   });
 });

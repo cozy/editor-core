@@ -33,7 +33,8 @@ const rulePlugin = (): EditorPlugin => ({
     return [
       {
         name: 'ruleInputRule',
-        plugin: ({ schema }) => inputRulePlugin(schema),
+        plugin: ({ schema, featureFlags }) =>
+          inputRulePlugin(schema, featureFlags),
       },
       {
         name: 'ruleKeymap',
@@ -51,9 +52,7 @@ const rulePlugin = (): EditorPlugin => ({
         keywords: ['horizontal', 'rule', 'line', 'hr'],
         priority: 1200,
         keyshortcut: '---',
-        icon: () => (
-          <IconDivider label={formatMessage(messages.horizontalRule)} />
-        ),
+        icon: () => <IconDivider />,
         action(insert, state) {
           let tr: Transaction<any> | null = null;
           const { newInsertionBehaviour } = getFeatureFlags(state);

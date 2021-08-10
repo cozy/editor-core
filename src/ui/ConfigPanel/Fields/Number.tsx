@@ -1,28 +1,28 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import { Field } from '@atlaskit/form';
 import TextField from '@atlaskit/textfield';
 import { NumberField } from '@atlaskit/editor-common/extensions';
 
 import FieldMessages from '../FieldMessages';
-import { validate, getSafeParentedName } from '../utils';
-import { OnBlur, ValidationError } from '../types';
+import { validate } from '../utils';
+import { OnFieldChange, ValidationError } from '../types';
 import isNumber from 'is-number';
 
 export default function Number({
+  name,
   field,
   autoFocus,
-  onBlur,
+  onFieldChange,
   placeholder,
-  parentName,
 }: {
+  name: string;
   field: NumberField;
   autoFocus?: boolean;
-  onBlur: OnBlur;
+  onFieldChange: OnFieldChange;
   placeholder?: string;
-  parentName?: string;
 }) {
-  const { name, label, description, defaultValue, isRequired } = field;
+  const { label, description, defaultValue, isRequired } = field;
 
   function validateNumber(value?: string) {
     const error = validate<string>(field, value || '');
@@ -40,27 +40,29 @@ export default function Number({
 
   return (
     <Field<string>
-      name={getSafeParentedName(name, parentName)}
+      name={name}
       label={label}
       defaultValue={defaultValue === undefined ? '' : String(defaultValue)}
       isRequired={isRequired}
       validate={validateNumber}
     >
-      {({ fieldProps, error, valid }) => (
-        <Fragment>
-          <TextField
-            {...fieldProps}
-            autoFocus={autoFocus}
-            onBlur={() => {
-              fieldProps.onBlur();
-              onBlur(name);
-            }}
-            type="text" // do not change this to type="number", it will return invalid strings as ''
-            placeholder={placeholder}
-          />
-          <FieldMessages error={error} description={description} />
-        </Fragment>
-      )}
+      {({ fieldProps, error, meta }) => {
+        return (
+          <>
+            <TextField
+              {...fieldProps}
+              autoFocus={autoFocus}
+              onBlur={() => {
+                fieldProps.onBlur();
+                onFieldChange(name, meta.dirty);
+              }}
+              type="text" // do not change this to type="number", it will return invalid strings as ''
+              placeholder={placeholder}
+            />
+            <FieldMessages error={error} description={description} />
+          </>
+        );
+      }}
     </Field>
   );
 }

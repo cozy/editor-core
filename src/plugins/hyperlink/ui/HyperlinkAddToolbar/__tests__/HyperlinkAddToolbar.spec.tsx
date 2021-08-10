@@ -41,8 +41,15 @@ import {
   LightEditorPlugin,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import hyperlinkPlugin from '../../../index';
-import { a, doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
-
+import {
+  a,
+  doc,
+  p,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import { hideLinkToolbar as cardHideLinkToolbar } from '../../../../card/pm-plugins/actions';
+import * as Commands from '../../../commands';
+import PanelTextInput from '../../../../../ui/PanelTextInput';
 interface SetupArgumentObject {
   recentItemsPromise?: ReturnType<ActivityProvider['getRecentItems']>;
   searchRecentPromise?: ReturnType<ActivityProvider['searchRecent']>;
@@ -73,11 +80,11 @@ const clock = sinon.useFakeTimers(
 );
 jest.unmock('lodash/debounce');
 
-jest.mock('date-fns/difference_in_calendar_days', () => {
+jest.mock('date-fns/differenceInCalendarDays', () => {
   return jest.fn().mockImplementation(() => -5);
 });
 
-jest.mock('date-fns/distance_in_words_to_now', () => ({
+jest.mock('date-fns/formatDistanceToNow', () => ({
   __esModule: true,
   default: () => 'just a minute',
 }));
@@ -97,12 +104,13 @@ const assertIcon = (item: LinkSearchListItemData, iconComponent: any) => {
   expect(mountedIcon.find(iconComponent)).toHaveLength(1);
 };
 
-describe('HyperlinkAddToolbar', () => {
+describe('HyperlinkLinkAddToolbar', () => {
   afterAll(() => {
     jest.restoreAllMocks();
     clock.restore();
   });
   afterEach(() => {
+    jest.clearAllMocks();
     clock.reset();
   });
 
@@ -123,8 +131,16 @@ describe('HyperlinkAddToolbar', () => {
       },
     } = options;
 
+    const eventListenerMap: {
+      [prop: string]: EventListenerOrEventListenerObject;
+    } = {};
+
+    document.addEventListener = jest.fn((event, cb) => {
+      eventListenerMap[event] = cb;
+    });
+
     const createEditor = createProsemirrorEditorFactory();
-    const editor = (doc: any) => {
+    const editor = (doc: DocBuilder) => {
       return createEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add(hyperlinkPlugin),
@@ -252,6 +268,7 @@ describe('HyperlinkAddToolbar', () => {
       recentItemsPromise,
       searchRecentPromise,
       quickSearchPromises,
+      eventListenerMap,
       updateInputField,
       updateInputFieldWithStateUpdated,
       pressReturnInputField,
@@ -476,8 +493,12 @@ describe('HyperlinkAddToolbar', () => {
     });
 
     it('should submit with selected activity item when clicked', async () => {
-      const { component, onSubmit } = await setup();
+      const { searchRecentPromise, component, onSubmit } = await setup();
 
+      await searchRecentPromise;
+      component.update();
+
+      component.find(LinkSearchListItem).at(1).simulate('mouseenter');
       component.find(LinkSearchListItem).at(1).simulate('click');
 
       expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -533,6 +554,64 @@ describe('HyperlinkAddToolbar', () => {
         'some-activity-name-2',
         undefined,
         'typeAhead',
+      );
+    });
+
+    it('should populate Url field with selected activity item when navigated to via keyboard', async () => {
+      const {
+        component,
+        pressDownArrowInputField,
+        recentItemsPromise,
+      } = await setup();
+
+      await recentItemsPromise;
+
+      pressDownArrowInputField('link-url');
+
+      const listComponentProps = component.find(LinkSearchList).props();
+
+      const items = listComponentProps.items!;
+
+      expectToEqual(
+        (component
+          .find('input[data-testid="link-url"]')
+          .getDOMNode() as HTMLInputElement).value,
+        items[0].url,
+      );
+    });
+
+    it('should insert the right item after a few interaction with both mouse and keyboard', async () => {
+      const {
+        component,
+        pressDownArrowInputField,
+        recentItemsPromise,
+        searchRecentPromise,
+        updateInputField,
+      } = await setup();
+
+      await recentItemsPromise;
+
+      updateInputField('link-url', 'some-value');
+
+      await searchRecentPromise;
+      component.update();
+
+      // Hover over the first item on the list
+      const firstSearchItem = component.find(LinkSearchListItem).first();
+      firstSearchItem.simulate('mouseenter');
+
+      // This should move to the second item in the list
+      pressDownArrowInputField('link-url');
+
+      const listComponentProps = component.find(LinkSearchList).props();
+
+      const items = listComponentProps.items!;
+
+      expectToEqual(
+        (component
+          .find('input[data-testid="link-url"]')
+          .getDOMNode() as HTMLInputElement).value,
+        items[1].url,
       );
     });
 
@@ -635,6 +714,16 @@ describe('HyperlinkAddToolbar', () => {
       expect(internalHideLinkToolbar).toHaveBeenCalledWith(
         editorView.state,
         editorView.dispatch,
+      );
+    });
+
+    it('should call card hideLinkToolbar when escape is pressed', async () => {
+      const { pressEscapeKeyInputField, editorView } = await setup();
+      const dispatchSpy = jest.spyOn(editorView, 'dispatch');
+
+      pressEscapeKeyInputField('link-url');
+      expect(dispatchSpy).toBeCalledWith(
+        cardHideLinkToolbar(editorView.state.tr),
       );
     });
 
@@ -1058,6 +1147,7 @@ describe('HyperlinkAddToolbar', () => {
         searchRecentItems.length,
       );
 
+      firstQuickSearchItem.simulate('mouseenter');
       firstQuickSearchItem.simulate('click');
 
       expectFunctionToHaveBeenCalledWith(onSubmit, [
@@ -1343,6 +1433,36 @@ describe('HyperlinkAddToolbar', () => {
       });
     });
 
+    it('should trigger the UI Event of "selected searchResult" when an item is selected through mouse click to insert', async () => {
+      const {
+        component,
+        searchRecentPromise,
+        createAnalyticsEvent,
+      } = await setup({
+        waitForResolves: true,
+      });
+
+      await searchRecentPromise;
+      component.update();
+
+      component.find(LinkSearchListItem).at(0).simulate('mouseenter');
+      component.find(LinkSearchListItem).at(0).simulate('click');
+
+      expect(createAnalyticsEvent).toHaveBeenCalledWith({
+        action: 'selected',
+        actionSubject: 'searchResult',
+        attributes: {
+          source: 'createLinkInlineDialog',
+          searchSessionId: 'a-unique-id',
+          trigger: 'click',
+          resultCount: 5,
+          selectedResultId: 'object-id-1',
+          selectedRelativePosition: 0,
+        },
+        eventType: 'ui',
+      });
+    });
+
     it('should trigger the UI Event of "dismissed searchResult" when it unmounts', async () => {
       const {
         component,
@@ -1539,6 +1659,34 @@ describe('HyperlinkAddToolbar', () => {
   });
 
   describe('others', () => {
+    it('should call card hideLinkToolbar when mousedown outside element', async () => {
+      const spyHideLinkToolbar = jest.spyOn(Commands, 'hideLinkToolbar');
+
+      const { eventListenerMap } = await setup();
+
+      const mousedown = eventListenerMap.mousedown as EventListener;
+
+      mousedown({
+        target: document.body as EventTarget,
+      } as Event);
+
+      expect(spyHideLinkToolbar).toBeCalled();
+    });
+
+    it('should not call card hideLinkToolbar when mousedown inside element', async () => {
+      const spyHideLinkToolbar = jest.spyOn(Commands, 'hideLinkToolbar');
+
+      const { eventListenerMap, component } = await setup();
+
+      const mousedown = eventListenerMap.mousedown as EventListener;
+
+      mousedown({
+        target: component.instance(),
+      } as Event);
+
+      expect(spyHideLinkToolbar).not.toBeCalled();
+    });
+
     it('should not trigger search if the input query starts with https://', async () => {
       const {
         component,
@@ -1619,6 +1767,21 @@ describe('HyperlinkAddToolbar', () => {
 
       expect(activityProvider.searchRecent).toHaveBeenCalledTimes(0);
       expect(searchProvider.quickSearch).toHaveBeenCalledTimes(0);
+    });
+
+    it('should render PanelTextInput (URL field) with correct describedById prop', async () => {
+      const screenReaderDescriptionId = 'search-recent-links-field-description';
+      const { component } = await setup();
+      expect(
+        component.find(PanelTextInput).first().prop('describedById'),
+      ).toEqual(screenReaderDescriptionId);
+    });
+    it('should render LinkSearchList component with correct ariaControls prop', async () => {
+      const ariaControlValue = 'fabric.editor.hyperlink.suggested.results';
+      const { component } = await setup();
+      expect(component.find(LinkSearchList).prop('ariaControls')).toEqual(
+        ariaControlValue,
+      );
     });
   });
 });

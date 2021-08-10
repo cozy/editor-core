@@ -2,8 +2,7 @@ import React from 'react';
 import { IntlProvider, addLocaleData } from 'react-intl';
 import WithEditorActions from './../src/ui/WithEditorActions';
 import EditorContext from './../src/ui/EditorContext';
-import withSentry from '../example-helpers/withSentry';
-import { addGlobalEventEmitterListeners } from '@atlaskit/media-test-helpers';
+import { addGlobalEventEmitterListeners } from '@atlaskit/media-test-helpers/globalEventEmitterListeners';
 import { KitchenSink } from '../example-helpers/kitchen-sink/kitchen-sink';
 import enMessages from '../src/i18n/en';
 import enData from 'react-intl/locale-data/en';
@@ -11,7 +10,7 @@ import enData from 'react-intl/locale-data/en';
 addGlobalEventEmitterListeners();
 addLocaleData(enData);
 
-export default withSentry(() => {
+export default function KitchenSinkExample() {
   const [locale, setLocale] = React.useState<string>('en');
   const [messages, setMessages] = React.useState<any>(enMessages);
 
@@ -19,7 +18,7 @@ export default withSentry(() => {
     <IntlProvider locale={locale.substring(0, 2)} messages={messages}>
       <EditorContext>
         <WithEditorActions
-          render={actions => (
+          render={(actions) => (
             <KitchenSink
               actions={actions}
               locale={locale}
@@ -31,4 +30,4 @@ export default withSentry(() => {
       </EditorContext>
     </IntlProvider>
   );
-});
+}

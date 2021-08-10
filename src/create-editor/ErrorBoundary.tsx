@@ -1,12 +1,31 @@
 import React from 'react';
-import { ContextIdentifierProvider } from '@atlaskit/editor-common';
+import uuid from 'uuid';
+import { EditorView } from 'prosemirror-view';
+import memoizeOne from 'memoize-one';
+
+import {
+  ContextIdentifierProvider,
+  sniffUserBrowserExtensions,
+  UserBrowserExtensionResults,
+} from '@atlaskit/editor-common';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
-import { ACTION, ACTION_SUBJECT, EVENT_TYPE } from '../plugins/analytics';
+
+import {
+  ACTION,
+  ACTION_SUBJECT,
+  ErrorEventPayload,
+  EVENT_TYPE,
+} from '../plugins/analytics';
 import { editorAnalyticsChannel } from '../plugins/analytics/consts';
+import { getFeatureFlags } from '../plugins/feature-flags-context';
+import { FeatureFlags } from '../types/feature-flags';
+import { getDocStructure } from '../utils/document-logger';
+import { WithEditorView } from './WithEditorView';
 
 export type ErrorBoundaryProps = {
-  createAnalyticsEvent?: CreateUIAnalyticsEvent | undefined;
+  createAnalyticsEvent?: CreateUIAnalyticsEvent;
   contextIdentifierProvider?: Promise<ContextIdentifierProvider>;
+  editorView?: EditorView;
   rethrow?: boolean;
   children: React.ReactNode;
 };
@@ -25,10 +44,12 @@ type AnalyticsErrorBoundaryAttributes = {
   [key: string]: any;
 };
 
-export default class ErrorBoundary extends React.Component<
+export class ErrorBoundaryWithEditorView extends React.Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
+  browserExtensions?: UserBrowserExtensionResults = undefined;
+
   static defaultProps = {
     rethrow: true,
   };
@@ -37,12 +58,29 @@ export default class ErrorBoundary extends React.Component<
     error: undefined,
   };
 
+  // Memoizing this as react alternative suggestion of https://reactjs.org/docs/react-component.html#unsafe_componentwillreceiveprops
+  private getFeatureFlags = memoizeOne(
+    (editorView: EditorView | undefined): FeatureFlags => {
+      if (!editorView) {
+        return {};
+      }
+      return getFeatureFlags(editorView.state);
+    },
+  );
+
+  get featureFlags() {
+    return this.getFeatureFlags(this.props.editorView);
+  }
+
   fireAnalytics = (analyticsErrorPayload: AnalyticsErrorBoundaryAttributes) => {
     const { createAnalyticsEvent } = this.props;
     this.getProductName()
-      .then(product => {
+      .then((product) => {
         if (createAnalyticsEvent) {
-          createAnalyticsEvent({
+          const { error, errorInfo, errorStack } = analyticsErrorPayload;
+          const sharedId = uuid();
+
+          const event: ErrorEventPayload = {
             action: ACTION.EDITOR_CRASHED,
             actionSubject: ACTION_SUBJECT.EDITOR,
             eventType: EVENT_TYPE.OPERATIONAL,
@@ -52,8 +90,32 @@ export default class ErrorBoundary extends React.Component<
                 window && window.navigator && window.navigator.userAgent
                   ? window.navigator.userAgent
                   : 'unknown',
+              error: (error as any) as Error,
+              errorInfo,
+              errorId: sharedId,
+              browserExtensions: this.browserExtensions,
+            },
+          };
 
-              ...analyticsErrorPayload,
+          // Add doc structure if the feature flag is on
+          if (
+            this.featureFlags.errorBoundaryDocStructure &&
+            this.props.editorView
+          ) {
+            event.attributes!.docStructure = getDocStructure(
+              this.props.editorView.state.doc,
+              { compact: true },
+            );
+          }
+          createAnalyticsEvent(event).fire(editorAnalyticsChannel);
+
+          createAnalyticsEvent({
+            action: ACTION.EDITOR_CRASHED_ADDITIONAL_INFORMATION,
+            actionSubject: ACTION_SUBJECT.EDITOR,
+            eventType: EVENT_TYPE.OPERATIONAL,
+            attributes: {
+              errorStack,
+              errorId: sharedId,
             },
           }).fire(editorAnalyticsChannel);
         } else {
@@ -68,7 +130,7 @@ export default class ErrorBoundary extends React.Component<
           );
         }
       })
-      .catch(e => {
+      .catch((e) => {
         // eslint-disable-next-line no-console
         console.error(
           'Failed to resolve product name from contextIdentifierProvider.',
@@ -90,10 +152,14 @@ export default class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: AnalyticsErrorBoundaryErrorInfo) {
     // Log the error
-    this.fireAnalytics({ error: error.toString(), errorInfo });
-
-    // Update state to allow a re-render to attempt graceful recovery (in the event that
-    // the error was caused by a race condition or is intermittent)
+    this.fireAnalytics({
+      error: error.toString(),
+      errorInfo,
+      errorStack: error.stack,
+    });
+    //
+    // // Update state to allow a re-render to attempt graceful recovery (in the event that
+    // // the error was caused by a race condition or is intermittent)
     this.setState({ error }, () => {
       if (this.props.rethrow) {
         // Now that a re-render has occured, we re-throw to allow product error boundaries
@@ -107,7 +173,17 @@ export default class ErrorBoundary extends React.Component<
     });
   }
 
+  async componentDidMount() {
+    this.browserExtensions = await sniffUserBrowserExtensions({
+      extensions: ['grammarly'],
+      async: true,
+      asyncTimeoutMs: 20000,
+    });
+  }
+
   render() {
     return this.props.children;
   }
 }
+
+export default WithEditorView(ErrorBoundaryWithEditorView);

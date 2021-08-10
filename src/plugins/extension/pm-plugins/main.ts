@@ -10,17 +10,15 @@ import {
 } from '@atlaskit/editor-common/extensions';
 
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import { ContextIdentifierProvider } from '@atlaskit/editor-common';
 
+import { EditorAppearance } from '../../../types/editor-appearance';
 import { Dispatch, EventDispatcher } from '../../../event-dispatcher';
 import { PortalProviderAPI } from '../../../ui/PortalProvider';
 import { createSelectionClickHandler } from '../../selection/utils';
 import ExtensionNodeView from '../nodeviews/extension';
 import { updateState, clearEditingContext } from '../commands';
-import {
-  getSelectedExtension,
-  getSelectedDomElement,
-  getSelectedNonContentExtension,
-} from '../utils';
+import { getSelectedExtension, getSelectedDomElement } from '../utils';
 import {
   createPluginState,
   getPluginState,
@@ -118,7 +116,7 @@ const getUpdateExtensionPromise = async (
   throw new Error('No update method available');
 };
 
-export const createProviderHandler = (view: EditorView) => async (
+export const createExtensionProviderHandler = (view: EditorView) => async (
   name: string,
   provider?: Promise<ExtensionProvider>,
 ) => {
@@ -133,6 +131,22 @@ export const createProviderHandler = (view: EditorView) => async (
   }
 };
 
+export const createContextIdentifierProviderHandler = (
+  view: EditorView,
+) => async (name: string, provider?: Promise<ContextIdentifierProvider>) => {
+  if (name === 'contextIdentifierProvider' && provider) {
+    try {
+      const contextIdentifierProvider = await provider;
+      updateState({ contextIdentifierProvider })(view.state, view.dispatch);
+    } catch {
+      updateState({ contextIdentifierProvider: undefined })(
+        view.state,
+        view.dispatch,
+      );
+    }
+  }
+};
+
 const createPlugin = (
   dispatch: Dispatch,
   providerFactory: ProviderFactory,
@@ -140,6 +154,9 @@ const createPlugin = (
   portalProviderAPI: PortalProviderAPI,
   eventDispatcher: EventDispatcher,
   useLongPressSelection: boolean = false,
+  options: {
+    appearance?: EditorAppearance;
+  } = {},
 ) => {
   const state = createPluginState(dispatch, {
     layout: 'default',
@@ -147,19 +164,33 @@ const createPlugin = (
     showContextPanel: false,
   });
 
+  const extensionNodeViewOptions = {
+    appearance: options.appearance,
+  };
+
   return new Plugin({
     state,
-    view: editorView => {
+    view: (editorView) => {
       const domAtPos = editorView.domAtPos.bind(editorView);
-      const providerHandler = createProviderHandler(editorView);
+      const extensionProviderHandler = createExtensionProviderHandler(
+        editorView,
+      );
+      const contextIdentificationProviderHandler = createContextIdentifierProviderHandler(
+        editorView,
+      );
 
-      providerFactory.subscribe('extensionProvider', providerHandler);
+      providerFactory.subscribe('extensionProvider', extensionProviderHandler);
+      providerFactory.subscribe(
+        'contextIdentificationProvider',
+        contextIdentificationProviderHandler,
+      );
 
       return {
-        update: view => {
+        update: (view) => {
           const { state, dispatch } = view;
           const {
             element,
+            localId,
             extensionProvider,
             showContextPanel,
           } = getPluginState(state);
@@ -175,20 +206,26 @@ const createPlugin = (
             return;
           }
 
-          const isContentExtension = !!getSelectedNonContentExtension(state);
-
+          const { node } = selectedExtension;
           const newElement = getSelectedDomElement(
+            state.schema,
             domAtPos,
             selectedExtension,
-            isContentExtension,
           );
 
-          if (element !== newElement) {
+          // New node is selection
+          if (
+            node.attrs.localId
+              ? localId !== node.attrs.localId
+              : // This is the current assumption and it's wrong but we are keeping it
+                // as fallback in case we need to turn off `allowLocalIdGeneration`
+                element !== newElement
+          ) {
             if (showContextPanel) {
               clearEditingContext(state, dispatch);
             }
 
-            const { extensionType } = selectedExtension.node.attrs;
+            const { extensionType } = node.attrs;
             const extensionHandler = extensionHandlers[extensionType];
 
             // showEditButton might change async based on results from extension providers
@@ -205,11 +242,10 @@ const createPlugin = (
               // do nothing;
             });
 
-            const layout = selectedExtension
-              ? selectedExtension.node.attrs.layout
-              : 'default';
+            const layout = selectedExtension ? node.attrs.layout : 'default';
 
             updateState({
+              localId: node.attrs.localId,
               showContextPanel: false,
               element: newElement,
               showEditButton,
@@ -217,10 +253,22 @@ const createPlugin = (
               layout,
             })(state, dispatch);
           }
+          // New DOM element doesn't necessarily mean it's a new Node
+          else if (element !== newElement) {
+            updateState({ element: newElement })(state, dispatch);
+          }
+
           return true;
         },
         destroy: () => {
-          providerFactory.unsubscribe('extensionProvider', providerHandler);
+          providerFactory.unsubscribe(
+            'extensionProvider',
+            extensionProviderHandler,
+          );
+          providerFactory.unsubscribe(
+            'contextIdentificationProvider',
+            contextIdentificationProviderHandler,
+          );
         },
       };
     },
@@ -232,23 +280,26 @@ const createPlugin = (
           eventDispatcher,
           providerFactory,
           extensionHandlers,
+          extensionNodeViewOptions,
         ),
         bodiedExtension: ExtensionNodeView(
           portalProviderAPI,
           eventDispatcher,
           providerFactory,
           extensionHandlers,
+          extensionNodeViewOptions,
         ),
         inlineExtension: ExtensionNodeView(
           portalProviderAPI,
           eventDispatcher,
           providerFactory,
           extensionHandlers,
+          extensionNodeViewOptions,
         ),
       },
       handleClickOn: createSelectionClickHandler(
         ['extension', 'bodiedExtension'],
-        target => !target.closest('.extension-content'),
+        (target) => !target.closest('.extension-content'),
         { useLongPressSelection },
       ),
     },

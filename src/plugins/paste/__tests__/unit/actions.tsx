@@ -18,7 +18,8 @@ import {
   nestedExpand,
   p,
   date,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { uuid } from '@atlaskit/adf-schema';
 import { EditorView } from 'prosemirror-view';
 import pastePlugin from '../../index';
@@ -44,7 +45,7 @@ const pasteAndCompare = (
 
 describe('action paste handler', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()

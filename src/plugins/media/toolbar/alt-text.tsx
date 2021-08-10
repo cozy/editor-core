@@ -27,6 +27,7 @@ export const altTextButton = (
   const title = intl.formatMessage(message);
   return {
     title,
+    id: 'editor.media.altText',
     type: 'button',
     onClick: openMediaAltTextMenu,
     showTitle: true,
@@ -37,9 +38,10 @@ export const altTextButton = (
 
 export const altTextEditComponent = (
   options?: AltTextToolbarOptions,
-): FloatingToolbarCustom => {
+): FloatingToolbarCustom<Command> => {
   return {
     type: 'custom',
+    fallback: [],
     render: (view?: EditorView, idx?: number) => {
       if (!view) {
         return null;

@@ -62,7 +62,7 @@ export default class EditorWithFeedback extends React.Component<Props, State> {
   }
 
   onFocus = () =>
-    this.setState(prevState => ({ isExpanded: !prevState.isExpanded }));
+    this.setState((prevState) => ({ isExpanded: !prevState.isExpanded }));
 
   render() {
     if (!this.state.hasJquery) {
@@ -73,7 +73,7 @@ export default class EditorWithFeedback extends React.Component<Props, State> {
       <EditorContext>
         <div>
           <WithEditorActions
-            render={actions => (
+            render={(actions) => (
               <ButtonGroup>
                 <Button
                   onClick={() => actions.replaceDocument(exampleDocument)}
@@ -92,6 +92,7 @@ export default class EditorWithFeedback extends React.Component<Props, State> {
               imageUploadProvider,
               onChange,
               disabled,
+              contextIdentifierProvider,
             }: any) => (
               <div style={{ padding: '20px' }}>
                 <CollapsedEditor
@@ -115,6 +116,7 @@ export default class EditorWithFeedback extends React.Component<Props, State> {
                     mentionProvider={mentionProvider}
                     emojiProvider={emojiProvider}
                     legacyImageUploadProvider={imageUploadProvider}
+                    contextIdentifierProvider={contextIdentifierProvider}
                     shouldFocus={true}
                     onChange={onChange}
                     onSave={SAVE_ACTION}

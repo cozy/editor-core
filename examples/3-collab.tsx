@@ -11,13 +11,14 @@ import {
   ConfigResponse,
 } from '@atlaskit/share';
 
+import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
 import {
-  emoji,
-  mention,
-  taskDecision,
-  userPickerData,
-} from '@atlaskit/util-data-test';
-import { EmojiProvider } from '@atlaskit/emoji/resource';
+  mentionResourceProviderWithResolver,
+  mentionResourceProviderWithResolver2,
+} from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
+import { userPickerData } from '@atlaskit/util-data-test/user-picker-data';
+
 import { OptionData, User } from '@atlaskit/user-picker';
 import { cardProviderStaging } from '@atlaskit/editor-test-helpers/card-provider';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
@@ -41,9 +42,8 @@ import { EditorActions, MediaProvider, MentionProvider } from '../src';
 import { InviteToEditComponentProps } from '../src/plugins/collab-edit/types';
 import { ResolvingMentionProvider } from '@atlaskit/mention/resource';
 
-import { getXProductExtensionProvider } from '../example-helpers/fake-x-product-extensions';
-import { getConfluenceMacrosExtensionProvider } from '../example-helpers/confluence-macros';
 import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
+import { getExampleExtensionProviders } from '../example-helpers/get-example-extension-providers';
 
 export const Content = styled.div`
   padding: 0 20px;
@@ -78,7 +78,7 @@ const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => (
     <Button
       appearance="primary"
       onClick={() =>
-        props.editorActions.getValue().then(value => console.log(value))
+        props.editorActions.getValue().then((value) => console.log(value))
       }
     >
       Publish
@@ -91,7 +91,7 @@ const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => (
 
 const shareClient = {
   getConfig: () =>
-    new Promise<ConfigResponse>(resolve => {
+    new Promise<ConfigResponse>((resolve) => {
       setTimeout(() => {
         resolve({
           allowComment: true,
@@ -101,7 +101,7 @@ const shareClient = {
       }, 1000);
     }),
   share: () =>
-    new Promise<ShareResponse>(resolve => {
+    new Promise<ShareResponse>((resolve) => {
       setTimeout(
         () =>
           resolve({
@@ -129,7 +129,7 @@ const loadUserOptions = (searchText?: string): OptionData[] => {
     }))
     .filter((user: User) => {
       const searchTextInLowerCase = searchText.toLowerCase();
-      return userPropertiesToSearch.some(property => {
+      return userPropertiesToSearch.some((property) => {
         const value = property && user[property];
         return !!(value && value.toLowerCase().includes(searchTextInLowerCase));
       });
@@ -197,7 +197,7 @@ class DropzoneEditorWrapper extends React.Component<
 const mediaProvider1 = storyMediaProviderFactory();
 const mediaProvider2 = storyMediaProviderFactory();
 const mentionProvider2 = Promise.resolve<ResolvingMentionProvider>(
-  mention.storyData.resourceProviderWithResolver2,
+  mentionResourceProviderWithResolver2,
 );
 export type Props = {};
 
@@ -230,16 +230,21 @@ const editorProps = ({
   allowTextColor: true,
   allowDate: true,
   allowPanel: true,
+  allowFindReplace: true,
+  featureFlags: {
+    showAvatarGroupAsPlugin: true,
+    'local-id-generation-on-tables': true,
+    'data-consumer-mark': true,
+  },
   allowTables: {
     advanced: true,
   },
-  extensionProviders: editorActions => [
-    getXProductExtensionProvider(),
-    getConfluenceMacrosExtensionProvider(editorActions),
+  extensionProviders: (editorActions) => [
+    getExampleExtensionProviders(editorActions),
   ],
   allowExtension: { allowAutoSave: true, allowBreakout: true },
   macroProvider: Promise.resolve(macroProvider),
-  UNSAFE_cards: {
+  smartLinks: {
     provider: Promise.resolve(cardProviderStaging),
   },
   allowExpand: true,
@@ -249,14 +254,12 @@ const editorProps = ({
     allowMediaSingle: true,
     customDropzoneContainer: parentContainer,
   },
-  emojiProvider: emoji.storyData.getEmojiResource() as Promise<EmojiProvider>,
+  emojiProvider: getEmojiProvider(),
   mentionProvider: Promise.resolve(
-    mentionProvider || mention.storyData.resourceProviderWithResolver,
+    mentionProvider || mentionResourceProviderWithResolver,
   ),
 
-  taskDecisionProvider: Promise.resolve(
-    taskDecision.getMockTaskDecisionResource(),
-  ),
+  taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
   contextIdentifierProvider: storyContextIdentifierProviderFactory(),
   collabEdit: {
     provider: createCollabEditProvider({ userId: sessionId }),
@@ -267,10 +270,10 @@ const editorProps = ({
   placeholder: 'Write something...',
   shouldFocus: false,
   quickInsert: { provider: Promise.resolve(quickInsertProvider) },
-  contentComponents: <TitleInput innerRef={ref => ref && ref.focus()} />,
+  contentComponents: <TitleInput innerRef={(ref) => ref && ref.focus()} />,
   primaryToolbarComponents: (
     <WithEditorActions
-      render={actions => <SaveAndCancelButtons editorActions={actions} />}
+      render={(actions) => <SaveAndCancelButtons editorActions={actions} />}
     />
   ),
   insertMenuItems: customInsertMenuItems,
@@ -284,7 +287,7 @@ export default class Example extends React.Component<Props> {
         <Columns>
           <Column>
             <DropzoneEditorWrapper>
-              {parentContainer => (
+              {(parentContainer) => (
                 <EditorContext>
                   <Editor
                     {...editorProps({
@@ -300,7 +303,7 @@ export default class Example extends React.Component<Props> {
           </Column>
           <Column>
             <DropzoneEditorWrapper>
-              {parentContainer => (
+              {(parentContainer) => (
                 <EditorContext>
                   <Editor
                     {...editorProps({

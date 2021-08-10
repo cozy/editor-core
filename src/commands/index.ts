@@ -187,24 +187,33 @@ function topLevelNodeIsEmptyTextBlock(state: EditorState): boolean {
   );
 }
 
+export function addParagraphAtEnd(tr: Transaction) {
+  const {
+    doc: {
+      type: {
+        schema: {
+          nodes: { paragraph },
+        },
+      },
+    },
+    doc,
+  } = tr;
+  if (
+    doc.lastChild &&
+    !(doc.lastChild.type === paragraph && doc.lastChild.content.size === 0)
+  ) {
+    if (paragraph) {
+      tr.insert(doc.content.size, paragraph.createAndFill() as PMNode);
+    }
+  }
+  tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size - 1));
+  tr.scrollIntoView();
+}
+
 export function createParagraphAtEnd(): Command {
   return function (state, dispatch) {
-    const {
-      doc,
-      tr,
-      schema: { nodes },
-    } = state;
-    if (
-      doc.lastChild &&
-      !(
-        doc.lastChild.type === nodes.paragraph &&
-        doc.lastChild.content.size === 0
-      )
-    ) {
-      tr.insert(doc.content.size, nodes.paragraph.createAndFill() as PMNode);
-    }
-    tr.setSelection(TextSelection.create(tr.doc, tr.doc.content.size - 1));
-    tr.scrollIntoView();
+    const { tr } = state;
+    addParagraphAtEnd(tr);
     if (dispatch) {
       dispatch(tr);
     }
@@ -262,7 +271,7 @@ export const createToggleBlockMarkOnRange = <T = object>(
           : allowedBlocks(state.schema, node, parent))) &&
       parent.type.allowsMarkType(markType)
     ) {
-      const oldMarks = node.marks.filter(mark => mark.type === markType);
+      const oldMarks = node.marks.filter((mark) => mark.type === markType);
 
       const prevAttrs = oldMarks.length ? (oldMarks[0].attrs as T) : undefined;
       const newAttrs = getAttrs(prevAttrs, node);
@@ -273,7 +282,7 @@ export const createToggleBlockMarkOnRange = <T = object>(
           node.type,
           node.attrs,
           node.marks
-            .filter(mark => !markType.excludes(mark.type))
+            .filter((mark) => !markType.excludes(mark.type))
             .concat(newAttrs === false ? [] : markType.create(newAttrs)),
         );
         markApplied = true;

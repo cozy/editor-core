@@ -17,13 +17,24 @@ import {
 
 import { messages } from '../messages';
 // eslint-disable-next-line import/no-cycle
-import FormWrapper from '../NestedForms/FormWrapper';
-import { OnBlur } from '../types';
+import FormContent from '../FormContent';
+import { OnFieldChange } from '../types';
+import { getNameFromDuplicateField, isDuplicateField } from '../utils';
 
 type OptionType = {
   label: string;
   value: string;
 };
+
+import { gridSize } from '@atlaskit/theme/constants';
+import { multiply } from '@atlaskit/theme/math';
+import { N40A } from '@atlaskit/theme/colors';
+
+const ActionsWrapper = styled.div`
+  border-top: 1px solid ${N40A};
+  margin-top: ${multiply(gridSize, 2)}px;
+  padding-top: ${multiply(gridSize, 2)}px;
+`;
 
 const populateFromParameters = (
   parameters: Parameters,
@@ -31,8 +42,8 @@ const populateFromParameters = (
 ): string[] | undefined => {
   if (Object.keys(parameters).length) {
     const keys = Object.keys(parameters);
-    const existingFieldKeys = keys.filter(key =>
-      fields.find(field => field.name === key),
+    const existingFieldKeys = keys.filter((key) =>
+      fields.find((field) => field.name === getNameFromDuplicateField(key)),
     );
 
     if (existingFieldKeys.length > 0) {
@@ -40,36 +51,49 @@ const populateFromParameters = (
     }
   }
 };
-
-const populateWithTheFirst = (
+const populateFromRequired = (
   fields: FieldDefinition[],
 ): string[] | undefined => {
-  if (Array.isArray(fields) && fields.length > 0) {
-    return [fields[0].name];
-  }
+  return fields.filter((field) => field.isRequired).map((field) => field.name);
 };
 
 const getInitialFields = (
   parameters: Parameters = {},
   fields: FieldDefinition[],
   isDynamic?: boolean,
-): string[] => {
+): Set<string> => {
   if (!isDynamic) {
-    return fields.map(field => field.name);
+    return new Set(fields.map((field) => field.name));
+  }
+  const dynamicFields: string[] = [];
+
+  const fromRequired = populateFromRequired(fields);
+  if (fromRequired) {
+    dynamicFields.push(...fromRequired);
   }
 
-  return (
-    populateFromParameters(parameters, fields) ||
-    populateWithTheFirst(fields) ||
-    []
-  );
+  const fromParameters = populateFromParameters(parameters, fields);
+  if (fromParameters) {
+    dynamicFields.push(...fromParameters);
+  }
+
+  if (
+    dynamicFields.length === 0 &&
+    Array.isArray(fields) &&
+    fields.length > 0
+  ) {
+    dynamicFields.push(fields[0].name);
+  }
+
+  return new Set(dynamicFields);
 };
 
 type Props = {
+  name: string;
   extensionManifest: ExtensionManifest;
   field: Fieldset;
   parameters?: Parameters;
-  onFieldBlur: OnBlur;
+  onFieldChange: OnFieldChange;
   firstVisibleFieldName?: string;
   error?: string;
 } & InjectedIntlProps;
@@ -86,12 +110,10 @@ class FieldsetField extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    const initialFields = new Set<FieldDefinition['name']>(
-      getInitialFields(
-        props.parameters,
-        props.field.fields,
-        props.field.options.isDynamic,
-      ),
+    const initialFields = getInitialFields(
+      props.parameters,
+      props.field.fields,
+      props.field.options.isDynamic,
     );
 
     this.state = {
@@ -106,25 +128,38 @@ class FieldsetField extends React.Component<Props, State> {
   getSelectedFields = (visibleFields: Set<string>) => {
     const { field } = this.props;
 
-    return [...visibleFields].map(
-      fieldName =>
-        field.fields.find(field => field.name === fieldName) as FieldDefinition,
-    );
+    return [...visibleFields].map((fieldName) => {
+      const originalFieldDef = field.fields.find(
+        (field) => field.name === getNameFromDuplicateField(fieldName),
+      ) as FieldDefinition;
+      const fieldDef = {
+        ...originalFieldDef,
+        name: fieldName,
+      };
+      // for duplicate fields we only want the first one to actually be required
+      if (originalFieldDef.name !== fieldName && fieldDef.isRequired === true) {
+        fieldDef.isRequired = false;
+      }
+      return fieldDef;
+    });
   };
 
   getSelectOptions = (visibleFields: Set<string>) => {
     const { field } = this.props;
 
     return field.fields
-      .filter(field => !visibleFields.has(field.name))
-      .map(field => ({
+      .filter(
+        (field: FieldDefinition) =>
+          field.allowDuplicates || !visibleFields.has(field.name),
+      )
+      .map((field: FieldDefinition) => ({
         value: field.name,
         label: field.label,
       }));
   };
 
   setIsAdding = (value: boolean) => {
-    this.setState(state => ({
+    this.setState((state) => ({
       ...state,
       isAdding: value,
     }));
@@ -132,18 +167,18 @@ class FieldsetField extends React.Component<Props, State> {
 
   setCurrentParameters = (parameters: Parameters) => {
     this.setState(
-      state => ({
+      (state) => ({
         ...state,
         currentParameters: parameters,
       }),
       // callback required so autosave can be triggered on
       // the right moment if fields are being removed
-      () => this.props.onFieldBlur(this.props.field.name),
+      () => this.props.onFieldChange(this.props.field.name, true),
     );
   };
 
   setVisibleFields = (fields: Set<string>) => {
-    this.setState(state => ({
+    this.setState((state) => ({
       ...state,
       visibleFields: fields,
       selectedFields: this.getSelectedFields(fields),
@@ -153,7 +188,16 @@ class FieldsetField extends React.Component<Props, State> {
 
   onSelectItem = (option: OptionType) => {
     const { visibleFields } = this.state;
-    this.setVisibleFields(visibleFields.add((option as OptionType).value));
+
+    let newItem = option.value;
+    const duplicates = [...visibleFields].filter(
+      (field) => getNameFromDuplicateField(field) === newItem,
+    );
+    if (duplicates.length > 0) {
+      newItem += `:${duplicates.length}`;
+    }
+
+    this.setVisibleFields(new Set([...visibleFields, newItem]));
     this.setIsAdding(false);
   };
 
@@ -163,9 +207,21 @@ class FieldsetField extends React.Component<Props, State> {
     visibleFields.delete(fieldName);
     this.setVisibleFields(new Set(visibleFields));
 
-    delete currentParameters[fieldName];
-
-    this.setCurrentParameters({ ...currentParameters });
+    const newParameters = { ...currentParameters };
+    delete newParameters[fieldName];
+    // if any there are duplicate fields that come after the one removed, we want to reduce their
+    // duplicate index eg. label:2 -> label:1
+    if (isDuplicateField(fieldName)) {
+      const [key, idx] = fieldName.split(':');
+      let currentIdx = +idx;
+      while (currentParameters[`${key}:${currentIdx + 1}`]) {
+        newParameters[`${key}:${currentIdx}`] =
+          currentParameters[`${key}:${currentIdx + 1}`];
+        currentIdx++;
+      }
+      delete newParameters[`${key}:${currentIdx}`];
+    }
+    this.setCurrentParameters(newParameters);
   };
 
   renderActions = () => {
@@ -186,7 +242,7 @@ class FieldsetField extends React.Component<Props, State> {
             autoFocus
             placeholder={intl.formatMessage(messages.addField)}
             options={selectOptions}
-            onChange={option => {
+            onChange={(option) => {
               if (option) {
                 this.onSelectItem(option as OptionType);
               }
@@ -213,31 +269,41 @@ class FieldsetField extends React.Component<Props, State> {
 
   render() {
     const {
+      name,
       field,
       extensionManifest,
-      onFieldBlur,
+      onFieldChange,
       firstVisibleFieldName,
       error,
     } = this.props;
 
+    const { label, options } = field;
     const { selectedFields, currentParameters, visibleFields } = this.state;
+    const children = this.renderActions();
+
     return (
       <>
         {error && <FieldsetError message={error} />}
-        <FormWrapper
-          canRemoveFields={field.options.isDynamic && visibleFields.size > 1}
-          showTitle={field.options.showTitle}
-          extensionManifest={extensionManifest}
-          parentName={field.name}
-          fields={selectedFields}
-          label={field.label}
-          parameters={currentParameters}
-          onClickRemove={this.onClickRemove}
-          onFieldBlur={onFieldBlur}
-          firstVisibleFieldName={firstVisibleFieldName}
-        >
-          {this.renderActions()}
-        </FormWrapper>
+        <div>
+          {options.showTitle && <h5>{label}</h5>}
+
+          <FormContent
+            fields={selectedFields}
+            parentName={name}
+            extensionManifest={extensionManifest}
+            parameters={currentParameters}
+            canRemoveFields={field.options.isDynamic && visibleFields.size > 1}
+            onClickRemove={this.onClickRemove}
+            onFieldChange={onFieldChange}
+            firstVisibleFieldName={firstVisibleFieldName}
+          />
+
+          {children && (
+            <ActionsWrapper testId="fieldset-actions">
+              {children}
+            </ActionsWrapper>
+          )}
+        </div>
       </>
     );
   }

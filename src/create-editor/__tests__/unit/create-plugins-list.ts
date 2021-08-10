@@ -25,7 +25,9 @@ import {
 import placeholderPlugin from '../../../plugins/placeholder';
 import selectionPlugin from '../../../plugins/selection';
 
-import createPluginsList from '../../create-plugins-list';
+import createPluginsList, {
+  getScrollGutterOptions,
+} from '../../create-plugins-list';
 
 describe('createPluginsList', () => {
   afterEach(() => {
@@ -290,6 +292,25 @@ describe('createPluginsList', () => {
     it('should add plugin if props.allowFindReplace === true', () => {
       createPluginsList({ appearance: 'full-page', allowFindReplace: true });
       expect(findReplacePlugin).toHaveBeenCalled();
+    });
+  });
+
+  describe('getScrollGutterOptions', () => {
+    it('should return ScrollGutterPluginOptions with persistScrollGutter as true', () => {
+      const scrollGutterOptions = getScrollGutterOptions({
+        appearance: 'mobile',
+        persistScrollGutter: true,
+      });
+
+      expect(scrollGutterOptions?.persistScrollGutter).toBe(true);
+    });
+
+    it('should return ScrollGutterPluginOptions with gutterSize as 36', () => {
+      const scrollGutterOptions = getScrollGutterOptions({
+        appearance: 'mobile',
+      });
+
+      expect(scrollGutterOptions?.gutterSize).toBe(36);
     });
   });
 });

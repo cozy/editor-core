@@ -6,7 +6,7 @@ import {
   INPUT_METHOD,
 } from './enums';
 import { InsertSmartLinkAEP } from './smart-links';
-import { PanelType } from '@atlaskit/adf-schema';
+import { PanelType, ExtensionLayout } from '@atlaskit/adf-schema';
 
 export enum USER_CONTEXT {
   EDIT = 'edit',
@@ -262,6 +262,44 @@ type InsertExtensionAEP = InsertAEP<
   any
 >;
 
+type InsertNodeViaExtensionAPIAEP = InsertAEP<
+  undefined,
+  {
+    nodeType: string;
+    inputMethod: INPUT_METHOD.EXTENSION_API;
+
+    // referentiality specific info
+    hasReferentiality: Boolean;
+    nodeTypesReferenced?: string[];
+    // /referentiality
+
+    layout?: ExtensionLayout;
+
+    // if nodeType === extension
+    // eg. ${manifest.type} - com.atlassian.ecosystem
+    extensionType?: string;
+    /**
+     * extensionkey follows this format:
+     * ${manifest.key}:${manifest.modules.nodes.name}
+     * e.g: 'awesome:item', 'awesome:default', 'awesome:list'
+     */
+    extensionKey?: string;
+    // /extension
+  },
+  undefined
+>;
+
+type InsertPlaceholderTextAEP = InsertAEP<
+  ACTION_SUBJECT_ID.PLACEHOLDER_TEXT,
+  {
+    inputMethod:
+      | INPUT_METHOD.QUICK_INSERT
+      | INPUT_METHOD.TOOLBAR
+      | INPUT_METHOD.INSERT_MENU;
+  },
+  undefined
+>;
+
 export type InsertEventPayload =
   | InsertDividerAEP
   | InsertLineBreakAEP
@@ -280,4 +318,6 @@ export type InsertEventPayload =
   | InsertSmartLinkAEP
   | InsertLayoutAEP
   | InsertExtensionAEP
-  | InsertDateAEP;
+  | InsertNodeViaExtensionAPIAEP
+  | InsertDateAEP
+  | InsertPlaceholderTextAEP;

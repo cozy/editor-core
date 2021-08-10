@@ -19,6 +19,7 @@ import { DispatchAnalyticsEvent } from '../../../plugins/analytics';
 import { EventDispatcher } from '../../../event-dispatcher';
 import { EditorActions } from '../../..';
 import { ContextPanelConsumer } from '../../ContextPanel/context';
+import { FeatureFlags } from '../../../types/feature-flags';
 
 export interface FullPageToolbarProps {
   appearance?: EditorAppearance;
@@ -38,10 +39,12 @@ export interface FullPageToolbarProps {
   showKeyline: boolean;
   containerElement: HTMLElement | null;
   beforeIcon?: ReactElement;
+  hasMinWidth?: boolean;
+  featureFlags?: FeatureFlags;
 }
 
 export const FullPageToolbar: React.FunctionComponent<FullPageToolbarProps> = React.memo(
-  props => {
+  (props) => {
     return (
       <ContextPanelConsumer>
         {({ width: contextPanelWidth }) => (
@@ -65,22 +68,27 @@ export const FullPageToolbar: React.FunctionComponent<FullPageToolbarProps> = Re
               disabled={props.disabled}
               dispatchAnalyticsEvent={props.dispatchAnalyticsEvent}
               containerElement={props.containerElement}
+              hasMinWidth={props.hasMinWidth}
             />
-            <MainToolbarCustomComponentsSlot>
-              <AvatarsWithPluginState
-                editorView={props.editorView}
-                eventDispatcher={props.eventDispatcher}
-                inviteToEditComponent={
-                  props.collabEdit && props.collabEdit.inviteToEditComponent
-                }
-                inviteToEditHandler={
-                  props.collabEdit && props.collabEdit.inviteToEditHandler
-                }
-                isInviteToEditButtonSelected={
-                  props.collabEdit &&
-                  props.collabEdit.isInviteToEditButtonSelected
-                }
-              />
+            <MainToolbarCustomComponentsSlot
+              data-testid={'avatar-group-outside-plugin'}
+            >
+              {props?.featureFlags?.showAvatarGroupAsPlugin === true ? null : (
+                <AvatarsWithPluginState
+                  editorView={props.editorView}
+                  eventDispatcher={props.eventDispatcher}
+                  inviteToEditComponent={
+                    props.collabEdit && props.collabEdit.inviteToEditComponent
+                  }
+                  inviteToEditHandler={
+                    props.collabEdit && props.collabEdit.inviteToEditHandler
+                  }
+                  isInviteToEditButtonSelected={
+                    props.collabEdit &&
+                    props.collabEdit.isInviteToEditButtonSelected
+                  }
+                />
+              )}
               {props.customPrimaryToolbarComponents}
             </MainToolbarCustomComponentsSlot>
           </MainToolbar>

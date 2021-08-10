@@ -1,5 +1,9 @@
 import { Node as PMNode } from 'prosemirror-model';
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
+import {
+  evilburnsEmoji,
+  grinEmoji,
+} from '@atlaskit/util-data-test/emoji-samples';
 import { emoji as emojiNode } from '@atlaskit/adf-schema';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import {
@@ -10,7 +14,8 @@ import {
   li,
   p,
   ul,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import {
@@ -25,24 +30,22 @@ import analyticsPlugin, { INPUT_METHOD } from '../../../analytics';
 import typeAheadPlugin from '../../../type-ahead';
 import quickInsertPlugin from '../../../quick-insert';
 import blockTypePlugin from '../../../block-type';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 
-const { testData } = emojiData;
+const emojiProvider = getTestEmojiResource();
 
-const emojiProvider = testData.getEmojiResourcePromise();
-
-const grinEmoji = testData.grinEmoji;
+const grin = grinEmoji();
 const grinEmojiId = {
-  shortName: grinEmoji.shortName,
-  id: grinEmoji.id,
-  fallback: grinEmoji.fallback,
+  shortName: grin.shortName,
+  id: grin.id,
+  fallback: grin.fallback,
 };
 
-const evilburnsEmoji = testData.evilburnsEmoji;
+const evilburns = evilburnsEmoji();
 const evilburnsEmojiId = {
-  shortName: evilburnsEmoji.shortName,
-  id: evilburnsEmoji.id,
-  fallback: evilburnsEmoji.fallback,
+  shortName: evilburns.shortName,
+  id: evilburns.id,
+  fallback: evilburns.fallback,
 };
 
 describe('emojis', () => {
@@ -51,7 +54,7 @@ describe('emojis', () => {
   const providerFactory = ProviderFactory.create({ emojiProvider });
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
     return createEditor({
       doc,

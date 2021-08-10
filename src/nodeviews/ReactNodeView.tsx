@@ -9,6 +9,7 @@ import { EventDispatcher, createDispatch } from '../event-dispatcher';
 import {
   ACTION,
   ACTION_SUBJECT,
+  ACTION_SUBJECT_ID,
   EVENT_TYPE,
   AnalyticsDispatch,
   AnalyticsEventPayload,
@@ -21,11 +22,16 @@ import {
   ForwardRef,
 } from './types';
 import { getParticipantsCount } from '../plugins/collab-edit/get-participants-count';
+import { getFeatureFlags } from '../plugins/feature-flags-context';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 const DEFAULT_SAMPLING_RATE = 100;
 const DEFAULT_SLOW_THRESHOLD = 7;
 let nodeViewEventsCounter = 0;
 
+interface CreateDomRefOptions {
+  displayInlineBlockForInlineNodes: boolean;
+}
 export default class ReactNodeView<P = ReactComponentProps>
   implements NodeView {
   private domRef?: HTMLElement;
@@ -34,7 +40,7 @@ export default class ReactNodeView<P = ReactComponentProps>
   private portalProviderAPI: PortalProviderAPI;
   private hasContext: boolean;
   private _viewShouldUpdate?: shouldUpdate;
-  private eventDispatcher?: EventDispatcher;
+  protected eventDispatcher?: EventDispatcher;
 
   reactComponentProps: P;
 
@@ -106,8 +112,9 @@ export default class ReactNodeView<P = ReactComponentProps>
     this.renderReactComponent(() =>
       this.render(this.reactComponentProps, this.handleRef),
     );
+
     trackingEnabled &&
-      stopMeasure(`🦉${this.node.type.name}::ReactNodeView`, duration => {
+      stopMeasure(`🦉${this.node.type.name}::ReactNodeView`, (duration) => {
         if (
           ++nodeViewEventsCounter % samplingRate === 0 &&
           duration > slowThreshold
@@ -135,13 +142,45 @@ export default class ReactNodeView<P = ReactComponentProps>
       return;
     }
 
-    this.portalProviderAPI.render(component, this.domRef!, this.hasContext);
+    const componentWithErrorBoundary = () => (
+      <ErrorBoundary
+        component={ACTION_SUBJECT.REACT_NODE_VIEW}
+        componentId={
+          (this?.node?.type?.name ??
+            ACTION_SUBJECT_ID.UNKNOWN_NODE) as ACTION_SUBJECT_ID
+        }
+        dispatchAnalyticsEvent={this.dispatchAnalyticsEvent}
+      >
+        {component()}
+      </ErrorBoundary>
+    );
+
+    this.portalProviderAPI.render(
+      componentWithErrorBoundary,
+      this.domRef!,
+      this.hasContext,
+    );
   }
 
-  createDomRef(): HTMLElement {
-    return this.node.isInline
-      ? document.createElement('span')
-      : document.createElement('div');
+  createDomRef(options?: CreateDomRefOptions): HTMLElement {
+    if (!this.node.isInline) {
+      return document.createElement('div');
+    }
+
+    const htmlElement = document.createElement('span');
+    const state = this.view.state;
+    const featureFlags = getFeatureFlags(state);
+
+    if (
+      featureFlags &&
+      featureFlags.displayInlineBlockForInlineNodes &&
+      options?.displayInlineBlockForInlineNodes !== false
+    ) {
+      htmlElement.style.display = 'inline-block';
+      htmlElement.style.userSelect = 'all';
+    }
+
+    return htmlElement;
   }
 
   getContentDOM():
@@ -198,6 +237,7 @@ export default class ReactNodeView<P = ReactComponentProps>
     }
 
     this.node = node;
+
     this.renderReactComponent(() =>
       this.render(this.reactComponentProps, this.handleRef),
     );
@@ -218,7 +258,7 @@ export default class ReactNodeView<P = ReactComponentProps>
    * @param node The Prosemirror Node from which to source the attributes
    */
   setDomAttrs(node: PMNode, element: HTMLElement) {
-    Object.keys(node.attrs || {}).forEach(attr => {
+    Object.keys(node.attrs || {}).forEach((attr) => {
       element.setAttribute(attr, node.attrs[attr]);
     });
   }
@@ -261,7 +301,7 @@ export default class ReactNodeView<P = ReactComponentProps>
   }
 
   private dispatchAnalyticsEvent = (payload: AnalyticsEventPayload) => {
-    if (this.eventDispatcher && this.performanceOptions.enabled) {
+    if (this.eventDispatcher) {
       const dispatch: AnalyticsDispatch = createDispatch(this.eventDispatcher);
       dispatch(analyticsEventKey, {
         payload,

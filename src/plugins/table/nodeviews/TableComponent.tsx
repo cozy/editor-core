@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import classnames from 'classnames';
 import { Node as PmNode } from 'prosemirror-model';
@@ -16,9 +16,9 @@ import {
   akEditorTableToolbarSize as tableToolbarSize,
 } from '@atlaskit/editor-shared-styles';
 
-import { parsePx } from '../../../utils/dom';
 import { isValidPosition } from '../../../utils';
 import { getParentNodeWidth } from '../../../utils/node-width';
+import { parsePx } from '../../../utils/dom';
 import { WidthPluginState } from '../../width';
 import { autoSizeTable } from '../commands';
 import { getPluginState } from '../pm-plugins/plugin-factory';
@@ -37,8 +37,9 @@ import { updateControls } from '../pm-plugins/table-resizing/utils/dom';
 import {
   TableCssClassName as ClassName,
   ColumnResizingPluginState,
-  TablePluginState,
+  ShadowEvent,
 } from '../types';
+import type { TableColumnOrdering } from '@atlaskit/adf-schema/steps';
 import TableFloatingControls from '../ui/TableFloatingControls';
 import {
   containsHeaderRow,
@@ -46,21 +47,33 @@ import {
   tablesHaveDifferentNoOfColumns,
 } from '../utils';
 
-import { Props, TableOptions } from './types';
+import { TableOptions } from './types';
 import { updateOverflowShadows } from './update-overflow-shadows';
+import { EventDispatcher } from '../../../event-dispatcher';
+import { ForwardRef } from '../../../nodeviews/types';
+import { getFeatureFlags } from '../../feature-flags-context';
+import memoizeOne from 'memoize-one';
+import { OverflowShadowsObserver } from './OverflowShadowsObserver';
 
 const isIE11 = browser.ie_version === 11;
 
-export interface ComponentProps extends Props {
+const NOOP = () => undefined;
+export interface ComponentProps {
   view: EditorView;
-  node: PmNode;
-  allowColumnResizing: boolean;
-  contentDOM: (element: HTMLElement | undefined) => void;
+  getNode: () => PmNode;
+  allowColumnResizing?: boolean;
+  eventDispatcher: EventDispatcher;
+  getPos: () => number;
+  options?: TableOptions;
 
+  contentDOM: ForwardRef;
   containerWidth: WidthPluginState;
-  pluginState: TablePluginState;
+  allowControls: boolean;
+  isHeaderRowEnabled: boolean;
+  isHeaderColumnEnabled: boolean;
+  tableActive: boolean;
+  ordering: TableColumnOrdering;
   tableResizingPluginState?: ColumnResizingPluginState;
-  width: number;
 }
 
 interface TableState {
@@ -69,6 +82,8 @@ interface TableState {
   parentWidth?: number;
   isLoading: boolean;
   stickyHeader?: RowStickyState;
+  [ShadowEvent.SHOW_BEFORE_SHADOW]: boolean;
+  [ShadowEvent.SHOW_AFTER_SHADOW]: boolean;
 }
 
 // in Chrome, if none of the parent elements
@@ -99,20 +114,22 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
     tableContainerWidth: 'inherit',
     parentWidth: undefined,
     isLoading: true,
+    [ShadowEvent.SHOW_BEFORE_SHADOW]: false,
+    [ShadowEvent.SHOW_AFTER_SHADOW]: false,
   };
 
   private wrapper?: HTMLDivElement | null;
   private table?: HTMLTableElement | null;
   private frameId?: number;
-  private node?: PmNode;
+  private node: PmNode;
   private containerWidth?: WidthPluginState;
   private layoutSize?: number;
+  private overflowShadowsObserver?: OverflowShadowsObserver;
 
   constructor(props: ComponentProps) {
     super(props);
-    const { options, containerWidth, node } = props;
-
-    this.node = node;
+    const { options, containerWidth, getNode, view } = props;
+    this.node = getNode();
     this.containerWidth = containerWidth;
 
     // store table size using previous full-width mode so can detect if it has changed
@@ -120,25 +137,33 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
     const isFullWidthModeEnabled = options
       ? options.wasFullWidthModeEnabled
       : false;
-    this.layoutSize = this.tableNodeLayoutSize(node, containerWidth.width, {
-      dynamicTextSizing,
-      isFullWidthModeEnabled,
-    });
+    this.layoutSize = this.tableNodeLayoutSize(
+      this.node,
+      containerWidth.width,
+      {
+        dynamicTextSizing,
+        isFullWidthModeEnabled,
+      },
+    );
 
     // Disable inline table editing and resizing controls in Firefox
     // https://github.com/ProseMirror/prosemirror/issues/432
     if ('execCommand' in document) {
-      ['enableObjectResizing', 'enableInlineTableEditing'].forEach(cmd => {
+      ['enableObjectResizing', 'enableInlineTableEditing'].forEach((cmd) => {
         if (document.queryCommandSupported(cmd)) {
           document.execCommand(cmd, false, 'false');
         }
       });
     }
 
-    // @see ED-7945
-    requestAnimationFrame(() => {
-      this.setState({ isLoading: false });
-    });
+    const { initialRenderOptimization } = getFeatureFlags(view.state) || {};
+
+    if (!initialRenderOptimization) {
+      // @see ED-7945
+      requestAnimationFrame(() => {
+        this.setState({ isLoading: false });
+      });
+    }
   }
 
   componentDidMount() {
@@ -183,6 +208,10 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
       window.cancelAnimationFrame(this.frameId);
     }
 
+    if (this.overflowShadowsObserver) {
+      this.overflowShadowsObserver.dispose();
+    }
+
     this.props.eventDispatcher.off(
       (stickyHeadersPluginKey as any).key,
       this.onStickyState,
@@ -190,35 +219,47 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
   }
 
   componentDidUpdate(prevProps: ComponentProps) {
-    if (this.wrapper && this.wrapper.parentElement) {
-      const rightShadows = this.wrapper.parentElement.querySelectorAll<
-        HTMLElement
-      >(`.${ClassName.TABLE_RIGHT_SHADOW}`);
+    const { view, getNode } = this.props;
+    const { tableOverflowShadowsOptimization } =
+      getFeatureFlags(view.state) || {};
 
-      const leftShadows = this.wrapper.parentElement.querySelectorAll<
-        HTMLElement
-      >(`.${ClassName.TABLE_LEFT_SHADOW}`);
+    if (!tableOverflowShadowsOptimization) {
+      this.updateShadows();
+    } else {
+      if (
+        this.wrapper?.parentElement &&
+        this.table &&
+        !this.overflowShadowsObserver
+      ) {
+        this.overflowShadowsObserver = new OverflowShadowsObserver(
+          this.updateShadowState,
+          this.table,
+          this.wrapper,
+        );
+      }
 
-      updateOverflowShadows(
-        this.wrapper,
-        this.table,
-        rightShadows,
-        leftShadows,
-      );
+      if (this.overflowShadowsObserver) {
+        this.overflowShadowsObserver.observeCells(
+          this.state.stickyHeader?.sticky,
+          containsHeaderRow(view.state, getNode()),
+        );
+      }
     }
 
-    if (this.props.node.attrs.__autoSize) {
+    const currentTable = getNode();
+    if (currentTable.attrs.__autoSize) {
       // Wait for next tick to handle auto sizing, gives the browser time to do layout calc etc.
       this.handleAutoSizeDebounced();
     } else if (this.props.allowColumnResizing && this.table) {
       // If col widths (e.g. via collab) or number of columns (e.g. delete a column) have changed,
       // re-draw colgroup.
+      const previousTable = this.node;
       if (
-        tablesHaveDifferentColumnWidths(this.props.node, prevProps.node) ||
-        tablesHaveDifferentNoOfColumns(this.props.node, prevProps.node)
+        tablesHaveDifferentColumnWidths(currentTable, previousTable) ||
+        tablesHaveDifferentNoOfColumns(currentTable, previousTable)
       ) {
         const { view } = this.props;
-        recreateResizeColsByNode(this.table, this.props.node);
+        recreateResizeColsByNode(this.table, currentTable);
         updateControls(view.state);
       }
 
@@ -226,7 +267,41 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
     }
   }
 
+  private updateShadows() {
+    const parent = this.wrapper?.parentElement;
+    if (this.wrapper && parent) {
+      const rightShadows = parent.querySelectorAll<HTMLElement>(
+        `.${ClassName.TABLE_RIGHT_SHADOW}`,
+      );
+      const leftShadows = parent.querySelectorAll<HTMLElement>(
+        `.${ClassName.TABLE_LEFT_SHADOW}`,
+      );
+
+      updateOverflowShadows(
+        this.props.view.state,
+        this.wrapper,
+        this.table,
+        rightShadows,
+        leftShadows,
+      );
+    }
+  }
+
+  private updateShadowState = (shadowKey: ShadowEvent, value: boolean) => {
+    if (this.state[shadowKey] === value) {
+      return;
+    }
+    // need this check to satisfy types for the setState argument
+    if (shadowKey === ShadowEvent.SHOW_BEFORE_SHADOW) {
+      return this.setState({ [shadowKey]: value });
+    }
+    this.setState({ [shadowKey]: value });
+  };
+
   onStickyState = (state: StickyPluginState) => {
+    const { tableOverflowShadowsOptimization } =
+      getFeatureFlags(this.props.view.state) || {};
+
     const pos = this.props.getPos();
     if (!isValidPosition(pos, this.props.view.state)) {
       return;
@@ -234,35 +309,57 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
     const stickyHeader = findStickyHeaderForTable(state, pos);
     if (stickyHeader !== this.state.stickyHeader) {
       this.setState({ stickyHeader });
+      if (tableOverflowShadowsOptimization && this.overflowShadowsObserver) {
+        this.overflowShadowsObserver.updateStickyShadows();
+      }
     }
   };
+
+  prevTableState: any = null;
 
   render() {
     const {
       view,
-      node,
-      pluginState,
+      getNode,
       tableResizingPluginState,
-      width,
+      allowControls = true,
+      isHeaderRowEnabled,
+      ordering,
+      isHeaderColumnEnabled,
+      tableActive,
+      containerWidth,
     } = this.props;
-    const { isLoading, tableContainerWidth } = this.state;
     const {
-      pluginConfig: { allowControls = true },
-    } = pluginState;
-
+      isLoading,
+      tableContainerWidth,
+      showBeforeShadow,
+      showAfterShadow,
+    } = this.state;
+    const node = getNode();
     // doesn't work well with WithPluginState
     const { isInDanger, hoveredRows } = getPluginState(view.state);
 
+    const {
+      stickyHeadersOptimization,
+      initialRenderOptimization,
+      tableRenderOptimization,
+      tableOverflowShadowsOptimization,
+    } = getFeatureFlags(view.state) || {};
+
     const tableRef = this.table || undefined;
-    const tableActive = this.table === pluginState.tableRef;
     const isResizing =
       !!tableResizingPluginState && !!tableResizingPluginState.dragging;
     const headerRow = tableRef
       ? tableRef.querySelector<HTMLTableRowElement>('tr[data-header-row]')
       : undefined;
 
-    const rowControls = [
-      <div key={0} className={ClassName.ROW_CONTROLS_WRAPPER}>
+    //dont need to change tableHeight with tableRenderOptimization because it will be observed inside floating components
+    const tableHeight =
+      tableRef && !tableRenderOptimization ? tableRef.offsetHeight : undefined;
+
+    const hasHeaderRow = containsHeaderRow(view.state, node);
+    const rowControls = (
+      <div className={ClassName.ROW_CONTROLS_WRAPPER}>
         <TableFloatingControls
           editorView={view}
           tableRef={tableRef}
@@ -271,23 +368,30 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
           isInDanger={isInDanger}
           isResizing={isResizing}
           isNumberColumnEnabled={node.attrs.isNumberColumnEnabled}
-          isHeaderRowEnabled={pluginState.isHeaderRowEnabled}
-          ordering={pluginState.ordering}
-          isHeaderColumnEnabled={pluginState.isHeaderColumnEnabled}
-          hasHeaderRow={containsHeaderRow(view.state, node)}
+          isHeaderRowEnabled={isHeaderRowEnabled}
+          ordering={ordering}
+          isHeaderColumnEnabled={isHeaderColumnEnabled}
+          hasHeaderRow={hasHeaderRow}
           // pass `selection` and `tableHeight` to control re-render
           selection={view.state.selection}
-          tableHeight={tableRef ? tableRef.offsetHeight : undefined}
+          tableHeight={tableHeight}
           headerRowHeight={headerRow ? headerRow.offsetHeight : undefined}
           stickyHeader={this.state.stickyHeader}
         />
-      </div>,
-    ];
+      </div>
+    );
 
     const shadowPadding =
-      allowControls && !isLoading && tableActive
+      allowControls && (!isLoading || initialRenderOptimization) && tableActive
         ? -tableToolbarSize
         : tableMarginSides;
+
+    const shadowStyle = tableOverflowShadowsOptimization
+      ? memoizeOne(
+          (visible) =>
+            ({ visibility: visible ? 'visible' : 'hidden' } as CSSProperties),
+        )
+      : NOOP;
 
     return (
       <div
@@ -297,21 +401,34 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
         }}
         className={classnames(ClassName.TABLE_CONTAINER, {
           [ClassName.WITH_CONTROLS]: allowControls && tableActive,
-          [ClassName.TABLE_STICKY]: this.state.stickyHeader,
+          [ClassName.TABLE_STICKY]: this.state.stickyHeader && hasHeaderRow,
           [ClassName.HOVERED_DELETE_BUTTON]: isInDanger,
           [ClassName.TABLE_SELECTED]: isTableSelected(view.state.selection),
-          'less-padding': width < akEditorMobileBreakoutPoint,
+          'less-padding': containerWidth.width < akEditorMobileBreakoutPoint,
         })}
         data-number-column={node.attrs.isNumberColumnEnabled}
         data-layout={node.attrs.layout}
       >
+        {stickyHeadersOptimization && (
+          <div className={ClassName.TABLE_STICKY_SENTINEL_TOP} />
+        )}
         <FloatingPlaceholder />
-        {allowControls && !isLoading && rowControls}
-        <div className={ClassName.TABLE_LEFT_SHADOW} />
+        {allowControls &&
+          (!isLoading || initialRenderOptimization) &&
+          rowControls}
+        <div
+          style={shadowStyle(showBeforeShadow)}
+          className={ClassName.TABLE_LEFT_SHADOW}
+        />
         {this.state.stickyHeader && (
           <div
             className={`${ClassName.TABLE_LEFT_SHADOW} ${ClassName.TABLE_STICKY_SHADOW}`}
             style={{
+              visibility: tableOverflowShadowsOptimization
+                ? showBeforeShadow && hasHeaderRow
+                  ? 'visible'
+                  : 'hidden'
+                : undefined,
               top: `${
                 this.state.stickyHeader.top +
                 this.state.stickyHeader.padding +
@@ -324,16 +441,21 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
 
         <div
           className={classnames(ClassName.TABLE_NODE_WRAPPER)}
-          ref={elem => {
+          ref={(elem) => {
             this.wrapper = elem;
-            this.props.contentDOM(elem ? elem : undefined);
             if (elem) {
-              this.table = elem.querySelector('table');
+              this.props.contentDOM(elem);
+              const tableElement = elem.querySelector('table');
+              if (tableElement !== this.table) {
+                this.table = tableElement;
+              }
             }
           }}
         />
-
-        <div className={ClassName.TABLE_RIGHT_SHADOW} />
+        <div
+          style={shadowStyle(showAfterShadow)}
+          className={ClassName.TABLE_RIGHT_SHADOW}
+        />
         {this.state.stickyHeader && (
           <div
             style={{
@@ -344,6 +466,11 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
             <div
               className={`${ClassName.TABLE_RIGHT_SHADOW} ${ClassName.TABLE_STICKY_SHADOW}`}
               style={{
+                visibility: tableOverflowShadowsOptimization
+                  ? showAfterShadow && hasHeaderRow
+                    ? 'visible'
+                    : 'hidden'
+                  : undefined,
                 top: `${
                   this.state.stickyHeader.top +
                   this.state.stickyHeader.padding +
@@ -353,6 +480,9 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
               }}
             />
           </div>
+        )}
+        {stickyHeadersOptimization && (
+          <div className={ClassName.TABLE_STICKY_SENTINEL_BOTTOM} />
         )}
       </div>
     );
@@ -388,12 +518,18 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
       }
     }
 
-    this.setState({ scroll: this.wrapper.scrollLeft });
+    const { tableOverflowShadowsOptimization } =
+      getFeatureFlags(this.props.view.state) || {};
+
+    if (!tableOverflowShadowsOptimization) {
+      this.updateShadows();
+    }
   };
 
   private handleTableResizing = () => {
-    const { node, containerWidth, options } = this.props;
+    const { getNode, containerWidth, options } = this.props;
     const prevNode = this.node!;
+    const node = getNode();
     const prevAttrs = prevNode.attrs;
 
     // We only consider a layout change valid if it's done outside of an autoSize.
@@ -411,6 +547,9 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
       options,
     );
 
+    const hasNumberedColumnChanged =
+      prevAttrs.isNumberColumnEnabled !== node.attrs.isNumberColumnEnabled;
+
     if (
       // Breakout mode/layout changed
       layoutChanged ||
@@ -418,14 +557,16 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
       // Scales the cols widths relative to the new parent width.
       parentWidthChanged ||
       // Enabling / disabling this feature reduces or adds size to the table.
-      prevAttrs.isNumberColumnEnabled !== node.attrs.isNumberColumnEnabled ||
+      hasNumberedColumnChanged ||
       // Adding or removing columns from the table, should snap the remaining / new columns to the layout width.
       tablesHaveDifferentNoOfColumns(node, prevNode) ||
       // This last check is also to cater for dynamic text sizing changing the 'default' layout width
       // Usually happens on window resize.
       layoutSize !== this.layoutSize
     ) {
-      this.scaleTable({ parentWidth, layoutChanged });
+      if (!hasNumberedColumnChanged) {
+        this.scaleTable({ parentWidth, layoutChanged });
+      }
       this.updateParentWidth(parentWidth);
     }
 
@@ -439,7 +580,8 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
     layoutChanged: boolean;
     parentWidth?: number;
   }) => {
-    const { view, node, getPos, containerWidth, options } = this.props;
+    const { view, getNode, getPos, containerWidth, options } = this.props;
+    const node = getNode();
     const { state, dispatch } = view;
     const pos = getPos();
     if (!isValidPosition(pos, state)) {
@@ -469,7 +611,8 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
 
   private handleAutoSize = () => {
     if (this.table) {
-      const { view, node, getPos, options, containerWidth } = this.props;
+      const { view, getNode, getPos, options, containerWidth } = this.props;
+      const node = getNode();
       const pos = getPos();
       if (!isValidPosition(pos, view.state)) {
         return;
@@ -482,9 +625,8 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
   };
 
   private handleWindowResize = () => {
-    const { node, containerWidth } = this.props;
-
-    const layoutSize = this.tableNodeLayoutSize(node);
+    const { getNode, containerWidth } = this.props;
+    const layoutSize = this.tableNodeLayoutSize(getNode());
 
     if (containerWidth.width > layoutSize) {
       return;
@@ -495,8 +637,8 @@ class TableComponent extends React.Component<ComponentProps, TableState> {
   };
 
   private updateTableContainerWidth = () => {
-    const { node, containerWidth, options } = this.props;
-
+    const { getNode, containerWidth, options } = this.props;
+    const node = getNode();
     if (options && options.isBreakoutEnabled === false) {
       return;
     }

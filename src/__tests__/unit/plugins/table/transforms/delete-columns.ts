@@ -1,5 +1,5 @@
 import { Rect } from '@atlaskit/editor-tables/table-map';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -8,7 +8,8 @@ import {
   td,
   tdCursor,
   tdEmpty,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { TablePluginState } from '../../../../../plugins/table/types';
 import { deleteColumns } from '../../../../../plugins/table/transforms';
 import { getSelectionRect } from '@atlaskit/editor-tables/utils';
@@ -24,7 +25,7 @@ const colsToRect = (cols: Array<number>, noOfRows: number): Rect => ({
 describe('table plugin -> transforms -> delete columns', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },

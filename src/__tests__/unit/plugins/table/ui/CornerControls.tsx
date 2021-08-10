@@ -1,13 +1,14 @@
 import React from 'react';
 import { isTableSelected } from '@atlaskit/editor-tables/utils';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import {
   doc,
   table,
   tr,
   thEmpty,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import {
   TablePluginState,
@@ -24,7 +25,7 @@ const CornerButton = `.${ClassName.CONTROLS_CORNER_BUTTON}`;
 describe('CornerControls', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },

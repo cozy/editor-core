@@ -4,16 +4,17 @@ import { Selection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 import { browser } from '@atlaskit/editor-common';
+import type { TableColumnOrdering } from '@atlaskit/adf-schema/steps';
 
 import { hoverRows, selectRow } from '../../commands';
 import { RowStickyState } from '../../pm-plugins/sticky-headers';
-import { TableColumnOrdering } from '../../types';
+
 import { isSelectionUpdated } from '../../utils';
 
 import CornerControls from './CornerControls';
 import NumberColumn from './NumberColumn';
 import RowControls from './RowControls';
-
+import { getFeatureFlags } from '../../../feature-flags-context';
 export interface Props {
   editorView: EditorView;
   selection?: Selection;
@@ -32,10 +33,45 @@ export interface Props {
   stickyHeader?: RowStickyState;
 }
 
-export default class TableFloatingControls extends Component<Props> {
-  static displayName = 'TableFloatingControls';
+interface State {
+  tableHeight: number;
+}
 
-  shouldComponentUpdate(nextProps: Props) {
+export default class TableFloatingControls extends Component<Props, State> {
+  static displayName = 'TableFloatingControls';
+  private resizeObserver?: ResizeObserver;
+
+  componentDidMount() {
+    this.tryInitResizeObserver();
+  }
+
+  componentDidUpdate() {
+    // tableRef prop is not guaranteed to be defined after componentDidMount, so retry to init resize observer on update
+    this.tryInitResizeObserver();
+  }
+
+  // tracking the table height changes to update floating controls
+  private tryInitResizeObserver() {
+    let { tableRef } = this.props;
+    const { tableRenderOptimization } =
+      getFeatureFlags(this.props.editorView.state) || {};
+    if (
+      tableRenderOptimization &&
+      tableRef &&
+      !this.resizeObserver &&
+      window?.ResizeObserver
+    ) {
+      this.resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          const tableHeight = entry.contentRect.height;
+          this.setState({ tableHeight });
+        }
+      });
+      this.resizeObserver.observe(tableRef);
+    }
+  }
+
+  shouldComponentUpdate(nextProps: Props, nextState: State) {
     const {
       tableRef,
       isInDanger,
@@ -44,18 +80,24 @@ export default class TableFloatingControls extends Component<Props> {
       isNumberColumnEnabled,
       hoveredRows,
       selection,
-      tableHeight,
       tableActive,
       isHeaderColumnEnabled,
       ordering,
       headerRowHeight,
       stickyHeader,
     } = this.props;
-
+    const { tableRenderOptimization } =
+      getFeatureFlags(this.props.editorView.state) || {};
+    const tableHeight = tableRenderOptimization
+      ? this.state?.tableHeight
+      : this.props.tableHeight;
+    const nextTableHeight = tableRenderOptimization
+      ? nextState?.tableHeight
+      : nextProps.tableHeight;
     return (
       ordering !== nextProps.ordering ||
       tableRef !== nextProps.tableRef ||
-      tableHeight !== nextProps.tableHeight ||
+      tableHeight !== nextTableHeight ||
       tableActive !== nextProps.tableActive ||
       isInDanger !== nextProps.isInDanger ||
       isResizing !== nextProps.isResizing ||
@@ -67,6 +109,12 @@ export default class TableFloatingControls extends Component<Props> {
       headerRowHeight !== nextProps.headerRowHeight ||
       stickyHeader !== nextProps.stickyHeader
     );
+  }
+
+  componentWillUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
   }
 
   render() {
@@ -89,10 +137,11 @@ export default class TableFloatingControls extends Component<Props> {
     }
 
     const stickyTop =
-      stickyHeader && stickyHeader.sticky ? stickyHeader.top : undefined;
-
+      stickyHeader && stickyHeader.sticky && hasHeaderRow
+        ? stickyHeader.top
+        : undefined;
     return (
-      <div onMouseDown={e => e.preventDefault()}>
+      <div onMouseDown={(e) => e.preventDefault()}>
         {isNumberColumnEnabled ? (
           <NumberColumn
             editorView={editorView}
@@ -107,26 +156,31 @@ export default class TableFloatingControls extends Component<Props> {
             stickyTop={stickyTop}
           />
         ) : null}
-        <CornerControls
-          editorView={editorView}
-          tableRef={tableRef}
-          isInDanger={isInDanger}
-          isResizing={isResizing}
-          isHeaderRowEnabled={isHeaderRowEnabled}
-          isHeaderColumnEnabled={isHeaderColumnEnabled}
-          hoveredRows={hoveredRows}
-          stickyTop={tableActive ? stickyTop : undefined}
-        />
-        <RowControls
-          editorView={editorView}
-          tableRef={tableRef}
-          hoverRows={this.hoverRows}
-          hoveredRows={hoveredRows}
-          isInDanger={isInDanger}
-          isResizing={isResizing}
-          selectRow={this.selectRow}
-          stickyTop={tableActive ? stickyTop : undefined}
-        />
+
+        {tableActive && (
+          <>
+            <CornerControls
+              editorView={editorView}
+              tableRef={tableRef}
+              isInDanger={isInDanger}
+              isResizing={isResizing}
+              isHeaderRowEnabled={isHeaderRowEnabled}
+              isHeaderColumnEnabled={isHeaderColumnEnabled}
+              hoveredRows={hoveredRows}
+              stickyTop={tableActive ? stickyTop : undefined}
+            />
+            <RowControls
+              editorView={editorView}
+              tableRef={tableRef}
+              hoverRows={this.hoverRows}
+              hoveredRows={hoveredRows}
+              isInDanger={isInDanger}
+              isResizing={isResizing}
+              selectRow={this.selectRow}
+              stickyTop={tableActive ? stickyTop : undefined}
+            />
+          </>
+        )}
       </div>
     );
   }

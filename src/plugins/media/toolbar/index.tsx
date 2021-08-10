@@ -95,16 +95,20 @@ export const floatingToolbar = (
       if (allowAnnotation) {
         toolbarButtons.push({
           type: 'custom',
+          fallback: [],
           render: renderAnnotationButton(pluginState, intl),
         });
       }
     }
 
-    if (allowLinking && shouldShowMediaLinkToolbar(state)) {
-      const showSeparatorLeft = toolbarButtons.length > 0;
+    if (toolbarButtons.length) {
+      toolbarButtons.push({ type: 'separator' });
+    }
 
+    if (allowLinking && shouldShowMediaLinkToolbar(state)) {
       toolbarButtons.push({
         type: 'custom',
+        fallback: [],
         render: (editorView, idx) => {
           if (editorView?.state) {
             const editLink = () => {
@@ -138,17 +142,12 @@ export const floatingToolbar = (
                 onAddLink={editLink}
                 onEditLink={editLink}
                 onOpenLink={openLink}
-                showSeparatorLeft={showSeparatorLeft}
               />
             );
           }
           return null;
         },
       });
-    }
-
-    if (toolbarButtons.length) {
-      toolbarButtons.push({ type: 'separator' });
     }
   }
 
@@ -166,6 +165,7 @@ export const floatingToolbar = (
   const items: Array<FloatingToolbarItem<Command>> = [
     ...toolbarButtons,
     {
+      id: 'editor.media.delete',
       type: 'button',
       appearance: 'danger',
       icon: RemoveIcon,

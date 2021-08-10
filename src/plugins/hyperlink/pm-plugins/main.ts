@@ -59,8 +59,8 @@ export const canLinkBeCreatedInRange = (from: number, to: number) => (
     if ($from.parent === $to.parent && $from.parent.isTextblock) {
       if ($from.parent.type.allowsMarkType(link)) {
         let allowed = true;
-        state.doc.nodesBetween(from, to, node => {
-          allowed = allowed && !node.marks.some(m => m.type.excludes(link));
+        state.doc.nodesBetween(from, to, (node) => {
+          allowed = allowed && !node.marks.some((m) => m.type.excludes(link));
           return allowed;
         });
         return allowed;
@@ -232,7 +232,7 @@ export interface HyperlinkState {
   inputMethod?: INPUT_METHOD;
 }
 
-export const stateKey = new PluginKey('hyperlinkPlugin');
+export const stateKey = new PluginKey<HyperlinkState>('hyperlinkPlugin');
 
 export const plugin = (dispatch: Dispatch) =>
   new Plugin({

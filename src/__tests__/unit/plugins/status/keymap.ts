@@ -1,11 +1,16 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p, status } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import {
+  doc,
+  p,
+  status,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 
 describe('status - keymaps', () => {
   const createEditor = createEditorFactory();
 
-  const editorFactory = (doc: any) =>
+  const editorFactory = (doc: DocBuilder) =>
     createEditor({
       editorProps: {
         allowStatus: true,
@@ -14,7 +19,7 @@ describe('status - keymaps', () => {
     });
 
   describe('Consume Enter/Tab keys in status node', () => {
-    ['Tab', 'Enter'].forEach(key => {
+    ['Tab', 'Enter'].forEach((key) => {
       it(`When status node is selected and ${key} key is pressed then the node should not move`, () => {
         const adf = doc(
           p('boo something'),

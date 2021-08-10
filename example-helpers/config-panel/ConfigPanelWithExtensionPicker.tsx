@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IntlProvider } from 'react-intl';
 import styled from 'styled-components';
 
 import { gridSize } from '@atlaskit/theme/constants';
 import { multiply } from '@atlaskit/theme/math';
 import * as colors from '@atlaskit/theme/colors';
+import TextArea from '@atlaskit/textarea';
 import { CodeBlock } from '@atlaskit/code';
 
 import {
@@ -28,7 +29,7 @@ const ExampleWrapper = styled.div`
 `;
 
 const Column = styled.div<{ width: number | string }>`
-  width: ${props => props.width}px;
+  width: ${(props) => props.width}px;
   margin: ${multiply(gridSize, 2)}px;
 
   h3 {
@@ -46,7 +47,7 @@ function ExtensionConfigPanel({
   node,
   nodeKey,
   extensionProvider,
-  parameters = {},
+  parameters: initialParameters = {},
   item,
 }: { extensionProvider: ExtensionProvider; nodeKey: string } & CallbackParams) {
   const [fields] = useStateFromPromise(
@@ -59,7 +60,28 @@ function ExtensionConfigPanel({
     [],
   );
 
-  const [parametersState, setParameters] = useState({} as Parameters);
+  const [parametersJson, setParametersJson] = useState(() =>
+    JSON.stringify(initialParameters),
+  );
+
+  const [parameters, setParameters] = useState(initialParameters);
+
+  function onChangeParametersJson(event: any) {
+    setParametersJson(event.target.value);
+  }
+
+  useEffect(() => {
+    try {
+      setParameters({
+        ...parameters,
+        ...JSON.parse(parametersJson),
+      });
+    } catch (e) {
+      console.error('Invalid JSON Parameters', e.message);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parametersJson]);
+
   if (!extension || !node || !item) {
     return null;
   }
@@ -78,22 +100,21 @@ function ExtensionConfigPanel({
         />
       </Column>
       <Column width="500" key="parameters">
-        <h3>Parameters:</h3>
+        <h3>Initial Parameters:</h3>
         <CodeWrapper>
           {parameters && (
-            <CodeBlock
-              language="json"
-              text={JSON.stringify(parameters, null, 4)}
-              showLineNumbers={false}
+            <TextArea
+              onChange={onChangeParametersJson}
+              value={parametersJson}
             />
           )}
         </CodeWrapper>
         <h3>State:</h3>
         <CodeWrapper>
-          {parametersState && (
+          {parameters && (
             <CodeBlock
               language="json"
-              text={JSON.stringify(parametersState, null, 4)}
+              text={JSON.stringify(parameters, null, 4)}
               showLineNumbers={false}
             />
           )}
@@ -131,7 +152,6 @@ export default function ConfigPanelWithExtensionPicker({
   const [hash, setHash] = useState<string>(getHashFromUrl());
   const [extensionNode, setNodeAndParameters] = useState<CallbackParams>();
   const [item, setItem] = useState<ExtensionModule>();
-
   const [extensionKey, nodeKey] = getExtensionKeyAndNodeKey(
     hash,
     extensionNode && extensionNode.extension
@@ -139,7 +159,7 @@ export default function ConfigPanelWithExtensionPicker({
       : '',
   );
 
-  const params =
+  const actualParameters =
     extensionNode &&
     extensionNode.parameters &&
     Object.keys(extensionNode.parameters).length > 0
@@ -158,7 +178,7 @@ export default function ConfigPanelWithExtensionPicker({
               nodeKey={nodeKey}
               node={extensionNode.node}
               item={item}
-              parameters={params}
+              parameters={actualParameters}
             />
           )}
         </div>
@@ -167,7 +187,7 @@ export default function ConfigPanelWithExtensionPicker({
             selectedExtension={extensionKey}
             selectedNode={nodeKey}
             extensionProvider={extensionProvider}
-            onSelect={params => {
+            onSelect={(params) => {
               setNodeAndParameters(params);
               setItem(params.item);
 

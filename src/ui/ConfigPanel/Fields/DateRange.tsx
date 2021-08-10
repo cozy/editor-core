@@ -13,8 +13,8 @@ import {
 
 import { messages } from '../messages';
 import FieldMessages from '../FieldMessages';
-import { validate, validateRequired, getSafeParentedName } from '../utils';
-import { OnBlur } from '../types';
+import { validate, validateRequired } from '../utils';
+import { OnFieldChange } from '../types';
 
 const HorizontalFields = styled.div`
   display: flex;
@@ -43,13 +43,15 @@ const DateField = ({
   parentField,
   scope,
   fieldName,
-  onBlur,
+  onFieldChange,
   intl,
+  isRequired,
 }: {
   parentField: DateRangeField;
   scope: string;
   fieldName: 'from' | 'to';
-  onBlur: OnBlur;
+  onFieldChange: OnFieldChange;
+  isRequired?: boolean;
 } & InjectedIntlProps) => (
   <HorizontalFieldWrapper key={fieldName}>
     <Field
@@ -59,10 +61,10 @@ const DateField = ({
         parentField,
         fieldName as keyof DateRangeResult,
       )}
-      isRequired
-      validate={(value?: string) =>
-        validateRequired<string | undefined>({ isRequired: true }, value)
-      }
+      isRequired={isRequired}
+      validate={(value?: string) => {
+        return validateRequired<string | undefined>({ isRequired }, value);
+      }}
     >
       {({ fieldProps, error }) => (
         <Fragment>
@@ -70,7 +72,7 @@ const DateField = ({
             {...fieldProps}
             onChange={(date: string) => {
               fieldProps.onChange(date);
-              onBlur(parentField.name);
+              onFieldChange(parentField.name, true);
             }}
             locale={intl.locale}
           />
@@ -82,16 +84,16 @@ const DateField = ({
 );
 
 const DateRange = function ({
+  name,
   field,
-  onBlur,
+  onFieldChange,
   intl,
-  parentName,
 }: {
+  name: string;
   field: DateRangeField;
-  onBlur: OnBlur;
+  onFieldChange: OnFieldChange;
   autoFocus?: boolean;
   placeholder?: string;
-  parentName?: string;
 } & InjectedIntlProps) {
   const items = useMemo(() => {
     return [
@@ -100,11 +102,11 @@ const DateRange = function ({
         label: intl.formatMessage(messages.custom),
         value: 'custom',
       },
-    ].map(option => ({
+    ].map((option) => ({
       ...option,
-      name: field.name,
+      name,
     }));
-  }, [field.items, field.name, intl]);
+  }, [field.items, name, intl]);
 
   const [currentValue, setCurrentValue] = useState(
     getFromDefaultValue(field, 'value') || items[0].value,
@@ -113,31 +115,29 @@ const DateRange = function ({
   useEffect(() => {
     // calling onBlur here based on the currentValue changing will ensure that we
     // get the most up to date value after the form has been rendered
-    onBlur(field.name);
-  }, [currentValue, onBlur, field.name]);
-
-  const fieldName = getSafeParentedName(field.name, parentName);
+    onFieldChange(name, true);
+  }, [currentValue, onFieldChange, name]);
 
   const element = (
     <Fragment>
       <Hidden>
-        <Field name={`${fieldName}.type`} defaultValue={'date-range'}>
+        <Field name={`${name}.type`} defaultValue={'date-range'}>
           {({ fieldProps }) => <TextField {...fieldProps} type="hidden" />}
         </Field>
       </Hidden>
       <Field
-        name={`${fieldName}.value`}
+        name={`${name}.value`}
         label={field.label}
         defaultValue={currentValue}
         isRequired={field.isRequired}
         validate={(value?: string) => validate<string>(field, value || '')}
       >
-        {({ fieldProps, error, valid }) => (
+        {({ fieldProps, error }) => (
           <Fragment>
             <RadioGroup
               {...fieldProps}
               options={items}
-              onChange={event => {
+              onChange={(event) => {
                 fieldProps.onChange(event.target.value);
                 setCurrentValue(event.target.value);
               }}
@@ -151,25 +151,27 @@ const DateRange = function ({
           {/** this is a hidden field that will copy the selected value to a field of name 'from'
            *  when a option that is NOT 'custom' is selected. This is to comply with the atlaskit
            * form component that relies on final-form */}
-          <Field name={`${fieldName}.from`} defaultValue={currentValue}>
+          <Field name={`${name}.from`} defaultValue={currentValue}>
             {({ fieldProps }) => <TextField {...fieldProps} type="hidden" />}
           </Field>
         </Hidden>
       ) : (
         <HorizontalFields>
           <DateField
-            scope={fieldName}
+            scope={name}
             parentField={field}
             fieldName="from"
-            onBlur={onBlur}
+            onFieldChange={onFieldChange}
             intl={intl}
+            isRequired={field.isRequired}
           />
           <DateField
-            scope={fieldName}
+            scope={name}
             parentField={field}
             fieldName="to"
-            onBlur={onBlur}
+            onFieldChange={onFieldChange}
             intl={intl}
+            isRequired={field.isRequired}
           />
         </HorizontalFields>
       )}

@@ -23,7 +23,7 @@ describe('Snapshot Test: numbered table', () => {
     page = global.page;
   });
 
-  describe.each(THEME_MODES)('Theme: %s', theme => {
+  describe.each(THEME_MODES)('Theme: %s', (theme) => {
     const mode = theme === 'dark' ? 'dark' : 'light';
 
     it('looks correct for fullpage', async () => {
@@ -64,7 +64,7 @@ describe('Snapshot Test: numbered table', () => {
       await clickFirstCell(page, true);
       await waitForFloatingControl(page, 'Table floating controls');
       await page.hover(tableSelectors.nthRowControl(2));
-      await page.waitFor(tableSelectors.insertRowButton);
+      await page.waitForSelector(tableSelectors.insertRowButton);
       await snapshot(page);
     });
 

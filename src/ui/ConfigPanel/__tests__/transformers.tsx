@@ -32,6 +32,12 @@ describe('Config panel', () => {
             name: 'depth',
             label: 'Depth',
             type: 'number',
+            defaultValue: 99,
+          },
+          {
+            name: 'width',
+            label: 'Width',
+            type: 'number',
           },
           {
             name: 'USER',
@@ -68,14 +74,14 @@ describe('Config panel', () => {
         fields: {
           fieldset: {
             'json-group': {
-              serializer: value => JSON.stringify(value),
-              deserializer: value => JSON.parse(value),
+              serializer: (value) => JSON.stringify(value),
+              deserializer: (value) => JSON.parse(value),
             },
             'broken-group': {
-              serializer: params => {
+              serializer: (params) => {
                 throw new Error('Something is broken');
               },
-              deserializer: result => {
+              deserializer: (result) => {
                 throw new Error('Something is broken');
               },
             },
@@ -137,6 +143,7 @@ describe('Config panel', () => {
           settings: {
             foo: 'bar',
             depth: undefined,
+            width: '',
             USER: {
               label: 'Leandro',
               value: 'llemos',
@@ -249,6 +256,35 @@ describe('Config panel', () => {
       await expect(test()).resolves.toEqual('OK');
     });
 
+    it('serialize should convert format of duplicate fields', async () => {
+      const result = await serialize(
+        manifest,
+        { title: 'a title', 'title:1': ['second title', 'or this title'] },
+        fieldsDefinitions,
+      );
+
+      expect(result).toEqual([
+        { title: 'a title' },
+        { title: ['second title', 'or this title'] },
+      ]);
+    });
+
+    it('serialize should convert format of nested duplicate fields', async () => {
+      const result = await serialize(
+        manifest,
+        { settings: { foo: 'a', 'foo:1': ['b', 'c'], 'foo:2': 'd' } },
+        fieldsDefinitions,
+      );
+
+      expect(result).toEqual({
+        settings: JSON.stringify([
+          { foo: 'a' },
+          { foo: ['b', 'c'] },
+          { foo: 'd' },
+        ]),
+      });
+    });
+
     it('deserialize should throw for a missing transformer', async () => {
       await expect(
         deserialize(
@@ -307,17 +343,22 @@ describe('Config panel', () => {
       await expect(test()).resolves.toEqual('OK');
     });
 
-    it('serialize/deserialise should skip fields if missing from the parameters', async () => {
+    it('serialize should skip fields if missing from the parameters', async () => {
       expect(
         await serialize(manifest, { title: 'a title' }, fieldsDefinitions),
       ).toEqual({
         title: 'a title',
       });
+    });
 
+    it('deserialise should inject defaultValues if provided', async () => {
       expect(
         await deserialize(manifest, { title: 'a title' }, fieldsDefinitions),
       ).toEqual({
         title: 'a title',
+        settings: {
+          depth: 99,
+        },
       });
     });
 
@@ -373,6 +414,38 @@ describe('Config panel', () => {
       const error = 'Something is broken';
       expect(result.errors.settings).toStrictEqual(error);
       expect(result.errors.title).toStrictEqual(error);
+    });
+
+    it('deserialize should convert format of duplicate fields', async () => {
+      const result = await deserialize(
+        manifest,
+        [{ title: 'a title' }, { title: ['second title', 'or this title'] }],
+        fieldsDefinitions,
+      );
+
+      expect(result).toEqual({
+        title: 'a title',
+        'title:1': ['second title', 'or this title'],
+        settings: { depth: 99 },
+      });
+    });
+
+    it('deserialize should convert format of nested duplicate fields', async () => {
+      const result = await deserialize(
+        manifest,
+        {
+          settings: JSON.stringify([
+            { foo: 'a' },
+            { foo: ['b', 'c'] },
+            { foo: 'd' },
+          ]),
+        },
+        fieldsDefinitions,
+      );
+
+      expect(result).toEqual({
+        settings: { depth: 99, foo: 'a', 'foo:1': ['b', 'c'], 'foo:2': 'd' },
+      });
     });
   });
 });

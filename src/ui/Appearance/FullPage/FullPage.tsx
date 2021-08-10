@@ -8,6 +8,7 @@ import { FullPageEditorWrapper } from './StyledComponents';
 import { ContextPanelWidthProvider } from '../../ContextPanel/context';
 import { FullPageContentArea } from './FullPageContentArea';
 import { FullPageToolbar } from './FullPageToolbar';
+import { getFeatureFlags } from '../../../plugins/feature-flags-context';
 
 interface FullPageEditorState {
   showKeyline: boolean;
@@ -86,13 +87,18 @@ export class FullPageEditor extends React.Component<
   public render() {
     const { props } = this;
     const { showKeyline } = this.state;
+    const featureFlags = props.editorView?.state
+      ? getFeatureFlags(props.editorView.state)
+      : undefined;
 
     return (
       <ContextPanelWidthProvider>
         <FullPageEditorWrapper className="akEditor">
           <FullPageToolbar
             appearance={props.appearance}
+            beforeIcon={props.primaryToolbarIconBefore}
             collabEdit={props.collabEdit}
+            containerElement={this.scrollContainer}
             customPrimaryToolbarComponents={
               props.customPrimaryToolbarComponents
             }
@@ -102,14 +108,14 @@ export class FullPageEditor extends React.Component<
             editorDOMElement={props.editorDOMElement}
             editorView={props.editorView!}
             eventDispatcher={props.eventDispatcher!}
+            hasMinWidth={props.enableToolbarMinWidth}
             popupsBoundariesElement={props.popupsBoundariesElement}
             popupsMountPoint={props.popupsMountPoint}
             popupsScrollableElement={props.popupsScrollableElement}
             primaryToolbarComponents={props.primaryToolbarComponents}
             providerFactory={props.providerFactory}
             showKeyline={showKeyline}
-            containerElement={this.scrollContainer}
-            beforeIcon={props.primaryToolbarIconBefore}
+            featureFlags={featureFlags}
           />
           <FullPageContentArea
             allowAnnotation={props.allowAnnotation}

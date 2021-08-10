@@ -1,6 +1,6 @@
 import React from 'react';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 import {
   bodiedExtension,
@@ -15,7 +15,8 @@ import {
   td,
   tr,
   ul,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import * as analytics from '../../../../../plugins/analytics/utils';
 import RemoveIcon from '@atlaskit/icon/glyph/editor/remove';
 /**
@@ -67,7 +68,7 @@ import { ProviderFactory } from '@atlaskit/editor-common';
 import {
   getToolbarItems,
   findToolbarBtn,
-} from '../../floating-toolbar/_helpers';
+} from '../../../../../plugins/floating-toolbar/__tests__/_helpers';
 import { Command } from '../../../../../types';
 import { MediaPluginState } from '../../../../../plugins/media/pm-plugins/types';
 
@@ -76,7 +77,7 @@ describe('media', () => {
 
   let createAnalyticsEvent: jest.Mock<any>;
 
-  const editor = (doc: any, mediaPropsOverride: MediaOptions = {}) => {
+  const editor = (doc: DocBuilder, mediaPropsOverride: MediaOptions = {}) => {
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
     const providerFactory = ProviderFactory.create({
       contextIdentifierProvider,
@@ -197,7 +198,7 @@ describe('media', () => {
       expect(toolbar).toBeDefined();
       expect(toolbar!.items.length).toEqual(9);
       const item = getToolbarItems(toolbar!, editorView).find(
-        cmd => cmd.type === 'custom',
+        (cmd) => cmd.type === 'custom',
       );
       expect(item).toBeDefined();
     });
@@ -432,7 +433,9 @@ describe('media', () => {
         const annotateToolbarComponent = getToolbarItems(
           toolbar!,
           editorView,
-        ).find(item => item.type === 'custom') as FloatingToolbarCustom;
+        ).find((item) => item.type === 'custom') as FloatingToolbarCustom<
+          Command
+        >;
 
         const annotationToolbar = shallow(
           annotateToolbarComponent.render(editorView) as ReactElement<any>,

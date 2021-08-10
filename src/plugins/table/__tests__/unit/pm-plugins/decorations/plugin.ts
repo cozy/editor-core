@@ -2,14 +2,15 @@ import { Selection } from 'prosemirror-state';
 import { addColumnAt } from '@atlaskit/editor-tables/utils';
 import { DecorationSet } from 'prosemirror-view';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   table,
   tdCursor,
   tdEmpty,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { selectColumn } from '../../../../commands';
 import {
@@ -21,7 +22,7 @@ import { TableDecorations, TablePluginState } from '../../../../types';
 
 describe('decorations plugin', () => {
   const createEditor = createEditorFactory<TablePluginState>();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },
@@ -48,7 +49,7 @@ describe('decorations plugin', () => {
       const columnSelectedDecorations = decorationSet.find(
         undefined,
         undefined,
-        spec => spec.key.indexOf(TableDecorations.COLUMN_SELECTED) > -1,
+        (spec) => spec.key.indexOf(TableDecorations.COLUMN_SELECTED) > -1,
       );
 
       expect(columnSelectedDecorations).toHaveLength(0);
@@ -103,7 +104,7 @@ describe('decorations plugin', () => {
       const decorations = expectedDecorationSet.find(
         undefined,
         undefined,
-        spec =>
+        (spec) =>
           spec.key.indexOf(TableDecorations.COLUMN_CONTROLS_DECORATIONS) > -1,
       );
 

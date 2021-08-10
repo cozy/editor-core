@@ -22,8 +22,12 @@ import {
   ACTION_SUBJECT,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
-  DispatchAnalyticsEvent,
 } from '../../analytics';
+import {
+  AnalyticsEventPayload,
+  DispatchAnalyticsEvent,
+  CONTENT_COMPONENT,
+} from '../../analytics/types';
 import {
   RESOLVE_METHOD,
   AnnotationAEP,
@@ -41,7 +45,7 @@ const findPosForDOM = (sel: Selection) => {
     !node &&
     $from.nodeBefore &&
     $from.nodeBefore.isText &&
-    $from.nodeBefore.marks.find(mark => mark.type.name === 'annotation')
+    $from.nodeBefore.marks.find((mark) => mark.type.name === 'annotation')
   ) {
     return from - 1;
   }
@@ -72,10 +76,37 @@ export function InlineCommentView({
   const { bookmark, selectedAnnotations, annotations } = inlineCommentState;
 
   const selection = getSelectionPositions(state, inlineCommentState);
-  const dom = findDomRefAtPos(
-    findPosForDOM(selection),
-    editorView.domAtPos.bind(editorView),
-  ) as HTMLElement;
+  const position = findPosForDOM(selection);
+  let dom: HTMLElement | undefined;
+  try {
+    dom = findDomRefAtPos(
+      position,
+      editorView.domAtPos.bind(editorView),
+    ) as HTMLElement;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(error);
+    if (dispatchAnalyticsEvent) {
+      const payload: AnalyticsEventPayload = {
+        action: ACTION.ERRORED,
+        actionSubject: ACTION_SUBJECT.CONTENT_COMPONENT,
+        eventType: EVENT_TYPE.OPERATIONAL,
+        attributes: {
+          component: CONTENT_COMPONENT.INLINE_COMMENT,
+          selection: selection.toJSON(),
+          position,
+          docSize: editorView.state.doc.nodeSize,
+          error: error.toString(),
+          errorStack: error.stack || undefined,
+        },
+      };
+      dispatchAnalyticsEvent(payload);
+    }
+  }
+
+  if (!dom) {
+    return null;
+  }
 
   // Create Component
   if (bookmark) {
@@ -90,7 +121,7 @@ export function InlineCommentView({
         <CreateComponent
           dom={dom}
           textSelection={textSelection}
-          onCreate={id => {
+          onCreate={(id) => {
             createAnnotation(id)(editorView.state, editorView.dispatch);
             !editorView.hasFocus() && editorView.focus();
           }}
@@ -108,7 +139,7 @@ export function InlineCommentView({
 
   // View Component
   const activeAnnotations = selectedAnnotations.filter(
-    mark => annotations[mark.id] === false,
+    (mark) => annotations[mark.id] === false,
   );
   if (!ViewComponent || activeAnnotations.length === 0) {
     return null;
@@ -144,8 +175,8 @@ export function InlineCommentView({
       <ViewComponent
         annotations={activeAnnotations}
         dom={dom}
-        onDelete={id => removeInlineCommentNearSelection(id)(state, dispatch)}
-        onResolve={id =>
+        onDelete={(id) => removeInlineCommentNearSelection(id)(state, dispatch)}
+        onResolve={(id) =>
           updateInlineCommentResolvedState(
             { [id]: true },
             RESOLVE_METHOD.COMPONENT,

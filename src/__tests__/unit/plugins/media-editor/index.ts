@@ -1,5 +1,6 @@
 import { EditorView } from 'prosemirror-view';
-import createEditorFactory, {
+import {
+  createEditorFactory,
   Options as CreateEditorOptions,
 } from '@atlaskit/editor-test-helpers/create-editor';
 import {
@@ -7,7 +8,8 @@ import {
   p,
   mediaSingle,
   media,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { nextTick } from '@atlaskit/media-test-helpers';
 
@@ -28,7 +30,10 @@ describe('media editor', () => {
 
   const mediaProvider = getFreshMediaProvider();
 
-  const editor = (doc: any, createEditorOptions?: CreateEditorOptions) => {
+  const editor = (
+    doc: DocBuilder,
+    createEditorOptions?: CreateEditorOptions,
+  ) => {
     return createEditor({
       ...createEditorOptions,
       doc,

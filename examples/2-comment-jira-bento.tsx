@@ -4,8 +4,11 @@ import EditorContext from './../src/ui/EditorContext';
 import WithEditorActions from './../src/ui/WithEditorActions';
 import CollapsedEditor from '../src/ui/CollapsedEditor';
 import ToolbarHelp from '../src/ui/ToolbarHelp';
-import { mention, emoji } from '@atlaskit/util-data-test';
-import { EmojiProvider } from '@atlaskit/emoji';
+import {
+  currentUser,
+  getEmojiProvider,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { mediaProvider } from './5-full-page';
 import { MockActivityResource } from '../example-helpers/activity-provider';
 
@@ -26,13 +29,11 @@ export class CommentEditorJiraBento extends React.Component<Props, State> {
   };
 
   private providers = {
-    emojiProvider: emoji.storyData.getEmojiResource({
+    emojiProvider: getEmojiProvider({
       uploadSupported: true,
-      currentUser: {
-        id: emoji.storyData.loggedUser,
-      },
-    }) as Promise<EmojiProvider>,
-    mentionProvider: Promise.resolve(mention.storyData.resourceProvider),
+      currentUser,
+    }),
+    mentionProvider: Promise.resolve(mentionResourceProvider),
     activityProvider: Promise.resolve(new MockActivityResource()),
   };
 
@@ -43,13 +44,13 @@ export class CommentEditorJiraBento extends React.Component<Props, State> {
   };
 
   onFocus = () =>
-    this.setState(prevState => ({ isExpanded: !prevState.isExpanded }));
+    this.setState((prevState) => ({ isExpanded: !prevState.isExpanded }));
 
   render() {
     return (
       <EditorContext>
         <WithEditorActions
-          render={actions => (
+          render={(actions) => (
             <CollapsedEditor
               isExpanded={this.state.isExpanded}
               onFocus={this.onFocus}

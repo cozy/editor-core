@@ -9,17 +9,17 @@ import {
 } from '../_helpers';
 import {
   mountEditor,
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
 } from '../../__helpers/testing-example-helpers';
 
 const calendar = '[aria-label="calendar"]';
-const nextDate = 'td[aria-selected=true] + td';
+const nextDate = 'button[aria-selected=true] + button';
 
 BrowserTestCase(
   'change-date-inside-table.ts: Change date inside table',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
       allowDate: true,

@@ -11,7 +11,11 @@ import {
   INPUT_METHOD,
 } from './enums';
 import { PluginPerformanceReportData } from '../../../utils/performance/plugin-performance-report';
-import { FeatureFlagKey } from '../../feature-flags-context/types';
+import {
+  ShallowPropsDifference,
+  PropsDifference,
+} from '../../../utils/compare';
+import { FeatureFlagKey } from '../../../types/feature-flags';
 import { AnnotationAEP } from './inline-comment-events';
 import { RichMediaLayout } from '@atlaskit/adf-schema';
 import { SEVERITY } from '@atlaskit/editor-common';
@@ -83,7 +87,10 @@ type EditorStartAEP = UIAEP<
 >;
 
 type EditorPerfAEP = OperationalAEPWithObjectId<
-  ACTION.EDITOR_MOUNTED | ACTION.PROSEMIRROR_RENDERED,
+  | ACTION.EDITOR_MOUNTED
+  | ACTION.PROSEMIRROR_RENDERED
+  | ACTION.ON_EDITOR_READY_CALLBACK
+  | ACTION.ON_CHANGE_CALLBACK,
   ACTION_SUBJECT.EDITOR,
   undefined,
   {
@@ -104,6 +111,31 @@ type EditorTTIAEP = OperationalAEP<
     tti: number;
     ttiFromInvocation: number;
     canceled: boolean;
+    ttiSeverity?: SEVERITY;
+    ttiFromInvocationSeverity?: SEVERITY;
+  },
+  undefined
+>;
+
+type EditorContentRetrievalPerformedAEP = OperationalAEP<
+  ACTION.EDITOR_CONTENT_RETRIEVAL_PERFORMED,
+  ACTION_SUBJECT.EDITOR,
+  undefined,
+  {
+    success: boolean;
+    errorInfo?: string;
+    errorStack?: string;
+  },
+  undefined
+>;
+
+type EditorRenderedAEP<T> = OperationalAEP<
+  ACTION.RE_RENDERED,
+  ACTION_SUBJECT.EDITOR | ACTION_SUBJECT.REACT_EDITOR_VIEW,
+  undefined,
+  {
+    propsDifference: PropsDifference<T> | ShallowPropsDifference<T>;
+    count: number;
   },
   undefined
 >;
@@ -145,6 +177,7 @@ type InputPerfSamlingAEP = OperationalAEPWithObjectId<
     nodeSize: number;
     participants: number;
     nodeCount?: Record<string, number>;
+    severity?: SEVERITY;
   },
   undefined
 >;
@@ -294,6 +327,29 @@ type TypeAheadMentionAEP = TypeAheadAEP<
   }
 >;
 
+export type TypeAheadRenderedAEP = OperationalAEP<
+  ACTION.RENDERED,
+  ACTION_SUBJECT.TYPEAHEAD,
+  undefined,
+  {
+    time?: number;
+    items?: number;
+    initial?: boolean;
+  },
+  undefined
+>;
+
+export type TypeAheadItemViewedAEP = OperationalAEP<
+  ACTION.VIEWED,
+  ACTION_SUBJECT.TYPEAHEAD_ITEM,
+  undefined,
+  {
+    index?: number;
+    items?: number;
+  },
+  undefined
+>;
+
 type FullWidthModeAEP = TrackAEP<
   ACTION.CHANGED_FULL_WIDTH_MODE,
   ACTION_SUBJECT.EDITOR,
@@ -318,6 +374,18 @@ type ExpandToggleAEP = TrackAEP<
   undefined
 >;
 
+export type ColorPickerAEP = TrackAEP<
+  ACTION.UPDATED,
+  ACTION_SUBJECT.PICKER,
+  ACTION_SUBJECT_ID.PICKER_COLOR,
+  {
+    color: string;
+    label?: string;
+    placement: string;
+  },
+  undefined
+>;
+
 type RichMediaLayoutAEP = TrackAEP<
   ACTION.SELECTED,
   ACTION_SUBJECT.MEDIA_SINGLE | ACTION_SUBJECT.EMBEDS,
@@ -329,30 +397,46 @@ type RichMediaLayoutAEP = TrackAEP<
   undefined
 >;
 
-export type GeneralEventPayload =
-  | EditorStartAEP
-  | EditorStopAEP
+type CodeBlockLanguageSelectedAEP = TrackAEP<
+  ACTION.LANGUAGE_SELECTED,
+  ACTION_SUBJECT.CODE_BLOCK,
+  undefined,
+  {
+    language: string;
+  },
+  undefined
+>;
+
+export type GeneralEventPayload<T = void> =
   | AnnotateButtonAEP
   | AnnotationAEP
-  | ButtonHelpAEP
+  | BrowserFreezePayload
   | ButtonFeedbackAEP
+  | ButtonHelpAEP
+  | ColorPickerAEP
+  | DispatchedTransactionAEP
+  | EditorPerfAEP
+  | EditorRenderedAEP<T>
+  | EditorStartAEP
+  | EditorStopAEP
+  | EditorTTIAEP
+  | ExpandToggleAEP
+  | FeedbackAEP
+  | FullWidthModeAEP
+  | HelpQuickInsertAEP
+  | InputPerfSamlingAEP
   | PickerEmojiAEP
   | PickerImageAEP
-  | FeedbackAEP
-  | TypeAheadQuickInsertAEP
+  | ReactNodeViewRenderedAEP
+  | RichMediaLayoutAEP
+  | SlowInputAEP
   | TypeAheadEmojiAEP
+  | TypeAheadItemViewedAEP
   | TypeAheadLinkAEP
   | TypeAheadMentionAEP
-  | FullWidthModeAEP
-  | EditorPerfAEP
-  | EditorTTIAEP
-  | BrowserFreezePayload
-  | SlowInputAEP
+  | TypeAheadQuickInsertAEP
+  | TypeAheadRenderedAEP
   | UploadExternalFailedAEP
-  | InputPerfSamlingAEP
-  | HelpQuickInsertAEP
-  | ExpandToggleAEP
-  | DispatchedTransactionAEP
   | WithPluginStateCalledAEP
-  | ReactNodeViewRenderedAEP
-  | RichMediaLayoutAEP;
+  | CodeBlockLanguageSelectedAEP
+  | EditorContentRetrievalPerformedAEP;
