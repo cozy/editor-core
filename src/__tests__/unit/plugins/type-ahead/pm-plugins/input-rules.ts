@@ -1,10 +1,10 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   typeAheadQuery,
   em,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { createTypeAheadPlugin } from './_create-type-ahead-plugin';
 

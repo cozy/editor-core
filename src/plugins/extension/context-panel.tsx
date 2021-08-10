@@ -5,13 +5,34 @@ import { getPluginState } from './pm-plugins/main';
 import { getSelectedExtension } from './utils';
 import WithEditorActions from '../../ui/WithEditorActions';
 import ConfigPanelLoader from '../../ui/ConfigPanel/ConfigPanelLoader';
-import { clearEditingContext, forceAutoSave } from './commands';
-
+import { duplicateSelection } from '../../utils/selection';
+import { clearEditingContext, forceAutoSave, updateState } from './commands';
+import { buildExtensionNode } from './actions';
 import type { EditorView } from 'prosemirror-view';
 import type { ContentNodeWithPos } from 'prosemirror-utils';
 import type { ExtensionState } from './types';
-import { buildExtensionNode } from './actions';
-import { updateState } from './commands';
+import { SaveIndicator } from './ui/SaveIndicator/SaveIndicator';
+
+const areParametersEqual = (
+  firstParameters: any,
+  secondParameters: any,
+): boolean => {
+  if (
+    typeof firstParameters === 'object' &&
+    typeof secondParameters === 'object' &&
+    firstParameters !== null &&
+    secondParameters !== null
+  ) {
+    const firstKeys = Object.keys(firstParameters);
+    const secondKeys = Object.keys(secondParameters);
+    return (
+      firstKeys.length === secondKeys.length &&
+      firstKeys.every((key) => firstParameters[key] === secondParameters[key])
+    );
+  }
+
+  return firstParameters === secondParameters;
+};
 
 export const getContextPanel = (allowAutoSave?: boolean) => (
   state: EditorState,
@@ -45,74 +66,105 @@ export const getContextPanel = (allowAutoSave?: boolean) => (
     );
 
     const configParams = processParametersBefore
-      ? processParametersBefore(parameters)
+      ? processParametersBefore(parameters || {})
       : parameters;
 
     return (
-      <WithEditorActions
-        render={actions => {
-          const editorView = actions._privateGetEditorView();
-
-          if (!editorView) {
-            return null;
-          }
-
+      <SaveIndicator duration={5000} visible={allowAutoSave}>
+        {({ onSaveStarted, onSaveEnded }) => {
           return (
-            <ConfigPanelLoader
-              showHeader
-              closeOnEsc
-              extensionType={extensionType}
-              extensionKey={extKey}
-              nodeKey={nodeKey}
-              extensionParameters={parameters}
-              parameters={configParams}
-              extensionProvider={extensionProvider}
-              autoSave={allowAutoSave}
-              autoSaveTrigger={autoSaveResolve}
-              onChange={async updatedParameters => {
-                await onChangeAction(
-                  editorView,
-                  updatedParameters,
-                  parameters,
-                  nodeWithPos,
+            <WithEditorActions
+              render={(actions) => {
+                const editorView = actions._privateGetEditorView();
+
+                if (!editorView) {
+                  return null;
+                }
+
+                return (
+                  <ConfigPanelLoader
+                    showHeader
+                    closeOnEsc
+                    extensionType={extensionType}
+                    extensionKey={extKey}
+                    nodeKey={nodeKey}
+                    extensionParameters={parameters}
+                    parameters={configParams}
+                    extensionProvider={extensionProvider}
+                    autoSave={allowAutoSave}
+                    autoSaveTrigger={autoSaveResolve}
+                    onChange={async (updatedParameters) => {
+                      await onChangeAction(
+                        editorView,
+                        updatedParameters,
+                        parameters,
+                        nodeWithPos,
+                        onSaveStarted,
+                      );
+                      onSaveEnded();
+
+                      if (autoSaveResolve) {
+                        autoSaveResolve();
+                      }
+                      if (!allowAutoSave) {
+                        clearEditingContext(
+                          editorView.state,
+                          editorView.dispatch,
+                        );
+                      }
+                    }}
+                    onCancel={async () => {
+                      if (allowAutoSave) {
+                        await new Promise((resolve) => {
+                          forceAutoSave(resolve)(
+                            editorView.state,
+                            editorView.dispatch,
+                          );
+                        });
+                      }
+
+                      clearEditingContext(
+                        editorView.state,
+                        editorView.dispatch,
+                      );
+                    }}
+                  />
                 );
-
-                if (autoSaveResolve) {
-                  autoSaveResolve();
-                }
-              }}
-              onCancel={async () => {
-                if (allowAutoSave) {
-                  await new Promise(resolve => {
-                    forceAutoSave(resolve)(
-                      editorView.state,
-                      editorView.dispatch,
-                    );
-                  });
-                }
-
-                clearEditingContext(editorView.state, editorView.dispatch);
               }}
             />
           );
         }}
-      />
+      </SaveIndicator>
     );
   }
 };
 
 export async function onChangeAction(
   editorView: EditorView,
-  updatedParameters: object,
-  oldParameters: object,
+  updatedParameters: object = {},
+  oldParameters: object = {},
   nodeWithPos: ContentNodeWithPos,
+  onSaving?: () => void,
 ) {
   // WARNING: editorView.state stales quickly, do not unpack
-  const { processParametersAfter } = getPluginState(
+  const { processParametersAfter, processParametersBefore } = getPluginState(
     editorView.state,
   ) as ExtensionState;
+
   if (!processParametersAfter) {
     return;
+  }
+
+  const unwrappedOldParameters = processParametersBefore
+    ? processParametersBefore(oldParameters)
+    : oldParameters;
+  // todo: update to only check parameters which are in the manifest's field definitions
+  if (areParametersEqual(unwrappedOldParameters, updatedParameters)) {
+    return;
+  }
+
+  if (onSaving) {
+    onSaving();
   }
 
   const key = Date.now();
@@ -149,6 +201,7 @@ export async function onChangeAction(
       },
     },
     node.content,
+    node.marks,
   );
 
   if (!newNode) {
@@ -161,6 +214,16 @@ export async function onChangeAction(
     positionUpdated + newNode.nodeSize,
     newNode,
   );
+
+  // Ensure we preserve the selection, tr.replaceWith causes it to be lost in some cases
+  // when replacing the node
+  const { selection: prevSelection } = editorView.state;
+  if (!prevSelection.eq(transaction.selection)) {
+    const selection = duplicateSelection(prevSelection, transaction.doc);
+    if (selection) {
+      transaction.setSelection(selection);
+    }
+  }
 
   const positionsLess: Record<number, number> = {
     ...(getPluginState(editorView.state) as ExtensionState).positions,

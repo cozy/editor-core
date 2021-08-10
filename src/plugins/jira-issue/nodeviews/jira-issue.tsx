@@ -1,9 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Node as PMNode } from 'prosemirror-model';
-import { JiraIcon } from '@atlaskit/logo';
+import { JiraIcon } from '@atlaskit/logo/jira-icon';
 import { borderRadius } from '@atlaskit/theme/constants';
 import { N30, N50 } from '@atlaskit/theme/colors';
+import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 
 const WrapperNode = styled.span`
   align-items: center;
@@ -13,7 +14,7 @@ const WrapperNode = styled.span`
   box-sizing: border-box;
   cursor: default;
   display: inline-flex;
-  font-size: 13px;
+  font-size: ${relativeFontSizeToBase16(13)};
   margin: 0 2px;
   min-height: 24px;
   padding: 0 4px;

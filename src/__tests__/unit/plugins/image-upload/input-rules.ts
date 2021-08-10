@@ -1,17 +1,18 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   code_block,
   media,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 
 describe('inputrules', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: {

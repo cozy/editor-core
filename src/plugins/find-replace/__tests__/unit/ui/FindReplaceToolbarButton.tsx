@@ -1,10 +1,9 @@
 import React from 'react';
 import { InjectedIntlProps } from 'react-intl';
 import { ReactWrapper } from 'enzyme';
-import {
-  mountWithIntl,
-  mockAddEventListener,
-} from '@atlaskit/editor-test-helpers';
+import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
+import { mockAddEventListener } from '@atlaskit/editor-test-helpers/mock-add-event-listener';
+
 import FindReplaceToolbarButton, {
   FindReplaceToolbarButtonProps,
 } from '../../../ui/FindReplaceToolbarButton';
@@ -31,9 +30,9 @@ describe('FindReplaceToolbarButton', () => {
         onFindBlur={jest.fn()}
         onFindNext={jest.fn()}
         onFindPrev={jest.fn()}
-        onFocusElementRefSet={jest.fn()}
         onReplace={jest.fn()}
         onReplaceAll={jest.fn()}
+        takeFullWidth={false}
         {...props}
       />,
     );

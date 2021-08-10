@@ -12,14 +12,17 @@ import { closeElementBrowserModal, insertItem } from '../../commands';
 
 type Props = {
   editorView: EditorView;
+  helpUrl: string | undefined;
 };
 
 const Modal = ({
   quickInsertState,
   editorView,
+  helpUrl,
 }: {
   editorView: EditorView;
   quickInsertState: QuickInsertPluginState;
+  helpUrl?: string;
 }) => {
   const getItems = useCallback(
     (query?: string, category?: string) =>
@@ -34,7 +37,7 @@ const Modal = ({
   }, [editorView]);
 
   const onInsertItem = useCallback(
-    item => {
+    (item) => {
       closeElementBrowserModal()(editorView.state, editorView.dispatch);
       focusInEditor();
       insertItem(item)(editorView.state, editorView.dispatch);
@@ -51,6 +54,7 @@ const Modal = ({
     <ModalElementBrowser
       getItems={getItems}
       onInsertItem={onInsertItem}
+      helpUrl={helpUrl}
       isOpen={
         (quickInsertState && quickInsertState.isElementBrowserModalOpen) ||
         false
@@ -60,12 +64,16 @@ const Modal = ({
   );
 };
 
-export default ({ editorView }: Props) => {
+export default ({ editorView, helpUrl }: Props) => {
   const render = useCallback(
     ({ quickInsertState }) => (
-      <Modal quickInsertState={quickInsertState} editorView={editorView} />
+      <Modal
+        quickInsertState={quickInsertState}
+        editorView={editorView}
+        helpUrl={helpUrl}
+      />
     ),
-    [editorView],
+    [editorView, helpUrl],
   );
 
   return (

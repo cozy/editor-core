@@ -6,19 +6,20 @@ import {
   hidePlaceholderFloatingToolbar,
 } from '../../../plugins/placeholder-text/actions';
 import { FakeTextCursorSelection } from '../../../plugins/fake-text-cursor/cursor';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
+  DocBuilder,
   p,
   placeholder,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { Selection } from 'prosemirror-state';
 import { pluginKey } from '../../../plugins/placeholder-text/plugin-key';
 
 describe(name, () => {
   const createEditor = createEditorFactory();
-  const editor = (doc: any, options = { allowInserting: true }) =>
+  const editor = (doc: DocBuilder, options = { allowInserting: true }) =>
     createEditor({
       doc,
       editorProps: { allowTemplatePlaceholders: options },

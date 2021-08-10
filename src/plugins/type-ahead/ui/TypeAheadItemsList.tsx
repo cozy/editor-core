@@ -6,6 +6,7 @@ import Item, { ItemGroup, itemThemeNamespace } from '@atlaskit/item';
 import { themed } from '@atlaskit/theme/components';
 import { borderRadius } from '@atlaskit/theme/constants';
 import * as colors from '@atlaskit/theme/colors';
+import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 
 import { Shortcut } from '../../../ui/styles';
 import IconFallback from '../../quick-insert/assets/fallback';
@@ -69,7 +70,7 @@ const ItemBody = styled.div`
 const ItemText = styled.div`
   white-space: initial;
   .item-description {
-    font-size: 11.67px;
+    font-size: ${relativeFontSizeToBase16(11.67)};
     color: ${colors.N200};
     margin-top: 4px;
   }
@@ -79,8 +80,8 @@ const ItemAfter = styled.div`
   flex: 0 0 auto;
 `;
 
-const fallbackIcon = (label: string) => {
-  return <IconFallback label={label} />;
+const fallbackIcon = () => {
+  return <IconFallback />;
 };
 
 export type TypeAheadItemsListProps = {
@@ -173,9 +174,10 @@ export class TypeAheadItemComponent extends React.Component<
     }
   };
 
-  handleRef = (ref: HTMLElement | null) => {
-    let hasRef = (ref: any): ref is { ref: HTMLElement } => ref && ref.ref;
-    this.setState({ ref: hasRef(ref) ? ref.ref : ref });
+  handleRef = (rawRef: HTMLElement | null) => {
+    const hasRef = (ref: any): ref is { ref: HTMLElement } => ref && ref.ref;
+    const ref = hasRef(rawRef) ? rawRef.ref : rawRef;
+    this.setState({ ref });
   };
 
   componentDidUpdate() {
@@ -204,9 +206,7 @@ export class TypeAheadItemComponent extends React.Component<
         onClick={this.insertByIndex}
         onMouseMove={this.setCurrentIndex}
         elemBefore={
-          <ItemIcon>
-            {item.icon ? item.icon() : fallbackIcon(item.title)}
-          </ItemIcon>
+          <ItemIcon>{item.icon ? item.icon() : fallbackIcon()}</ItemIcon>
         }
         isSelected={this.isSelected(this.props)}
         aria-describedby={item.title}

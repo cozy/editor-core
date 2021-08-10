@@ -2,7 +2,8 @@ import {
   alignment as alignmentMark,
   doc,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -16,7 +17,7 @@ const alignmentPreset = new Preset<LightEditorPlugin>().add(alignmentPlugin);
 describe('alignment utils', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: alignmentPreset,

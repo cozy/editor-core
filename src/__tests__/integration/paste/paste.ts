@@ -1,6 +1,7 @@
 import WebdriverPage from '@atlaskit/webdriver-runner/wd-wrapper';
 import { documentWithDecision } from './__fixtures__/document-with-decision';
 import { documentWithInlineCard } from './__fixtures__/document-with-inline-card';
+import { documentWithText } from './__fixtures__/document-with-text';
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import { getExampleUrl } from '@atlaskit/visual-regression/helper';
 import {
@@ -8,14 +9,16 @@ import {
   fullpage,
   copyAsPlainText,
   copyAsHTML,
+  setProseMirrorTextSelection,
 } from '../_helpers';
 import {
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
   mountEditor,
 } from '../../__helpers/testing-example-helpers';
-import { ConfluenceCardProvider } from '../../../../examples/5-full-page-with-confluence-smart-cards';
+import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
+import { selectors } from '../../__helpers/page-objects/_editor';
 
-const editorSelector = '.ProseMirror';
+const editorSelector = selectors.editor;
 
 /*
  NOTE: this only works on this url:
@@ -26,7 +29,7 @@ async function mountRenderer(
   page: WebdriverPage,
   props?: {
     withRendererActions?: boolean;
-    UNSAFE_cards?: any;
+    smartLinks?: any;
   },
   adf?: Object,
 ): Promise<boolean> {
@@ -74,7 +77,7 @@ BrowserTestCase(
   'paste.ts: paste tests on fullpage editor: plain text',
   { skip: ['edge', 'safari'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     await copyAsPlainText(page, 'This text is plain.');
 
@@ -95,7 +98,7 @@ BrowserTestCase(
   'paste.ts: paste tests on fullpage editor: text formatting',
   { skip: ['edge', 'safari'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     const testData =
       '<strong>bold </strong><em><strong>italics and bold </strong>some italics only </em><span class="code" style="font-family: monospace; white-space: pre-wrap;">add some code to this </span><u>underline this text</u><s> strikethrough </s><span style="color: rgb(0, 184, 217);">blue is my fav color</span> <a href="http://www.google.com">www.google.com</a>';
@@ -118,7 +121,7 @@ BrowserTestCase(
   'paste.ts: paste tests on fullpage editor: bullet list',
   { skip: ['edge', 'safari'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     const data =
       '<ul><li><p>list ele 1</p></li><li><p>list ele 2</p><ul><li><p>more ele 1</p></li><li><p>more ele 2</p></li></ul></li><li><p>this is the last ele</p></li></ul>';
@@ -141,7 +144,7 @@ BrowserTestCase(
   'paste.ts: paste tests on fullpage editor: ordered list',
   { skip: ['edge', 'safari'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     const data =
       '<ol><li><p>this is ele1</p></li><li><p>this is a link <a href="http://www.google.com">www.google.com</a></p><ol><li><p>more elements with some <strong>format</strong></p></li><li><p>some addition<em> formatting</em></p></li></ol></li><li><p>last element</p></li></ol>';
@@ -198,7 +201,7 @@ BrowserTestCase(
       await page.simulateUserSelection(selectorStart, selectorEnd);
       await page.copy();
 
-      page = await goToEditorTestingExample(client);
+      page = await goToEditorTestingWDExample(client);
       await mountEditor(page, {
         appearance: fullpage.appearance,
       });
@@ -209,6 +212,29 @@ BrowserTestCase(
       const doc = await page.$eval(editorSelector, getDocFromElement);
       expect(doc).toMatchCustomDocSnapshot(testName);
     }
+  },
+);
+
+BrowserTestCase(
+  'paste.ts: code block copied from renderer and pasted',
+  { skip: ['safari'] },
+  async (client: WebdriverIO.BrowserObject, testName: string) => {
+    const page = await goToEditorTestingWDExample(client);
+
+    const data =
+      '<div class="ak-renderer-document"><p data-renderer-start-pos="1">hello</p><div class="code-block"><span data-ds--code--code-block=""><code><span class="linenumber react-syntax-highlighter-line-number">1</span><span>world</span></code></span></div></div>';
+    await copyAsHTML(page, data);
+
+    await mountEditor(page, {
+      appearance: fullpage.appearance,
+    });
+
+    await page.click(editorSelector);
+    await page.paste();
+    await page.waitForSelector('.code-block');
+
+    const doc = await page.$eval(editorSelector, getDocFromElement);
+    expect(doc).toMatchCustomDocSnapshot(testName);
   },
 );
 
@@ -243,7 +269,7 @@ BrowserTestCase(
       page,
       {
         withRendererActions: true,
-        UNSAFE_cards: {
+        smartLinks: {
           provider: cardProviderPromise,
           allowBlockCards: true,
         },
@@ -264,10 +290,10 @@ BrowserTestCase(
       await page.simulateUserSelection(selectorStart, selectorEnd);
       await page.copy();
 
-      page = await goToEditorTestingExample(client);
+      page = await goToEditorTestingWDExample(client);
       await mountEditor(page, {
         appearance: fullpage.appearance,
-        UNSAFE_cards: {
+        smartLinks: {
           provider: cardProviderPromise,
           allowBlockCards: true,
         },
@@ -279,5 +305,28 @@ BrowserTestCase(
       const doc = await page.$eval(editorSelector, getDocFromElement);
       expect(doc).toMatchCustomDocSnapshot(testName);
     }
+  },
+);
+
+BrowserTestCase(
+  'paste.ts: paste tests on fullpage editor: hyperlink',
+  { skip: ['edge', 'safari'] },
+  async (client: any, testName: string) => {
+    const page = await goToEditorTestingWDExample(client);
+
+    const data = 'https://www.atlassian.com';
+    await copyAsPlainText(page, data);
+
+    await mountEditor(page, {
+      appearance: fullpage.appearance,
+      defaultValue: JSON.stringify(documentWithText),
+    });
+
+    await page.click(fullpage.placeholder);
+    await setProseMirrorTextSelection(page, { anchor: 13, head: 26 });
+    await page.paste();
+
+    const doc = await page.$eval(editorSelector, getDocFromElement);
+    expect(doc).toMatchCustomDocSnapshot(testName);
   },
 );

@@ -9,7 +9,6 @@ import { Command } from '../../types';
 import { SelectionActionTypes } from './actions';
 import { createCommand, getPluginState } from './plugin-factory';
 import {
-  getDecorations,
   isSelectableContainerNode,
   isSelectionAtEndOfParentNode,
   findSelectableContainerParent,
@@ -21,13 +20,6 @@ import {
 } from './utils';
 import { RelativeSelectionPos, SelectionDirection } from './types';
 
-export const setDecorations = () =>
-  createCommand(state => ({
-    type: SelectionActionTypes.SET_DECORATIONS,
-    selection: state.tr.selection,
-    decorationSet: getDecorations(state.tr),
-  }));
-
 export const setSelectionRelativeToNode = (
   selectionRelativeToNode?: RelativeSelectionPos,
   selection?: Selection | null,
@@ -37,7 +29,7 @@ export const setSelectionRelativeToNode = (
       type: SelectionActionTypes.SET_RELATIVE_SELECTION,
       selectionRelativeToNode,
     },
-    tr => {
+    (tr) => {
       if (selection) {
         return tr.setSelection(selection);
       }
@@ -361,7 +353,7 @@ const setSelectionInsideAtNodeStart = (
   return false;
 };
 
-const setSelectionInsideAtNodeEnd = (
+export const setSelectionInsideAtNodeEnd = (
   selectionRelativeToNode: RelativeSelectionPos,
   node: PmNode,
   from: number,

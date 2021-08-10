@@ -9,7 +9,7 @@ import {
 } from '../_helpers';
 import {
   mountEditor,
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
 } from '../../__helpers/testing-example-helpers';
 
 const altTextButtonSelector = '[data-testid="alt-text-edit-button"]';
@@ -17,7 +17,7 @@ const cancelBtnSelector = '[data-testid="alt-text-clear-button"]';
 const inputSelector = '[data-testid="alt-text-input"]';
 
 async function setupEditorWithMedia(client: any): Promise<Page> {
-  const page = await goToEditorTestingExample(client);
+  const page = await goToEditorTestingWDExample(client);
   await mountEditor(page, {
     appearance: fullpage.appearance,
     media: {
@@ -45,6 +45,10 @@ BrowserTestCase(
   async (client: any, testName: string) => {
     const page = await setupEditorWithMedia(client);
 
+    // Make keydown to focus on the media
+    // await page.keys(['ArrowDown']);
+    // await page.click(exampleClaimBtn);
+    await page.click(`.ProseMirror .${richMediaClassName}`);
     await page.waitForSelector(altTextButtonSelector);
     await page.waitForVisible(altTextButtonSelector);
 

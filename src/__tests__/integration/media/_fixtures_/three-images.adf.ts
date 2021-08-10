@@ -1,4 +1,4 @@
-import { testMediaSingle } from '@atlaskit/editor-test-helpers';
+import { testMediaSingle } from '@atlaskit/editor-test-helpers/media-mock';
 
 export default {
   version: 1,

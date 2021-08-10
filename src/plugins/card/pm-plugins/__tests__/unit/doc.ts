@@ -9,7 +9,8 @@ import rafSchd from 'raf-schd';
 jest.mock('../../shouldReplaceLink');
 import { shouldReplaceLink } from '../../shouldReplaceLink';
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
-import createEditorFactory, {
+import {
+  createEditorFactory,
   EditorInstanceWithPlugin,
 } from '@atlaskit/editor-test-helpers/create-editor';
 
@@ -18,6 +19,7 @@ import {
   blockCard,
   blockquote,
   bodiedExtension,
+  cleanOne,
   decisionItem,
   decisionList,
   doc,
@@ -32,7 +34,9 @@ import {
   th,
   tr,
   ul,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { EditorView } from 'prosemirror-view';
@@ -45,8 +49,10 @@ import { queueCards, setProvider } from '../../actions';
 import { setTextSelection } from '../../../../../utils';
 import {
   insertCard,
+  handleFallbackWithAnalytics,
   queueCardsFromChangedTr,
   updateCard,
+  changeSelectedCardToLink,
   setSelectedCardAppearance,
   convertHyperlinkToSmartCard,
 } from '../../doc';
@@ -77,10 +83,10 @@ const inlineCardAdf = {
 describe('card', () => {
   const createEditor = createEditorFactory();
   let createAnalyticsEvent: jest.MockInstance<UIAnalyticsEvent, any>;
-  let editor: (doc: any) => EditorInstanceWithPlugin<any>;
+  let editor: (doc: DocBuilder) => EditorInstanceWithPlugin<any>;
 
   beforeEach(() => {
-    editor = (doc: any) => {
+    editor = (doc: DocBuilder) => {
       createAnalyticsEvent = createAnalyticsEventMock();
       const editorWrapper = createEditor({
         doc,
@@ -92,7 +98,7 @@ describe('card', () => {
           allowExtension: true,
           allowPanel: true,
           allowTasksAndDecisions: true,
-          UNSAFE_cards: {},
+          smartLinks: {},
         },
         createAnalyticsEvent: createAnalyticsEvent as any,
         pluginKey,
@@ -233,7 +239,7 @@ describe('card', () => {
         const { dispatch } = editorView;
 
         // queue both links
-        (Object.keys(hrefs) as Array<keyof typeof hrefs>).map(key => {
+        (Object.keys(hrefs) as Array<keyof typeof hrefs>).map((key) => {
           dispatch(
             queueCards([createCardRequest(hrefs[key], refs[key])])(
               editorView.state.tr,
@@ -575,6 +581,50 @@ describe('card', () => {
       });
     });
 
+    describe('#changeSelectedCardToLink', () => {
+      it('should replace selection with new url using provided node and position', function () {
+        const inlineCardRefsNode = inlineCard(inlineCardAdf.attrs)();
+        const inlineCardNode = cleanOne(inlineCardRefsNode)(defaultSchema);
+        const { editorView } = editor(
+          doc(p('hello', '{<node>}', inlineCardRefsNode, ' some other text')),
+        );
+
+        const { state, dispatch } = editorView;
+
+        expect(editorView.state.doc).toEqualDocument(
+          doc(
+            p('hello', inlineCard(inlineCardAdf.attrs)(), ' some other text'),
+          ),
+        );
+
+        changeSelectedCardToLink(
+          atlassianUrl,
+          atlassianUrl,
+          false,
+          inlineCardNode,
+          6,
+        )(state, dispatch);
+
+        expect(editorView.state.doc).toEqualDocument(
+          doc(
+            p(
+              'hello',
+              a({ href: atlassianUrl })('http://www.atlassian.com/'),
+              ' some other text',
+            ),
+          ),
+        );
+
+        // Ensure we have no pending requests
+        expect(pluginKey.getState(editorView.state)).toEqual({
+          cards: [],
+          requests: [],
+          provider: null,
+          showLinkingToolbar: false,
+        } as CardPluginState);
+      });
+    });
+
     describe('setSelectedCardAppearance()', () => {
       it('should use the right NodeType for the new node', () => {
         const { editorView } = editor(
@@ -807,7 +857,10 @@ describe('card', () => {
         );
       });
 
-      function testWithContext(initialDoc: object, expectedContext: string) {
+      function testWithContext(
+        initialDoc: DocBuilder,
+        expectedContext: string,
+      ) {
         test(`should create analytics GAS V3 with node context ${expectedContext}`, async () => {
           const { editorView } = editor(initialDoc);
 
@@ -972,6 +1025,43 @@ describe('card', () => {
       ].forEach(({ initialDoc, expectedContext }) =>
         testWithContext(initialDoc, expectedContext),
       );
+    });
+
+    describe('#handleFallbackWithAnalytics', () => {
+      it('sends an analytics event upon falling back to a blue link', () => {
+        const { editorView } = editor(
+          doc(
+            p(
+              'hello have a link {<>}',
+              a({ href: atlassianUrl })(atlassianUrl),
+            ),
+          ),
+        );
+
+        const { state, dispatch } = editorView;
+        handleFallbackWithAnalytics(atlassianUrl, INPUT_METHOD.MANUAL)(
+          state,
+          dispatch,
+        );
+        expect(createAnalyticsEvent).toBeCalled();
+        expect(createAnalyticsEvent).toBeCalledWith({
+          action: 'inserted',
+          actionSubject: 'document',
+          actionSubjectId: 'link',
+          attributes: {
+            fromCurrentDomain: false,
+            inputMethod: 'manual',
+            insertLocation: 'doc',
+            selectionPosition: 'middle',
+            selectionType: 'cursor',
+            actionSubjectId: 'link',
+          },
+          eventType: 'track',
+          nonPrivacySafeAttributes: {
+            linkDomain: 'atlassian.com',
+          },
+        });
+      });
     });
 
     describe('#insertCard', () => {

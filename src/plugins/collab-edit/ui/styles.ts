@@ -1,7 +1,10 @@
 import styled from 'styled-components';
 import { gridSize } from '@atlaskit/theme/constants';
 import { N20 } from '@atlaskit/theme/colors';
-import { akEditorSmallZIndex } from '@atlaskit/editor-shared-styles';
+import {
+  akEditorSmallZIndex,
+  relativeFontSizeToBase16,
+} from '@atlaskit/editor-shared-styles';
 
 export const InviteTeamWrapper = styled.div`
   background: ${N20};
@@ -14,6 +17,14 @@ export const AvatarContainer = styled.div`
   margin-right: ${gridSize()}px;
   display: flex;
   align-items: center;
+
+  // ED-13102: This is to override list styles that come from the
+  // .wiki-content class in Confluence that should not apply within
+  // the toolbar. Has to be extra specific to override.
+  && > ul {
+    list-style-type: none;
+  }
+
   div:last-child button.invite-to-edit {
     border-radius: 50%;
     height: 32px;
@@ -33,7 +44,7 @@ export const Badge = styled.div<{ color: string }>`
   border-radius: 3px;
   background: ${({ color }) => color};
   color: #fff;
-  font-size: 9px;
+  font-size: ${relativeFontSizeToBase16(9)};
   line-height: 0;
   padding-top: 7px;
   text-align: center;

@@ -1,8 +1,8 @@
 import { ProviderFactory } from '@atlaskit/editor-common';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
 import randomId from '@atlaskit/editor-test-helpers/random-id';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { MediaState } from '../../../../plugins/media/types';
 import { stateKey as mediaPluginKey } from '../../../../plugins/media/pm-plugins/plugin-key';
@@ -13,7 +13,7 @@ const testCollectionName = `media-plugin-mock-collection-${randomId()}`;
 const getFreshMediaProvider = () =>
   storyMediaProviderFactory({
     collectionName: testCollectionName,
-    includeUserAuthProvider: true,
+    includeUserAuthProvider: false,
     includeUploadMediaClientConfig: true,
   });
 
@@ -22,7 +22,7 @@ describe('Media plugin', () => {
   const mediaProvider = getFreshMediaProvider();
   const providerFactory = ProviderFactory.create({ mediaProvider });
 
-  const editor = (doc: any, editorProps = {}) =>
+  const editor = (doc: DocBuilder, editorProps = {}) =>
     createEditor({
       doc,
       editorProps: {
@@ -72,10 +72,10 @@ describe('Media plugin', () => {
           fileMimeType: 'image/jpeg',
           status: 'preview',
         },
-        evt => evts.push(evt),
+        (evt) => evts.push(evt),
       );
       jest.runOnlyPendingTimers();
-      evts.forEach(cb =>
+      evts.forEach((cb) =>
         cb({
           id: 'foo',
           fileName: 'foo.jpg',
@@ -102,7 +102,7 @@ describe('Media plugin', () => {
           fileMimeType: 'image/jpeg',
           status: 'preview',
         },
-        evt => fooEvents.push(evt),
+        (evt) => fooEvents.push(evt),
       );
       pluginState.insertFile(
         {
@@ -110,14 +110,14 @@ describe('Media plugin', () => {
           fileMimeType: 'image/jpeg',
           status: 'preview',
         },
-        evt => barEvents.push(evt),
+        (evt) => barEvents.push(evt),
       );
 
       expect(pluginState.allUploadsFinished).toBe(false);
       jest.runOnlyPendingTimers();
       expect(pluginState.allUploadsFinished).toBe(false);
 
-      fooEvents.forEach(cb =>
+      fooEvents.forEach((cb) =>
         cb({
           id: 'foo',
           fileName: 'foo.jpg',
@@ -131,7 +131,7 @@ describe('Media plugin', () => {
       jest.runOnlyPendingTimers();
       expect(pluginState.allUploadsFinished).toBe(false);
 
-      barEvents.forEach(cb =>
+      barEvents.forEach((cb) =>
         cb({
           id: 'bar',
           fileName: 'bar.jpg',

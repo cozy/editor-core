@@ -4,7 +4,7 @@ import {
   Preset,
   createProsemirrorEditorFactory,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
-import { p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import { CollabEditProvider } from '@atlaskit/editor-common';
 import collabEditPlugin from '../../../index';
 import { Cleanup, subscribe } from '../../../events/handlers';
@@ -32,7 +32,7 @@ describe('collab-edit: handlers.ts', () => {
   ]);
 
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: collabPreset,
@@ -51,9 +51,9 @@ describe('collab-edit: handlers.ts', () => {
       collabOptions: PrivateCollabEditOptions,
     ): {
       cleanup: Cleanup;
-      onSpy: jest.SpyInstance<void>;
-      offSpy: jest.SpyInstance<void>;
-      entity: EventEmitter.EventEmitter;
+      onSpy: jest.SpyInstance<EventEmitter>;
+      offSpy: jest.SpyInstance<EventEmitter>;
+      entity: EventEmitter;
     } => {
       const entity = new EventEmitter();
       // default handlers to avoid unhandled exception
@@ -151,7 +151,7 @@ describe('collab-edit: handlers.ts', () => {
 
     it.each(['connected', 'presence', 'telepointer'])(
       'should call external listener on %s event',
-      event => {
+      (event) => {
         provider.sendMessage({
           type: event,
         });

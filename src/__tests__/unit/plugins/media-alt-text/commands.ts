@@ -1,4 +1,5 @@
-import createEditorFactory, {
+import {
+  createEditorFactory,
   Options as CreateEditorOptions,
 } from '@atlaskit/editor-test-helpers/create-editor';
 import {
@@ -6,7 +7,8 @@ import {
   mediaSingle,
   media,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   updateAltText,
   openMediaAltTextMenu,
@@ -33,7 +35,10 @@ describe('commands', () => {
     () => ({ fire() {} } as UIAnalyticsEvent),
   );
 
-  const editor = (doc: any, createEditorOptions?: CreateEditorOptions) => {
+  const editor = (
+    doc: DocBuilder,
+    createEditorOptions?: CreateEditorOptions,
+  ) => {
     return createEditor({
       ...createEditorOptions,
       doc,
@@ -113,7 +118,7 @@ describe('commands', () => {
       it('should set meta attribute scrollIntoView to false', () => {
         const { editorView } = editor(defaultDoc);
 
-        updateAltText('lol')(editorView.state, tr => {
+        updateAltText('lol')(editorView.state, (tr) => {
           expect(tr.getMeta('scrollIntoView')).toBeFalsy();
           editorView.dispatch(tr);
         });
@@ -155,7 +160,7 @@ describe('commands', () => {
         it('should set meta attribute scrollIntoView to false', () => {
           const { editorView } = editor(defaultDoc);
 
-          openMediaAltTextMenu(editorView.state, tr => {
+          openMediaAltTextMenu(editorView.state, (tr) => {
             expect(tr.getMeta('scrollIntoView')).toBeFalsy();
             editorView.dispatch(tr);
           });

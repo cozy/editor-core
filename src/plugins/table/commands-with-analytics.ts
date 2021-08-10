@@ -36,20 +36,19 @@ import {
   toggleNumberColumn,
   toggleTableLayout,
 } from './commands/toggle';
+import { distributeColumnsWidths } from './pm-plugins/table-resizing/commands';
 import { getPluginState } from './pm-plugins/plugin-factory';
 import { deleteColumns, deleteRows, mergeCells } from './transforms';
-import {
-  InsertRowMethods,
-  InsertRowOptions,
-  RowInsertPosition,
-  SortOrder,
-} from './types';
+import { InsertRowMethods, InsertRowOptions, RowInsertPosition } from './types';
+
+import { TableSortOrder as SortOrder } from '@atlaskit/adf-schema/steps';
 import {
   checkIfNumberColumnEnabled,
   getSelectedCellInfo,
   getSelectedTableInfo,
 } from './utils';
 import { getAllowAddColumnCustomStep } from './utils/get-allow-add-column-custom-step';
+import { ResizeStateWithAnalytics } from './pm-plugins/table-resizing/utils';
 
 const TABLE_BREAKOUT_NAME_MAPPING = {
   default: TABLE_BREAKOUT.NORMAL,
@@ -58,7 +57,10 @@ const TABLE_BREAKOUT_NAME_MAPPING = {
 };
 // #region Analytics wrappers
 export const emptyMultipleCellsWithAnalytics = (
-  inputMethod: INPUT_METHOD.CONTEXT_MENU | INPUT_METHOD.KEYBOARD,
+  inputMethod:
+    | INPUT_METHOD.CONTEXT_MENU
+    | INPUT_METHOD.KEYBOARD
+    | INPUT_METHOD.FLOATING_TB,
   targetCellPosition?: number,
 ) =>
   withAnalytics(({ selection }) => {
@@ -201,7 +203,7 @@ export const insertRowWithAnalytics = (
   inputMethod: InsertRowMethods,
   options: InsertRowOptions,
 ) =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -223,10 +225,11 @@ export const insertColumnWithAnalytics = (
   inputMethod:
     | INPUT_METHOD.CONTEXT_MENU
     | INPUT_METHOD.BUTTON
-    | INPUT_METHOD.SHORTCUT,
+    | INPUT_METHOD.SHORTCUT
+    | INPUT_METHOD.FLOATING_TB,
   position: number,
 ) =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -245,7 +248,10 @@ export const insertColumnWithAnalytics = (
   })(insertColumn(position));
 
 export const deleteRowsWithAnalytics = (
-  inputMethod: INPUT_METHOD.CONTEXT_MENU | INPUT_METHOD.BUTTON,
+  inputMethod:
+    | INPUT_METHOD.CONTEXT_MENU
+    | INPUT_METHOD.BUTTON
+    | INPUT_METHOD.FLOATING_TB,
   rect: Rect,
   isHeaderRowRequired: boolean,
 ) =>
@@ -273,7 +279,10 @@ export const deleteRowsWithAnalytics = (
   });
 
 export const deleteColumnsWithAnalytics = (
-  inputMethod: INPUT_METHOD.CONTEXT_MENU | INPUT_METHOD.BUTTON,
+  inputMethod:
+    | INPUT_METHOD.CONTEXT_MENU
+    | INPUT_METHOD.BUTTON
+    | INPUT_METHOD.FLOATING_TB,
   rect: Rect,
 ) =>
   withAnalytics(({ selection }) => {
@@ -331,7 +340,7 @@ export const deleteTableIfSelectedWithAnalytics = (
   )(deleteTableIfSelected);
 
 export const toggleHeaderRowWithAnalytics = () =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -351,7 +360,7 @@ export const toggleHeaderRowWithAnalytics = () =>
   })(toggleHeaderRow);
 
 export const toggleHeaderColumnWithAnalytics = () =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -371,7 +380,7 @@ export const toggleHeaderColumnWithAnalytics = () =>
   })(toggleHeaderColumn);
 
 export const toggleNumberColumnWithAnalytics = () =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -389,7 +398,7 @@ export const toggleNumberColumnWithAnalytics = () =>
   })(toggleNumberColumn);
 
 export const toggleTableLayoutWithAnalytics = () =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { table, totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -417,7 +426,7 @@ export const sortColumnWithAnalytics = (
   columnIndex: number,
   sortOrder: SortOrder,
 ) =>
-  withAnalytics(state => {
+  withAnalytics((state) => {
     const { totalRowCount, totalColumnCount } = getSelectedTableInfo(
       state.selection,
     );
@@ -435,4 +444,28 @@ export const sortColumnWithAnalytics = (
       eventType: EVENT_TYPE.TRACK,
     };
   })(sortByColumn(columnIndex, sortOrder));
+
+export const distributeColumnsWidthsWithAnalytics = (
+  inputMethod: INPUT_METHOD.CONTEXT_MENU,
+  { resizeState, table, attributes }: ResizeStateWithAnalytics,
+) => {
+  return withAnalytics(() => {
+    return {
+      action: TABLE_ACTION.DISTRIBUTED_COLUMNS_WIDTHS,
+      actionSubject: ACTION_SUBJECT.TABLE,
+      actionSubjectId: null,
+      attributes: {
+        inputMethod,
+        ...attributes,
+      },
+      eventType: EVENT_TYPE.TRACK,
+    };
+  })((state, dispatch) => {
+    if (dispatch) {
+      distributeColumnsWidths(resizeState, table)(state, dispatch);
+    }
+    return true;
+  });
+};
+
 // #endregion

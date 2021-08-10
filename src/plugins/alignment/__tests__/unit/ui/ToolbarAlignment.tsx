@@ -1,5 +1,5 @@
 import React from 'react';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import {
   createProsemirrorEditorFactory,
@@ -19,7 +19,7 @@ describe('ToolbarAlignment', () => {
   const createEditor = createProsemirrorEditorFactory();
   let toolbarAlignment: ReactWrapper<ToolbarAlignmentProps>;
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<AlignmentPluginState, PluginKey>({
       doc,
       pluginKey,

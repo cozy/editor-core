@@ -1,4 +1,6 @@
+import { Schema, Mark } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
+import { Node as PMNode } from 'prosemirror-model';
 import {
   findParentNodeOfType,
   findSelectedNodeOfType,
@@ -7,6 +9,7 @@ import {
   DomAtPos,
 } from 'prosemirror-utils';
 import { closestElement } from '../../utils/dom';
+import { findNodePosByLocalIds } from '../../utils/nodes-by-localIds';
 
 export const getSelectedExtension = (
   state: EditorState,
@@ -21,33 +24,77 @@ export const getSelectedExtension = (
   );
 };
 
-export const getSelectedNonContentExtension = ({
-  schema,
-  selection,
-}: EditorState): NodeWithPos | undefined => {
-  const { inlineExtension, extension } = schema.nodes;
-  return findSelectedNodeOfType([inlineExtension, extension])(selection);
+export const findExtensionWithLocalId = (
+  state: EditorState,
+  localId?: string,
+) => {
+  const selectedExtension = getSelectedExtension(state, true);
+
+  if (!localId) {
+    return selectedExtension;
+  }
+
+  if (selectedExtension && selectedExtension.node.attrs.localId === localId) {
+    return selectedExtension;
+  }
+
+  const { inlineExtension, extension, bodiedExtension } = state.schema.nodes;
+  const nodeTypes = [extension, bodiedExtension, inlineExtension];
+  let matched: NodeWithPos | undefined;
+
+  state.doc.descendants((node, pos) => {
+    if (nodeTypes.includes(node.type) && node.attrs.localId === localId) {
+      matched = { node, pos };
+    }
+  });
+
+  return matched;
 };
 
 export const getSelectedDomElement = (
+  schema: Schema,
   domAtPos: DomAtPos,
-  selectedExtensionNode?: NodeWithPos,
-  isContentExtension: boolean = false,
+  selectedExtensionNode: NodeWithPos,
 ) => {
-  const selectedExtensionDomNode =
-    selectedExtensionNode &&
-    (findDomRefAtPos(selectedExtensionNode.pos, domAtPos) as HTMLElement);
+  const selectedExtensionDomNode = findDomRefAtPos(
+    selectedExtensionNode.pos,
+    domAtPos,
+  ) as HTMLElement;
 
-  // Non-content extension can be nested in bodied-extension, the following check is necessary for that case
-  return selectedExtensionNode && selectedExtensionDomNode!.querySelector
-    ? isContentExtension
-      ? selectedExtensionDomNode!.querySelector<HTMLElement>(
+  const isContentExtension =
+    selectedExtensionNode.node.type !== schema.nodes.bodiedExtension;
+
+  return (
+    // Content extension can be nested in bodied-extension, the following check is necessary for that case
+    (isContentExtension
+      ? // Search down
+        selectedExtensionDomNode.querySelector<HTMLElement>(
           '.extension-container',
-        ) || selectedExtensionDomNode
-      : closestElement(selectedExtensionDomNode!, '.extension-container') ||
-        selectedExtensionDomNode!.querySelector<HTMLElement>(
+        )
+      : // Try searching up and then down
+        closestElement(selectedExtensionDomNode, '.extension-container') ||
+        selectedExtensionDomNode.querySelector<HTMLElement>(
           '.extension-container',
-        ) ||
-        selectedExtensionDomNode
-    : undefined;
+        )) || selectedExtensionDomNode
+  );
+};
+
+export const getDataConsumerMark = (newNode: PMNode): Mark | undefined =>
+  newNode.marks?.find((mark: Mark) => mark.type.name === 'dataConsumer');
+
+export const getNodeTypesReferenced = (
+  ids: string[],
+  state: EditorState,
+): string[] => {
+  return findNodePosByLocalIds(state, ids, { includeDocNode: true }).map(
+    ({ node }) => node.type.name,
+  );
+};
+
+export const findNodePosWithLocalId = (
+  state: EditorState,
+  localId: string,
+): NodeWithPos | undefined => {
+  const nodes = findNodePosByLocalIds(state, [localId]);
+  return nodes.length >= 1 ? nodes[0] : undefined;
 };

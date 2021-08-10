@@ -39,7 +39,7 @@ export class JiraCardProvider extends EditorCardProvider {
       };
     }
 
-    // If the URL doesn't look like something we should handle, try native provider.
+    // If the URL doesn't look like something we should handle, try native provider
     return super.resolve(url, appearance);
   }
 }
@@ -59,7 +59,7 @@ export class JiraCardClient extends Client {
     // it to JSON-LD format. To read more about the format, please visit:
     //   https://product-fabric.atlassian.net/wiki/spaces/CS/pages/615126630/Task
     //
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       // We simulate a 2s load time
       window.setTimeout(() => {
         resolve({
@@ -109,7 +109,7 @@ export default function CommentWithJiraCardsExample() {
             allowHelpDialog={true}
             allowExtension={true}
             extensionHandlers={extensionHandlers}
-            UNSAFE_cards={{
+            smartLinks={{
               // This is how we pass in the provider for smart cards
               provider: Promise.resolve(cardProvider),
             }}

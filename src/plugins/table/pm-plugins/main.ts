@@ -8,9 +8,9 @@ import {
   findParentDomRefOfType,
   findParentNodeOfType,
 } from 'prosemirror-utils';
+import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { findTable } from '@atlaskit/editor-tables/utils';
 import { EditorView } from 'prosemirror-view';
-
 import { browser } from '@atlaskit/editor-common';
 
 import { Dispatch, EventDispatcher } from '../../../event-dispatcher';
@@ -37,12 +37,18 @@ import {
 import { createTableView } from '../nodeviews/table';
 import { pluginKey as decorationsPluginKey } from '../pm-plugins/decorations/plugin';
 import { fixTables, replaceSelectedTable } from '../transforms';
-import { TableCssClassName as ClassName, PluginConfig } from '../types';
+import {
+  TableCssClassName as ClassName,
+  PluginConfig,
+  ElementContentRects,
+} from '../types';
 import { findControlsHoverDecoration, updateResizeHandles } from '../utils';
 import { INPUT_METHOD } from '../../analytics';
 
 import { defaultTableSelection } from './default-table-selection';
 import { createPluginState, getPluginState, pluginKey } from './plugin-factory';
+import TableCellNodeView from '../nodeviews/tableCell';
+import { getPosHandler } from '../../../nodeviews';
 
 let isBreakoutEnabled: boolean | undefined;
 let isDynamicTextSizingEnabled: boolean | undefined;
@@ -58,6 +64,7 @@ export const createPlugin = (
   breakoutEnabled?: boolean,
   fullWidthModeEnabled?: boolean,
   previousFullWidthModeEnabled?: boolean,
+  allowLocalIdGeneration?: boolean,
 ) => {
   isBreakoutEnabled = breakoutEnabled;
   isDynamicTextSizingEnabled = dynamicTextSizing;
@@ -74,6 +81,34 @@ export const createPlugin = (
     ...defaultTableSelection,
   });
 
+  let elementContentRects: ElementContentRects = {};
+
+  const observer = window?.ResizeObserver
+    ? new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.target.id) {
+            return;
+          }
+          elementContentRects[entry.target.id] = entry.contentRect;
+        });
+      })
+    : undefined;
+
+  const tableCellNodeview = pluginConfig.tableCellOptimization
+    ? {
+        tableCell: (
+          node: ProseMirrorNode,
+          view: EditorView,
+          getPos: getPosHandler,
+        ) => new TableCellNodeView(node, view, getPos, observer),
+        tableHeader: (
+          node: ProseMirrorNode,
+          view: EditorView,
+          getPos: getPosHandler,
+        ) => new TableCellNodeView(node, view, getPos, observer),
+      }
+    : {};
+
   return new Plugin({
     state: state,
     key: pluginKey,
@@ -82,13 +117,13 @@ export const createPlugin = (
       oldState: EditorState,
       newState: EditorState,
     ) => {
-      const tr = transactions.find(tr => tr.getMeta('uiEvent') === 'cut');
+      const tr = transactions.find((tr) => tr.getMeta('uiEvent') === 'cut');
       if (tr) {
         // "fixTables" removes empty rows as we don't allow that in schema
         const updatedTr = handleCut(tr, oldState, newState);
         return fixTables(updatedTr) || updatedTr;
       }
-      if (transactions.find(tr => tr.docChanged)) {
+      if (transactions.find((tr) => tr.docChanged)) {
         return fixTables(newState.tr);
       }
     },
@@ -100,7 +135,7 @@ export const createPlugin = (
           const { state, dispatch } = view;
           const { selection } = state;
           const pluginState = getPluginState(state);
-          let tableRef;
+          let tableRef: HTMLTableElement | undefined;
           let tableNode;
           if (pluginState.editorHasFocus) {
             const parent = findParentDomRefOfType(
@@ -108,11 +143,15 @@ export const createPlugin = (
               domAtPos,
             )(selection);
             if (parent) {
-              tableRef = (parent as HTMLElement).querySelector('table');
+              tableRef =
+                (parent as HTMLElement).querySelector<HTMLTableElement>(
+                  'table',
+                ) || undefined;
             }
 
             tableNode = findTable(state.selection);
           }
+
           if (pluginState.tableRef !== tableRef) {
             setTableRef(tableRef)(state, dispatch);
           }
@@ -133,6 +172,11 @@ export const createPlugin = (
                 addBoldInEmptyHeaderCells(tableCellHeader)(state, dispatch);
               }
             }
+          }
+        },
+        destroy: () => {
+          if (observer) {
+            observer.disconnect();
           }
         },
       };
@@ -182,6 +226,8 @@ export const createPlugin = (
       },
 
       nodeViews: {
+        //temporary flag to test tableCell optimisation
+        ...(tableCellNodeview as any),
         table: (node, view, getPos) =>
           createTableView(
             node,
@@ -194,6 +240,7 @@ export const createPlugin = (
               dynamicTextSizing: isDynamicTextSizingEnabled,
               isFullWidthModeEnabled,
               wasFullWidthModeEnabled,
+              allowLocalIdGeneration,
             },
           ),
       },
@@ -205,7 +252,7 @@ export const createPlugin = (
         mouseover: whenTableInFocus(handleMouseOver),
         mouseleave: whenTableInFocus(handleMouseLeave),
         mouseout: whenTableInFocus(handleMouseOut),
-        mousemove: whenTableInFocus(handleMouseMove),
+        mousemove: whenTableInFocus(handleMouseMove, elementContentRects),
         click: whenTableInFocus(handleClick),
       },
 

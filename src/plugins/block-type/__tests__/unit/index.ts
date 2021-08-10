@@ -10,7 +10,8 @@ import {
   h5,
   h6,
   p,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -52,7 +53,7 @@ describe('block-type', () => {
   const createEditor = createProsemirrorEditorFactory();
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(
       () =>
         ({
@@ -219,17 +220,17 @@ describe('block-type', () => {
     expect(pluginState.availableWrapperBlockTypes.length).toBe(3);
     expect(
       pluginState.availableWrapperBlockTypes.some(
-        blockType => blockType.name === 'panel',
+        (blockType) => blockType.name === 'panel',
       ),
     ).toBe(true);
     expect(
       pluginState.availableWrapperBlockTypes.some(
-        blockType => blockType.name === 'codeblock',
+        (blockType) => blockType.name === 'codeblock',
       ),
     ).toBe(true);
     expect(
       pluginState.availableWrapperBlockTypes.some(
-        blockType => blockType.name === 'blockquote',
+        (blockType) => blockType.name === 'blockquote',
       ),
     ).toBe(true);
   });
@@ -433,7 +434,7 @@ describe('block-type', () => {
   });
 
   describe('block type in comment editor', () => {
-    const editor = (doc: any) =>
+    const editor = (doc: DocBuilder) =>
       createEditor({
         doc,
         preset: new Preset<LightEditorPlugin>()
@@ -531,7 +532,9 @@ describe('block-type', () => {
 
         if (blockQuote.nodes) {
           const nodes = blockQuote.nodes();
-          const hasBlockQuote = nodes.some(node => node.name === 'blockquote');
+          const hasBlockQuote = nodes.some(
+            (node) => node.name === 'blockquote',
+          );
           expect(hasBlockQuote).toBeFalsy();
         }
 

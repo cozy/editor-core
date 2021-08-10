@@ -6,7 +6,7 @@ import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { expectToEqual } from '@atlaskit/media-test-helpers/jestHelpers';
 import { activityProviderMock, searchProviderMock } from './__helpers';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
-import { createEditorFactory } from '@atlaskit/editor-test-helpers';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 describe('HyperlinkAddToolbar (with ProviderFactory prop)', () => {
   const createEditor = createEditorFactory();
@@ -17,10 +17,9 @@ describe('HyperlinkAddToolbar (with ProviderFactory prop)', () => {
         allowTables: true,
         allowStatus: true,
         allowDate: true,
-        UNSAFE_cards: {},
+        smartLinks: {},
       },
     });
-    const onBlur = jest.fn();
     const onSubmit = jest.fn();
     const providerFactory = ProviderFactory.create({
       activityProvider: activityProviderMock,
@@ -34,13 +33,11 @@ describe('HyperlinkAddToolbar (with ProviderFactory prop)', () => {
         providerFactory={providerFactory}
         displayText={'some-display-text'}
         displayUrl={'some-display-url'}
-        onBlur={onBlur}
         onSubmit={onSubmit}
       />,
     );
     expectToEqual(component.find(HyperlinkAddToolbar).props(), {
       onSubmit,
-      onBlur,
       displayUrl: 'some-display-url',
       displayText: 'some-display-text',
       activityProvider: activityProviderMock,

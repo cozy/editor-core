@@ -6,14 +6,15 @@ import {
   tr,
   td,
   tdEmpty,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
 import {
   InlineCursorTargetState,
   inlineCursorTargetStateKey,
@@ -24,12 +25,12 @@ import basePlugin from '../../';
 import emojiPlugin from '../../../emoji';
 import tablesPlugin from '../../../table';
 
-const emojiProvider = emojiData.testData.getEmojiResourcePromise();
+const emojiProvider = getTestEmojiResource();
 const providerFactory = ProviderFactory.create({ emojiProvider });
 
 describe('Inline cursor target', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editorFactory = (doc: any) =>
+  const editorFactory = (doc: DocBuilder) =>
     createEditor<InlineCursorTargetState, PluginKey>({
       doc,
       providerFactory,

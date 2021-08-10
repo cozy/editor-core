@@ -2,7 +2,7 @@ import React from 'react';
 import { IntlProvider } from 'react-intl';
 import { mount } from 'enzyme';
 import { ADNode } from '@atlaskit/editor-common/validator';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   bodiedExtension,
@@ -10,7 +10,8 @@ import {
   inlineExtension,
   p as paragraph,
   BuilderContent,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { createFakeExtensionProvider } from '@atlaskit/editor-test-helpers/extensions';
 
 import {
@@ -28,7 +29,7 @@ import { waitForProvider, flushPromises } from '../../../__helpers/utils';
 import { getContextPanel } from '../../../../plugins/extension/context-panel';
 import { setEditingContextToContextPanel } from '../../../../plugins/extension/commands';
 import EditorActions from '../../../../actions';
-import { PublicProps } from '../../../../ui/ConfigPanel/FieldsLoader';
+import { PublicProps } from '../../../../ui/ConfigPanel/ConfigPanelFieldsLoader';
 
 // there are many warnings due to hooks usage and async code that will be solved with the next react update.
 // this function will keep then silent so we can still read the tests.
@@ -48,7 +49,7 @@ describe('extension context panel', () => {
   const createEditor = createEditorFactory();
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     props: Partial<EditorProps> = {},
     providerFactory?: ProviderFactory,
   ) => {
@@ -70,14 +71,15 @@ describe('extension context panel', () => {
 
   const ExtensionHandlerComponent = () => <div>Awesome Extension</div>;
 
-  const transformBefore: TransformBefore = parameters => parameters.macroParams;
-  const transformAfter: TransformAfter = parameters =>
+  const transformBefore: TransformBefore = (parameters) =>
+    parameters && parameters.macroParams;
+  const transformAfter: TransformAfter = (parameters) =>
     Promise.resolve({
       macroParams: parameters,
     });
 
   const extensionUpdater: UpdateExtension = (data, actions) =>
-    new Promise(resolve => {
+    new Promise((resolve) => {
       actions!.editInContextPanel(transformBefore, transformAfter);
     });
 
@@ -94,7 +96,10 @@ describe('extension context panel', () => {
     ),
   });
 
-  const setupConfigPanel = async (content: BuilderContent[]) => {
+  const setupConfigPanel = async (
+    content: BuilderContent[],
+    autoSave = true,
+  ) => {
     const { editorView, eventDispatcher } = editor(
       doc(...content),
       {},
@@ -108,7 +113,7 @@ describe('extension context panel', () => {
       editorView.dispatch,
     );
 
-    const contextPanel = getContextPanel(true)(editorView.state);
+    const contextPanel = getContextPanel(autoSave)(editorView.state);
 
     expect(contextPanel).toBeTruthy();
     const editorActions = new EditorActions();
@@ -178,6 +183,76 @@ describe('extension context panel', () => {
     ).toEqual(1);
   });
 
+  it('should allow an extension with no parameters to be updated', async () => {
+    const { props, dispatchMock } = await setupConfigPanel([
+      '{<node>}',
+      extension({
+        extensionType: 'fake.confluence',
+        extensionKey: 'expand',
+      })(),
+    ]);
+
+    props.onChange({
+      title: 'changed',
+      content: 'not that cool',
+    });
+
+    await flushPromises();
+
+    const lastDispatchedTr = dispatchMock.mock.calls.pop();
+
+    expect(
+      findExtension(lastDispatchedTr![0].doc.toJSON().content[0]).attrs
+        .parameters,
+    ).toEqual({
+      macroParams: {
+        title: 'changed',
+        content: 'not that cool',
+      },
+    });
+  });
+
+  it('should not close the config panel after save if autosave is on', async () => {
+    const { props, editorView } = await setupConfigPanel([
+      '{<node>}',
+      extension({
+        extensionType: 'fake.confluence',
+        extensionKey: 'expand',
+      })(),
+    ]);
+
+    props.onChange({
+      title: 'changed',
+      content: 'not that cool',
+    });
+
+    await flushPromises();
+    const pluginState = pluginKey.getState(editorView.state);
+    expect(pluginState.showContextPanel).toBeTruthy();
+  });
+
+  it('should close the config panel after save if autosave is off', async () => {
+    const { props, editorView } = await setupConfigPanel(
+      [
+        '{<node>}',
+        extension({
+          extensionType: 'fake.confluence',
+          extensionKey: 'expand',
+        })(),
+      ],
+      false,
+    );
+
+    props.onChange({
+      title: 'changed',
+      content: 'not that cool',
+    });
+
+    await flushPromises();
+    const pluginState = pluginKey.getState(editorView.state);
+    expect(pluginState.showContextPanel).toBeFalsy();
+  });
+
   const testSaving = (type: string, content: BuilderContent[]) => {
     describe(`Saving ${type}`, () => {
       silenceActErrors();
@@ -214,6 +289,37 @@ describe('extension context panel', () => {
         });
 
         expect((lastDispatchedTr as any).scrolledIntoView).toBeFalsy();
+      });
+
+      it('should preserve selection', async () => {
+        const { props, editorView } = await setupConfigPanel(content);
+        const { selection: prevSelection } = editorView.state;
+
+        props.onChange({
+          title: 'changed',
+          content: 'not that cool',
+        });
+        await flushPromises();
+
+        const { selection } = editorView.state;
+        expect(selection.constructor.name).toEqual(
+          prevSelection.constructor.name,
+        );
+        expect(selection.from).toEqual(prevSelection.from);
+        expect(selection.to).toEqual(prevSelection.to);
+      });
+
+      it("shouldn't update the document if parameters are the same", async () => {
+        const { props, dispatchMock } = await setupConfigPanel(content);
+
+        dispatchMock.mockClear();
+        props.onChange({
+          title: props.parameters!.title,
+          content: props.parameters!.content,
+        });
+        await flushPromises();
+
+        expect(dispatchMock).not.toHaveBeenCalled();
       });
     });
   };

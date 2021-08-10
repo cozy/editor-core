@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { injectIntl, InjectedIntlProps } from 'react-intl';
 
 import { Field } from '@atlaskit/form';
@@ -6,50 +6,55 @@ import { DatePicker } from '@atlaskit/datetime-picker';
 import { DateField } from '@atlaskit/editor-common/extensions';
 
 import FieldMessages from '../FieldMessages';
-import { validate, getSafeParentedName } from '../utils';
-import { OnBlur } from '../types';
+import { validate } from '../utils';
+import { OnFieldChange } from '../types';
 
-const Date = function ({
+function Date({
+  name,
   field,
-  onBlur,
   autoFocus,
-  intl,
+  onFieldChange,
   placeholder,
-  parentName,
+  intl,
 }: {
+  name: string;
   field: DateField;
-  onBlur: OnBlur;
   autoFocus?: boolean;
+  onFieldChange: OnFieldChange;
   placeholder?: string;
-  parentName?: string;
 } & InjectedIntlProps) {
-  const element = (
-    <Field
-      name={getSafeParentedName(field.name, parentName)}
-      label={field.label}
-      defaultValue={field.defaultValue || ''}
-      isRequired={field.isRequired}
-      validate={(value?: string) => validate<string>(field, value || '')}
+  const { label, description, defaultValue, isRequired } = field;
+
+  return (
+    <Field<string>
+      name={name}
+      label={label}
+      defaultValue={defaultValue}
+      isRequired={isRequired}
+      validate={(value?: string) => validate(field, value)}
     >
-      {({ fieldProps, error, valid }) => (
-        <Fragment>
-          <DatePicker
-            {...fieldProps}
-            autoFocus={autoFocus}
-            onBlur={() => {
-              fieldProps.onBlur();
-              onBlur(field.name);
-            }}
-            locale={intl.locale}
-            placeholder={placeholder}
-          />
-          <FieldMessages error={error} description={field.description} />
-        </Fragment>
-      )}
+      {({ fieldProps, error }) => {
+        return (
+          <>
+            <DatePicker
+              {...fieldProps}
+              autoFocus={autoFocus}
+              onBlur={() => {
+                fieldProps.onBlur();
+              }}
+              onChange={(value: string) => {
+                fieldProps.onChange(value);
+                onFieldChange(name, true);
+              }}
+              locale={intl.locale}
+              placeholder={placeholder}
+            />
+            <FieldMessages error={error} description={description} />
+          </>
+        );
+      }}
     </Field>
   );
-
-  return element;
-};
+}
 
 export default injectIntl(Date);

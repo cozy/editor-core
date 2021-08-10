@@ -12,9 +12,12 @@ import { EditorProps } from '../../types';
 import { animationFrame } from '../__helpers/page-objects/_editor';
 import { GUTTER_SELECTOR } from '../../plugins/base/pm-plugins/scroll-gutter';
 import { CreateCollabProviderOptions } from '@atlaskit/synchrony-test-helpers';
-import { getContentBoundingRectTopLeftCoords } from '@atlaskit/editor-test-helpers';
-export { getContentBoundingRectTopLeftCoords };
+import {
+  TestExtensionProviders,
+  getBoundingClientRect,
+} from '@atlaskit/editor-test-helpers/vr-utils';
 
+export { getBoundingClientRect };
 export const editorSelector = '.akEditor';
 export const editorFullPageContentSelector =
   '.fabric-editor-popup-scroll-parent';
@@ -30,6 +33,19 @@ export const dynamicTextViewportSizes = [
   { width: 768, height: 4000 },
   { width: 1024, height: 4000 },
 ];
+
+export interface EventHooks {
+  /**
+   * A hook which is called after navigation to the test page.
+   * Example usage: setup performance marks post-navigation.
+   */
+  onNavigateToUrl?: () => Promise<void>;
+  /**
+   * A hook which is called straight after a call to render the TWP Editor.
+   * Example usage: check how long the it takes for the page to become idle.
+   */
+  onEditorMountCalled?: () => Promise<void>;
+}
 
 export enum Device {
   Default = 'Default',
@@ -113,13 +129,13 @@ async function attachCursorIndicator(page: PuppeteerPage) {
     );
     cursorIndicator.appendChild(mouseIndicator);
 
-    window.addEventListener('mousemove', event => {
+    window.addEventListener('mousemove', (event) => {
       cursorIndicator.style.display = 'block';
       cursorIndicator.style.top = `${event.clientY - cursorDiameter / 2}px`;
       cursorIndicator.style.left = `${event.clientX - cursorDiameter / 2}px`;
     });
 
-    window.addEventListener('mousedown', event => {
+    window.addEventListener('mousedown', (event) => {
       mouseIndicator.style.display = 'block';
       switch (event.button) {
         case 0:
@@ -134,7 +150,7 @@ async function attachCursorIndicator(page: PuppeteerPage) {
       }
     });
 
-    window.addEventListener('mouseup', event => {
+    window.addEventListener('mouseup', (event) => {
       mouseIndicator.style.display = 'none';
     });
   });
@@ -166,10 +182,13 @@ function getEditorProps(appearance: Appearance) {
     placeholder:
       'Use markdown shortcuts to format your page as you type, like * for lists, # for headers, and *** for a horizontal rule.',
     shouldFocus: false,
-    UNSAFE_cards: true,
+    smartLinks: true,
     allowExpand: { allowInsertion: true },
     allowHelpDialog: true,
     codeBlock: { allowCopyToClipboard: true },
+    featureFlags: {
+      displayInlineBlockForInlineNodes: false,
+    },
   };
 
   if (
@@ -208,9 +227,12 @@ export type MountOptions = {
   i18n?: {
     locale: string;
   };
+  /** Toggles chosen extension providers */
+  withTestExtensionProviders?: TestExtensionProviders;
   withContextPanel?: boolean;
   invalidAltTextValues?: string[];
   withCollab?: boolean;
+  hooks?: EventHooks;
 };
 
 export async function mountEditor(
@@ -220,7 +242,7 @@ export async function mountEditor(
 ) {
   await page.evaluate(
     (props: EditorProps, mountOptions: MountOptions) => {
-      return new Promise<void>(resolve => {
+      return new Promise<void>((resolve) => {
         function waitAndCall() {
           if ((window as any).__mountEditor) {
             (window as any).__mountEditor(props, mountOptions);
@@ -258,8 +280,11 @@ type InitEditorWithADFOptions = {
   withSidebar?: boolean;
   withCollab?: boolean;
   withContextPanel?: boolean;
+  /** Toggles chosen extension providers */
+  withTestExtensionProviders?: TestExtensionProviders;
   forceReload?: boolean;
   invalidAltTextValues?: string[];
+  hooks?: EventHooks;
 };
 
 async function setupEditor(
@@ -275,6 +300,7 @@ async function setupEditor(
     editorProps = {},
     allowSideEffects = {},
     withContextPanel,
+    withTestExtensionProviders,
     forceReload,
   } = options;
 
@@ -283,6 +309,7 @@ async function setupEditor(
     withSidebar = false,
     invalidAltTextValues,
     withCollab,
+    hooks,
   } = mountOptions;
   await page.bringToFront();
   const url = getExampleUrl('editor', 'editor-core', 'vr-testing');
@@ -298,6 +325,11 @@ async function setupEditor(
     await page.setViewport(deviceViewPorts[device]);
   }
 
+  // For any actions to be taken prior to mounting the editor.
+  if (hooks?.onNavigateToUrl) {
+    await hooks?.onNavigateToUrl();
+  }
+
   // Mount the editor with the right attributes
   await mountEditor(
     page,
@@ -307,8 +339,20 @@ async function setupEditor(
       ...getEditorProps(appearance),
       ...editorProps,
     },
-    { mode, withSidebar, withContextPanel, invalidAltTextValues, withCollab },
+    {
+      mode,
+      withSidebar,
+      withContextPanel,
+      invalidAltTextValues,
+      withCollab,
+      withTestExtensionProviders,
+    },
   );
+
+  // For any actions to be taken prior straight after mounting of the editor.
+  if (hooks?.onEditorMountCalled) {
+    await hooks?.onEditorMountCalled();
+  }
 
   // We disable possible side effects, like animation, transitions and caret cursor,
   // because we cannot control and affect snapshots
@@ -331,6 +375,7 @@ export const initEditorWithAdf = async (
     withSidebar: options.withSidebar,
     invalidAltTextValues: options.invalidAltTextValues,
     withCollab: options.withCollab,
+    hooks: options.hooks,
   };
 
   await setupEditor(page, options, mountOptions);
@@ -346,6 +391,7 @@ export const initFullPageEditorWithAdf = async (
   allowSideEffects?: SideEffectOptions,
   forceReload?: boolean,
   withCollab?: boolean,
+  hooks?: EventHooks,
 ) => {
   await initEditorWithAdf(page, {
     adf,
@@ -357,6 +403,7 @@ export const initFullPageEditorWithAdf = async (
     allowSideEffects,
     forceReload,
     withCollab,
+    hooks,
   });
 };
 
@@ -365,12 +412,14 @@ export const initCommentEditorWithAdf = async (
   adf: Object,
   device?: Device,
   mode?: 'light' | 'dark',
+  editorProps?: EditorProps,
 ) => {
   await initEditorWithAdf(page, {
     adf,
     appearance: Appearance.comment,
     device,
     mode,
+    editorProps,
   });
 };
 
@@ -409,18 +458,13 @@ async function takeSnapshot(
   const editor = await page.$(selector);
 
   // Wait for a frame because we are using RAF to throttle floating toolbar render
-  animationFrame(page);
+  await animationFrame(page);
 
   // Try to take a screenshot of only the editor.
   // Otherwise take the whole page.
-  let image;
-  if (editor) {
-    image = await editor.screenshot();
-  } else {
-    image = await page.screenshot();
-  }
+  const image = editor ? await editor.screenshot() : await page.screenshot();
 
-  return compareScreenshot(image, tolerance, {
+  return compareScreenshot(image as string, tolerance, {
     useUnsafeThreshold,
     customSnapshotIdentifier,
   });
@@ -438,7 +482,7 @@ export const snapshot = async (
       collabPage,
       threshold,
       selector,
-      (_t, _n, _c, defaultIdentifier) => `Collab Page - ${defaultIdentifier}`,
+      ({ defaultIdentifier }) => `Collab Page - ${defaultIdentifier}`,
     );
     await page.bringToFront();
   }
@@ -526,7 +570,7 @@ export async function emulateSelectAll(page: PuppeteerPage) {
  * Click the top-left edge of the target element's bounding box.
  */
 export const clickTopLeft = async (page: PuppeteerPage, selector: string) => {
-  const rect = await getContentBoundingRectTopLeftCoords(page, selector);
+  const rect = await getBoundingClientRect(page, selector);
   await page.mouse.click(rect.left, rect.top);
 };
 
@@ -553,7 +597,7 @@ export const retryUntil = (
   condition: () => Promise<boolean>,
   ms: number = 1000,
 ) => {
-  return new Promise(async resolve => {
+  return new Promise<void>(async (resolve) => {
     const intervalId = setInterval(async () => {
       await work();
       if (await condition()) {

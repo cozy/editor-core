@@ -1,6 +1,7 @@
 import WebdriverPage from '@atlaskit/webdriver-runner/wd-wrapper';
 import { getExampleUrl } from '@atlaskit/visual-regression/helper';
-import { mediaMockQueryOptInFlag } from '@atlaskit/media-test-helpers';
+import { getExampleUrl as getWDExampleUrl } from '@atlaskit/webdriver-runner/utils/example';
+import { mediaMockQueryOptInFlag } from '@atlaskit/media-test-helpers/media-mock';
 import { EditorProps } from '../../types';
 import { selectors } from './page-objects/_editor';
 import { MountEditorOptions } from '../../../example-helpers/create-editor-example-for-tests';
@@ -45,17 +46,12 @@ export async function mountEditor<T = EditorProps>(
   }
 }
 
-export async function goToEditorTestingExample(
+export async function goToEditorTestingWDExample(
   client: ConstructorParameters<typeof WebdriverPage>[0],
 ) {
   const page = new WebdriverPage(client);
   const currentUrl = await page.url();
-  const url = getExampleUrl(
-    'editor',
-    'editor-core',
-    'testing',
-    global.__BASEURL__,
-  );
+  const url = getWDExampleUrl('editor', 'editor-core', 'testing');
 
   if (currentUrl !== url) {
     await page.goto(url);
@@ -119,6 +115,27 @@ export async function goToFullPageClickToEdit(
       'editor',
       'editor-core',
       'full-page-click-to-edit',
+      // @ts-ignore
+      global.__BASEURL__,
+    ) + `&${mediaMockQueryOptInFlag}`;
+
+  await page.goto(url);
+  await page.maximizeWindow();
+  await page.waitForSelector(EDITOR_SELECTOR, { timeout: 500 });
+  await page.click(EDITOR_SELECTOR);
+
+  return page;
+}
+
+export async function goToFullPageWithXExtensions(
+  client: ConstructorParameters<typeof WebdriverPage>[0],
+) {
+  const page = new FullPageEditor(client);
+  const url =
+    getExampleUrl(
+      'editor',
+      'editor-core',
+      'full-page-with-x-extensions',
       // @ts-ignore
       global.__BASEURL__,
     ) + `&${mediaMockQueryOptInFlag}`;

@@ -12,7 +12,7 @@ import {
   TransformAfter,
 } from '@atlaskit/editor-common/extensions';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   inlineExtensionData,
   bodiedExtensionData,
@@ -33,10 +33,10 @@ import {
   media,
   mediaSingle,
   underline,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
-import sleep from '@atlaskit/editor-test-helpers/sleep';
 import { createFakeExtensionProvider } from '@atlaskit/editor-test-helpers/extensions';
 
 import { editExtension } from '../../../../plugins/extension/actions';
@@ -63,6 +63,7 @@ const extensionAttrs = {
       a: 2,
     },
   },
+  localId: 'testId',
 };
 
 describe('extension', () => {
@@ -73,7 +74,7 @@ describe('extension', () => {
   const ExtensionHandlerComponent = () => <div>Awesome Extension</div>;
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     extensionHandlers?: ExtensionHandlers,
     extensionProviders?: ExtensionProvider[],
   ) => {
@@ -131,6 +132,28 @@ describe('extension', () => {
       const extensionState = getPluginState(editorView.state);
 
       expect(extensionState.updateExtension).resolves.toBe(updateFn);
+    });
+  });
+
+  describe('localId', () => {
+    it('should generate an unique localId', () => {
+      const { editorView } = editor(
+        doc(
+          bodiedExtension({ ...bodiedExtensionAttrs, localId: '' })(
+            paragraph('a{<>}'),
+          ),
+          bodiedExtension({ ...bodiedExtensionAttrs, localId: '' })(
+            paragraph('a{<>}'),
+          ),
+        ),
+      );
+
+      expect(
+        editorView.state.doc.firstChild?.attrs.localId.length,
+      ).toBeGreaterThan(1);
+      expect(editorView.state.doc.firstChild?.attrs.localId).not.toEqual(
+        editorView.state.doc.lastChild?.attrs.localId,
+      );
     });
   });
 
@@ -219,9 +242,13 @@ describe('extension', () => {
         const { editorView } = editor(
           doc(bodiedExtension(bodiedExtensionAttrs)(paragraph('te{<>}xt'))),
         );
-        expect(editExtension(null)(editorView.state, editorView.dispatch)).toBe(
-          false,
-        );
+        expect(
+          editExtension(null)(
+            editorView.state,
+            editorView.dispatch,
+            editorView,
+          ),
+        ).toBe(false);
       });
 
       describe('macroProvider', () => {
@@ -236,7 +263,11 @@ describe('extension', () => {
           );
           const provider = await macroProviderPromise;
           expect(
-            editExtension(provider)(editorView.state, editorView.dispatch),
+            editExtension(provider)(
+              editorView.state,
+              editorView.dispatch,
+              editorView,
+            ),
           ).toBe(true);
         });
 
@@ -244,7 +275,11 @@ describe('extension', () => {
           const { editorView } = editor(doc(paragraph('te{<>}xt')));
           const provider = await macroProviderPromise;
           expect(
-            editExtension(provider)(editorView.state, editorView.dispatch),
+            editExtension(provider)(
+              editorView.state,
+              editorView.dispatch,
+              editorView,
+            ),
           ).toBe(false);
         });
 
@@ -253,8 +288,12 @@ describe('extension', () => {
             doc(bodiedExtension(bodiedExtensionAttrs)(paragraph('{<>}'))),
           );
           const provider = await macroProviderPromise;
-          editExtension(provider)(editorView.state, editorView.dispatch);
-          await sleep(0);
+          editExtension(provider)(
+            editorView.state,
+            editorView.dispatch,
+            editorView,
+          );
+          await flushPromises();
           expect(editorView.state.doc).toEqualDocument(
             doc(
               bodiedExtension(bodiedExtensionData[0].attrs)(
@@ -285,8 +324,12 @@ describe('extension', () => {
             new MockMacroProvider(inlineExtensionData[1]),
           );
           const provider = await macroProviderPromise;
-          editExtension(provider)(editorView.state, editorView.dispatch);
-          await sleep(0);
+          editExtension(provider)(
+            editorView.state,
+            editorView.dispatch,
+            editorView,
+          );
+          await flushPromises();
           expect(editorView.state.doc).toEqualDocument(
             doc(
               paragraph(
@@ -320,8 +363,12 @@ describe('extension', () => {
               new MockMacroProvider(inlineExtensionData[1]),
             );
             const provider = await macroProviderPromise;
-            editExtension(provider)(editorView.state, editorView.dispatch);
-            await sleep(0);
+            editExtension(provider)(
+              editorView.state,
+              editorView.dispatch,
+              editorView,
+            );
+            await flushPromises();
             expect(editorView.state.doc).toEqualDocument(
               doc(
                 bodiedExtension(bodiedExtensionAttrs)(
@@ -349,7 +396,11 @@ describe('extension', () => {
 
           const provider = await macroProviderPromise;
           expect(
-            editExtension(provider)(editorView.state, editorView.dispatch),
+            editExtension(provider)(
+              editorView.state,
+              editorView.dispatch,
+              editorView,
+            ),
           ).toBe(true);
 
           expect(nodeWithPos).toBeDefined();
@@ -408,12 +459,12 @@ describe('extension', () => {
             editExtension(null, updateHandlerPromise)(
               editorView.state,
               editorView.dispatch,
+              editorView,
             ),
           ).toBe(true);
           await flushPromises();
 
           expect(updateFn).toBeCalledWith(initialValue);
-          await flushPromises();
 
           expect(
             editorView.state.doc.firstChild!.attrs.parameters.content,
@@ -422,23 +473,24 @@ describe('extension', () => {
 
         it('should scroll into view', async () => {
           // using a mock to be able to capture the passed TR at the end
-          const dispatchMock = jest.fn(editorView.dispatch);
+          const dispatchSpy = jest.spyOn(editorView, 'dispatch');
 
           expect(
             editExtension(null, updateHandlerPromise)(
               editorView.state,
-              dispatchMock,
+              editorView.dispatch,
+              editorView,
             ),
           ).toBe(true);
+          await flushPromises();
 
           expect(updateFn).toBeCalledWith(initialValue);
-          await flushPromises();
 
           expect(
             editorView.state.doc.firstChild!.attrs.parameters.content,
           ).toBe(newContent);
 
-          const dispatchedTR = dispatchMock.mock.calls[0][0];
+          const dispatchedTR = dispatchSpy.mock.calls[0][0];
           expect((dispatchedTR as any).scrolledIntoView).toBeTruthy();
         });
       });
@@ -449,6 +501,7 @@ describe('extension', () => {
         const updatedExtension = {
           ...extensionAttrs,
           parameters: newMacroParams,
+          localId: 'testId',
         };
 
         const setup = () => {
@@ -479,6 +532,7 @@ describe('extension', () => {
           editExtension(provider, updateMethodResolvingMacroParams)(
             editorView.state,
             editorView.dispatch,
+            editorView,
           );
 
           await flushPromises();
@@ -501,6 +555,7 @@ describe('extension', () => {
           editExtension(provider, updateMethodResolvingUndefined)(
             editorView.state,
             editorView.dispatch,
+            editorView,
           );
 
           await flushPromises();
@@ -523,6 +578,7 @@ describe('extension', () => {
           editExtension(provider, updateMethodMissing)(
             editorView.state,
             editorView.dispatch,
+            editorView,
           );
 
           await flushPromises();
@@ -715,9 +771,9 @@ describe('extension', () => {
   });
 
   describe('Config Panel', () => {
-    const transformBefore: TransformBefore = parameters =>
+    const transformBefore: TransformBefore = (parameters) =>
       parameters.macroParams;
-    const transformAfter: TransformAfter = parameters =>
+    const transformAfter: TransformAfter = (parameters) =>
       Promise.resolve({
         macroParams: parameters,
       });
@@ -731,16 +787,21 @@ describe('extension', () => {
       const { editorView, refs } = editor(
         doc(
           '{firstExtension}',
-          bodiedExtension(bodiedExtensionAttrs)(paragraph('{<>}text')),
+          bodiedExtension({ ...bodiedExtensionAttrs, localId: 'testId1' })(
+            paragraph('{<>}text'),
+          ),
           paragraph('hello'),
           '{secondExtension}',
-          bodiedExtension(bodiedExtensionAttrs)(paragraph('text')),
+          bodiedExtension({ ...bodiedExtensionAttrs, localId: 'testId2' })(
+            paragraph('text'),
+          ),
         ),
       );
 
       editExtension(null, Promise.resolve(extensionUpdater))(
         editorView.state,
         editorView.dispatch,
+        editorView,
       );
 
       await flushPromises();

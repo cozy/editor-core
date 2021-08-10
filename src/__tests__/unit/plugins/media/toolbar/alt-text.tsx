@@ -1,11 +1,12 @@
 import { ProviderFactory } from '@atlaskit/editor-common';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   media,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { MediaAttributes } from '@atlaskit/adf-schema';
 import { EditorView } from 'prosemirror-view';
 import { IntlProvider } from 'react-intl';
@@ -27,7 +28,7 @@ import {
 import {
   findToolbarBtn,
   getToolbarItems,
-} from '../../floating-toolbar/_helpers';
+} from '../../../../../plugins/floating-toolbar/__tests__/_helpers';
 import { MediaPluginState } from '../../../../../plugins/media/pm-plugins/types';
 
 interface ToolbarWrapper {
@@ -45,7 +46,7 @@ describe('media', () => {
 
   const createEditor = createEditorFactory<MediaPluginState>();
 
-  const editor = (doc: any, mediaPropsOverride: MediaOptions = {}) => {
+  const editor = (doc: DocBuilder, mediaPropsOverride: MediaOptions = {}) => {
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
     const mediaProvider = getFreshMediaProvider();
     const providerFactory = ProviderFactory.create({
@@ -92,7 +93,7 @@ describe('media', () => {
   const docWithoutAltText = doc(temporaryMediaSingleWithoutAltText);
 
   async function setupToolbar(
-    doc: any,
+    doc: DocBuilder,
     allowAltTextOnImages = false,
   ): Promise<ToolbarWrapper> {
     // Setup editor

@@ -38,18 +38,31 @@ import {
 import { toolbarMessages } from './toolbar-messages';
 
 type IconMap = Array<
-  { value: string; icon: React.ComponentClass<any> } | { value: 'separator' }
+  | { id?: string; value: string; icon: React.ComponentClass<any> }
+  | { value: 'separator' }
 >;
 
 const alignmentIcons: IconMap = [
-  { value: 'align-start', icon: EditorAlignImageLeft },
-  { value: 'center', icon: EditorAlignImageCenter },
-  { value: 'align-end', icon: EditorAlignImageRight },
+  {
+    id: 'editor.media.alignLeft',
+    value: 'align-start',
+    icon: EditorAlignImageLeft,
+  },
+  {
+    id: 'editor.media.alignCenter',
+    value: 'center',
+    icon: EditorAlignImageCenter,
+  },
+  {
+    id: 'editor.media.alignRight',
+    value: 'align-end',
+    icon: EditorAlignImageRight,
+  },
 ];
 
 const wrappingIcons: IconMap = [
-  { value: 'wrap-left', icon: WrapLeftIcon },
-  { value: 'wrap-right', icon: WrapRightIcon },
+  { id: 'editor.media.wrapLeft', value: 'wrap-left', icon: WrapLeftIcon },
+  { id: 'editor.media.wrapRight', value: 'wrap-right', icon: WrapRightIcon },
 ];
 
 const breakoutIcons: IconMap = [
@@ -107,6 +120,9 @@ const makeAlign = (layout: MediaSingleLayout, nodeType: NodeType): Command => {
       newAttrs,
     );
     tr.setMeta('scrollIntoView', false);
+    // when image captions are enabled, the wrong node gets selected after
+    // setNodeMarkup is called
+    tr.setSelection(NodeSelection.create(tr.doc, state.selection.from));
     dispatch(
       addAnalytics(state, tr, {
         eventType: EVENT_TYPE.TRACK,
@@ -130,10 +146,11 @@ const mapIconsToToolbarItem = (
   intl: InjectedIntl,
   nodeType: NodeType,
 ) =>
-  icons.map<FloatingToolbarItem<Command>>(toolbarItem => {
-    const { value } = toolbarItem;
+  icons.map<FloatingToolbarItem<Command>>((toolbarItem) => {
+    const { id, value } = toolbarItem;
 
     return {
+      id: id,
       type: 'button',
       icon: toolbarItem.icon,
       title: intl.formatMessage(layoutToMessages[value]),

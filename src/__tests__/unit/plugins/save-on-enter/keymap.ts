@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -6,7 +6,8 @@ import {
   decisionItem,
   taskList,
   taskItem,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
 
@@ -20,7 +21,7 @@ describe('save on enter', () => {
     onSaveSpy.mockReset();
   });
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
     return createEditor({
       doc,

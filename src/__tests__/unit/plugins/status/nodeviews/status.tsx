@@ -1,10 +1,15 @@
 import React from 'react';
 import { ReactWrapper } from 'enzyme';
 import { TextSelection, NodeSelection } from 'prosemirror-state';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
-import { doc, p, status } from '@atlaskit/editor-test-helpers/schema-builder';
+import {
+  doc,
+  p,
+  status,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { Status } from '@atlaskit/status/element';
 import {
   ContainerProps,
@@ -26,7 +31,7 @@ describe('Status - NodeView', () => {
 
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps: {

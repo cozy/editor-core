@@ -1,7 +1,7 @@
 import { TableMap } from '@atlaskit/editor-tables/table-map';
 import { findTable } from '@atlaskit/editor-tables/utils';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -9,14 +9,15 @@ import {
   tr as row,
   th,
   td,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { TablePluginState } from '../../../../../plugins/table/types';
 import { copyPreviousRow } from '../../../../../plugins/table/utils/row-controls';
 import { pluginKey } from '../../../../../plugins/table/pm-plugins/plugin-factory';
 
 describe('table plugin: utils/row-controls.js', () => {
   const createEditor = createEditorFactory<TablePluginState>();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },

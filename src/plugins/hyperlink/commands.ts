@@ -89,52 +89,34 @@ export function updateLink(
     }
     const url = normalizeUrl(href);
 
-    if (!url) {
-      return false;
-    }
-
     const mark: Mark = state.schema.marks.link.isInSet(node.marks);
     const linkMark = state.schema.marks.link;
 
     const rightBound =
       to && pos !== to ? to : pos - $pos.textOffset + node.nodeSize;
     const tr = state.tr;
-    tr.insertText(text, pos, rightBound);
-    // Casting to LinkAttributes to prevent wrong attributes been passed (Example ED-7951)
-    const linkAttrs: LinkAttributes = {
-      ...((mark && (mark.attrs as LinkAttributes)) || {}),
-      href: url,
-    };
-    tr.addMark(pos, pos + text.length, linkMark.create(linkAttrs));
-    tr.setMeta(stateKey, { type: LinkAction.HIDE_TOOLBAR });
+
+    if (!url && text) {
+      tr.removeMark(pos, rightBound, linkMark);
+      tr.insertText(text, pos, rightBound);
+    } else if (!url) {
+      return false;
+    } else {
+      tr.insertText(text, pos, rightBound);
+      // Casting to LinkAttributes to prevent wrong attributes been passed (Example ED-7951)
+      const linkAttrs: LinkAttributes = {
+        ...((mark && (mark.attrs as LinkAttributes)) || {}),
+        href: url,
+      };
+      tr.addMark(pos, pos + text.length, linkMark.create(linkAttrs));
+      tr.setMeta(stateKey, { type: LinkAction.HIDE_TOOLBAR });
+    }
+
     if (dispatch) {
       dispatch(tr);
     }
     return true;
   };
-}
-
-export function setLinkText(text: string, pos: number, to?: number): Command {
-  return filter(isLinkAtPos(pos), (state, dispatch) => {
-    const $pos = state.doc.resolve(pos);
-    const node = state.doc.nodeAt(pos) as Node;
-    const mark = state.schema.marks.link.isInSet(node.marks) as Mark;
-    if (node && text.length > 0 && text !== node.text) {
-      const rightBound =
-        to && pos !== to ? to : pos - $pos.textOffset + node.nodeSize;
-      const tr = state.tr;
-
-      tr.insertText(text, pos, rightBound);
-      tr.addMark(pos, pos + text.length, mark);
-      tr.setMeta(stateKey, { type: LinkAction.HIDE_TOOLBAR });
-
-      if (dispatch) {
-        dispatch(tr);
-      }
-      return true;
-    }
-    return false;
-  });
 }
 
 export function insertLink(
@@ -147,8 +129,8 @@ export function insertLink(
 ): Command {
   return (state, dispatch) => {
     const link = state.schema.marks.link;
+    const { tr } = state;
     if (incomingHref.trim()) {
-      const { tr } = state;
       const normalizedUrl = normalizeUrl(incomingHref);
       // NB: in this context, `currentText` represents text which has been
       // highlighted in the Editor, upon which a link is is being added.
@@ -158,14 +140,17 @@ export function insertLink(
       const text = displayText || incomingTitle || incomingHref;
       if (!displayText || displayText !== currentText) {
         tr.insertText(text, from, to);
-        markEnd = from + text.length;
+        if (!isTextAtPos(from)(state)) {
+          markEnd = from + text.length + 1;
+        } else {
+          markEnd = from + text.length;
+        }
       }
 
       tr.addMark(from, markEnd, link.create({ href: normalizedUrl }));
       tr.setSelection(Selection.near(tr.doc.resolve(markEnd)));
 
-      //Create a smart link when the user doesn't provide a title
-      if (isSmartLink(incomingHref, source, incomingTitle, displayText)) {
+      if (!displayText || displayText === incomingHref) {
         queueCardsFromChangedTr(state, tr, source!, false);
       }
 
@@ -174,6 +159,10 @@ export function insertLink(
         dispatch(tr);
       }
       return true;
+    }
+    tr.setMeta(stateKey, { type: LinkAction.HIDE_TOOLBAR });
+    if (dispatch) {
+      dispatch(tr);
     }
     return false;
   };
@@ -184,35 +173,31 @@ export const insertLinkWithAnalytics = (
   from: number,
   to: number,
   href: string,
-  title?: string | undefined,
-  displayText?: string | undefined,
-) => {
-  // If we are inserting a smart link, skip insert hyperlink analytics
-  if (isSmartLink(href, inputMethod, title, displayText)) {
-    return insertLink(from, to, href, title, displayText, inputMethod);
-  } else {
-    return withAnalytics(getLinkCreationAnalyticsEvent(inputMethod, href))(
-      insertLink(from, to, href, title, displayText, inputMethod),
-    );
-  }
-};
-
-const isSmartLink = (
-  href: string,
-  inputMethod?: LinkInputType,
   title?: string,
   displayText?: string,
-) =>
-  // NB: A link is a Smart Link if:
-  // - it is inserted from the CMD + K menu without display text
-  // - it is inserted manually (by typing) without display text and a title
-  // - it is inserted using either approach and the display text, href are the same
-  (inputMethod && inputMethod === INPUT_METHOD.TYPEAHEAD && !displayText) ||
-  (inputMethod &&
-    inputMethod === INPUT_METHOD.MANUAL &&
-    !title &&
-    !displayText) ||
-  displayText === href;
+  cardsAvailable: boolean = false,
+) => {
+  // If smart cards are available, we send analytics for hyperlinks when a smart link is rejected.
+  if (cardsAvailable && !title && !displayText) {
+    return insertLink(from, to, href, title, displayText, inputMethod);
+  }
+  return withAnalytics(getLinkCreationAnalyticsEvent(inputMethod, href))(
+    insertLink(from, to, href, title, displayText, inputMethod),
+  );
+};
+
+export const insertLinkWithAnalyticsMobileNative = (
+  inputMethod: LinkInputType,
+  from: number,
+  to: number,
+  href: string,
+  title?: string,
+  displayText?: string,
+) => {
+  return withAnalytics(getLinkCreationAnalyticsEvent(inputMethod, href))(
+    insertLink(from, to, href, title, displayText, inputMethod),
+  );
+};
 
 export function removeLink(pos: number): Command {
   return setLinkHref('', pos);

@@ -18,14 +18,14 @@ export function fixExcludes(marks: {
   [key: string]: MarkSpec;
 }): { [key: string]: MarkSpec } {
   const markKeys = Object.keys(marks);
-  const markGroups = new Set(markKeys.map(mark => marks[mark].group));
+  const markGroups = new Set(markKeys.map((mark) => marks[mark].group));
 
-  markKeys.forEach(markKey => {
+  markKeys.forEach((markKey) => {
     const mark = marks[markKey];
     if (mark.excludes) {
       mark.excludes = mark.excludes
         .split(' ')
-        .filter(group => markGroups.has(group))
+        .filter((group) => markGroups.has(group))
         .join(' ');
     }
   });
@@ -38,7 +38,7 @@ export function processPluginsList(plugins: EditorPlugin[]): EditorConfig {
    */
   const pluginsOptions = plugins.reduce<PluginsOptions>((acc, plugin) => {
     if (plugin.pluginsOptions) {
-      Object.keys(plugin.pluginsOptions).forEach(pluginName => {
+      Object.keys(plugin.pluginsOptions).forEach((pluginName) => {
         if (!acc[pluginName]) {
           acc[pluginName] = [];
         }
@@ -106,24 +106,53 @@ export function processPluginsList(plugins: EditorPlugin[]): EditorConfig {
 const TRACKING_DEFAULT = { enabled: false };
 
 export function createPMPlugins(config: PMPluginCreateConfig): Plugin[] {
-  const { editorConfig, performanceTracking = {}, ...rest } = config;
+  const { editorConfig, performanceTracking = {}, transactionTracker } = config;
   const {
     uiTracking = TRACKING_DEFAULT,
     transactionTracking = TRACKING_DEFAULT,
   } = performanceTracking;
 
-  const instrumentPlugin =
-    uiTracking.enabled || transactionTracking.enabled
-      ? (plugin: Plugin): Plugin =>
-          InstrumentedPlugin.fromPlugin(plugin, {
+  const useInstrumentedPlugin =
+    uiTracking.enabled || transactionTracking.enabled;
+
+  if (
+    process.env.NODE_ENV === 'development' &&
+    transactionTracking.enabled &&
+    !transactionTracker
+  ) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      'createPMPlugins(): tracking is turned on but transactionTracker not defined! Transaction tracking has been disabled',
+    );
+  }
+
+  const instrumentPlugin = useInstrumentedPlugin
+    ? (plugin: Plugin): Plugin =>
+        InstrumentedPlugin.fromPlugin(
+          plugin,
+          {
             uiTracking,
             transactionTracking,
-          })
-      : (plugin: Plugin): Plugin => plugin;
+          },
+          transactionTracker,
+        )
+    : (plugin: Plugin): Plugin => plugin;
 
   return editorConfig.pmPlugins
     .sort(sortByOrder('plugins'))
-    .map(({ plugin }) => plugin(rest))
+    .map(({ plugin }) =>
+      plugin({
+        schema: config.schema,
+        dispatch: config.dispatch,
+        eventDispatcher: config.eventDispatcher,
+        providerFactory: config.providerFactory,
+        errorReporter: config.errorReporter,
+        portalProviderAPI: config.portalProviderAPI,
+        reactContext: config.reactContext,
+        dispatchAnalyticsEvent: config.dispatchAnalyticsEvent,
+        featureFlags: config.featureFlags || {},
+      }),
+    )
     .filter((plugin): plugin is Plugin => typeof plugin !== 'undefined')
     .map(instrumentPlugin);
 }

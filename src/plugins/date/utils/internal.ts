@@ -1,8 +1,8 @@
 import { formatDateType, dateTypeToDate, dateToDateType } from './formatParse';
 import { DateType } from '../types';
-import addDays from 'date-fns/add_days';
-import addMonths from 'date-fns/add_months';
-import addYears from 'date-fns/add_years';
+import addDays from 'date-fns/addDays';
+import addMonths from 'date-fns/addMonths';
+import addYears from 'date-fns/addYears';
 
 import { DateSegment } from '../types';
 
@@ -29,11 +29,6 @@ function isCursorInFirstDateSegment(cursorPos: number, date: string): boolean {
   const strippedDate = date.replace(/[^0-9]+$/g, '');
   while (posCounter >= 0 && isAdjacent) {
     const c = strippedDate[posCounter];
-    // if(c === undefined) {
-    //   console.log("c undef");
-    //   console.log({posCounter, strippedDate,cursorPos,date})
-
-    // }
 
     if (!isDigit(c)) {
       isAdjacent = false;
@@ -113,7 +108,7 @@ export function findDateSegmentByPosition(
     keyToSegment[strippedPlaceholder[strippedPlaceholder.length - 1]];
   const allPossibleSegments: DateSegment[] = ['day', 'month', 'year'];
   const middleSegment: DateSegment = allPossibleSegments.filter(
-    s => s !== firstSegment && s !== lastSegment,
+    (s) => s !== firstSegment && s !== lastSegment,
   )[0];
 
   if (isCursorInFirstDateSegment(position, date)) {

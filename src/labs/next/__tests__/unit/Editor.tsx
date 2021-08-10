@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, ReactTestRenderer } from 'react-test-renderer';
-import { doc, p } from '@atlaskit/editor-test-helpers';
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 import { createEditorFactory, TestEditor } from './__create-editor-helper';
 import EditorActions from '../../../../actions';
 
@@ -29,7 +29,7 @@ describe('next/Editor', () => {
           actions.appendText('hello');
         },
         onChange: handleChange,
-        transformer: schema => ({
+        transformer: (schema) => ({
           encode: () => 'encoded document',
           parse: () => doc(p(''))(schema),
         }),

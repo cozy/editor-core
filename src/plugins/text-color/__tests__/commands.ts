@@ -13,7 +13,8 @@ import {
   td,
   textColor,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import blockTypePlugin from '../../block-type';
 import panelPlugin from '../../panel';
@@ -28,7 +29,7 @@ import {
 describe('#changeColor', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<TextColorPluginState, PluginKey>({
       doc,
       preset: new Preset<LightEditorPlugin>()

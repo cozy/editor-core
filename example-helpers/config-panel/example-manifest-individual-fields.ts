@@ -4,25 +4,23 @@ import {
   ExtensionModule,
 } from '@atlaskit/editor-common';
 
-import {
-  spaceKeyFieldResolver,
-  usernameFieldResolver,
-  labelFieldResolver,
-  confluenceContentFieldResolver,
-} from './confluence-fields-data-providers';
+import { mockFieldResolver } from './confluence-fields-data-providers';
 
 import { cqlSerializer, cqlDeserializer } from './cql-helpers';
 
-import { setEnv } from '@atlaskit/user-picker/src/components/smart-user-picker/config';
+import { setSmartUserPickerEnv } from '@atlaskit/user-picker';
 import { nativeFields, customFields } from './fields';
 
 const exampleFields = [...nativeFields, ...customFields];
 
-const quickInsert: ExtensionModule[] = exampleFields.map(field => ({
+const quickInsert: ExtensionModule[] = exampleFields.map((field) => ({
   key: field.name,
   title: field.label,
-  description: `type: ${field.type}`,
-  icon: () => import('@atlaskit/icon/glyph/editor/code'),
+  description: `type: ${field.type} (${field.name})`,
+  icon: () =>
+    import(
+      /* webpackChunkName: "@atlaskit-internal_icon-code" */ '@atlaskit/icon/glyph/editor/code'
+    ).then((mod) => mod.default),
   action: {
     type: 'node',
     key: field.name,
@@ -46,24 +44,18 @@ const manifest: ExtensionManifest = {
   key: 'all-fields',
   description: 'Example of fields supported by the editor',
   icons: {
-    '48': () => import('@atlaskit/icon/glyph/editor/code'),
+    '48': () =>
+      import(
+        /* webpackChunkName: "@atlaskit-internal_icon-code" */ '@atlaskit/icon/glyph/editor/code'
+      ).then((mod) => mod.default),
   },
   modules: {
     quickInsert,
     nodes,
     fields: {
       custom: {
-        spacekey: {
-          resolver: spaceKeyFieldResolver,
-        },
-        username: {
-          resolver: usernameFieldResolver,
-        },
-        label: {
-          resolver: labelFieldResolver,
-        },
-        'confluence-content': {
-          resolver: confluenceContentFieldResolver,
+        'mock-resolver': {
+          resolver: mockFieldResolver,
         },
       },
       fieldset: {
@@ -76,10 +68,10 @@ const manifest: ExtensionManifest = {
         'user-jdog-provider': {
           provider: async () => {
             // WARNING: this is required by the SmartUserPicker for testing environments
-            setEnv('local');
+            setSmartUserPickerEnv('local');
 
             return {
-              siteId: '497ea592-beb4-43c3-9137-a6e5fa301088',
+              siteId: '49d8b9d6-ee7d-4931-a0ca-7fcae7d1c3b5',
               principalId: 'Context',
               fieldId: 'storybook',
               productKey: 'jira',

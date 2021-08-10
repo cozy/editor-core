@@ -1,12 +1,13 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
+  DocBuilder,
   doc,
   p,
   table,
   tr,
   td,
   tdEmpty,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { TablePluginState } from '../../../../../plugins/table/types';
 import { mergeCells } from '../../../../../plugins/table/transforms';
 import { pluginKey } from '../../../../../plugins/table/pm-plugins/plugin-factory';
@@ -14,7 +15,7 @@ import { pluginKey } from '../../../../../plugins/table/pm-plugins/plugin-factor
 describe('table plugin -> transforms -> merge cells', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },

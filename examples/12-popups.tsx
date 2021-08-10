@@ -3,7 +3,8 @@
 import React from 'react';
 import { PureComponent } from 'react';
 import styled from 'styled-components';
-import { mention, emoji } from '@atlaskit/util-data-test';
+import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { Editor } from '../src';
 import { Content } from '../example-helpers/styles';
 import imageUploadHandler from '../example-helpers/imageUpload';
@@ -210,10 +211,10 @@ class JiraSidebarEditor extends PureComponent<any, any> {
 const CANCEL_ACTION = () => console.log('Cancel');
 const SAVE_ACTION = () => console.log('Save');
 
-const mentionProvider = new Promise<any>(resolve =>
-  resolve(mention.storyData.resourceProvider),
+const mentionProvider = new Promise<any>((resolve) =>
+  resolve(mentionResourceProvider),
 );
-const emojiProvider = emoji.storyData.getEmojiResource() as any;
+const emojiProvider = getEmojiProvider();
 
 export default function Example() {
   return (

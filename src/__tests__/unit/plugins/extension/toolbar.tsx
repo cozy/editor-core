@@ -2,8 +2,12 @@ import React from 'react';
 import { IntlProvider } from 'react-intl';
 import { NodeSelection } from 'prosemirror-state';
 import { activityProviderFactory } from '@atlaskit/editor-test-helpers/mock-activity-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, extension } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import {
+  doc,
+  extension,
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { createFakeExtensionProvider } from '@atlaskit/editor-test-helpers/extensions';
 import { combineExtensionProviders } from '@atlaskit/editor-common/extensions';
 import {
@@ -21,7 +25,7 @@ import { getToolbarConfig } from '../../../../plugins/extension/toolbar';
 import commonMessages from '../../../../messages';
 import { EditorProps } from '../../../../types';
 import { waitForProvider, flushPromises } from '../../../__helpers/utils';
-import { getToolbarItems } from '../floating-toolbar/_helpers';
+import { getToolbarItems } from '../../../../plugins/floating-toolbar/__tests__/_helpers';
 
 describe('extension toolbar', () => {
   const createEditor = createEditorFactory();
@@ -30,7 +34,7 @@ describe('extension toolbar', () => {
   });
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     props: Partial<EditorProps> = {},
     providerFactory?: ProviderFactory,
   ) => {
@@ -77,7 +81,7 @@ describe('extension toolbar', () => {
       );
       expect(toolbar).toBeDefined();
       const removeButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === removeTitle,
+        (item) => item.type === 'button' && item.title === removeTitle,
       );
 
       expect(removeButton).toBeDefined();
@@ -102,7 +106,7 @@ describe('extension toolbar', () => {
       );
       expect(toolbar).toBeDefined();
       const editButton = getToolbarItems(toolbar!, editorView).find(
-        item => item.type === 'button' && item.title === 'Edit',
+        (item) => item.type === 'button' && item.title === 'Edit',
       );
 
       expect(editButton).toBeDefined();
@@ -126,7 +130,7 @@ describe('extension toolbar', () => {
       );
       expect(toolbar).toBeDefined();
       const breakoutButtons = getToolbarItems(toolbar!, editorView).filter(
-        item =>
+        (item) =>
           item.type === 'button' &&
           [
             defaultBreakoutTitle,
@@ -154,7 +158,7 @@ describe('extension toolbar', () => {
       );
       expect(toolbar).toBeDefined();
       const breakoutButtons = getToolbarItems(toolbar!, editorView).filter(
-        item =>
+        (item) =>
           item.type === 'button' &&
           [
             defaultBreakoutTitle,
@@ -475,14 +479,14 @@ describe('extension toolbar', () => {
         await flushPromises();
 
         const editButton = getToolbarItems(toolbar!, editorView).find(
-          item => item.type === 'button' && item.title === 'Edit',
+          (item) => item.type === 'button' && item.title === 'Edit',
         );
         expect(editButton).toBeDefined();
 
         // Click edit pencil button
         editButton &&
           editButton.type === 'button' &&
-          editButton.onClick(editorView.state, editorView.dispatch);
+          editButton.onClick(editorView.state, editorView.dispatch, editorView);
 
         await flushPromises();
 

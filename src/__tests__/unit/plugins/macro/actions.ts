@@ -1,15 +1,22 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
   bodiedExtension,
   extension,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertMacroFromMacroBrowser } from '../../../../plugins/macro';
 import {
   MacroAttributes,
   MacroProvider,
 } from '@atlaskit/editor-common/provider-factory';
+
+jest.mock('@atlaskit/adf-schema', () => ({
+  ...jest.requireActual<Object>('@atlaskit/adf-schema'),
+  uuid: {
+    generate: () => 'testId',
+  },
+}));
 
 const macroProvider: MacroProvider = {
   config: {},
@@ -54,21 +61,20 @@ describe('macro plugin -> commands -> insert macro from provider', () => {
       editorView.state.schema.nodes.paragraph.createChecked(),
     );
 
-    await insertMacroFromMacroBrowser(macroProvider, macroNode)(
-      editorView.state,
-      editorView.dispatch,
-    );
+    await insertMacroFromMacroBrowser(macroProvider, macroNode)(editorView);
 
     expect(editorView.state.doc).toEqualDocument(
       doc(
         bodiedExtension({
           extensionKey: 'fake.extension',
           extensionType: 'atlassian.com.editor',
+          localId: 'testId',
         })(
           extension({
             extensionKey: 'com.fake',
             extensionType: 'com.fake',
             layout: 'default',
+            localId: 'testId',
           })(),
         ),
       ),

@@ -1,6 +1,6 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import {
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
   mountEditor,
 } from '../../__helpers/testing-example-helpers';
 import * as embedCardAdf from './_fixtures_/embed-card.adf.json';
@@ -11,20 +11,20 @@ import { editable, getDocFromElement } from '../_helpers';
   { type: 'align right', value: 'button[aria-label="Align right"]' },
   { type: 'wrap left', value: 'button[aria-label="Wrap left"]' },
   { type: 'wrap right', value: 'button[aria-label="Wrap right"]' },
-].forEach(layout => {
+].forEach((layout) => {
   BrowserTestCase(
     `embed-layout.ts: Layout ${layout.type} selector for embed Card`,
     { skip: ['edge', 'safari', 'firefox'] },
     async (
-      client: Parameters<typeof goToEditorTestingExample>[0],
+      client: Parameters<typeof goToEditorTestingWDExample>[0],
       testName: string,
     ) => {
-      const page = await goToEditorTestingExample(client);
+      const page = await goToEditorTestingWDExample(client);
       await mountEditor(page, {
         appearance: 'full-page',
         allowTextAlignment: true,
         defaultValue: JSON.stringify(embedCardAdf),
-        UNSAFE_cards: {
+        smartLinks: {
           allowBlockCards: true,
           allowEmbeds: true,
         },

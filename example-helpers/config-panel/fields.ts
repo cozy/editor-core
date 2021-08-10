@@ -2,8 +2,52 @@ import { FieldDefinition } from '@atlaskit/editor-common/extensions';
 
 export const nativeFields: FieldDefinition[] = [
   {
-    type: 'string',
+    type: 'tab-group',
+    label: 'Tab type',
+    name: 'tabGroup',
+    fields: [
+      {
+        type: 'tab',
+        label: 'Tab A',
+        name: 'optionA',
+        fields: [
+          {
+            name: 'expandField',
+            type: 'expand',
+            label: 'awesome expand field',
+            isExpanded: true,
+            fields: [
+              {
+                name: 'textFieldOne',
+                type: 'string',
+                label: 'Free text',
+              },
+            ],
+          },
+          {
+            name: 'textFieldThree',
+            type: 'string',
+            label: 'Free text',
+          },
+        ],
+      },
+      {
+        type: 'tab',
+        label: 'Tab B',
+        name: 'optionB',
+        fields: [
+          {
+            name: 'textFieldTwo',
+            type: 'string',
+            label: 'Free text',
+          },
+        ],
+      },
+    ],
+  },
+  {
     name: 'text-field',
+    type: 'string',
     label: 'Free text',
     isRequired: true,
     description: 'Add any text',
@@ -11,70 +55,70 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'text-field-multiline',
+    type: 'string',
     label: 'Free text',
     isRequired: true,
     description: 'Add any text across multiple lines',
     defaultValue: 'I am the default multiline text',
     style: 'multiline',
-    type: 'string',
   },
   {
     name: 'text-field-optional',
+    type: 'string',
     label: 'Text',
     isRequired: false,
     description: 'Leave it empty',
     placeholder: 'Text goes here',
-    type: 'string',
   },
   {
     name: 'text-field-hidden',
+    type: 'string',
     label: 'Hidden text field',
     defaultValue: 'this is a hidden value passed to the extension',
     isHidden: true,
-    type: 'string',
   },
   {
     name: 'number-field',
+    type: 'number',
     label: 'Number',
     isRequired: true,
     placeholder: 'Number goes here',
-    type: 'number',
   },
   {
     name: 'boolean-field-required',
+    type: 'boolean',
     label: 'Needs to be checked',
     description:
       '<b>A</b> <i>checkbox</i> that can be <code>true</code> or <strong>false</strong> <em>(by design)</em>',
     isRequired: true,
-    type: 'boolean',
   },
   {
     name: 'boolean-field-optional',
+    type: 'boolean',
     label: 'Do you want free shipping?',
     description: 'True or <b>FALSE</b> (should be bolded)',
-    type: 'boolean',
   },
   {
     name: 'boolean-field-toggle',
+    type: 'boolean',
     label: 'Turn on the Wi-Fi?',
     description: 'On or Off',
-    type: 'boolean',
     style: 'toggle',
     defaultValue: true,
   },
   {
     name: 'date-start',
+    type: 'date',
     label: 'Date',
     description: `Nothing of <a onclick="alert('something is wrong')">interest</a>`,
     placeholder: 'Date goes here',
-    type: 'date',
   },
   {
     name: 'enum-select',
+    type: 'enum',
     label: 'Select one',
     isRequired: true,
     description: 'Pick one',
-    type: 'enum',
     style: 'select',
     isMultiple: false,
     placeholder: 'Selected option goes here',
@@ -85,9 +129,9 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-select-icon',
+    type: 'enum',
     label: 'Select with icons',
     description: 'Pick one',
-    type: 'enum',
     style: 'select',
     isMultiple: false,
     items: [
@@ -98,7 +142,8 @@ export const nativeFields: FieldDefinition[] = [
         icon: 'https://i.picsum.photos/id/237/24/24.jpg',
       },
       {
-        label: 'Option B',
+        label:
+          'Option B with a really really really really really really long label',
         value: 'b',
         description: 'One of the best options out there',
         icon: 'https://i.picsum.photos/id/240/24/24.jpg',
@@ -107,9 +152,9 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-select-icon-multiple',
+    type: 'enum',
     label: 'Select with icons (multiple)',
     description: 'Pick many',
-    type: 'enum',
     defaultValue: ['a', 'b'],
     style: 'select',
     placeholder: 'Selected options go here',
@@ -131,11 +176,11 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-select-multiple',
-    label: 'Select multiple choice',
-    isRequired: true,
-    description: 'Pick one',
     type: 'enum',
+    label: 'Select 1 or many',
+    description: '1 required, no default',
     style: 'select',
+    isRequired: true,
     isMultiple: true,
     items: [
       { label: 'Option A', value: 'a' },
@@ -147,9 +192,9 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-radio-required',
-    label: 'Radio - select one',
-    description: 'One is always required',
     type: 'enum',
+    label: 'Select one',
+    description: 'One is always required',
     style: 'radio',
     isRequired: true,
     isMultiple: false,
@@ -163,9 +208,9 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-radio-defaulted',
-    label: 'Radio - select one (defaulted)',
-    description: 'One is always required, but we default it',
     type: 'enum',
+    label: 'Select one (defaulted)',
+    description: 'One is always required, but we default it',
     style: 'radio',
     isRequired: false,
     defaultValue: 'a',
@@ -179,9 +224,9 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'enum-checkbox-multiple',
-    label: 'Checkbox - select many',
-    description: 'Pick multiple',
     type: 'enum',
+    label: 'Select 1 or many, or none',
+    description: 'Nothing required, no default',
     style: 'checkbox',
     isRequired: false,
     isMultiple: true,
@@ -189,44 +234,75 @@ export const nativeFields: FieldDefinition[] = [
       {
         label: 'Option A',
         value: 'a',
-        description: 'cool tooltip description for a',
+        description: 'tooltip description for a',
       },
       {
         label: 'Option B',
         value: 'b',
-        description: 'cool tooltip description for b',
+        description: 'tooltip description for b',
       },
       {
         label: 'Option C',
         value: 'c',
-        description: 'cool tooltip description for c',
+        description: 'tooltip description for c',
       },
       {
         label: 'Option D',
         value: 'd',
-        description: 'cool tooltip description for d',
+        description: 'tooltip description for d',
       },
       {
         label: 'Option E',
         value: 'e',
-        description: 'cool tooltip description for e',
+        description: 'tooltip description for e',
+      },
+    ],
+  },
+  {
+    name: 'enum-checkbox-multiple-required',
+    type: 'enum',
+    label: 'Select 1 or many',
+    description: 'Something required',
+    style: 'checkbox',
+    isRequired: true,
+    isMultiple: true,
+    items: [
+      {
+        label: 'Option A',
+        value: 'a',
+        description: 'tooltip description for a',
+      },
+      {
+        label: 'Option B',
+        value: 'b',
+        description: 'tooltip description for b',
+      },
+      {
+        label: 'Option C',
+        value: 'c',
+        description: 'tooltip description for c',
+      },
+      {
+        label: 'Option D',
+        value: 'd',
+        description: 'tooltip description for d',
+      },
+      {
+        label: 'Option E',
+        value: 'e',
+        description: 'tooltip description for e',
       },
     ],
   },
   {
     name: 'unhandled',
-    label: 'Unknown type',
     type: 'foobar' as any,
+    label: 'Unknown type',
   },
   {
-    name: 'Q',
-    label: 'Search term',
-    type: 'string',
-  },
-  {
-    name: 'cql',
-    label: 'CQL',
+    name: 'fieldset-cql',
     type: 'fieldset',
+    label: 'CQL',
     options: {
       isDynamic: true,
       transformer: {
@@ -235,10 +311,10 @@ export const nativeFields: FieldDefinition[] = [
     },
     fields: [
       {
-        name: 'created',
+        name: 'created-at',
+        type: 'date-range',
         label: 'Created at',
         description: `This is how we select date range in the cql component`,
-        type: 'date-range',
         items: [
           { label: 'Any date', value: '' },
           { label: 'Last 24 hours', value: 'now(-1d)' },
@@ -249,8 +325,8 @@ export const nativeFields: FieldDefinition[] = [
       },
       {
         name: 'last-modified',
-        label: 'Last modified',
         type: 'date-range',
+        label: 'Last modified',
         items: [
           { label: 'Today', value: 'now(-1d)' },
           { label: 'This week', value: 'now(-1w)' },
@@ -259,36 +335,26 @@ export const nativeFields: FieldDefinition[] = [
         ],
       },
       {
-        name: 'Q',
-        label: 'Search term',
+        name: 'query',
         type: 'string',
+        label: 'Search term',
       },
       {
-        name: 'fs-custom-select-icon',
-        label: 'Custom: User',
+        name: 'custom',
         type: 'custom',
-        options: {
-          resolver: {
-            type: 'username',
-          },
-        },
-      },
-      {
-        name: 'SPACE',
-        label: 'Space',
+        label: 'Custom: Select anything',
         isRequired: true,
-        type: 'custom',
         options: {
           resolver: {
-            type: 'spacekey',
+            type: 'mock-resolver',
           },
         },
       },
       {
-        name: 'contentType',
+        name: 'content',
+        type: 'enum',
         label: 'Content Type',
         isRequired: false,
-        type: 'enum',
         style: 'checkbox',
         isMultiple: true,
         items: [
@@ -310,8 +376,8 @@ export const nativeFields: FieldDefinition[] = [
   },
   {
     name: 'fieldset-without-label',
-    label: 'Fieldset without label',
     type: 'fieldset',
+    label: 'Fieldset without label',
     options: {
       isDynamic: true,
       showTitle: false,
@@ -321,21 +387,16 @@ export const nativeFields: FieldDefinition[] = [
     },
     fields: [
       {
-        name: 'Q',
+        name: 'inner-text',
+        type: 'string',
         label: 'Search term',
-        type: 'string',
-      },
-      {
-        name: 'keywords',
-        label: 'Keywords',
-        type: 'string',
       },
     ],
   },
   {
-    name: 'jira-filter',
-    label: 'Issues filter',
+    name: 'fieldset-jira-filter',
     type: 'fieldset',
+    label: 'Issues filter',
     options: {
       isDynamic: true,
       transformer: {
@@ -345,14 +406,14 @@ export const nativeFields: FieldDefinition[] = [
     fields: [
       {
         name: 'keywords',
-        label: 'Keywords',
         type: 'string',
+        label: 'Keywords',
       },
       {
         name: 'project',
+        type: 'enum',
         label: 'Project',
         isRequired: false,
-        type: 'enum',
         style: 'select',
         items: [
           {
@@ -367,9 +428,9 @@ export const nativeFields: FieldDefinition[] = [
       },
       {
         name: 'status',
+        type: 'enum',
         label: 'Status',
         isRequired: false,
-        type: 'enum',
         style: 'select',
         items: [
           {
@@ -388,91 +449,152 @@ export const nativeFields: FieldDefinition[] = [
       },
     ],
   },
+  {
+    name: 'expand field',
+    type: 'expand',
+    label: 'awesome expand field',
+    fields: [
+      {
+        name: 'enum-select',
+        type: 'enum',
+        label: 'Select one',
+        isRequired: true,
+        description: 'Pick one',
+        style: 'select',
+        isMultiple: false,
+        placeholder: 'Selected option goes here',
+        items: [
+          { label: 'Option A', value: 'a' },
+          { label: 'Option B', value: 'b' },
+        ],
+      },
+      {
+        name: 'enum-select-icon',
+        type: 'enum',
+        label: 'Select with icons',
+        description: 'Pick one',
+        style: 'select',
+        isMultiple: false,
+        items: [
+          {
+            label: 'Option A',
+            value: 'a',
+            description: 'Recommended',
+          },
+          {
+            label:
+              'Option B with a really really really really really really long label',
+            value: 'b',
+            description: 'One of the best options out there',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'color-picker',
+    label: 'Color Picker',
+    type: 'color',
+    description: 'Pick your color',
+    defaultValue: '#7AB2FF',
+  },
+  {
+    name: 'color-picker-req',
+    label: 'Color Picker Required',
+    type: 'color',
+    isRequired: true,
+    description: 'Pick your color',
+    defaultValue: '#7AB2FF',
+  },
 ];
 
 export const customFields: FieldDefinition[] = [
   {
-    name: 'custom-label',
-    label: 'Custom: Label',
-    description: 'Select the label',
+    name: 'custom-required',
     type: 'custom',
+    label: 'Custom: Required',
+    description: 'Select the option',
+    isRequired: true,
     options: {
       resolver: {
-        type: 'label',
+        type: 'mock-resolver',
       },
     },
   },
   {
-    name: 'custom-label-create',
-    label: 'Custom: Create a Label',
-    description: 'Select or create a label',
+    name: 'custom-optional',
     type: 'custom',
+    label: 'Custom: Optional',
+    description: 'Select the option, maybe',
+    options: {
+      resolver: {
+        type: 'mock-resolver',
+      },
+    },
+  },
+  {
+    name: 'custom-required-create',
+    type: 'custom',
+    label: 'Custom: Create an option',
+    description: 'Select or create an option',
     isRequired: true,
     options: {
       isCreatable: true,
       resolver: {
-        type: 'label',
+        type: 'mock-resolver',
       },
     },
   },
   {
-    name: 'custom-label-create-multiple',
-    label: 'Custom: Create Label(s)',
-    description: 'Select or create label(s)',
+    name: 'custom-create-multiple',
     type: 'custom',
+    label: 'Custom: Create option(s)',
+    description: 'Select or create option(s)',
     isMultiple: true,
     options: {
       isCreatable: true,
       resolver: {
-        type: 'label',
-      },
-    },
-  },
-  {
-    name: 'custom-user',
-    label: 'Custom: User',
-    type: 'custom',
-    options: {
-      resolver: {
-        type: 'username',
-      },
-    },
-  },
-  {
-    name: 'custom-user-lazy',
-    label: 'Custom: User (lazy)',
-    type: 'custom',
-    options: {
-      resolver: {
-        type: 'username',
+        type: 'mock-resolver',
       },
     },
   },
   {
     name: 'unsupported',
-    label: 'Custom: Missing provider',
     type: 'custom',
+    label: 'Custom: Missing provider',
     options: {
       resolver: {
         type: 'missing-type',
-      } as any,
-    },
-  },
-  {
-    name: 'page',
-    label: 'Custom: Page',
-    description: 'Select the page',
-    type: 'custom',
-    options: {
-      resolver: {
-        type: 'confluence-content',
       },
     },
   },
   {
     name: 'user-jdog',
-    label: 'JDog User',
     type: 'user',
+    label: 'JDog User',
+    options: {
+      provider: {
+        type: 'user-jdog-provider',
+      },
+    },
+  },
+  {
+    name: 'user-jdog-required',
+    type: 'user',
+    label: 'JDog User (Required)',
+    isRequired: true,
+    options: {
+      provider: {
+        type: 'user-jdog-provider',
+      },
+    },
+  },
+  {
+    name: 'user-jdog-multiple',
+    type: 'user',
+    label: 'JDog User (Multiple, Required)',
+    isRequired: true,
+    isMultiple: true,
     options: {
       provider: {
         type: 'user-jdog-provider',

@@ -34,7 +34,7 @@ import {
 } from '../analytics';
 import { isIgnored as isIgnoredByGapCursor } from '../selection/gap-cursor/utils/is-ignored';
 
-import { SelectionPluginState } from './types';
+import { selectionPluginKey } from './types';
 
 export function createSelectionClickHandler(
   nodes: string[],
@@ -213,12 +213,21 @@ export function getRangeSelectionAnalyticsPayload(
   }
 }
 
-export function shouldRecalcDecorations(
-  pluginState: SelectionPluginState,
-  state: EditorState,
-): boolean {
-  const { selection: oldSelection, decorationSet } = pluginState;
-  const { selection: newSelection } = state;
+export function shouldRecalcDecorations({
+  oldEditorState,
+  newEditorState,
+}: {
+  oldEditorState: EditorState;
+  newEditorState: EditorState;
+}): boolean {
+  const oldSelection = oldEditorState.selection;
+  const newSelection = newEditorState.selection;
+  const oldPluginState = selectionPluginKey.getState(oldEditorState);
+  const newPluginState = selectionPluginKey.getState(newEditorState);
+
+  if (!oldPluginState || !newPluginState) {
+    return false;
+  }
 
   // If selection is unchanged, no need to recalculate
   if (oldSelection.eq(newSelection)) {
@@ -228,8 +237,8 @@ export function shouldRecalcDecorations(
       oldSelection instanceof NodeSelection &&
       newSelection instanceof NodeSelection
     ) {
-      const oldDecorations = decorationSet.find();
-      const newDecorations = getDecorations(state.tr).find();
+      const oldDecorations = oldPluginState.decorationSet.find();
+      const newDecorations = newPluginState.decorationSet.find();
       // There might not be old or new decorations if the node selection is for a text node
       // This wouldn't have happened intentionally, but we need to handle this case regardless
       if (oldDecorations.length > 0 && newDecorations.length > 0) {
@@ -273,7 +282,7 @@ export const findSelectableContainerParent = (
   selection: Selection,
 ): ContentNodeWithPos | undefined => {
   let foundNodeThatSupportsGapCursor = false;
-  const selectableNode = findParentNode(node => {
+  const selectableNode = findParentNode((node) => {
     const isSelectable = isSelectableContainerNode(node);
     if (!isSelectable && !isIgnoredByGapCursor(node)) {
       foundNodeThatSupportsGapCursor = true;
@@ -317,6 +326,20 @@ export const findSelectableContainerBefore = (
         return;
       }
     }
+
+    /**
+     * Stick to the default left selection behaviour,
+     * useful for mediaSingleWithCaption
+     */
+    if (
+      selectionBefore instanceof NodeSelection &&
+      NodeSelection.isSelectable(selectionBefore.node)
+    ) {
+      return {
+        node: selectionBefore.node,
+        pos: selectionBefore.from,
+      };
+    }
   }
 };
 
@@ -356,7 +379,7 @@ export const findFirstChildNodeToSelect = (
   parent: PmNode,
 ): NodeWithPos | undefined =>
   flatten(parent).find(
-    child =>
+    (child) =>
       isSelectableChildNode(child.node) || !isIgnoredByGapCursor(child.node),
   );
 

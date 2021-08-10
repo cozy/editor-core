@@ -13,7 +13,12 @@ import WithEditorActions from '../src/ui/WithEditorActions';
 import { EditorActions } from '../src';
 import ToolbarHelp from '../src/ui/ToolbarHelp';
 import Editor from './../src/editor';
-import { emoji, taskDecision, mention } from '@atlaskit/util-data-test';
+import {
+  getEmojiProvider,
+  currentUser,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { mediaProvider } from './5-full-page';
 import { EmojiProvider } from '@atlaskit/emoji/resource';
 import styled from 'styled-components';
@@ -29,16 +34,12 @@ const Wrapper: any = styled.div`
 `;
 
 export const providers: any = {
-  emojiProvider: emoji.storyData.getEmojiResource({
+  emojiProvider: getEmojiProvider({
     uploadSupported: true,
-    currentUser: {
-      id: emoji.storyData.loggedUser,
-    },
+    currentUser,
   }) as Promise<EmojiProvider>,
-  taskDecisionProvider: Promise.resolve(
-    taskDecision.getMockTaskDecisionResource(),
-  ),
-  mentionProvider: Promise.resolve(mention.storyData.resourceProvider),
+  taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
+  mentionProvider: Promise.resolve(mentionResourceProvider),
 };
 
 export default class Example extends React.Component<{}, AdfState> {
@@ -54,7 +55,7 @@ export default class Example extends React.Component<{}, AdfState> {
         <Wrapper>
           <div>
             <WithEditorActions
-              render={actions => {
+              render={(actions) => {
                 this.editorActions = actions;
                 return (
                   <Editor
@@ -118,7 +119,7 @@ export default class Example extends React.Component<{}, AdfState> {
       return;
     }
 
-    this.editorActions.getValue().then(value => {
+    this.editorActions.getValue().then((value) => {
       if (this.adfTextArea) {
         this.adfTextArea.value = JSON.stringify(value, null, 2);
       }

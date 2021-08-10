@@ -11,7 +11,8 @@ import {
   tdEmpty,
   layoutSection,
   layoutColumn,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -25,12 +26,12 @@ import basePlugin from '../../../base';
 import widthPlugin from '../../../width';
 import tablesPlugin from '../../../table';
 import breakoutPlugin from '../../../breakout';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 
 describe('codeBlock - keymaps', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()
@@ -167,6 +168,24 @@ describe('codeBlock - keymaps', () => {
           layoutColumn({ width: 50 })(p('')),
         ),
       );
+
+      sendKeyToPm(editorView, 'Backspace');
+      expect(editorView.state.doc).toEqualDocument(expectedDoc);
+    });
+
+    it('should remove not nested empty code block', () => {
+      const { editorView } = editor(doc(p(), p(), code_block()('{<>}')));
+
+      const expectedDoc = doc(p(), p());
+
+      sendKeyToPm(editorView, 'Backspace');
+      expect(editorView.state.doc).toEqualDocument(expectedDoc);
+    });
+
+    it('should replace not nested empty code block with paragraph if it is at the beginning of the doc', () => {
+      const { editorView } = editor(doc(code_block()('{<>}')));
+
+      const expectedDoc = doc(p());
 
       sendKeyToPm(editorView, 'Backspace');
       expect(editorView.state.doc).toEqualDocument(expectedDoc);

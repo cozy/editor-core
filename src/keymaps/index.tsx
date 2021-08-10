@@ -32,6 +32,10 @@ export const toggleOrderedList = makeKeyMapWithCommon(
   'Numbered list',
   'Mod-Shift-7',
 );
+export const ctrlBackSpace = makeKeyMapWithCommon(
+  'Cmd + Backspace',
+  'Mod-Backspace',
+);
 export const toggleBulletList = makeKeyMapWithCommon(
   'Bullet list',
   'Mod-Shift-8',
@@ -58,8 +62,7 @@ export const moveLeft = makeKeyMapWithCommon('Move left', 'ArrowLeft');
 export const moveRight = makeKeyMapWithCommon('Move right', 'ArrowRight');
 export const indentList = makeKeyMapWithCommon('Indent List', 'Tab');
 export const outdentList = makeKeyMapWithCommon('Outdent List', 'Shift-Tab');
-export const redo = makeKeymap('Redo', 'Ctrl-y', 'Cmd-Shift-z');
-export const redoBarred = makeKeymap('Redo Barred', 'Ctrl-Shift-z', 'Cmd-y');
+export const redo = makeKeymap('Redo', 'Ctrl-y', 'Mod-Shift-z');
 export const openHelp = makeKeyMapWithCommon('Open Help', 'Mod-/');
 export const addLink = makeKeyMapWithCommon('Link', 'Mod-k');
 export const addInlineComment = makeKeyMapWithCommon('Annotate', 'Mod-Alt-c');
@@ -76,6 +79,7 @@ export const space = makeKeyMapWithCommon('Space', 'Space');
 export const escape = makeKeyMapWithCommon('Escape', 'Escape');
 export const nextCell = makeKeyMapWithCommon('Next cell', 'Tab');
 export const previousCell = makeKeyMapWithCommon('Previous cell', 'Shift-Tab');
+export const shiftTab = makeKeyMapWithCommon('Shift Tab', 'Shift-Tab');
 export const toggleTable = makeKeyMapWithCommon('Table', 'Shift-Alt-t');
 export const addRowBefore = makeKeyMapWithCommon(
   'Add Row Above',
@@ -174,7 +178,7 @@ export function findKeymapByDescription(
   description: string,
 ): Keymap | undefined {
   const matches = ALL.filter(
-    keymap => keymap.description.toUpperCase() === description.toUpperCase(),
+    (keymap) => keymap.description.toUpperCase() === description.toUpperCase(),
   );
   return matches[0];
 }
@@ -225,7 +229,7 @@ const ALL = [
   shiftEnter,
 ];
 
-function makeKeymap(
+export function makeKeymap(
   description: string,
   windows: string,
   mac: string,
@@ -233,13 +237,16 @@ function makeKeymap(
 ): Keymap {
   return {
     description: description,
-    windows: windows,
-    mac: mac,
+    windows: windows.replace(/Mod/i, 'Ctrl'),
+    mac: mac.replace(/Mod/i, 'Cmd'),
     common: common,
   };
 }
 
-function makeKeyMapWithCommon(description: string, common: string): Keymap {
+export function makeKeyMapWithCommon(
+  description: string,
+  common: string,
+): Keymap {
   const windows = common.replace(/Mod/i, 'Ctrl');
   const mac = common.replace(/Mod/i, 'Cmd');
   return makeKeymap(description, windows, mac, common);

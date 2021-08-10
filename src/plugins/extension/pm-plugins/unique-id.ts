@@ -9,8 +9,9 @@ const createPlugin = () =>
     // TODO: @see ED-8839
     appendTransaction: (transactions, _oldState, newState) => {
       const tr = newState.tr;
+      const selectionBookmark = tr.selection.getBookmark();
       let modified = false;
-      transactions.forEach(transaction => {
+      transactions.forEach((transaction) => {
         if (!transaction.docChanged) {
           return;
         }
@@ -41,7 +42,9 @@ const createPlugin = () =>
       });
 
       if (modified) {
-        return tr;
+        // We want to restore to the original selection but w/o applying the mapping
+        // @see https://github.com/ProseMirror/prosemirror/issues/645
+        return tr.setSelection(selectionBookmark.resolve(tr.doc));
       }
       return;
     },

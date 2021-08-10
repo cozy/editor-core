@@ -17,7 +17,8 @@ import {
   tr,
   th,
   td,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import rulePlugin from '../../../rule';
 import layoutPlugin from '../../../layout';
@@ -39,7 +40,7 @@ describe('selection analytics', () => {
     .add(layoutPlugin)
     .add(tablePlugin);
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<SelectionPluginState, PluginKey>({
       doc,
       preset,

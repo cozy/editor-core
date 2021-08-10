@@ -7,9 +7,10 @@ import {
   lozenge as mentionId,
   fullpage,
 } from '../_helpers';
+import { codeBlockSelectors } from '../../__helpers/page-objects/_code-block';
 import {
   mountEditor,
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
 } from '../../__helpers/testing-example-helpers';
 
 /*
@@ -24,7 +25,7 @@ BrowserTestCase(
   'mention-3.ts: user can click ToolbarMentionPicker and see mention',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
     });
@@ -42,7 +43,7 @@ BrowserTestCase(
   'mention-3.ts: should not insert on space if multiple exact nickname match',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
     });
@@ -55,7 +56,7 @@ BrowserTestCase(
     await page.type(editable, [' some']);
     await page.type(editable, [' text ']);
     const doc = await page.$eval(editable, getDocFromElement);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     expect(doc).toMatchCustomDocSnapshot(testName);
   },
 );
@@ -92,13 +93,15 @@ BrowserTestCase(
   // TODO: Fix unknown character on BS
   { skip: ['safari', 'edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
     });
 
     await page.type(editable, '`this is inline code ');
     await insertMention(page, 'Carolyn');
+    // Remove weird space after the mention
+    await page.keys('Backspace');
     await page.type(editable, '`');
     const doc = await page.$eval(editable, getDocFromElement);
     expect(doc).toMatchCustomDocSnapshot(testName);
@@ -110,13 +113,13 @@ BrowserTestCase(
   // TODO: Fix unknown character on BS
   { skip: ['safari', 'edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
     });
 
-    await page.type(editable, '```');
-    await page.waitForSelector('pre');
+    await page.type(editable, ['``', '`']);
+    await page.waitForSelector(codeBlockSelectors.code);
     await page.type(editable, ['this is a code block ', '@Caro']);
     await page.keys(['Return']);
     const doc = await page.$eval(editable, getDocFromElement);
@@ -128,7 +131,7 @@ BrowserTestCase(
   'mention-3.ts: users with same first name should not be selected if space',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
     });

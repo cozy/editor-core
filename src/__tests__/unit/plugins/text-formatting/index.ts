@@ -1,5 +1,5 @@
 import { browser } from '@atlaskit/editor-common';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   strike,
@@ -11,7 +11,8 @@ import {
   subsup,
   mention,
   code_block,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import {
@@ -34,7 +35,7 @@ describe('text-formatting', () => {
   const createEditor = createEditorFactory<TextFormattingState>();
 
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
     return createEditor({
       doc,

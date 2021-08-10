@@ -4,7 +4,7 @@ import { EditorView } from 'prosemirror-view';
 
 import { ProviderFactory, wrappedLayouts } from '@atlaskit/editor-common';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import randomId from '@atlaskit/editor-test-helpers/random-id';
 
@@ -27,7 +27,8 @@ import {
   code_block,
   Refs,
   RefsNode,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import sleep from '@atlaskit/editor-test-helpers/sleep';
@@ -48,7 +49,6 @@ import {
   temporaryMedia,
   temporaryMediaGroup,
   getFreshMediaProvider,
-  waitForAllPickersInitialised,
   testCollectionName,
   temporaryFileId,
 } from '../../../../__tests__/unit/plugins/media/_utils';
@@ -61,8 +61,8 @@ import {
 } from '@atlaskit/adf-schema';
 import { CardEvent, CardOnClickCallback } from '@atlaskit/media-card';
 import { FileDetails } from '@atlaskit/media-client';
-import { Schema } from '@atlaskit/editor-test-helpers/src/schema';
-import { EditorInstanceWithPlugin } from '@atlaskit/editor-test-helpers/src/create-editor';
+import { Schema } from '@atlaskit/editor-test-helpers/schema';
+import { EditorInstanceWithPlugin } from '@atlaskit/editor-test-helpers/create-editor';
 import { ReactWrapper, mount } from 'enzyme';
 import { ClipboardWrapper } from '../../../../plugins/media/ui/MediaPicker/ClipboardWrapper';
 import { INPUT_METHOD } from '../../../../plugins/analytics';
@@ -101,7 +101,7 @@ describe('Media plugin', () => {
   });
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     editorProps = {},
     dropzoneContainer: HTMLElement = document.body,
   ) => {
@@ -285,7 +285,7 @@ describe('Media plugin', () => {
       });
 
       it('should be true when an inserted file is ready', async () => {
-        mediaPluginState.insertFile(foo, listener => {
+        mediaPluginState.insertFile(foo, (listener) => {
           listener({ status: 'ready', id: 'dummy-id' });
         });
 
@@ -316,7 +316,7 @@ describe('Media plugin', () => {
         });
 
         it('should invoke it with allUploadsFinished true when an inserted image is ready', async () => {
-          mediaPluginState.insertFile(foo, listener => {
+          mediaPluginState.insertFile(foo, (listener) => {
             listener({ status: 'ready', id: 'dummy-id' });
           });
 
@@ -558,10 +558,6 @@ describe('Media plugin', () => {
 
     await getFreshMediaProvider();
     await getFreshMediaProvider();
-
-    await waitForAllPickersInitialised(pluginState);
-
-    expect(pluginState.pickers.length).toBe(1);
   });
 
   it('should re-use old pickers when new media provider is set', async () => {
@@ -570,14 +566,9 @@ describe('Media plugin', () => {
 
     await getFreshMediaProvider();
 
-    await waitForAllPickersInitialised(pluginState);
-
     const pickersAfterMediaProvider1 = pluginState.pickers;
-    expect(pickersAfterMediaProvider1.length).toBe(1);
 
     await getFreshMediaProvider();
-
-    await waitForAllPickersInitialised(pluginState);
 
     const pickersAfterMediaProvider2 = pluginState.pickers;
 
@@ -599,7 +590,7 @@ describe('Media plugin', () => {
     await pluginState.setMediaProvider(mediaProvider1);
     await mediaProvider1;
 
-    pluginState.pickers.forEach(picker => {
+    pluginState.pickers.forEach((picker) => {
       picker.setUploadParams = jest.fn();
     });
 
@@ -607,7 +598,7 @@ describe('Media plugin', () => {
     await pluginState.setMediaProvider(mediaProvider2);
     await mediaProvider2;
 
-    pluginState.pickers.forEach(picker => {
+    pluginState.pickers.forEach((picker) => {
       expect(picker.setUploadParams as any).toHaveBeenCalledTimes(1);
     });
   });
@@ -909,9 +900,7 @@ describe('Media plugin', () => {
         setNodeSelection(editorView, 0);
 
         expect(pluginState.element).not.toBeUndefined();
-        expect(pluginState.element!.className).toContain(
-          'mediaSingleView-content-wrap ProseMirror-selectednode',
-        );
+        expect(pluginState.element!.tagName).toBe('FIGURE');
       });
 
       describe('when clicked', () => {
@@ -1095,7 +1084,7 @@ describe('Media plugin', () => {
               expectedFromRef: '<',
               expectedToRef: '>',
             },
-          ].forEach(testCase => {
+          ].forEach((testCase) => {
             it(testCase.name, () => {
               const editorInstance = editor(testCase.doc);
               const { onClickHandler } = setupWrapper(editorInstance);
@@ -1454,12 +1443,7 @@ describe('Media plugin', () => {
   });
 
   it('should trigger cloud picker opened analytics event when opened via quick insert', async () => {
-    const { editorView, sel, pluginState } = editor(
-      doc(p('{<>}')),
-      {},
-      undefined,
-    );
-    await waitForAllPickersInitialised(pluginState);
+    const { editorView, sel } = editor(doc(p('{<>}')), {}, undefined);
     insertText(editorView, '/Files', sel);
     sendKeyToPm(editorView, 'Enter');
 
@@ -1486,7 +1470,7 @@ describe('Media plugin', () => {
 
     describe('#alignAttributes', () => {
       describe('with <100% image', () => {
-        wrappedLayouts.forEach(newAlignment => {
+        wrappedLayouts.forEach((newAlignment) => {
           it(`should maintain width on ${newAlignment}`, () => {
             const centerNode: MediaSingleAttributes = {
               width: 70,
@@ -1528,7 +1512,7 @@ describe('Media plugin', () => {
           });
         });
 
-        wrappedLayouts.forEach(newAlignment => {
+        wrappedLayouts.forEach((newAlignment) => {
           it(`should resize to half width for ${newAlignment}`, () => {
             const centerNode: MediaSingleAttributes = {
               width: 100,
@@ -1550,9 +1534,9 @@ describe('Media plugin', () => {
         });
       });
 
-      nonCenterNonWrappedLayouts.forEach(oldAlignment => {
+      nonCenterNonWrappedLayouts.forEach((oldAlignment) => {
         describe(`with ${oldAlignment} and 70% width`, () => {
-          wrappedLayouts.forEach(newAlignment => {
+          wrappedLayouts.forEach((newAlignment) => {
             it(`should resize to 50 for ${newAlignment}`, () => {
               const centerNode: MediaSingleAttributes = {
                 width: 70,
@@ -1576,7 +1560,7 @@ describe('Media plugin', () => {
       });
 
       describe('with unresized image', () => {
-        wrappedLayouts.forEach(newAlignment => {
+        wrappedLayouts.forEach((newAlignment) => {
           it(`should resize to half width for ${newAlignment}`, () => {
             const centerNode: MediaSingleAttributes = { layout: 'center' };
             expect(
@@ -1595,7 +1579,7 @@ describe('Media plugin', () => {
         });
       });
 
-      nonCenterNonWrappedLayouts.forEach(oldAlignment => {
+      nonCenterNonWrappedLayouts.forEach((oldAlignment) => {
         it(`should drop width for center from ${oldAlignment}`, () => {
           const centerNode: MediaSingleAttributes = {
             layout: oldAlignment,
@@ -1616,7 +1600,7 @@ describe('Media plugin', () => {
       });
 
       describe('with small image', () => {
-        wrappedLayouts.forEach(newAlignment => {
+        wrappedLayouts.forEach((newAlignment) => {
           it(`should not add 50% width when alignment changed to ${newAlignment}`, () => {
             const centerNode: MediaSingleAttributes = { layout: 'center' };
             expect(
@@ -1654,7 +1638,7 @@ describe('Media plugin', () => {
           });
         });
 
-        wrappedLayouts.forEach(newAlignment => {
+        wrappedLayouts.forEach((newAlignment) => {
           it(`should maintain width on ${newAlignment}`, () => {
             const centerNode: MediaSingleAttributes = {
               layout: 'center',

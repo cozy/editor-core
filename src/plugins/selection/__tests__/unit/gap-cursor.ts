@@ -1,5 +1,5 @@
-import { TextSelection } from 'prosemirror-state';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { TextSelection, PluginKey } from 'prosemirror-state';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -10,7 +10,10 @@ import {
   tdCursor,
   h1,
   code_block,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+  mediaSingle,
+  media,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 
@@ -31,13 +34,20 @@ import {
 } from './_gap-cursor-utils';
 
 import { uuid } from '@atlaskit/adf-schema';
-
-import { gapCursorPluginKey } from '../../../../plugins/selection/types';
+import { gapCursorPluginKey } from '../../pm-plugins/gap-cursor-plugin-key';
+import createStub from 'raf-stub';
+import {
+  createProsemirrorEditorFactory,
+  LightEditorPlugin,
+  Preset,
+} from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+import mediaPlugin from '../../../media';
+import selectionPlugin from '../../../selection';
 
 describe('gap-cursor', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: {
@@ -71,7 +81,7 @@ describe('gap-cursor', () => {
     });
 
     describe('when selection moving to preceding block node', () => {
-      (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+      (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
         describe(nodeName, () => {
           it(`should create TextSelection on preceding ${nodeName}`, () => {
             const { editorView } = editor(
@@ -90,7 +100,7 @@ describe('gap-cursor', () => {
     });
 
     describe('when selection moving to following block node', () => {
-      (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+      (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
         describe(nodeName, () => {
           it(`should create TextSelection on following ${nodeName}`, () => {
             const { editorView } = editor(
@@ -110,12 +120,12 @@ describe('gap-cursor', () => {
   });
 
   describe('when block nodes allow gap cursor', () => {
-    ['ArrowLeft', 'ArrowRight'].forEach(direction => {
+    ['ArrowLeft', 'ArrowRight'].forEach((direction) => {
       describe(`when pressing ${direction}`, () => {
         describe('when cursor is inside of a content block node', () => {
           (Object.keys(blockNodes) as BlockNodesKeys)
-            .filter(blockNode => blockNode !== 'table') // table has custom behaviour to set a cell selection in this case
-            .forEach(nodeName => {
+            .filter((blockNode) => blockNode !== 'table') // table has custom behaviour to set a cell selection in this case
+            .forEach((nodeName) => {
               describe(nodeName, () => {
                 it('should set GapCursorSelection', () => {
                   const { editorView } = editor(
@@ -136,7 +146,7 @@ describe('gap-cursor', () => {
             });
 
           (Object.keys(blockContainerNodes) as BlockContainerNodesKeys).forEach(
-            nodeName => {
+            (nodeName) => {
               describe(nodeName, () => {
                 it('should set GapCursorSelection', () => {
                   const { editorView } = editor(
@@ -161,7 +171,7 @@ describe('gap-cursor', () => {
 
         describe('when cursor is before or after a leaf block node', () => {
           (Object.keys(leafBlockNodes) as LeafBlockNodesKeys).forEach(
-            nodeName => {
+            (nodeName) => {
               describe(nodeName, () => {
                 it('should set GapCursorSelection', () => {
                   const content =
@@ -189,7 +199,7 @@ describe('gap-cursor', () => {
 
       describe('when cursor is after a block node', () => {
         describe(`when pressing Backspace`, () => {
-          (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+          (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
             describe(nodeName, () => {
               it(`should delete the ${nodeName}`, () => {
                 const { editorView, refs } = editor(
@@ -206,7 +216,7 @@ describe('gap-cursor', () => {
             });
           });
           (Object.keys(leafBlockNodes) as LeafBlockNodesKeys).forEach(
-            nodeName => {
+            (nodeName) => {
               describe(nodeName, () => {
                 it(`should delete the ${nodeName}`, () => {
                   const { editorView, refs } = editor(
@@ -228,7 +238,7 @@ describe('gap-cursor', () => {
 
       describe('when cursor is before a block node', () => {
         describe(`when pressing Delete`, () => {
-          (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+          (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
             describe(nodeName, () => {
               it(`should delete the ${nodeName}`, () => {
                 const { editorView, refs } = editor(
@@ -245,7 +255,7 @@ describe('gap-cursor', () => {
             });
           });
           (Object.keys(leafBlockNodes) as LeafBlockNodesKeys).forEach(
-            nodeName => {
+            (nodeName) => {
               describe(nodeName, () => {
                 it(`should delete the ${nodeName}`, () => {
                   const { editorView, refs } = editor(
@@ -268,7 +278,7 @@ describe('gap-cursor', () => {
 
     describe('when pressing ArrowUp', () => {
       describe('when cursor is inside first content block node of document', () => {
-        (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+        (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
           describe(nodeName, () => {
             it('should set GapCursorSelection', () => {
               const { editorView } = editor(
@@ -290,8 +300,8 @@ describe('gap-cursor', () => {
     describe('when pressing ArrowLeft', () => {
       describe('when cursor is inside first content block node of document', () => {
         (Object.keys(blockNodes) as BlockNodesKeys)
-          .filter(blockNode => blockNode !== 'table') // table has custom behaviour to set a cell selection in this case
-          .forEach(nodeName => {
+          .filter((blockNode) => blockNode !== 'table') // table has custom behaviour to set a cell selection in this case
+          .forEach((nodeName) => {
             describe(nodeName, () => {
               it('should set GapCursorSelection', () => {
                 const { editorView } = editor(
@@ -314,7 +324,7 @@ describe('gap-cursor', () => {
   describe('when inside of a table', () => {
     describe('when cursor is at a cell to the right', () => {
       describe('when pressing ArrowLeft', () => {
-        (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+        (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
           if (!/table|bodiedExtension/.test(nodeName)) {
             describe(nodeName, () => {
               it('should set GapCursorSelection', () => {
@@ -338,7 +348,7 @@ describe('gap-cursor', () => {
         });
 
         (Object.keys(leafBlockNodes) as LeafBlockNodesKeys).forEach(
-          nodeName => {
+          (nodeName) => {
             describe(nodeName, () => {
               it('should set GapCursorSelection', () => {
                 const { editorView } = editor(
@@ -360,7 +370,7 @@ describe('gap-cursor', () => {
 
     describe('when cursor is at a cell to the left', () => {
       describe('when pressing ArrowRight', () => {
-        (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+        (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
           if (!/table|bodiedExtension/.test(nodeName)) {
             describe(nodeName, () => {
               it('should set GapCursorSelection', () => {
@@ -389,7 +399,7 @@ describe('gap-cursor', () => {
         });
 
         (Object.keys(leafBlockNodes) as LeafBlockNodesKeys).forEach(
-          nodeName => {
+          (nodeName) => {
             describe(nodeName, () => {
               it('should set GapCursorSelection', () => {
                 const { editorView, refs } = editor(
@@ -441,7 +451,7 @@ describe('gap-cursor', () => {
   describe('when inside of a code block', () => {
     it.each(['ArrowUp', 'ArrowDown'])(
       'should not create gap cursor when pressing %s in the middle of code block',
-      key => {
+      (key) => {
         const { editorView } = editor(
           doc(code_block({})('1\n2\n3\n4\n{<>}5\n6\n')),
         );
@@ -462,7 +472,7 @@ describe('gap-cursor', () => {
     afterEach(() => {
       uuid.setStatic(false);
     });
-    (Object.keys(blockNodes) as BlockNodesKeys).forEach(nodeName => {
+    (Object.keys(blockNodes) as BlockNodesKeys).forEach((nodeName) => {
       describe(nodeName, () => {
         it(`should create a paragraph below the ${nodeName}`, () => {
           const { editorView, refs } = editor(
@@ -481,6 +491,68 @@ describe('gap-cursor', () => {
           );
         });
       });
+    });
+  });
+
+  describe('selection at front of document', () => {
+    const createProsemirrorEditor = createProsemirrorEditorFactory();
+    let stub: any;
+    let rafSpy: any;
+    const editor = (doc: DocBuilder) => {
+      return createProsemirrorEditor<boolean, PluginKey>({
+        doc,
+        pluginKey: gapCursorPluginKey,
+        preset: new Preset<LightEditorPlugin>()
+          .add([mediaPlugin, { allowMediaSingle: true }])
+          .add(selectionPlugin),
+      });
+    };
+
+    beforeEach(() => {
+      stub = createStub();
+      rafSpy = jest
+        // @ts-ignore
+        .spyOn(global, 'requestAnimationFrame')
+        .mockImplementation((stub as any).add);
+    });
+
+    afterEach(() => {
+      rafSpy.mockRestore();
+    });
+
+    it('should change selection to gap cursor if media is first', () => {
+      const { editorView } = editor(
+        doc(
+          mediaSingle()(
+            media({
+              id: 'a559980d-cd47-43e2-8377-27359fcb905f',
+              type: 'file',
+              collection: 'MediaServicesSample',
+            })(),
+          ),
+          p('Line text'),
+        ),
+      );
+      stub.step();
+      expect(editorView.state).toEqualDocumentAndSelection(
+        doc(
+          '{<gap|>}',
+          mediaSingle()(
+            media({
+              id: 'a559980d-cd47-43e2-8377-27359fcb905f',
+              type: 'file',
+              collection: 'MediaServicesSample',
+            })(),
+          ),
+          p('Line text'),
+        ),
+      );
+    });
+
+    it('should leave selection as text selection if node is not first', () => {
+      const { editorView } = editor(doc(p('Praesent ullamcorper natoque')));
+      stub.step();
+      expect(editorView.state.selection).toBeInstanceOf(TextSelection);
     });
   });
 });

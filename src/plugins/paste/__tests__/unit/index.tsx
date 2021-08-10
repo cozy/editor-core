@@ -47,7 +47,8 @@ import {
   a,
   inlineCard,
   annotation,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createFakeExtensionManifest,
   createFakeAutoConvertModule,
@@ -61,10 +62,9 @@ import {
   ExtensionProvider,
 } from '@atlaskit/editor-common';
 import { EmojiProvider } from '@atlaskit/emoji';
-import {
-  emoji as emojiData,
-  mention as mentionData,
-} from '@atlaskit/util-data-test';
+import { getEmojiResourceWithStandardAndAtlassianEmojis } from '@atlaskit/util-data-test/get-emoji-resource-standard-atlassian';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+
 import { TextSelection, Transaction } from 'prosemirror-state';
 import { uuid, AnnotationTypes } from '@atlaskit/adf-schema';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
@@ -91,14 +91,14 @@ import tasksAndDecisionsPlugin from '../../../tasks-and-decisions';
 import tablesPlugin from '../../../table';
 import emojiPlugin from '../../../emoji';
 import mentionsPlugin from '../../../mentions';
-import cardPlugin, { CardOptions } from '../../../card';
+import cardPlugin from '../../../card';
+import { CardOptions } from '@atlaskit/editor-common';
 import pastePlugin from '../../index';
 import mediaPlugin from '../../../media';
-import featureFlags from '../../../feature-flags-context';
 import { PluginConfig as TablePluginConfig } from '../../../table/types';
 import blockTypePlugin from '../../../block-type';
 import hyperlinkPlugin from '../../../hyperlink';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 import codeBlockPlugin from '../../../code-block';
 import textFormattingPlugin from '../../../text-formatting';
 import layoutPlugin from '../../../layout';
@@ -110,6 +110,27 @@ import {
   InlineCommentMap,
 } from '../../../annotation/pm-plugins/types';
 import { inlineCommentPluginKey } from '../../../annotation/utils';
+import { handlePasteLinkOnSelectedText } from '../../handlers';
+import { Slice } from 'prosemirror-model';
+import { measureRender as measureRenderMocked } from '@atlaskit/editor-common';
+import { createPasteMeasurePayload as createPasteMeasurePayloadMocked } from '../../pm-plugins/analytics';
+import unsupportedContentPlugin from '../../../unsupported-content';
+
+jest.mock('@atlaskit/editor-common', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common'),
+  measureRender: jest.fn(
+    (
+      measureName: string,
+      onMeasureComplete?: (duration: number, startTime: number) => void,
+    ) => {
+      onMeasureComplete && onMeasureComplete(5000, 1);
+    },
+  ),
+}));
+jest.mock('../../pm-plugins/analytics', () => ({
+  ...jest.requireActual<Object>('../../pm-plugins/analytics'),
+  createPasteMeasurePayload: jest.fn(),
+}));
 
 describe('paste plugins', () => {
   const createEditor = createProsemirrorEditorFactory();
@@ -126,12 +147,12 @@ describe('paste plugins', () => {
   }
 
   const editor = (
-    doc: any,
+    doc: DocBuilder,
     pluginsOptions?: PluginsOptions,
     attachTo?: HTMLElement,
   ) => {
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
-    const emojiProvider = emojiData.storyData.getEmojiResourceWithStandardAndAtlassianEmojis() as Promise<
+    const emojiProvider = getEmojiResourceWithStandardAndAtlassianEmojis() as Promise<
       EmojiProvider
     >;
     const mediaProvider = Promise.resolve({
@@ -139,7 +160,7 @@ describe('paste plugins', () => {
     });
     const inlineCommentProvider: InlineCommentAnnotationProvider = {
       getState: async (ids: string[]) => {
-        return ids.map(id => ({
+        return ids.map((id) => ({
           annotationType: AnnotationTypes.INLINE_COMMENT,
           id,
           state: { resolved: false },
@@ -153,7 +174,7 @@ describe('paste plugins', () => {
       emojiProvider,
       mediaProvider,
       macroProvider: Promise.resolve(macroProvider),
-      mentionProvider: Promise.resolve(mentionData.storyData.resourceProvider),
+      mentionProvider: Promise.resolve(mentionResourceProvider),
       annotationProviders: Promise.resolve({
         inlineComment: inlineCommentProvider,
       }),
@@ -179,7 +200,14 @@ describe('paste plugins', () => {
         .add([pastePlugin, pasteOptions])
         .add([
           analyticsPlugin,
-          { createAnalyticsEvent: createAnalyticsEvent as any },
+          {
+            createAnalyticsEvent: createAnalyticsEvent as any,
+            performanceTracking: {
+              pasteTracking: {
+                enabled: true,
+              },
+            },
+          },
         ])
         .add(extensionPlugin)
         .add(blockTypePlugin)
@@ -209,7 +237,6 @@ describe('paste plugins', () => {
             ? { platform: 'web', ...pasteOptions.cardOptions }
             : { platform: 'web' },
         ])
-        .add(featureFlags)
         .add([
           mediaPlugin,
           {
@@ -228,6 +255,7 @@ describe('paste plugins', () => {
             isCopyPasteEnabled: true,
           },
         ])
+        .add(unsupportedContentPlugin)
         .add(layoutPlugin)
         .add([
           annotationPlugin,
@@ -414,6 +442,120 @@ describe('paste plugins', () => {
             ),
           );
         });
+      });
+    });
+
+    describe('paste in hyperlink', () => {
+      it('should add link mark to selected text if slice is a link and text is matching', () => {
+        const href = 'https://www.atlassian.com';
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+        expect(
+          handlePasteLinkOnSelectedText(
+            new Slice(
+              doc(p(link({ href })(href)))(editorView.state.schema).content,
+              1,
+              1,
+            ),
+          )(editorView.state, editorView.dispatch),
+        ).toBeTruthy();
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the ', a({ href })('selected text'), ' here')),
+        );
+      });
+
+      it('should not add link mark to selected text if slice is a link and text is different', () => {
+        const href = 'https://www.atlassian.com';
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+        expect(
+          handlePasteLinkOnSelectedText(
+            new Slice(
+              doc(p(link({ href })('copied text')))(
+                editorView.state.schema,
+              ).content,
+              1,
+              1,
+            ),
+          )(editorView.state, editorView.dispatch),
+        ).toBeFalsy();
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+      });
+
+      it('should be falsy if not adding a link', () => {
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+        expect(
+          handlePasteLinkOnSelectedText(
+            new Slice(
+              doc(p('hello world'))(editorView.state.schema).content,
+              1,
+              1,
+            ),
+          )(editorView.state, editorView.dispatch),
+        ).toBeFalsy();
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the selected text here')),
+        );
+      });
+
+      it('should be falsy if theres no text selection', () => {
+        const href = 'https://www.atlassian.com';
+        const { editorView } = editor(
+          doc(p('This is the {<>}selected text here')),
+        );
+        expect(
+          handlePasteLinkOnSelectedText(
+            new Slice(
+              doc(p(link({ href })(href)))(editorView.state.schema).content,
+              1,
+              1,
+            ),
+          )(editorView.state, editorView.dispatch),
+        ).toBeFalsy();
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the selected text here')),
+        );
+      });
+
+      it('should be falsy if you cannot add a link in that range', () => {
+        const href = 'https://www.atlassian.com';
+        const { editorView } = editor(
+          doc(p('This is the {<}sele'), p('cted text{>} here')),
+        );
+        expect(
+          handlePasteLinkOnSelectedText(
+            new Slice(
+              doc(p(link({ href })(href)))(editorView.state.schema).content,
+              1,
+              1,
+            ),
+          )(editorView.state, editorView.dispatch),
+        ).toBeFalsy();
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the sele'), p('cted text here')),
+        );
+      });
+
+      it('should add link mark to selected text on paste', () => {
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+        dispatchPasteEvent(editorView, { plain: 'https://www.atlassian.com' });
+        expect(editorView.state.doc).toEqualDocument(
+          doc(
+            p(
+              'This is the ',
+              a({ href: 'https://www.atlassian.com' })('selected text'),
+              ' here',
+            ),
+          ),
+        );
       });
     });
 
@@ -1367,6 +1509,13 @@ describe('paste plugins', () => {
   });
 
   describe('extensions api v2 - auto convert', () => {
+    beforeEach(() => {
+      uuid.setStatic('testId');
+    });
+
+    afterEach(() => {
+      uuid.setStatic(false);
+    });
     const providerWithAutoConvertHandler = new DefaultExtensionProvider(
       [
         createFakeExtensionManifest({
@@ -1442,6 +1591,7 @@ describe('paste plugins', () => {
                   url: 'http://jira-issue-convert?paramA=CFE',
                 },
               },
+              localId: 'testId',
             })(),
           ),
         ),
@@ -1467,6 +1617,7 @@ describe('paste plugins', () => {
             },
             text: 'Assana issue',
             layout: 'default',
+            localId: 'testId',
           })(),
         ),
       );
@@ -1489,6 +1640,7 @@ describe('paste plugins', () => {
           ],
         },
       },
+      localId: 'testId',
     };
 
     const cardProvider = Promise.resolve({
@@ -1523,7 +1675,60 @@ describe('paste plugins', () => {
       };
     };
 
+    describe('should convert pasted content to link on selected text', () => {
+      it('links text instead of pasting a macro', async () => {
+        const macroProvider = Promise.resolve(new MockMacroProvider({}));
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+        );
+        const href = 'http://www.dumbmacro.com?paramA=CFE';
+        await setMacroProvider(macroProvider)(editorView);
+        await flushPromises();
+
+        dispatchPasteEvent(editorView, {
+          plain: href,
+        });
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the ', a({ href })('selected text'), ' here')),
+        );
+      });
+
+      it('links text instead of pasting inline card', async () => {
+        const macroProvider = Promise.resolve(new MockMacroProvider({}));
+        const { editorView } = editor(
+          doc(p('This is the {<}selected text{>} here')),
+          extensionProps({ resolveBeforeMacros: ['jira'] }),
+        );
+        const href = 'https://jdog.jira-dev.com/browse/BENTO-3677';
+
+        await setMacroProvider(macroProvider)(editorView);
+        await flushPromises();
+
+        await dispatchPasteEvent(editorView, {
+          plain: href,
+        });
+
+        // let the card resolve
+        const resolvedProvider = await cardProvider;
+        await resolvedProvider.resolve(
+          'https://jdog.jira-dev.com/browse/BENTO-3677',
+          'inline',
+        );
+
+        expect(editorView.state.doc).toEqualDocument(
+          doc(p('This is the ', a({ href })('selected text'), ' here')),
+        );
+      });
+    });
+
     describe('should convert pasted content to inlineExtension (confluence macro)', () => {
+      beforeEach(() => {
+        uuid.setStatic('testId');
+      });
+
+      afterEach(() => {
+        uuid.setStatic(false);
+      });
       it('from plain text url', async () => {
         const macroProvider = Promise.resolve(new MockMacroProvider({}));
         const { editorView } = editor(doc(p('{<>}')));
@@ -1534,14 +1739,21 @@ describe('paste plugins', () => {
           plain: 'http://www.dumbmacro.com?paramA=CFE',
         });
         expect(editorView.state.doc).toEqualDocument(
-          doc(p(inlineExtension(attrs)())),
+          doc(
+            p(
+              inlineExtension({
+                ...attrs,
+                localId: 'testId',
+              })(),
+            ),
+          ),
         );
       });
 
       it('inserts inline card when FF for resolving links over extensions is enabled', async () => {
         const macroProvider = Promise.resolve(new MockMacroProvider({}));
         const { editorView } = editor(
-          doc(p('{<}Hello world{>}')),
+          doc(p('Hello world{<>}')),
           extensionProps({ resolveBeforeMacros: ['jira'] }),
         );
 
@@ -1562,6 +1774,7 @@ describe('paste plugins', () => {
         expect(editorView.state.doc).toEqualDocument(
           doc(
             p(
+              'Hello world',
               inlineCard({
                 url: 'https://jdog.jira-dev.com/browse/BENTO-3677',
               })(),
@@ -1604,6 +1817,7 @@ describe('paste plugins', () => {
                     ],
                   },
                 },
+                localId: 'testId',
               })(),
             ),
           ),
@@ -1637,7 +1851,14 @@ describe('paste plugins', () => {
           `,
         });
         expect(editorView.state.doc).toEqualDocument(
-          doc(p(inlineExtension(attrs)())),
+          doc(
+            p(
+              inlineExtension({
+                ...attrs,
+                localId: 'testId',
+              })(),
+            ),
+          ),
         );
       });
     });
@@ -1648,6 +1869,7 @@ describe('paste plugins', () => {
       const attrs = {
         extensionType: 'com.atlassian.confluence.macro.core',
         extensionKey: 'expand',
+        localId: 'testId',
       };
       const { editorView } = editor(doc(bodiedExtension(attrs)(p('{<>}'))));
       dispatchPasteEvent(editorView, {
@@ -1664,6 +1886,7 @@ describe('paste plugins', () => {
       const attrs = {
         extensionType: 'com.atlassian.confluence.macro.core',
         extensionKey: 'expand',
+        localId: 'testId',
       };
       const { editorView } = editor(
         doc(bodiedExtension(attrs)(p('Hello')), p('{<>}')),
@@ -2170,6 +2393,10 @@ describe('paste plugins', () => {
 
     describe('paste', () => {
       describe('layoutSection', () => {
+        beforeEach(() => {
+          (measureRenderMocked as jest.Mock).mockClear();
+        });
+
         it('should create analytics event for pasting a layoutSection', () => {
           const { editorView } = editor(doc(p()));
           const html = `
@@ -2193,6 +2420,18 @@ describe('paste plugins', () => {
               ? { nonPrivacySafeAttributes: { linkDomain } }
               : {}),
           });
+          expect(measureRenderMocked).toHaveBeenCalledTimes(1);
+          const expectedContent = [
+            'text',
+            'paragraph',
+            'layoutColumn',
+            'layoutSection',
+          ];
+          expect(createPasteMeasurePayloadMocked).toHaveBeenLastCalledWith(
+            expect.anything(),
+            5000,
+            expectedContent,
+          );
         });
       });
     });
@@ -2299,13 +2538,6 @@ describe('paste plugins', () => {
           [],
         ],
         [
-          'a media single',
-          'mediaSingle',
-          `<meta charset='utf-8'><div data-node-type="mediaSingle" data-layout="center" data-width=""><div data-id="9b5c6412-6de0-42cb-837f-bc08c24b4383" data-node-type="media" data-type="file" data-collection="MediaServicesSample" data-width="490" data-height="288" title="Attachment" style="display: inline-block; border-radius: 3px; background: #EBECF0; box-shadow: 0 1px 1px rgba(9, 30, 66, 0.2), 0 0 1px 0 rgba(9, 30, 66, 0.24);" data-file-name="image-20190325-222039.png" data-file-size="29502" data-file-mime-type="image/png"></div></div>`,
-          '',
-          [],
-        ],
-        [
           'a table',
           'table',
           `<meta charset='utf-8'><table><tbody><tr><td><p>foo</p></td></tr></tbody></table>`,
@@ -2333,23 +2565,126 @@ describe('paste plugins', () => {
         (_, content, html, plain = '', linkDomain = []) => {
           dispatchPasteEvent(editorView, { html, plain });
 
-          expect(createAnalyticsEvent).toHaveBeenCalledWith({
-            action: 'pasted',
-            actionSubject: 'document',
-            actionSubjectId,
-            eventType: 'track',
-            attributes: expect.objectContaining({
-              content,
-              inputMethod: 'keyboard',
-              source: 'uncategorized',
-              type: 'richText',
+          expect(createAnalyticsEvent).toHaveBeenCalledWith(
+            expect.objectContaining({
+              action: 'pasted',
+              actionSubject: 'document',
+              actionSubjectId,
+              eventType: 'track',
+              attributes: expect.objectContaining({
+                content,
+                inputMethod: 'keyboard',
+                source: 'uncategorized',
+                type: 'richText',
+              }),
+              ...(linkDomain && linkDomain.length > 0
+                ? {
+                    nonPrivacySafeAttributes: {
+                      linkDomain: expect.arrayContaining(linkDomain),
+                    },
+                  }
+                : {}),
             }),
-            ...(linkDomain && linkDomain.length > 0
-              ? { nonPrivacySafeAttributes: { linkDomain } }
-              : {}),
-          });
+          );
         },
       );
+    });
+
+    /**
+     * Table with this format
+     * | description | document | actionSubjectId
+     */
+    describe.each([
+      ['paragraph', paragraphDoc, ACTION_SUBJECT_ID.PASTE_PARAGRAPH],
+      ['ordered list', orderedListDoc, ACTION_SUBJECT_ID.PASTE_ORDERED_LIST],
+      ['bullet list', bulletListDoc, ACTION_SUBJECT_ID.PASTE_BULLET_LIST],
+      ['heading', headingDoc, ACTION_SUBJECT_ID.PASTE_HEADING],
+      ['table cell', tableCellDoc, ACTION_SUBJECT_ID.PASTE_TABLE_CELL],
+    ])('paste inside %s', (_, doc, actionSubjectId) => {
+      const testCase: [string, string, string, string, string[]] = [
+        'a media single',
+        'mediaSingle',
+        `<meta charset='utf-8'><div data-node-type="mediaSingle" data-layout="center" data-width=""><div data-id="9b5c6412-6de0-42cb-837f-bc08c24b4383" data-node-type="media" data-type="file" data-collection="MediaServicesSample" data-width="490" data-height="288" title="Attachment" style="display: inline-block; border-radius: 3px; background: #EBECF0; box-shadow: 0 1px 1px rgba(9, 30, 66, 0.2), 0 0 1px 0 rgba(9, 30, 66, 0.24);" data-file-name="image-20190325-222039.png" data-file-size="29502" data-file-mime-type="image/png"></div></div>`,
+        '',
+        [],
+      ];
+      let editorView: EditorView;
+
+      beforeEach(() => {
+        ({ editorView } = editor(doc));
+      });
+
+      /**
+       * Table with the given format
+       * | description | contentType | html paste event | plain paste event | link domain (if any) |
+       */
+      test('should create analytics event for paste a media single', () => {
+        const [, content, html, plain = '', linkDomain = []] = testCase;
+        dispatchPasteEvent(editorView, { html, plain });
+
+        expect(createAnalyticsEvent).toHaveBeenCalledWith({
+          action: 'pasted',
+          actionSubject: 'document',
+          actionSubjectId,
+          eventType: 'track',
+          attributes: expect.objectContaining({
+            content,
+            inputMethod: 'keyboard',
+            source: 'uncategorized',
+            type: 'richText',
+          }),
+          ...(linkDomain && linkDomain.length > 0
+            ? { nonPrivacySafeAttributes: { linkDomain } }
+            : {}),
+        });
+      });
+    });
+
+    /**
+     * Table with this format
+     * | description | document | actionSubjectId
+     */
+    describe.skip.each([
+      ['panel', panelDoc, ACTION_SUBJECT_ID.PASTE_PANEL],
+      ['blockquote', blockQuoteDoc, ACTION_SUBJECT_ID.PASTE_BLOCKQUOTE],
+    ])('paste inside %s', (_, doc, actionSubjectId) => {
+      const testCase: [string, string, string, string, string[]] = [
+        'a media single',
+        'mediaSingle',
+        `<meta charset='utf-8'><div data-node-type="mediaSingle" data-layout="center" data-width=""><div data-id="9b5c6412-6de0-42cb-837f-bc08c24b4383" data-node-type="media" data-type="file" data-collection="MediaServicesSample" data-width="490" data-height="288" title="Attachment" style="display: inline-block; border-radius: 3px; background: #EBECF0; box-shadow: 0 1px 1px rgba(9, 30, 66, 0.2), 0 0 1px 0 rgba(9, 30, 66, 0.24);" data-file-name="image-20190325-222039.png" data-file-size="29502" data-file-mime-type="image/png"></div></div>`,
+        '',
+        [],
+      ];
+      let editorView: EditorView;
+
+      beforeEach(() => {
+        ({ editorView } = editor(doc));
+      });
+
+      /**
+       * Table with the given format
+       * | description | contentType | html paste event | plain paste event | link domain (if any) |
+       */
+      test('should create analytics event for paste a media single', () => {
+        const [, content, html, plain = '', linkDomain = []] = testCase;
+        dispatchPasteEvent(editorView, { html, plain });
+
+        expect(createAnalyticsEvent).toHaveBeenCalledWith({
+          action: 'pasted',
+          actionSubject: 'document',
+          actionSubjectId,
+          eventType: 'track',
+          attributes: expect.objectContaining({
+            content,
+            inputMethod: 'keyboard',
+            source: 'uncategorized',
+            type: 'richText',
+          }),
+          ...(linkDomain && linkDomain.length > 0
+            ? { nonPrivacySafeAttributes: { linkDomain } }
+            : {}),
+        });
+      });
     });
   });
 });

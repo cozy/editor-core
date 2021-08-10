@@ -10,7 +10,7 @@ import { QuickInsertItem } from '@atlaskit/editor-common/provider-factory';
 import Item, { itemThemeNamespace } from '@atlaskit/item';
 // AFP-2532 TODO: Fix automatic suppressions below
 // eslint-disable-next-line @atlassian/tangerine/import/entry-points
-import { borderRadius } from '@atlaskit/theme';
+import { borderRadius, gridSize } from '@atlaskit/theme';
 import { themed } from '@atlaskit/theme/components';
 import { DN50, N0, N30A, N60A } from '@atlaskit/theme/colors';
 
@@ -56,7 +56,6 @@ const InsertMenu = ({
       icon: () =>
         getSvgIconForItem({
           name: item.value.name,
-          content: item.content as string,
         }) || (item.elemBefore as ReactElement),
       action: () => onInsert({ item }),
       // "insertInsertMenuItem" expects these 2 properties.
@@ -71,7 +70,7 @@ const InsertMenu = ({
   const viewMoreItem = quickInsertDropdownItems.pop();
 
   const onInsertItem = useCallback(
-    item => {
+    (item) => {
       toggleVisiblity();
       if (!editorView.hasFocus()) {
         editorView.focus();
@@ -162,7 +161,6 @@ const ViewMore = ({ item }: { item: QuickInsertItem }) => {
 
 const getSvgIconForItem = ({
   name,
-  content,
 }: SvgGetterParams): ReactElement | undefined => {
   type IconType = { [key: string]: ComponentClass<{ label: string }> };
 
@@ -177,7 +175,7 @@ const getSvgIconForItem = ({
     status: IconStatus,
   } as IconType)[name];
 
-  return Icon ? <Icon label={content} /> : undefined;
+  return Icon ? <Icon label="" /> : undefined;
 };
 
 const getInsertMenuHeight = ({ itemCount }: { itemCount: number }) => {
@@ -206,9 +204,10 @@ const ItemBefore = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-right: ${gridSize() / 2}px;
 `;
 
-const PADDING_LEFT = 12;
+const PADDING_LEFT = 14;
 const HEIGHT = 40;
 
 const viewMoreItemTheme = {

@@ -1,5 +1,5 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { EditorView } from 'prosemirror-view';
@@ -16,6 +16,16 @@ import {
   withAnalytics,
 } from '../../../../plugins/analytics';
 import { createTable } from '../../../../plugins/table/commands';
+
+/**
+ * Note that the history events are defined within `@atlaskit/adf-schema`.
+ * Changes to the implementation within that package may impact the result of these tests.
+ *
+ * The implementation lives here: `packages/editor/adf-schema/src/steps/analytics.ts`
+ * With its own unit test here: `packages/editor/adf-schema/src/steps/__tests__/unit/analytics.ts`
+ *
+ * These tests serve as a superset.
+ */
 
 describe('Analytics Plugin: History Events', () => {
   const createEditor = createEditorFactory();
@@ -36,7 +46,7 @@ describe('Analytics Plugin: History Events', () => {
         inputMethod: INPUT_METHOD.TOOLBAR,
       },
       eventType: EVENT_TYPE.TRACK,
-    })(createTable)(editorView.state, editorView.dispatch);
+    })(createTable())(editorView.state, editorView.dispatch);
 
   const do3Times = (fn: Function) =>
     Array(3)

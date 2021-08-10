@@ -3,7 +3,7 @@ import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   layoutColumn,
@@ -14,12 +14,13 @@ import {
   taskList,
   td,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   buildKeyEvent,
   testKeymap,
 } from '@atlaskit/editor-test-helpers/send-key-to-pm';
-import { MockMentionResource } from '@atlaskit/util-data-test';
+import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 
 import { keymapPlugin } from '../../../../../plugins/tasks-and-decisions/pm-plugins/keymaps';
 
@@ -49,7 +50,7 @@ describe('tasks and decisions - keymaps', () => {
     uuid.setStatic(false);
   });
 
-  const editorFactory = (doc: any) => {
+  const editorFactory = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps,
@@ -359,7 +360,7 @@ describe('tasks and decisions - keymaps', () => {
   });
 
   describe('allowNestedTasks', () => {
-    let simpleFactory = (doc: any) => {
+    let simpleFactory = (doc: DocBuilder) => {
       return createEditor({
         doc,
         editorProps: { ...editorProps, allowNestedTasks: false },

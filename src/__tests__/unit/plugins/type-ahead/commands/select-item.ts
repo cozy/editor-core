@@ -1,5 +1,5 @@
 import { Fragment } from 'prosemirror-model';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -8,7 +8,7 @@ import {
   date,
   bodiedExtension,
   extension,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   selectCurrentItem,
   selectSingleItemOrDismiss,
@@ -17,6 +17,13 @@ import {
 } from '../../../../../plugins/type-ahead/commands/select-item';
 import { datePlugin } from '../../../../../plugins';
 import { TypeAheadSelectItem } from '../../../../../plugins/type-ahead/types';
+
+jest.mock('@atlaskit/adf-schema', () => ({
+  ...jest.requireActual<Object>('@atlaskit/adf-schema'),
+  uuid: {
+    generate: () => 'testId',
+  },
+}));
 
 const createTypeAheadPlugin = ({
   getItems,
@@ -50,7 +57,7 @@ describe('typeahead plugin -> commands -> select-item', () => {
 
   describe('selectCurrentItem', () => {
     it("should call handler's selectItem method", () => {
-      const fn = jest.fn(state => state.tr);
+      const fn = jest.fn((state) => state.tr);
       const plugin = createTypeAheadPlugin({ selectItem: fn });
       const { editorView } = createEditor({
         doc: doc(p(typeAheadQuery({ trigger: '/' })('/query{<>}'))),
@@ -365,23 +372,25 @@ describe('typeahead plugin -> commands -> select-item', () => {
             insert(
               state.schema.nodes.extension.createChecked({
                 layout: 'full-width',
+                localId: 'testId',
               }),
             ),
           getItems: () => [],
         },
         { title: '1' },
       )(editorView.state, editorView.dispatch);
-
       expect(editorView.state.doc).toEqualDocument(
         doc(
           bodiedExtension({
             extensionKey: 'fake.extension',
             extensionType: 'atlassian.com.editor',
+            localId: 'testId',
           })(
             extension({
               extensionKey: '',
               extensionType: '',
               layout: 'default',
+              localId: 'testId',
             })(),
           ),
         ),

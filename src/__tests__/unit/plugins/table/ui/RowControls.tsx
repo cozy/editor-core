@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
 import {
   doc,
@@ -9,11 +9,12 @@ import {
   tdEmpty,
   thEmpty,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { selectRows } from '@atlaskit/editor-test-helpers/table';
 import { getSelectionRect, selectRow } from '@atlaskit/editor-tables/utils';
 import React from 'react';
-import { setTextSelection } from '../../../../../index';
+import { EditorProps, setTextSelection } from '../../../../../index';
 import { hoverRows } from '../../../../../plugins/table/commands';
 import {
   TableCssClassName as ClassName,
@@ -22,21 +23,57 @@ import {
 import TableFloatingControls from '../../../../../plugins/table/ui/TableFloatingControls';
 import RowControls from '../../../../../plugins/table/ui/TableFloatingControls/RowControls';
 import { pluginKey } from '../../../../../plugins/table/pm-plugins/plugin-factory';
+import { ReactWrapper } from 'enzyme';
 
 const ControlsButton = `.${ClassName.CONTROLS_BUTTON}`;
 const RowControlsButtonWrap = `.${ClassName.ROW_CONTROLS_BUTTON_WRAP}`;
 
 describe('RowControls', () => {
   const createEditor = createEditorFactory<TablePluginState>();
+  let floatingControls: ReactWrapper;
+  let originalResizeObserver: any;
 
-  const editor = (doc: any) =>
+  let triggerElementResize = (element: HTMLElement, height: number) => {
+    const entries = [
+      {
+        target: element,
+        contentRect: { height },
+      },
+    ];
+    resizeCallback(entries);
+  };
+  let resizeCallback: (entries: any[]) => {};
+
+  beforeAll(() => {
+    originalResizeObserver = (window as any).ResizeObserver;
+    (window as any).ResizeObserver = function resizeObserverMock(
+      callback: () => {},
+    ) {
+      this.disconnect = jest.fn();
+      this.observe = jest.fn();
+      resizeCallback = callback;
+    };
+  });
+
+  afterAll(() => {
+    (window as any).ResizeObserver = originalResizeObserver;
+  });
+
+  afterEach(() => {
+    if (floatingControls && floatingControls.length) {
+      floatingControls.unmount();
+    }
+    jest.clearAllMocks();
+  });
+
+  const editor = (doc: DocBuilder, props?: EditorProps) =>
     createEditor({
       doc,
-      editorProps: { allowTables: true },
+      editorProps: { allowTables: true, ...props },
       pluginKey,
     });
 
-  [1, 2, 3].forEach(row => {
+  [1, 2, 3].forEach((row) => {
     describe(`when table has ${row} rows`, () => {
       it(`should render ${row} row header buttons`, () => {
         const rows = [tr(tdCursor)];
@@ -44,19 +81,52 @@ describe('RowControls', () => {
           rows.push(tr(tdEmpty));
         }
         const { editorView } = editor(doc(p('text'), table()(...rows)));
-        const floatingControls = mountWithIntl(
+        floatingControls = mountWithIntl(
           <TableFloatingControls
             tableRef={document.querySelector('table')!}
+            tableActive={true}
             editorView={editorView}
           />,
         );
         expect(floatingControls.find(RowControlsButtonWrap)).toHaveLength(row);
-        floatingControls.unmount();
       });
     });
   });
 
-  [0, 1, 2].forEach(row => {
+  it('does not render rowControls if table is not active', () => {
+    const { editorView } = editor(doc(p('text'), table()(tr(tdCursor))));
+    floatingControls = mountWithIntl(
+      <TableFloatingControls
+        tableRef={document.querySelector('table')!}
+        tableActive={false}
+        editorView={editorView}
+      />,
+    );
+    expect(floatingControls.find(RowControlsButtonWrap)).toHaveLength(0);
+  });
+
+  describe('with tableRenderOptimization enabled', () => {
+    it('updates rowControls if table height changes', () => {
+      const { editorView } = editor(doc(table()(tr(tdCursor))), {
+        featureFlags: { tableRenderOptimization: true },
+      });
+      floatingControls = mountWithIntl(
+        <TableFloatingControls
+          tableRef={document.querySelector('table')!}
+          tableActive={true}
+          editorView={editorView}
+        />,
+      );
+      const tableElement = editorView.domAtPos(1).node as HTMLElement;
+      triggerElementResize(tableElement, 10);
+      expect(floatingControls.state('tableHeight')).toBe(10);
+      tableElement.style.height = '100px';
+      triggerElementResize(tableElement, 100);
+      expect(floatingControls.state('tableHeight')).toBe(100);
+    });
+  });
+
+  [0, 1, 2].forEach((row) => {
     describe(`when HeaderButton in row ${row + 1} is clicked`, () => {
       it('should not move the cursor when hovering controls', () => {
         const { editorView, refs } = editor(
@@ -69,9 +139,10 @@ describe('RowControls', () => {
           ),
         );
 
-        const floatingControls = mountWithIntl(
+        floatingControls = mountWithIntl(
           <TableFloatingControls
             tableRef={document.querySelector('table')!}
+            tableActive={true}
             editorView={editorView}
           />,
         );
@@ -103,8 +174,6 @@ describe('RowControls', () => {
         // assert the cursor is still in same position
         expect(editorView.state.selection.$from.pos).toBe(nextPos);
         expect(editorView.state.selection.$to.pos).toBe(nextPos);
-
-        floatingControls.unmount();
       });
     });
   });
@@ -120,7 +189,7 @@ describe('RowControls', () => {
       ),
     );
 
-    const floatingControls = mountWithIntl(
+    floatingControls = mountWithIntl(
       <RowControls
         tableRef={document.querySelector('table')!}
         editorView={editorView}
@@ -129,7 +198,7 @@ describe('RowControls', () => {
         }}
         hoveredRows={[0, 1]}
         isInDanger={true}
-        selectRow={row => {
+        selectRow={(row) => {
           editorView.dispatch(selectRow(row)(editorView.state.tr));
         }}
       />,
@@ -138,11 +207,9 @@ describe('RowControls', () => {
     floatingControls
       .find(RowControlsButtonWrap)
       .slice(0, 2)
-      .forEach(buttonWrap => {
+      .forEach((buttonWrap) => {
         expect(buttonWrap.hasClass('danger')).toBe(true);
       });
-
-    floatingControls.unmount();
   });
 
   describe('row shift selection', () => {
@@ -159,7 +226,7 @@ describe('RowControls', () => {
       );
 
       selectRows([0])(editorView.state, editorView.dispatch);
-      const floatingControls = mountWithIntl(
+      floatingControls = mountWithIntl(
         <RowControls
           tableRef={document.querySelector('table')!}
           editorView={editorView}
@@ -194,7 +261,7 @@ describe('RowControls', () => {
       );
 
       selectRows([2])(editorView.state, editorView.dispatch);
-      const floatingControls = mountWithIntl(
+      floatingControls = mountWithIntl(
         <RowControls
           tableRef={document.querySelector('table')!}
           editorView={editorView}

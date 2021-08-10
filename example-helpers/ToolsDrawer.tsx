@@ -1,6 +1,11 @@
 import React from 'react';
 import { EditorView } from 'prosemirror-view';
-import { mention, emoji, taskDecision } from '@atlaskit/util-data-test';
+import {
+  currentUser,
+  getEmojiProvider,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import Button from '@atlaskit/button/custom-theme-button';
 import Tooltip from '@atlaskit/tooltip';
 
@@ -10,13 +15,12 @@ import imageUploadHandler from './imageUpload';
 
 import { TeamMentionResource, MentionResource, EmojiResource } from '../src';
 import { toJSON } from '../src/utils';
-import {
-  storyContextIdentifierProviderFactory,
-  storyMediaProviderFactory,
-  createEditorMediaMock,
-} from '@atlaskit/editor-test-helpers';
+import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
+import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+import { createEditorMediaMock } from '@atlaskit/editor-test-helpers/media-mock';
 
 import { AnalyticsListener } from '@atlaskit/analytics-next';
+import { SmartMentionResource, SmartMentionConfig } from '@atlaskit/mention';
 
 const mediaMock = createEditorMediaMock();
 const rejectedPromise = Promise.reject(
@@ -39,23 +43,33 @@ const userMentionConfig = {
   productId: 'micros-group/confluence',
 };
 
+const smartMentionConfig: SmartMentionConfig = {
+  env: 'local',
+  productKey: 'confluence',
+  siteId: 'DUMMY-a5a01d21-1cc3-4f29-9565-f2bb8cd969f5',
+  includeGroups: true,
+  includeTeams: true,
+  principalId: 'Context',
+};
+
 const providers = {
   mentionProvider: {
-    resolved: Promise.resolve(mention.storyData.resourceProvider),
+    resolved: Promise.resolve(mentionResourceProvider),
     external: Promise.resolve(new MentionResource(userMentionConfig)),
     pending: pendingPromise,
     rejected: rejectedPromise,
     teamMentionResource: Promise.resolve(
       new TeamMentionResource(userMentionConfig, teamMentionConfig),
     ),
+    smartMentionResource: Promise.resolve(
+      new SmartMentionResource(smartMentionConfig),
+    ),
     undefined: undefined,
   },
   emojiProvider: {
-    resolved: emoji.storyData.getEmojiResource({
+    resolved: getEmojiProvider({
       uploadSupported: true,
-      currentUser: {
-        id: emoji.storyData.loggedUser,
-      },
+      currentUser,
     }),
     external: Promise.resolve(
       new EmojiResource({
@@ -75,7 +89,7 @@ const providers = {
     undefined: undefined,
   },
   taskDecisionProvider: {
-    resolved: Promise.resolve(taskDecision.getMockTaskDecisionResource()),
+    resolved: Promise.resolve(getMockTaskDecisionResource()),
     pending: pendingPromise,
     rejected: rejectedPromise,
     undefined: undefined,
@@ -187,12 +201,12 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
   };
 
   private toggleDisabled = () =>
-    this.setState(prevState => ({ editorEnabled: !prevState.editorEnabled }));
+    this.setState((prevState) => ({ editorEnabled: !prevState.editorEnabled }));
 
   private toggleMediaMock = () => {
     // eslint-disable-next-line no-unused-expressions
     this.state.mediaMockEnabled ? mediaMock.disable() : mediaMock.enable();
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       mediaMockEnabled: !prevState.mediaMockEnabled,
     }));
   };
@@ -204,7 +218,7 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
   };
 
   private toggleFeature = (name: keyof ToolbarFeatures) => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       ...prevState,
 
       enabledFeatures: {
@@ -269,12 +283,12 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
                   })}
               <div className="toolsDrawer">
                 {(Object.keys(providers) as Array<keyof typeof providers>).map(
-                  providerKey => (
+                  (providerKey) => (
                     <div key={providerKey}>
                       <ButtonGroup>
                         <label>{providerKey}: </label>
                         {Object.keys(providers[providerKey]).map(
-                          providerStateName => (
+                          (providerStateName) => (
                             <Button
                               key={`${providerKey}-${providerStateName}`}
                               onClick={this.switchProvider.bind(
@@ -317,7 +331,7 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
 
                     {(Object.keys(enabledFeatureNames) as Array<
                       keyof typeof enabledFeatureNames
-                    >).map(key => (
+                    >).map((key) => (
                       <Button
                         key={key}
                         onClick={() => this.toggleFeature(key)}

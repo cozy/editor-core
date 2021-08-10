@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   mediaGroup,
@@ -17,8 +17,9 @@ import {
   td,
   layoutSection,
   layoutColumn,
-} from '@atlaskit/editor-test-helpers/schema-builder';
-import { MockMentionResource } from '@atlaskit/util-data-test';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
+import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 import {
   insertMediaGroupNode,
   getPosInList,
@@ -40,7 +41,7 @@ describe('media-files', () => {
   const mediaProvider = getFreshMediaProvider();
   providerFactory.setProvider('mediaProvider', mediaProvider);
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: {

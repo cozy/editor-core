@@ -3,7 +3,6 @@ import { findParentNode } from 'prosemirror-utils';
 import { CellSelection } from '@atlaskit/editor-tables/cell-selection';
 import { EditorState, NodeSelection, Transaction } from 'prosemirror-state';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
-import { InputRuleWithHandler } from '../../utils/input-rules';
 import { GapCursorSelection, Side } from '../selection/gap-cursor/selection';
 import { AnalyticsStep } from '@atlaskit/adf-schema/steps';
 import { editorAnalyticsChannel } from './consts';
@@ -17,18 +16,11 @@ import {
 import { SELECTION_TYPE, SELECTION_POSITION } from './types/utils';
 import { analyticsPluginKey } from './plugin-key';
 import { HigherOrderCommand } from '../../types/command';
-import { fireAnalyticsEvent } from './fire-analytics-event';
 
 function getCreateUIAnalyticsEvent(
   editorState: EditorState,
 ): CreateUIAnalyticsEvent | null | undefined {
-  const pluginState = analyticsPluginKey.getState(editorState);
-  return pluginState
-    ? (pluginState.createAnalyticsEvent as
-        | CreateUIAnalyticsEvent
-        | null
-        | undefined)
-    : undefined;
+  return analyticsPluginKey.getState(editorState)?.createAnalyticsEvent;
 }
 
 export function getStateContext(
@@ -56,6 +48,26 @@ export function getStateContext(
     payload.attributes.nodeLocation = insertLocation;
   }
 
+  return payload;
+}
+
+export function mapActionSubjectIdToAttributes(
+  payload: AnalyticsEventPayload,
+): AnalyticsEventPayload {
+  const documentInserted =
+    payload.action === ACTION.INSERTED &&
+    payload.actionSubject === ACTION_SUBJECT.DOCUMENT;
+  const textFormatted =
+    payload.action === ACTION.FORMATTED &&
+    payload.actionSubject === ACTION_SUBJECT.TEXT;
+  const hasActionSubjectId = !!payload.actionSubjectId;
+
+  if (hasActionSubjectId && (documentInserted || textFormatted)) {
+    payload.attributes = {
+      ...payload.attributes,
+      actionSubjectId: payload.actionSubjectId,
+    };
+  }
   return payload;
 }
 
@@ -108,7 +120,7 @@ export function findInsertLocation(state: EditorState): string {
 
   // Text selection
   const parentNodeInfo = findParentNode(
-    node => node.type !== state.schema.nodes.paragraph,
+    (node) => node.type !== state.schema.nodes.paragraph,
   )(state.selection);
 
   return parentNodeInfo ? parentNodeInfo.node.type.name : state.doc.type.name;
@@ -127,14 +139,12 @@ export function addAnalytics(
 ): Transaction {
   const createAnalyticsEvent = getCreateUIAnalyticsEvent(state);
   payload = getStateContext(state, payload);
+  payload = mapActionSubjectIdToAttributes(payload);
 
   if (createAnalyticsEvent) {
     const { storedMarks } = tr;
     tr.step(
       new AnalyticsStep(
-        (payload: AnalyticsEventPayload, channel: string) => {
-          fireAnalyticsEvent(createAnalyticsEvent)({ payload, channel });
-        },
         [
           {
             payload,
@@ -162,10 +172,10 @@ export function withAnalytics(
   payload: AnalyticsEventPayload | AnalyticsEventPayloadCallback,
   channel?: string,
 ): HigherOrderCommand {
-  return command => (state, dispatch, view) =>
+  return (command) => (state, dispatch, view) =>
     command(
       state,
-      tr => {
+      (tr) => {
         if (dispatch) {
           if (payload instanceof Function) {
             const dynamicPayload = payload(state);
@@ -179,36 +189,6 @@ export function withAnalytics(
       },
       view,
     );
-}
-
-export function ruleWithAnalytics(
-  getPayload: (
-    state: EditorState,
-    match: string[],
-    start: number,
-    end: number,
-  ) => AnalyticsEventPayload,
-) {
-  return (rule: InputRuleWithHandler) => {
-    // Monkey patching handler to add analytics
-    const handler = rule.handler;
-
-    rule.handler = (
-      state: EditorState,
-      match,
-      start,
-      end,
-    ): Transaction<any> | null => {
-      let tr = handler(state, match, start, end);
-
-      if (tr) {
-        const payload = getPayload(state, match, start, end);
-        tr = addAnalytics(state, tr, payload);
-      }
-      return tr;
-    };
-    return rule;
-  };
 }
 
 export function getAnalyticsEventsFromTransaction(

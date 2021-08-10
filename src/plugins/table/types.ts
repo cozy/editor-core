@@ -11,13 +11,9 @@ import {
   tablePrefixSelector,
 } from '@atlaskit/adf-schema';
 import { TableSharedCssClassName } from '@atlaskit/editor-common';
+import { TableColumnOrdering } from '@atlaskit/adf-schema/steps';
 
 import { INPUT_METHOD } from '../analytics/types/enums';
-
-export enum SortOrder {
-  ASC = 'asc',
-  DESC = 'desc',
-}
 
 export const RESIZE_HANDLE_AREA_DECORATION_GAP = 30;
 export type RowInsertPosition = 'TOP' | 'BOTTOM';
@@ -35,7 +31,8 @@ export type InsertRowMethods =
   | INPUT_METHOD.CONTEXT_MENU
   | INPUT_METHOD.BUTTON
   | INPUT_METHOD.SHORTCUT
-  | INPUT_METHOD.KEYBOARD;
+  | INPUT_METHOD.KEYBOARD
+  | INPUT_METHOD.FLOATING_TB;
 
 export interface PluginConfig {
   advanced?: boolean;
@@ -52,6 +49,14 @@ export interface PluginConfig {
   permittedLayouts?: PermittedLayoutsDescriptor;
   allowControls?: boolean;
   stickyHeaders?: boolean;
+  allowCellOptionsInFloatingToolbar?: boolean;
+  tableCellOptimization?: boolean;
+  tableRenderOptimization?: boolean;
+  stickyHeadersOptimization?: boolean;
+  initialRenderOptimization?: boolean;
+  mouseMoveOptimization?: boolean;
+  tableOverflowShadowsOptimization?: boolean;
+  allowLocalIdGeneration?: boolean;
 }
 
 export interface ColumnResizingPluginState {
@@ -88,11 +93,6 @@ export interface ColumnResizingPluginState {
  */
 export type CellColumnPositioning = Pick<Rect, 'right' | 'left'>;
 
-export interface TableColumnOrdering {
-  columnIndex: number;
-  order: SortOrder;
-}
-
 export interface TablePluginState {
   editorHasFocus?: boolean;
   hoveredColumns: number[];
@@ -116,6 +116,9 @@ export interface TablePluginState {
   layout?: TableLayout;
   ordering?: TableColumnOrdering;
   resizeHandleColumnIndex?: number;
+  tableCellOptimization?: boolean;
+  tableHeight?: number;
+  tableWidth?: number;
 }
 
 export type TablePluginAction =
@@ -189,7 +192,11 @@ export type TablePluginAction =
   | {
       type: 'HIDE_INSERT_COLUMN_OR_ROW_BUTTON';
     }
-  | { type: 'TOGGLE_CONTEXTUAL_MENU' };
+  | { type: 'TOGGLE_CONTEXTUAL_MENU' }
+  | {
+      type: 'SET_TABLE_SIZE';
+      data: { tableHeight: number; tableWidth: number };
+    };
 
 export type ColumnResizingPluginAction =
   | {
@@ -313,4 +320,13 @@ export interface ToolbarMenuState {
 
 export interface ToolbarMenuContext {
   formatMessage: InjectedIntl['formatMessage'];
+}
+
+export type ElementContentRects = {
+  [key: string]: ResizeObserverEntry['contentRect'];
+};
+
+export enum ShadowEvent {
+  SHOW_BEFORE_SHADOW = 'showBeforeShadow',
+  SHOW_AFTER_SHADOW = 'showAfterShadow',
 }

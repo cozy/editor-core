@@ -4,7 +4,7 @@ import {
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 import { placeHolderClassName } from '../../styles';
@@ -35,7 +35,7 @@ describe('placeholder', () => {
   const createProsemirrorEditor = createProsemirrorEditorFactory();
 
   describe('Empty placeholder', () => {
-    const emptyPlaceholderEditor = (doc: any) =>
+    const emptyPlaceholderEditor = (doc: DocBuilder) =>
       createProsemirrorEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add([
@@ -61,7 +61,7 @@ describe('placeholder', () => {
   });
 
   describe('Hint placeholder', () => {
-    const hintPlaceholderEditor = (doc: any) =>
+    const hintPlaceholderEditor = (doc: DocBuilder) =>
       createProsemirrorEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add([
@@ -102,7 +102,7 @@ describe('placeholder', () => {
   });
 
   describe('Bracket placeholder', () => {
-    const emptyPlaceholderEditor = (doc: any) =>
+    const emptyPlaceholderEditor = (doc: DocBuilder) =>
       createProsemirrorEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add([
@@ -147,7 +147,7 @@ describe('placeholder', () => {
     });
   });
   describe('Default and Hint placeholder', () => {
-    const fullPlaceholderEditor = (doc: any) =>
+    const fullPlaceholderEditor = (doc: DocBuilder) =>
       createProsemirrorEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add([
@@ -166,7 +166,7 @@ describe('placeholder', () => {
   });
 
   describe('Editor out of focus', () => {
-    const fullPlaceholderEditor = (doc: any) =>
+    const fullPlaceholderEditor = (doc: DocBuilder) =>
       createProsemirrorEditor({
         doc,
         preset: new Preset<LightEditorPlugin>().add([

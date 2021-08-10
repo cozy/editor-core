@@ -4,10 +4,10 @@ import parser from 'prettier/parser-babel';
 
 import TextArea from '@atlaskit/textarea';
 import { defaultSchema as schema } from '@atlaskit/adf-schema';
-import { builderEval } from '@atlaskit/editor-test-helpers/schema-builder';
 
 import EditorContext from '../src/ui/EditorContext';
 import { DevTools } from '../example-helpers/DevTools';
+import { evaluateDocBuilderExpression } from '../example-helpers/evaluate-doc-builder-expression';
 import WithEditorActions from '../src/ui/WithEditorActions';
 import { EditorActions } from '../src';
 import { ExampleEditor as FullPageEditor } from './5-full-page';
@@ -26,7 +26,7 @@ const nodeTypes: Record<string, NodeMapping> = {
   doc: { name: 'doc' },
   paragraph: { name: 'p' },
   blockquote: { name: 'blockquote' },
-  heading: { name: node => `h${node.attrs.level}` },
+  heading: { name: (node) => `h${node.attrs.level}` },
   listItem: { name: 'li' },
   bulletList: { name: 'ul' },
   orderedList: { name: 'ol' },
@@ -150,6 +150,7 @@ const nodeTypes: Record<string, NodeMapping> = {
   alignment: { name: 'alignment', attrs: ['align'] },
   breakout: { name: 'breakout', attrs: ['mode'] },
   indentation: { name: 'indentation', attrs: ['level'] },
+  dataConsumer: { name: 'dataConsumer', attrs: ['sources'] },
 };
 nodeTypes.link = nodeTypes.a;
 
@@ -168,12 +169,13 @@ const buildMarks = (marks: Array<any>, leaf: string): string | undefined => {
 
   const children = buildMarks(marks, leaf);
   if (type.attrs) {
-    const attrs: Record<string, any> = {};
-    type.attrs.map(attrName => {
-      attrs[attrName] = mark.attrs[attrName];
-    });
+    const attrs = type.attrs.reduce<Record<string, any>>((acc, attrName) => {
+      acc[attrName] = mark.attrs[attrName];
+      return acc;
+    }, {});
 
-    const stringAttrs = attrs === {} ? '' : JSON.stringify(attrs);
+    const stringAttrs =
+      Object.keys(attrs).length === 0 ? '' : JSON.stringify(attrs);
     return `${name}(${stringAttrs})(${children || leaf})`;
   }
 
@@ -207,12 +209,13 @@ const nodeToDocBuilder = (node: any): string => {
 
   let leaf = `${name}(${childrenBuilders.join(', ')})`;
   if (type.attrs) {
-    const attrs: Record<string, any> = {};
-    type.attrs.map(attrName => {
-      attrs[attrName] = node.attrs[attrName];
-    });
+    const attrs = type.attrs.reduce<Record<string, any>>((acc, attrName) => {
+      acc[attrName] = node.attrs[attrName];
+      return acc;
+    }, {});
 
-    const stringAttrs = attrs === {} ? '' : JSON.stringify(attrs);
+    const stringAttrs =
+      Object.keys(attrs).length === 0 ? '' : JSON.stringify(attrs);
     leaf = `${name}(${stringAttrs})(${childrenBuilders.join(', ')})`;
   }
 
@@ -260,10 +263,10 @@ export default class Example extends React.Component<any, DocBuilderState> {
           <DevTools />
           <div style={{ gridArea: '1 / 1 / 3 / 3' }}>
             <WithEditorActions
-              render={actions => {
+              render={(actions) => {
                 this.editorActions = actions;
                 return (
-                  <FullPageEditor onChange={e => this.handleEditorChange()} />
+                  <FullPageEditor onChange={(e) => this.handleEditorChange()} />
                 );
               }}
             />
@@ -271,7 +274,7 @@ export default class Example extends React.Component<any, DocBuilderState> {
           <div style={{ gridArea: '1 / 3 / 2 / 4' }}>
             <h2>ADF</h2>
             <TextArea
-              onChange={e => this.handleAdfChange(e.target.value)}
+              onChange={(e) => this.handleAdfChange(e.target.value)}
               isInvalid={!this.state.adfValid}
               ref={(ref: any) => (this.adfTextArea = ref)}
               placeholder='{"version": 1...'
@@ -282,7 +285,7 @@ export default class Example extends React.Component<any, DocBuilderState> {
           <div style={{ gridArea: '2 / 3 / 3 / 4' }}>
             <h2>Doc Builder</h2>
             <TextArea
-              onChange={e => this.handleDocBuilderChange(e.target.value)}
+              onChange={(e) => this.handleDocBuilderChange(e.target.value)}
               isInvalid={!this.state.docBuilderValid}
               ref={(ref: any) => (this.docBuilderTextArea = ref)}
               placeholder="doc(..."
@@ -296,36 +299,28 @@ export default class Example extends React.Component<any, DocBuilderState> {
   }
 
   private handleDocBuilderChange = (value: string) => {
-    console.log('handleDocBuilderChange');
-    let content;
-    try {
-      content = builderEval(value);
-    } catch (error) {
-      this.setState({ docBuilderValid: false });
-      throw new Error(error);
-    }
-    this.setState({ docBuilderValid: true });
+    const buildDoc = evaluateDocBuilderExpression(value);
+    const docBuilderValid = !(buildDoc instanceof Error);
+    this.setState({ docBuilderValid });
 
-    if (this.editorActions) {
-      this.editorActions.replaceDocument(content(schema).toJSON());
+    if (buildDoc instanceof Error) {
+      console.error(buildDoc);
+    } else {
+      this.editorActions?.replaceDocument(buildDoc(schema).toJSON());
     }
   };
 
   private handleAdfChange = (value: string) => {
-    console.log('handleAdfChange');
     try {
-      if (this.editorActions) {
-        this.editorActions.replaceDocument(value);
-      }
+      this.editorActions?.replaceDocument(value);
+      this.setState({ adfValid: true });
     } catch (error) {
       this.setState({ adfValid: false });
       throw new Error(error);
     }
-    this.setState({ adfValid: true });
   };
 
   private handleEditorChange = () => {
-    console.log('handleEditorChange');
     this.updateFields();
   };
 
@@ -336,7 +331,7 @@ export default class Example extends React.Component<any, DocBuilderState> {
 
     const activeElement = document.activeElement;
 
-    this.editorActions.getValue().then(value => {
+    this.editorActions.getValue().then((value) => {
       if (this.adfTextArea && activeElement !== this.adfTextArea) {
         this.adfTextArea.value = JSON.stringify(value, null, 2);
       }

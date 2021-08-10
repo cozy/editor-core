@@ -20,7 +20,7 @@ export interface Props {
   label: string;
   tabIndex?: number;
   isSelected?: boolean;
-  onClick: (value: string) => void;
+  onClick: (value: string, label: string) => void;
   borderColor: string;
   checkMarkColor?: string;
 }
@@ -37,10 +37,15 @@ class Color extends PureComponent<Props & InjectedIntlProps> {
       intl: { formatMessage },
     } = this.props;
 
+    const ariaLabelText = isSelected
+      ? `${label} ${formatMessage(messages.selected)}`
+      : label;
+
     return (
       <Tooltip content={label}>
         <ButtonWrapper>
           <Button
+            aria-label={ariaLabelText}
             onClick={this.onClick}
             onMouseDown={this.onMouseDown}
             tabIndex={tabIndex}
@@ -51,10 +56,7 @@ class Color extends PureComponent<Props & InjectedIntlProps> {
             }}
           >
             {isSelected && (
-              <EditorDoneIcon
-                primaryColor={checkMarkColor}
-                label={formatMessage(messages.selected)}
-              />
+              <EditorDoneIcon primaryColor={checkMarkColor} label="" />
             )}
           </Button>
         </ButtonWrapper>
@@ -67,9 +69,9 @@ class Color extends PureComponent<Props & InjectedIntlProps> {
   };
 
   onClick = (e: React.MouseEvent<{}>) => {
-    const { onClick, value } = this.props;
+    const { onClick, value, label } = this.props;
     e.preventDefault();
-    onClick(value);
+    onClick(value, label);
   };
 }
 

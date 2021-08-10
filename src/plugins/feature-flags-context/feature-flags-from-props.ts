@@ -1,5 +1,6 @@
 import { EditorProps } from '../../types';
-import { FeatureFlags, FeatureFlagKey } from './types';
+import { normalizeFeatureFlags } from '@atlaskit/editor-common/normalize-feature-flags';
+import type { FeatureFlags } from '../../types/feature-flags';
 
 /**
  * Transforms EditorProps to an FeatureFlags object,
@@ -7,6 +8,8 @@ import { FeatureFlags, FeatureFlagKey } from './types';
  */
 export function createFeatureFlagsFromProps(props: EditorProps): FeatureFlags {
   return {
+    ...normalizeFeatureFlags(props.featureFlags),
+
     newInsertionBehaviour: props.allowNewInsertionBehaviour,
 
     interactiveExpand:
@@ -25,23 +28,13 @@ export function createFeatureFlagsFromProps(props: EditorProps): FeatureFlags {
     moreTextColors:
       typeof props.allowTextColor === 'boolean'
         ? false
-        : Boolean(
-            props.allowTextColor &&
-              props.allowTextColor.EXPERIMENTAL_allowMoreTextColors === true,
-          ),
+        : Boolean(props.allowTextColor?.allowMoreTextColors === true),
 
     findReplace: !!props.allowFindReplace,
 
     findReplaceMatchCase:
       typeof props.allowFindReplace === 'object' &&
       Boolean(props.allowFindReplace.allowMatchCase),
-
-    extensionLocalIdGeneration:
-      typeof props.allowExtension === 'boolean'
-        ? false
-        : !!(
-            props.allowExtension && props.allowExtension.allowLocalIdGeneration
-          ),
 
     keyboardAccessibleDatepicker:
       typeof props.allowKeyboardAccessibleDatepicker === 'boolean'
@@ -53,17 +46,75 @@ export function createFeatureFlagsFromProps(props: EditorProps): FeatureFlags {
         ? false
         : Boolean(props.allowTables.allowAddColumnWithCustomStep),
 
-    predictableLists: props.UNSAFE_predictableLists,
-  };
-}
+    undoRedoButtons: props.UNSAFE_allowUndoRedoButtons,
 
-/**
- * Transforms FeatureFlags to a type safe string array of the enabled feature flags.
- *
- * Useful for analytics and analysis purposes.
- */
-export function getEnabledFeatureFlagKeys(featureFlags: FeatureFlags) {
-  return (Object.keys(featureFlags) as FeatureFlagKey[]).filter(
-    key => featureFlags[key] === true,
-  );
+    catchAllTracking: props.performanceTracking?.catchAllTracking?.enabled,
+
+    nextEmojiNodeView: props.featureFlags?.nextEmojiNodeView === true,
+
+    stickyHeadersOptimization:
+      typeof props.featureFlags?.stickyHeadersOptimization === 'boolean'
+        ? !!props.featureFlags?.stickyHeadersOptimization
+        : typeof props.allowTables === 'object' &&
+          !!props.allowTables?.stickyHeadersOptimization,
+
+    initialRenderOptimization:
+      typeof props.featureFlags?.initialRenderOptimization === 'boolean'
+        ? !!props.featureFlags?.initialRenderOptimization
+        : typeof props.allowTables === 'object' &&
+          !!props.allowTables?.initialRenderOptimization,
+
+    mouseMoveOptimization:
+      typeof props.featureFlags?.mouseMoveOptimization === 'boolean'
+        ? !!props.featureFlags?.mouseMoveOptimization
+        : typeof props.allowTables === 'object' &&
+          !!props.allowTables?.mouseMoveOptimization,
+
+    tableRenderOptimization:
+      typeof props.featureFlags?.tableRenderOptimization === 'boolean'
+        ? !!props.featureFlags?.tableRenderOptimization
+        : typeof props.allowTables === 'object' &&
+          !!props.allowTables?.tableRenderOptimization,
+
+    tableOverflowShadowsOptimization:
+      typeof props.featureFlags?.tableOverflowShadowsOptimization === 'boolean'
+        ? !!props.featureFlags?.tableOverflowShadowsOptimization
+        : typeof props.allowTables === 'object' &&
+          !!props.allowTables?.tableOverflowShadowsOptimization,
+
+    extendFloatingToolbar: Boolean(
+      typeof props.allowExtension === 'object' &&
+        props.allowExtension?.allowExtendFloatingToolbars,
+    ),
+
+    displayInlineBlockForInlineNodes: Boolean(
+      typeof props.featureFlags?.displayInlineBlockForInlineNodes === 'boolean'
+        ? !!props.featureFlags?.displayInlineBlockForInlineNodes
+        : false,
+    ),
+
+    useUnpredictableInputRule: Boolean(
+      typeof props.featureFlags?.useUnpredictableInputRule === 'boolean'
+        ? !!props.featureFlags?.useUnpredictableInputRule
+        : props.UNSAFE_allowUndoRedoButtons
+        ? false
+        : true,
+    ),
+
+    showAvatarGroupAsPlugin: Boolean(
+      typeof props.featureFlags?.showAvatarGroupAsPlugin === 'boolean'
+        ? !!props.featureFlags?.showAvatarGroupAsPlugin
+        : false,
+    ),
+    errorBoundaryDocStructure: Boolean(
+      typeof props.featureFlags?.useErrorBoundaryDocStructure === 'boolean'
+        ? !!props.featureFlags?.useErrorBoundaryDocStructure
+        : false,
+    ),
+    synchronyErrorDocStructure: Boolean(
+      typeof props.featureFlags?.synchronyErrorDocStructure === 'boolean'
+        ? !!props.featureFlags?.synchronyErrorDocStructure
+        : false,
+    ),
+  };
 }

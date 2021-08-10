@@ -2,6 +2,7 @@ import { closeHistory } from 'prosemirror-history';
 import {
   Fragment,
   Mark,
+  MarkType,
   Node as PMNode,
   Schema,
   Slice,
@@ -10,7 +11,6 @@ import {
   EditorState,
   Selection,
   TextSelection,
-  NodeSelection,
   Transaction,
 } from 'prosemirror-state';
 import {
@@ -19,18 +19,24 @@ import {
   safeInsert,
 } from 'prosemirror-utils';
 import { EditorView } from 'prosemirror-view';
-import { Transform } from 'prosemirror-transform';
 
 import { MentionAttributes } from '@atlaskit/adf-schema';
 import { ExtensionAutoConvertHandler } from '@atlaskit/editor-common/extensions';
 import { CardAdf, CardAppearance } from '@atlaskit/smart-card';
 
 import { Command, CommandDispatch } from '../../types';
-import { compose, insideTable, processRawValue } from '../../utils';
+import {
+  compose,
+  insideTable,
+  isParagraph,
+  isText,
+  isLinkMark,
+  processRawValue,
+} from '../../utils';
 import { mapSlice } from '../../utils/slice';
 import { InputMethodInsertMedia, INPUT_METHOD } from '../analytics';
 import { insertCard, queueCardsFromChangedTr } from '../card/pm-plugins/doc';
-import { CardOptions } from '../card/types';
+import { CardOptions } from '@atlaskit/editor-common';
 import { GapCursorSelection, Side } from '../selection/gap-cursor-selection';
 import { linkifyContent } from '../hyperlink/utils';
 import { runMacroAutoConvert } from '../macro';
@@ -41,19 +47,15 @@ import {
 } from '../text-formatting/pm-plugins/main';
 import { replaceSelectedTable } from '../table/transforms/replace-table';
 
-import {
-  applyTextMarksToSlice,
-  hasOnlyNodesOfType,
-  isEmptyNode,
-  isCursorSelectionAtTextStartOrEnd,
-  isSelectionInsidePanel,
-} from './util';
-import { getFeatureFlags } from '../feature-flags-context';
-import { isListNode } from '../lists-predictable/utils/node';
+import { applyTextMarksToSlice, hasOnlyNodesOfType } from './util';
+import { isListNode, isListItemNode } from '../list/utils/node';
+import { canLinkBeCreatedInRange } from '../hyperlink/pm-plugins/main';
+
+import { insertSliceForLists } from './edge-cases';
 
 // remove text attribute from mention for copy/paste (GDPR)
 export function handleMention(slice: Slice, schema: Schema): Slice {
-  return mapSlice(slice, node => {
+  return mapSlice(slice, (node) => {
     if (node.type.name === schema.nodes.mention.name) {
       const mention = node.attrs as MentionAttributes;
       const newMention = { ...mention, text: '' };
@@ -128,6 +130,52 @@ export function handlePasteIntoTaskAndDecision(slice: Slice): Command {
   };
 }
 
+// If we paste a link onto some selected text, apply the link as a mark
+export function handlePasteLinkOnSelectedText(slice: Slice): Command {
+  return (state, dispatch) => {
+    const {
+      schema,
+      selection,
+      selection: { from, to },
+      tr,
+    } = state;
+    let linkMark;
+
+    // check if we have a link on the clipboard
+    if (
+      slice.content.childCount === 1 &&
+      isParagraph(slice.content.child(0), schema)
+    ) {
+      const paragraph = slice.content.child(0);
+      if (
+        paragraph.content.childCount === 1 &&
+        isText(paragraph.content.child(0), schema)
+      ) {
+        const text = paragraph.content.child(0);
+        linkMark = text.marks.find(
+          (mark) => isLinkMark(mark, schema) && mark.attrs.href === text.text,
+        );
+      }
+    }
+
+    // if we have a link, apply it to the selected text if we have any and it's allowed
+    if (
+      linkMark &&
+      selection instanceof TextSelection &&
+      !selection.empty &&
+      canLinkBeCreatedInRange(from, to)(state)
+    ) {
+      tr.addMark(from, to, linkMark);
+      if (dispatch) {
+        dispatch(tr);
+      }
+      return true;
+    }
+
+    return false;
+  };
+}
+
 export function handlePasteAsPlainText(
   slice: Slice,
   _event: ClipboardEvent,
@@ -152,7 +200,7 @@ export function handlePasteAsPlainText(
         tr.replaceSelection(slice);
       }
 
-      (state.storedMarks || []).forEach(mark => {
+      (state.storedMarks || []).forEach((mark) => {
         tr.addMark(selection.from, selection.from + slice.size, mark);
       });
       tr.scrollIntoView();
@@ -345,7 +393,7 @@ export function handleMacroAutoConvert(
         }
 
         isLinkSmart(text, 'inline', cardsOptions)
-          .then(cardData => {
+          .then((cardData) => {
             if (!view) {
               throw new Error('Missing view');
             }
@@ -440,7 +488,7 @@ export function handleExpand(slice: Slice): Command {
     let { tr } = state;
     let hasExpand = false;
 
-    const newSlice = mapSlice(slice, maybeNode => {
+    const newSlice = mapSlice(slice, (maybeNode) => {
       if (maybeNode.type === expand) {
         hasExpand = true;
         try {
@@ -506,117 +554,15 @@ function hasInlineCode(state: EditorState, slice: Slice) {
   );
 }
 
-export function insertSlice({ tr, slice }: { tr: Transaction; slice: Slice }) {
-  const {
-    selection,
-    selection: { $to, $from, to, from },
-  } = tr;
-  const { $cursor } = selection as TextSelection;
-  const panelNode = isSelectionInsidePanel(selection);
-  const selectionIsInsideList = $from.blockRange($to, isListNode);
-
-  // if pasting a list inside another list, ensure no empty list items get added
-  const newRange = $from.blockRange($to);
-  if (selectionIsInsideList && newRange) {
-    const startPos = from;
-    const endPos = $to.nodeAfter ? to : to + 2;
-    const newSlice = tr.doc.slice(endPos, newRange.end);
-    tr.deleteRange(startPos, newRange.end);
-    const mapped = tr.mapping.map(startPos);
-    tr.replaceRange(mapped, mapped, slice);
-    if (newSlice.size <= 0) {
-      return;
-    }
-    const newSelection = TextSelection.near(
-      tr.doc.resolve(tr.mapping.map(mapped)),
-      -1,
-    );
-    newSlice.openEnd = newSlice.openStart;
-    tr.replaceRange(newSelection.from, newSelection.from, newSlice);
-    return;
-  }
-
-  // if inside an empty panel, try and insert content inside it rather than replace it
-  if (panelNode && isEmptyNode(panelNode) && $from.node() === $to.node()) {
-    const { from: panelPosition } = selection;
-
-    // if content of slice isn't valid for a panel node, insert slice after
+function rollupLeafListItems(list: PMNode, leafListItems: PMNode[]) {
+  list.content.forEach((child) => {
     if (
-      panelNode &&
-      !panelNode.type.validContent(Fragment.from(slice.content))
+      isListNode(child) ||
+      (isListItemNode(child) && isListNode(child.firstChild))
     ) {
-      const insertPosition = $to.pos + 2;
-      tr.replaceRange(insertPosition, insertPosition, slice);
-      tr.setSelection(
-        TextSelection.near(
-          tr.doc.resolve(insertPosition + slice.content.size),
-          -1,
-        ),
-      );
-      return;
-    }
-
-    const temporaryDoc = new Transform(tr.doc.type.createAndFill()!);
-    temporaryDoc.replaceRange(0, temporaryDoc.doc.content.size, slice);
-    const sliceWithoutInvalidListSurrounding = temporaryDoc.doc.slice(0);
-    const newPanel = panelNode.copy(sliceWithoutInvalidListSurrounding.content);
-    const panelNodeSelected =
-      selection instanceof NodeSelection ? selection.node : null;
-
-    const replaceFrom = panelNodeSelected
-      ? panelPosition
-      : tr.doc.resolve(panelPosition).start();
-    const replaceTo = panelNodeSelected
-      ? panelPosition + panelNodeSelected.nodeSize
-      : replaceFrom;
-
-    tr.replaceRangeWith(replaceFrom, replaceTo, newPanel);
-
-    tr.setSelection(
-      TextSelection.near(tr.doc.resolve($from.pos + newPanel.content.size), -1),
-    );
-  } else if ($cursor && isCursorSelectionAtTextStartOrEnd(selection)) {
-    const position = Math.max($cursor.pos - 1, 0);
-
-    if (isEmptyNode(tr.doc.resolve($cursor.pos).node())) {
-      tr.replaceRange(position, $cursor.end(), slice);
+      rollupLeafListItems(child, leafListItems);
     } else {
-      const position = !$cursor.nodeBefore ? $from.before() : $from.after();
-      tr.replaceRange(position, position, slice);
-    }
-    const startSlicePosition = tr.doc.resolve(
-      Math.min(position + slice.size, tr.doc.content.size),
-    );
-
-    const newSlicePosition = Math.min(
-      startSlicePosition.pos + slice.content.size - slice.openEnd,
-      tr.doc.content.size,
-    );
-    const direction = -1;
-
-    tr.setSelection(
-      TextSelection.near(tr.doc.resolve(newSlicePosition), direction),
-    );
-  } else {
-    tr.replaceSelection(slice);
-  }
-}
-
-function isList(schema: Schema, node: PMNode | null | undefined) {
-  const { bulletList, orderedList } = schema.nodes;
-  return node && (node.type === bulletList || node.type === orderedList);
-}
-
-function flattenList(state: EditorState, node: PMNode, nodesArr: PMNode[]) {
-  const { listItem } = state.schema.nodes;
-  node.content.forEach(child => {
-    if (
-      isList(state.schema, child) ||
-      (child.type === listItem && isList(state.schema, child.firstChild))
-    ) {
-      flattenList(state, child, nodesArr);
-    } else {
-      nodesArr.push(child);
+      leafListItems.push(child);
     }
   });
 }
@@ -626,20 +572,31 @@ function shouldFlattenList(state: EditorState, slice: Slice) {
   return (
     node &&
     insideTable(state) &&
-    isList(state.schema, node) &&
+    isListNode(node) &&
     slice.openStart > slice.openEnd
   );
 }
 
-function sliceHasAlignmentOrIndentationMarks(slice: Slice) {
-  for (let i = 0; i < slice.content.childCount; i++) {
-    const node = slice.content.child(i);
-    const marks = node.marks.map(mark => mark.type.name);
-    if (marks.includes('alignment') || marks.includes('indentation')) {
-      return true;
+function sliceHasTopLevelMarks(slice: Slice) {
+  let hasTopLevelMarks = false;
+  slice.content.descendants((node) => {
+    if (node.marks.length > 0) {
+      hasTopLevelMarks = true;
     }
-  }
-  return false;
+    return false;
+  });
+  return hasTopLevelMarks;
+}
+
+function getTopLevelMarkTypesInSlice(slice: Slice) {
+  const markTypes = new Set<MarkType>();
+  slice.content.descendants((node) => {
+    node.marks
+      .map((mark) => mark.type)
+      .forEach((markType) => markTypes.add(markType));
+    return false;
+  });
+  return markTypes;
 }
 
 export function handleParagraphBlockMarks(state: EditorState, slice: Slice) {
@@ -652,9 +609,9 @@ export function handleParagraphBlockMarks(state: EditorState, slice: Slice) {
     selection: { $from },
   } = state;
 
-  // If no paragraph in the slice contains alignment or indentation marks, there's no need
-  // for special handling
-  if (!sliceHasAlignmentOrIndentationMarks(slice)) {
+  // If no paragraph in the slice contains marks, there's no need for special handling
+  // Note: this doesn't check for marks applied to lower level nodes such as text
+  if (!sliceHasTopLevelMarks(slice)) {
     return slice;
   }
 
@@ -667,10 +624,15 @@ export function handleParagraphBlockMarks(state: EditorState, slice: Slice) {
   // Check the parent of (paragraph -> text) because block marks are assigned to a wrapper
   // element around the paragraph node
   const grandparent = $from.node(Math.max(0, $from.depth - 1));
-  if (
-    grandparent.type.allowsMarkType(schema.marks.alignment) ||
-    grandparent.type.allowsMarkType(schema.marks.indentation)
-  ) {
+  const markTypesInSlice = getTopLevelMarkTypesInSlice(slice);
+  let forbiddenMarkTypes: MarkType[] = [];
+  for (let markType of markTypesInSlice) {
+    if (!grandparent.type.allowsMarkType(markType)) {
+      forbiddenMarkTypes.push(markType);
+    }
+  }
+
+  if (forbiddenMarkTypes.length === 0) {
     // In a slice containing one or more paragraphs at the document level (not wrapped in
     // another node), the first paragraph will only have its text content captured and pasted
     // since openStart is 1. We decrement the open depth of the slice so it retains any block
@@ -680,21 +642,85 @@ export function handleParagraphBlockMarks(state: EditorState, slice: Slice) {
     return new Slice(slice.content, openStart, slice.openEnd);
   }
 
-  // If the paragraph's parent node doesn't support alignment or indentation, drop those
-  // marks from the slice
-  return mapSlice(slice, node => {
+  // If the paragraph contains marks forbidden by the parent node (e.g. alignment/indentation),
+  // drop those marks from the slice
+  return mapSlice(slice, (node) => {
     if (node.type === schema.nodes.paragraph) {
       return schema.nodes.paragraph.createChecked(
         undefined,
         node.content,
-        node.marks.filter(
-          mark =>
-            mark.type.name !== 'alignment' && mark.type.name !== 'indentation',
-        ),
+        node.marks.filter((mark) => !forbiddenMarkTypes.includes(mark.type)),
       );
     }
     return node;
   });
+}
+
+/**
+ * ED-6300: When a nested list is pasted in a table cell and the slice has openStart > openEnd,
+ * it splits the table. As a workaround, we flatten the list to even openStart and openEnd.
+ *
+ * Note: this only happens if the first child is a list
+ *
+ * Example: copying "one" and "two"
+ * - zero
+ *   - one
+ * - two
+ *
+ * Before:
+ * ul
+ *   ┗━ li
+ *     ┗━ ul
+ *       ┗━ li
+ *         ┗━ p -> "one"
+ *   ┗━ li
+ *     ┗━ p -> "two"
+ *
+ * After:
+ * ul
+ *   ┗━ li
+ *     ┗━ p -> "one"
+ *   ┗━ li
+ *     ┗━p -> "two"
+ */
+export function flattenNestedListInSlice(slice: Slice) {
+  if (!slice.content.firstChild) {
+    return slice;
+  }
+
+  const listToFlatten = slice.content.firstChild;
+  const leafListItems: PMNode[] = [];
+  rollupLeafListItems(listToFlatten, leafListItems);
+
+  const contentWithFlattenedList = slice.content.replaceChild(
+    0,
+    listToFlatten.type.createChecked(listToFlatten.attrs, leafListItems),
+  );
+  return new Slice(contentWithFlattenedList, slice.openEnd, slice.openEnd);
+}
+
+export function insertIntoPanel(tr: Transaction, slice: Slice, panel: any) {
+  let panelParentOverCurrentSelection = findParentNodeOfType(panel)(
+    tr.selection,
+  );
+  if (
+    tr.selection.$from === tr.selection.$to &&
+    panelParentOverCurrentSelection &&
+    !panelParentOverCurrentSelection.node.textContent
+  ) {
+    tr = safeInsert(slice.content, tr.selection.$to.pos)(tr);
+    // set selection to end of inserted content
+    const panelNode = findParentNodeOfType(panel)(tr.selection);
+    if (panelNode) {
+      tr.setSelection(
+        TextSelection.near(
+          tr.doc.resolve(panelNode.pos + panelNode.node.nodeSize),
+        ),
+      );
+    }
+  } else {
+    tr.replaceSelection(slice);
+  }
 }
 
 export function handleRichText(slice: Slice): Command {
@@ -706,69 +732,29 @@ export function handleRichText(slice: Slice): Command {
     if (hasInlineCode(state, slice)) {
       removePrecedingBackTick(tr);
     }
-    /**
-     * ED-6300: When a nested list is pasted in a table cell and the slice has openStart > openEnd,
-     * it splits the table. As a workaround, we flatten the list to even openStart and openEnd
-     *
-     *  Before:
-     *  ul
-     *    ┗━ li
-     *      ┗━ ul
-     *        ┗━ li
-     *          ┗━ p -> "one"
-     *    ┗━ li
-     *      ┗━ p -> "two"
-     *
-     *  After:
-     *  ul
-     *    ┗━ li
-     *      ┗━ p -> "one"
-     *    ┗━ li
-     *      ┗━p -> "two"
-     */
-    if (shouldFlattenList(state, slice) && slice.content.firstChild) {
-      const node = slice.content.firstChild;
-      const nodes: PMNode[] = [];
-      flattenList(state, node, nodes);
-      slice = new Slice(
-        Fragment.from(node.type.createChecked(node.attrs, nodes)),
-        slice.openEnd,
-        slice.openEnd,
-      );
+
+    if (shouldFlattenList(state, slice)) {
+      slice = flattenNestedListInSlice(slice);
     }
 
     closeHistory(tr);
 
-    const featureFlags = getFeatureFlags(state);
-    const allowPredictableLists = featureFlags && featureFlags.predictableLists;
+    let panelParentOverCurrentSelection = findParentNodeOfType(panel)(
+      tr.selection,
+    );
 
-    if (
-      allowPredictableLists &&
-      (isList(state.schema, slice.content.firstChild) ||
-        isList(state.schema, slice.content.lastChild))
-    ) {
-      insertSlice({ tr, slice });
+    const isFirstChildListNode = isListNode(slice.content.firstChild);
+    const isLastChildListNode = isListNode(slice.content.lastChild);
+    const isSliceContentListNodes = isFirstChildListNode || isLastChildListNode;
+    const isTargetPanelEmpty =
+      panelParentOverCurrentSelection &&
+      panelParentOverCurrentSelection.node?.content.size === 2;
+
+    if (isSliceContentListNodes || isTargetPanelEmpty) {
+      insertSliceForLists({ tr, slice });
     } else {
       // if inside an empty panel, try and insert content inside it rather than replace it
-      let panelParent = findParentNodeOfType(panel)(tr.selection);
-      if (
-        tr.selection.$from === tr.selection.$to &&
-        panelParent &&
-        !panelParent.node.textContent
-      ) {
-        tr = safeInsert(slice.content, tr.selection.$to.pos)(tr);
-        // set selection to end of inserted content
-        panelParent = findParentNodeOfType(panel)(tr.selection);
-        if (panelParent) {
-          tr.setSelection(
-            TextSelection.near(
-              tr.doc.resolve(panelParent.pos + panelParent.node.nodeSize),
-            ),
-          );
-        }
-      } else {
-        tr.replaceSelection(slice);
-      }
+      insertIntoPanel(tr, slice, panel);
     }
 
     tr.setStoredMarks([]);

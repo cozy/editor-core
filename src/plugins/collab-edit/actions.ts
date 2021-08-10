@@ -25,10 +25,10 @@ export const handleInit = (
   view: EditorView,
   options?: PrivateCollabEditOptions,
 ) => {
-  const { doc, json, version } = initData;
+  const { doc, json, version, reserveCursor } = initData;
   if (doc) {
     const { state } = view;
-    const tr = replaceDocument(doc, state, version, options);
+    const tr = replaceDocument(doc, state, version, options, reserveCursor);
     tr.setMeta('isRemote', true);
     view.dispatch(tr);
   } else if (json) {
@@ -82,7 +82,7 @@ export const applyRemoteSteps = (
     state: { schema },
   } = view;
 
-  const steps = json.map(step => Step.fromJSON(schema, step));
+  const steps = json.map((step) => Step.fromJSON(schema, step));
 
   let tr: Transaction;
 
@@ -90,7 +90,7 @@ export const applyRemoteSteps = (
     tr = receiveTransaction(state, steps, userIds);
   } else {
     tr = state.tr;
-    steps.forEach(step => tr.step(step));
+    steps.forEach((step) => tr.step(step));
   }
 
   if (tr) {

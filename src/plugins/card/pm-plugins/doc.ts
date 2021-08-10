@@ -20,12 +20,14 @@ import {
   EVENT_TYPE,
   AnalyticsEventPayload,
   INPUT_METHOD,
+  InputMethodInsertLink,
 } from '../../../plugins/analytics';
 import { SmartLinkNodeContext } from '../../analytics/types/smart-links';
 import { isSafeUrl } from '@atlaskit/adf-schema';
 import { isFromCurrentDomain } from '../../hyperlink/utils';
 import { shouldReplaceLink } from './shouldReplaceLink';
 import { SMART_LINK_TYPE } from '../../../plugins/analytics/types/node-events';
+import { getLinkCreationAnalyticsEvent } from '../../../plugins/hyperlink/analytics';
 
 export function insertCard(tr: Transaction, cardAdf: Node, schema: Schema) {
   const { inlineCard } = schema.nodes;
@@ -93,7 +95,7 @@ export const replaceQueuedUrlWithCard = (
   }
 
   // find the requests for this URL
-  const requests = state.requests.filter(req => req.url === url);
+  const requests = state.requests.filter((req) => req.url === url);
 
   // try to transform response to ADF
   const schema: Schema = editorState.schema;
@@ -104,13 +106,13 @@ export const replaceQueuedUrlWithCard = (
   if (cardAdf) {
     // Should prevent any other node than cards? [inlineCard, blockCard].includes(cardAdf.type)
     const nodeContexts: Array<string | undefined> = requests
-      .map(request => replaceLinksToCards(tr, cardAdf, schema, request))
-      .filter(context => !!context); // context exist
+      .map((request) => replaceLinksToCards(tr, cardAdf, schema, request))
+      .filter((context) => !!context); // context exist
 
     // Send analytics information
     if (nodeContexts.length) {
       const nodeContext = nodeContexts.every(
-        context => context === nodeContexts[0],
+        (context) => context === nodeContexts[0],
       )
         ? nodeContexts[0]
         : 'mixed';
@@ -146,6 +148,22 @@ export const replaceQueuedUrlWithCard = (
   return true;
 };
 
+export const handleFallbackWithAnalytics = (
+  url: string,
+  source: InputMethodInsertLink,
+): Command => (editorState, dispatch) => {
+  const state = pluginKey.getState(editorState) as CardPluginState | undefined;
+  if (!state) {
+    return false;
+  }
+  const tr = editorState.tr;
+  addAnalytics(editorState, tr, getLinkCreationAnalyticsEvent(source, url));
+  if (dispatch) {
+    dispatch(resolveCard(url)(tr));
+  }
+  return true;
+};
+
 export const queueCardsFromChangedTr = (
   state: EditorState,
   tr: Transaction,
@@ -161,7 +179,7 @@ export const queueCardsFromChangedTr = (
       return true;
     }
 
-    const linkMark = node.marks.find(mark => mark.type === link);
+    const linkMark = node.marks.find((mark) => mark.type === link);
 
     if (linkMark) {
       if (!shouldReplaceLink(node, normalizeLinkText)) {
@@ -197,7 +215,7 @@ export const convertHyperlinkToSmartCard = (
     state.selection.from,
     state.selection.to,
     (node, pos) => {
-      const linkMark = node.marks.find(mark => mark.type === link);
+      const linkMark = node.marks.find((mark) => mark.type === link);
       if (linkMark) {
         const request: Request = {
           url: linkMark.attrs.href,
@@ -220,8 +238,15 @@ export const changeSelectedCardToLink = (
   text?: string,
   href?: string,
   sendAnalytics?: boolean,
+  node?: Node,
+  pos?: number,
 ): Command => (state, dispatch) => {
-  const tr = cardToLinkWithTransaction(state, text, href);
+  let tr;
+  if (node && pos) {
+    tr = cardNodeToLinkWithTransaction(state, text, href, node, pos);
+  } else {
+    tr = cardToLinkWithTransaction(state, text, href);
+  }
 
   if (sendAnalytics) {
     addAnalytics(state, tr, {
@@ -278,6 +303,22 @@ function cardToLinkWithTransaction(
   return tr;
 }
 
+function cardNodeToLinkWithTransaction(
+  state: EditorState<any>,
+  text: string | undefined,
+  href: string | undefined,
+  node: Node,
+  pos: number,
+): Transaction {
+  const { link } = state.schema.marks;
+  const url = node.attrs.url || node.attrs.data.url;
+  return state.tr.replaceWith(
+    pos,
+    pos + node.nodeSize,
+    state.schema.text(text || url, [link.create({ href: href || url })]),
+  );
+}
+
 export const changeSelectedCardToText = (text: string): Command => (
   state,
   dispatch,
@@ -299,7 +340,7 @@ export const changeSelectedCardToText = (text: string): Command => (
 
 export const setSelectedCardAppearance: (
   appearance: CardAppearance,
-) => Command = appearance => (state, dispatch) => {
+) => Command = (appearance) => (state, dispatch) => {
   const selectedNode =
     state.selection instanceof NodeSelection && state.selection.node;
 

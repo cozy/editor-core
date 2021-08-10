@@ -1,16 +1,11 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
-import {
-  doc,
-  p,
-  mention,
-  a,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, mention, a } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   MockMentionResource,
   MockMentionConfig,
-} from '@atlaskit/util-data-test';
+} from '@atlaskit/util-data-test/mock-mention-resource';
 import { ProviderFactory } from '@atlaskit/editor-common';
 import {
   MentionProvider,
@@ -27,6 +22,7 @@ import { selectCurrentItem } from '../../../../plugins/type-ahead/commands/selec
 import { dismissCommand } from '../../../../plugins/type-ahead/commands/dismiss';
 import { pluginKey } from '../../../../plugins/type-ahead/pm-plugins/plugin-key';
 import { EditorProps } from '../../../../types';
+import { shouldKeepInviteItem } from '../../../../plugins/mentions';
 
 let mockRegisterTeamMention = jest.fn();
 
@@ -94,7 +90,11 @@ describe('mentionTypeahead', () => {
         ...editorProps,
         collabEdit: {},
         sanitizePrivateContent: true,
-        mentionInsertDisplayName: options.mentionInsertDisplayName,
+        mention: {
+          insertDisplayName:
+            options.mention?.insertDisplayName ??
+            options.mentionInsertDisplayName,
+        },
       };
       mentionProviderConfig = {
         mentionNameResolver,
@@ -108,10 +108,26 @@ describe('mentionTypeahead', () => {
       };
     }
 
-    if (options && options.mentionInsertDisplayName) {
+    if (
+      options &&
+      (options.mentionInsertDisplayName || options.mention?.insertDisplayName)
+    ) {
       editorProps = {
         ...editorProps,
-        mentionInsertDisplayName: options.mentionInsertDisplayName,
+        mention: {
+          insertDisplayName:
+            options.mention?.insertDisplayName ??
+            options.mentionInsertDisplayName,
+        },
+      };
+    }
+
+    if (options && options.mention?.HighlightComponent) {
+      editorProps = {
+        ...editorProps,
+        mention: {
+          HighlightComponent: options.mention.HighlightComponent,
+        },
       };
     }
 
@@ -197,7 +213,7 @@ describe('mentionTypeahead', () => {
    * @return Promise resolving with `MentionDescription[]`
    */
   const subscribe = (mentionProvider: MentionProvider, query = '') => {
-    return new Promise<MentionDescription[]>(resolve => {
+    return new Promise<MentionDescription[]>((resolve) => {
       const subscribeKey = 'mentionPluginTest';
       mentionProvider.subscribe(subscribeKey, (mentions, resultQuery) => {
         if (query === resultQuery) {
@@ -218,7 +234,7 @@ describe('mentionTypeahead', () => {
       fire: jest.fn().mockName('event.fire') as any,
     } as UIAnalyticsEvent;
     const createAnalyticsEvent = jest
-      .fn(payload =>
+      .fn((payload) =>
         // We're only interested in recording events for 'mentionTypeahead'
         // ignoring all others
         payload.actionSubject === expectedActionSubject
@@ -490,7 +506,7 @@ describe('mentionTypeahead', () => {
               duration: 200,
               userIds: null,
               teams: expect.arrayContaining(
-                allTeamIds.map(teamId => ({
+                allTeamIds.map((teamId) => ({
                   teamId,
                   includesYou: expect.anything(),
                   memberCount: expect.anything(),
@@ -543,6 +559,7 @@ describe('mentionTypeahead', () => {
               componentName: 'mention',
               flagKey: 'confluence.frontend.invite.from.mention',
               value: false,
+              cohort: undefined,
             }),
           }),
         );
@@ -550,32 +567,31 @@ describe('mentionTypeahead', () => {
     );
 
     describe('inviteFromMentionExperiment On', () => {
-      beforeAll(async () => {
-        ({ createAnalyticsEvent } = analyticsMocks());
-        ({ editorView, sel } = await editor(
-          {
-            createAnalyticsEvent,
-          },
-          {},
-          { shouldEnableInvite: true },
-        ));
-      });
-
       it(
         'should trigger feature exposed analytics event',
-        withMentionQuery('doesNotExist', ({ createAnalyticsEvent }) => {
-          expect(createAnalyticsEvent).toHaveBeenCalledWith(
-            expect.objectContaining({
-              action: 'exposed',
-              actionSubject: 'feature',
-              eventType: 'operational',
-              attributes: expect.objectContaining({
-                flagKey: 'confluence.frontend.invite.from.mention',
-                value: false,
+        withMentionQuery(
+          'doesNotExist',
+          ({ createAnalyticsEvent }) => {
+            expect(createAnalyticsEvent).toHaveBeenCalledWith(
+              expect.objectContaining({
+                action: 'exposed',
+                actionSubject: 'feature',
+                eventType: 'operational',
+                attributes: expect.objectContaining({
+                  flagKey: 'confluence.frontend.invite.from.mention',
+                  value: true,
+                  cohort: 'variation',
+                }),
               }),
-            }),
-          );
-        }),
+            );
+          },
+          {
+            mentionConfig: {
+              inviteExperimentCohort: 'variation',
+              shouldEnableInvite: true,
+            },
+          },
+        ),
       );
     });
   });
@@ -677,6 +693,42 @@ describe('mentionTypeahead', () => {
               ),
             );
           },
+          {
+            sanitizePrivateContent: true,
+            mention: { insertDisplayName: true },
+          },
+        ),
+      );
+
+      it(
+        'should not insert mention name when collabEdit.sanitizePrivateContent is true and @depreciated mentionInsertDisplayName is true',
+        withMentionQuery(
+          'april',
+          ({ editorView, mockMentionNameResolver }) => {
+            selectCurrentItem()(editorView.state, editorView.dispatch);
+
+            expect(mockMentionNameResolver!.lookupName).toHaveBeenCalledTimes(
+              0,
+            );
+            expect(mockMentionNameResolver!.cacheName).toHaveBeenCalledTimes(1);
+            expect(mockMentionNameResolver!.cacheName).toHaveBeenCalledWith(
+              '6',
+              'Dorene Rieger',
+            );
+
+            // expect text in mention to be empty due to sanitization
+            expect(editorView.state.doc).toEqualDocument(
+              doc(
+                p(
+                  mention({
+                    id: '6',
+                    text: '',
+                  })(),
+                  ' ',
+                ),
+              ),
+            );
+          },
           { sanitizePrivateContent: true, mentionInsertDisplayName: true },
         ),
       );
@@ -716,6 +768,30 @@ describe('mentionTypeahead', () => {
 
       it(
         'should insert mention name when collabEdit.sanitizePrivateContent is falsy and mentionInsertDisplayName true',
+        withMentionQuery(
+          'april',
+          ({ editorView }) => {
+            selectCurrentItem()(editorView.state, editorView.dispatch);
+
+            // expect text in mention to be empty due to sanitization
+            expect(editorView.state.doc).toEqualDocument(
+              doc(
+                p(
+                  mention({
+                    id: '6',
+                    text: '@Dorene Rieger',
+                  })(),
+                  ' ',
+                ),
+              ),
+            );
+          },
+          { mention: { insertDisplayName: true } },
+        ),
+      );
+
+      it(
+        'should insert mention name when collabEdit.sanitizePrivateContent is falsy and @depreciated mentionInsertDisplayName true',
         withMentionQuery(
           'april',
           ({ editorView }) => {
@@ -911,7 +987,7 @@ describe('mentionTypeahead', () => {
 
         it.each([2, 1, 0])(
           'should show invite item if there is %i mentionable users/teams returned',
-          noOfResults => {
+          (noOfResults) => {
             let query: string = 'doesNotExist';
 
             switch (noOfResults) {
@@ -1016,6 +1092,20 @@ describe('mentionTypeahead', () => {
             },
           ),
         );
+
+        describe('shouldKeepInviteItem', () => {
+          it('should show invite item only if a full word was entered with zero results', () => {
+            expect(shouldKeepInviteItem('alica', '')).toBe(true);
+            expect(shouldKeepInviteItem('alica woods ', '')).toBe(true);
+            expect(shouldKeepInviteItem('alica zzz ', 'alica z')).toBe(false);
+            expect(
+              shouldKeepInviteItem('alica woods zzz', 'alica woods z'),
+            ).toBe(true);
+            expect(
+              shouldKeepInviteItem('alica woods zzz ', 'alica woods z'),
+            ).toBe(false);
+          });
+        });
       });
     });
   });

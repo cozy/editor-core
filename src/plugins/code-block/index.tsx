@@ -16,6 +16,7 @@ import { IconCode } from '../quick-insert/assets';
 import { PMPluginFactoryParams, EditorPlugin } from '../../types';
 import { messages } from '../block-type/messages';
 import { CodeBlockOptions } from './types';
+import refreshBrowserSelectionOnChange from './refresh-browser-selection';
 
 const codeBlockPlugin = (options: CodeBlockOptions = {}): EditorPlugin => ({
   name: 'codeBlock',
@@ -40,6 +41,16 @@ const codeBlockPlugin = (options: CodeBlockOptions = {}): EditorPlugin => ({
       },
     ];
   },
+
+  // Workaround for a firefox issue where dom selection is off sync
+  // https://product-fabric.atlassian.net/browse/ED-12442
+  onEditorViewStateUpdated(props) {
+    refreshBrowserSelectionOnChange(
+      props.originalTransaction,
+      props.newEditorState,
+    );
+  },
+
   pluginsOptions: {
     quickInsert: ({ formatMessage }) => [
       {
@@ -49,7 +60,7 @@ const codeBlockPlugin = (options: CodeBlockOptions = {}): EditorPlugin => ({
         keywords: ['code block'],
         priority: 700,
         keyshortcut: '```',
-        icon: () => <IconCode label={formatMessage(messages.codeblock)} />,
+        icon: () => <IconCode />,
         action(insert, state) {
           const schema = state.schema;
           const tr = insert(schema.nodes.codeBlock.createChecked());

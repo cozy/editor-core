@@ -5,7 +5,7 @@ import {
   getDocFromElement,
 } from '../../../../__tests__/integration/_helpers';
 import {
-  goToEditorTestingExample,
+  goToEditorTestingWDExample,
   mountEditor,
   loadLocale,
 } from '../../../../__tests__/__helpers/testing-example-helpers';
@@ -17,7 +17,7 @@ BrowserTestCase(
   'quick-insert.ts: Insert date via quick insert',
   { skip: ['edge'] },
   async (client: any, testName: string) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     const JAN_1ST_2019_AEST_TIMEZONE = {
       year: 2019,
@@ -49,7 +49,7 @@ BrowserTestCase(
   "quick-insert.ts: Uses today's date in user's local timezone as initial selection",
   { skip: ['edge'] },
   async (client: any) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
 
     const JAN_1ST_2019_AEST_TIMEZONE = {
       year: 2019,
@@ -79,7 +79,7 @@ BrowserTestCase(
   'quick-insert.ts: format date to localized version',
   { skip: ['edge'] },
   async (client: any) => {
-    const page = await goToEditorTestingExample(client);
+    const page = await goToEditorTestingWDExample(client);
     await loadLocale(page, ['pt', 'es']);
 
     const JAN_1ST_2019_AEST_TIMEZONE = {
@@ -111,12 +111,7 @@ BrowserTestCase(
     const browser = (client.capabilities
       .browserName as string).toLowerCase() as Browser;
 
-    // Safari formats dates slightly differently
-    if (browser === 'safari') {
-      expect(lozengeText).toBe('1 de jan de 2019');
-    } else {
-      expect(lozengeText).toBe('1 de jan. de 2019');
-    }
+    expect(lozengeText).toBe('1 de jan. de 2019');
 
     await mountEditor(
       page,
@@ -131,7 +126,7 @@ BrowserTestCase(
     await quickInsert(page, 'Date');
 
     const lozengeText2 = await page.getText(dateLozenge);
-    if (browser === 'safari') {
+    if (browser !== 'firefox') {
       expect(lozengeText2).toBe('1 ene 2019');
     } else {
       expect(lozengeText2).toBe('1 ene. 2019');

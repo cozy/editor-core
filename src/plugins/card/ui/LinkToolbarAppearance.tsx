@@ -12,8 +12,8 @@ import {
 import { CardAppearance } from '@atlaskit/editor-common/provider-factory';
 import { isSupportedInParent } from '../../../utils/nodes';
 import Dropdown from '../../floating-toolbar/ui/Dropdown';
-import nodeNames from '../../../messages';
 import { messages } from '../messages';
+import nodeNames from '../../../messages';
 import { DropdownOptions } from '../../../plugins/floating-toolbar/ui/types';
 
 export interface LinkToolbarAppearanceProps {
@@ -48,6 +48,22 @@ export class LinkToolbarAppearance extends React.Component<
       cardContext &&
       url &&
       cardContext.extractors.getPreview(url, platform);
+
+    if (url) {
+      const urlState = cardContext?.store?.getState()[url];
+      if (urlState?.error?.kind === 'fatal') {
+        return null;
+      }
+    }
+
+    const isSmartLinkSupportedInParent = isSupportedInParent(
+      editorState,
+      Fragment.from(editorState.schema.nodes.blockCard.createChecked({})),
+      currentAppearance,
+    );
+    const tooltip = isSmartLinkSupportedInParent
+      ? undefined
+      : parentNodeName(editorState, intl);
     const embedOption = allowEmbeds &&
       preview && {
         title: intl.formatMessage(messages.embed),
@@ -55,6 +71,8 @@ export class LinkToolbarAppearance extends React.Component<
         selected: currentAppearance === 'embed',
         hidden: false,
         testId: 'embed-appearance',
+        disabled: !isSmartLinkSupportedInParent,
+        tooltip,
       };
     const options: DropdownOptions<Function> = [
       {
@@ -77,6 +95,8 @@ export class LinkToolbarAppearance extends React.Component<
         selected: currentAppearance === 'block',
         hidden: false,
         testId: 'block-appearance',
+        disabled: !isSmartLinkSupportedInParent,
+        tooltip,
       },
     ];
     const title = intl.formatMessage(
@@ -85,13 +105,6 @@ export class LinkToolbarAppearance extends React.Component<
     const dispatchCommand = (fn?: Function) => {
       fn && fn(editorState, view && view.dispatch);
     };
-
-    const isDropdownDisabled =
-      currentAppearance === 'inline' &&
-      !isSupportedInParent(
-        editorState,
-        Fragment.from(editorState.schema.nodes.blockCard.createChecked({})),
-      );
 
     if (embedOption) {
       options.push(embedOption);
@@ -104,10 +117,6 @@ export class LinkToolbarAppearance extends React.Component<
         title={title}
         dispatchCommand={dispatchCommand}
         options={options}
-        disabled={isDropdownDisabled}
-        tooltip={
-          isDropdownDisabled ? parentNodeName(editorState, intl) : undefined
-        }
       />
     );
   };
@@ -124,16 +133,19 @@ export class LinkToolbarAppearance extends React.Component<
 
 const parentNodeName = (state: EditorState, intl: InjectedIntl): string => {
   try {
-    const parentNode = state.selection.$from.node(-1);
+    const parentNode = state.selection.$from.node(1);
     const parentName = intl.formatMessage(
       nodeNames[parentNode.type.name as keyof typeof nodeNames],
     );
-    const tooltip = intl.formatMessage(messages.blockCardUnavailable, {
-      node: parentName,
-    });
+    const tooltip = intl.formatMessage(
+      messages.displayOptionUnavailableInParentNode,
+      {
+        node: parentName,
+      },
+    );
     return tooltip;
   } catch (e) {
-    return intl.formatMessage(messages.blockCardUnavailable, {
+    return intl.formatMessage(messages.displayOptionUnavailableInParentNode, {
       node: intl.formatMessage(nodeNames.defaultBlockNode),
     });
   }

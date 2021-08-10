@@ -4,6 +4,7 @@ import { EditorPlugin, EditorProps } from '../types';
 import {
   breakoutPlugin,
   collabEditPlugin,
+  dataConsumerMarkPlugin,
   datePlugin,
   emojiPlugin,
   extensionPlugin,
@@ -12,8 +13,7 @@ import {
   insertBlockPlugin,
   jiraIssuePlugin,
   layoutPlugin,
-  listsPlugin,
-  listsPredictablePlugin,
+  listPlugin,
   macroPlugin,
   maxContentSizePlugin,
   mediaPlugin,
@@ -42,16 +42,18 @@ import {
   contextPanelPlugin,
   mobileSelectionPlugin,
   annotationPlugin,
+  captionPlugin,
+  avatarGroupPlugin,
 } from '../plugins';
 import { isFullPage as fullPageCheck } from '../utils/is-full-page';
-import { ScrollGutterPluginOptions } from '../plugins/base/pm-plugins/scroll-gutter';
+import {
+  GUTTER_SIZE_MOBILE_IN_PX,
+  ScrollGutterPluginOptions,
+} from '../plugins/base/pm-plugins/scroll-gutter';
 import { createFeatureFlagsFromProps } from '../plugins/feature-flags-context/feature-flags-from-props';
 import { PrivateCollabEditOptions } from '../plugins/collab-edit/types';
 import { BlockTypePluginOptions } from '../plugins/block-type/types';
-import {
-  NORMAL_SEVERITY_THRESHOLD,
-  DEGRADED_SEVERITY_THRESHOLD,
-} from '../plugins/base/pm-plugins/frozen-editor';
+import { getMediaFeatureFlag } from '@atlaskit/media-common';
 import {
   createDefaultPreset,
   DefaultPresetPluginOptions,
@@ -70,10 +72,11 @@ const isCodeBlockAllowed = (
   return exclude.indexOf('codeBlock') === -1;
 };
 
-function getScrollGutterOptions(
+export function getScrollGutterOptions(
   props: EditorProps,
 ): ScrollGutterPluginOptions | undefined {
-  const { appearance } = props;
+  const { appearance, persistScrollGutter } = props;
+
   if (fullPageCheck(appearance)) {
     // Full Page appearance uses a scrollable div wrapper
     return {
@@ -86,6 +89,8 @@ function getScrollGutterOptions(
     return {
       getScrollElement: () => document.body,
       allowCustomScrollHandler: false,
+      persistScrollGutter,
+      gutterSize: GUTTER_SIZE_MOBILE_IN_PX,
     };
   }
   return undefined;
@@ -93,92 +98,65 @@ function getScrollGutterOptions(
 
 export function getDefaultPresetOptionsFromEditorProps(
   props: EditorProps,
+  createAnalyticsEvent?: CreateUIAnalyticsEvent,
 ): EditorPresetProps & DefaultPresetPluginOptions {
   const appearance = props.appearance;
   const isMobile = appearance === 'mobile';
-  const isFullPage = fullPageCheck(appearance);
 
-  // TODO: https://product-fabric.atlassian.net/browse/ED-10260
-  const inputTracking =
-    props.performanceTracking && props.performanceTracking.inputTracking
-      ? props.performanceTracking.inputTracking
-      : {
-          enabled:
-            isFullPage ||
-            (typeof props.inputSamplingLimit !== 'undefined' &&
-              props.inputSamplingLimit > 0),
-          samplingRate: props.inputSamplingLimit,
-        };
-
-  // If the feature prop is not explicitly defined AND we are on a product-fabric branch deploy we force-enable node counting
-  // START: temporary code https://product-fabric.atlassian.net/browse/ED-10260
-  const hasInputTracking =
-    typeof props.performanceTracking?.inputTracking !== 'undefined';
-  inputTracking.countNodes =
-    !hasInputTracking && shouldForceTracking()
-      ? true
-      : inputTracking.countNodes;
-
-  const forceBFreezeTracking =
-    typeof props.performanceTracking?.bFreezeTracking === 'undefined' &&
-    shouldForceTracking();
-
-  const bFreezeTracking = {
-    trackInteractionType:
-      !!forceBFreezeTracking ||
-      !!props.performanceTracking?.bFreezeTracking?.trackInteractionType,
-    trackSeverity:
-      !!forceBFreezeTracking ||
-      !!props.performanceTracking?.bFreezeTracking?.trackSeverity,
-    severityNormalThreshold:
-      props.performanceTracking?.bFreezeTracking?.severityNormalThreshold ??
-      NORMAL_SEVERITY_THRESHOLD,
-    severityDegradedThreshold:
-      props.performanceTracking?.bFreezeTracking?.severityDegradedThreshold ??
-      DEGRADED_SEVERITY_THRESHOLD,
-  };
-  // END:  temporary code  https://product-fabric.atlassian.net/browse/ED-10260
+  const inputTracking = props.performanceTracking?.inputTracking;
 
   return {
+    createAnalyticsEvent,
     featureFlags: createFeatureFlagsFromProps(props),
     paste: {
-      cardOptions: props.UNSAFE_cards,
+      cardOptions: props.smartLinks || props.UNSAFE_cards,
       sanitizePrivateContent: props.sanitizePrivateContent,
-      predictableLists: props.UNSAFE_predictableLists,
     },
     base: {
       allowInlineCursorTarget: !isMobile,
       allowScrollGutter: getScrollGutterOptions(props),
       inputTracking,
-      bFreezeTracking,
+      browserFreezeTracking: props.performanceTracking?.bFreezeTracking,
     },
     blockType: {
       lastNodeMustBeParagraph:
         appearance === 'comment' || appearance === 'chromeless',
       allowBlockType: props.allowBlockType,
+      isUndoRedoButtonsEnabled: props.UNSAFE_allowUndoRedoButtons,
     },
     placeholder: {
       placeholder: props.placeholder,
       placeholderHints: props.placeholderHints,
       placeholderBracketHint: props.placeholderBracketHint,
     },
-    textFormatting: props.textFormatting,
+    textFormatting: {
+      ...(props.textFormatting || {}),
+      responsiveToolbarMenu:
+        props.textFormatting?.responsiveToolbarMenu != null
+          ? props.textFormatting.responsiveToolbarMenu
+          : props.UNSAFE_allowUndoRedoButtons,
+    },
     annotationProviders: props.annotationProviders,
     submitEditor: props.onSave,
     quickInsert: {
       enableElementBrowser:
         props.elementBrowser && props.elementBrowser.showModal,
+      elementBrowserHelpUrl:
+        props.elementBrowser && props.elementBrowser.helpUrl,
       disableDefaultItems: isMobile,
       headless: isMobile,
     },
     selection: { useLongPressSelection: false },
-    cardOptions: props.UNSAFE_cards,
+    cardOptions: props.smartLinks || props.UNSAFE_cards,
     codeBlock: { ...props.codeBlock, useLongPressSelection: false },
   };
 }
 
 /**
  * Maps EditorProps to EditorPlugins
+ *
+ * Note: The order that presets are added determines
+ * their placement in the editor toolbar
  */
 export default function createPluginsList(
   props: EditorProps,
@@ -190,25 +168,19 @@ export default function createPluginsList(
   const isComment = appearance === 'comment';
   const isFullPage = fullPageCheck(appearance);
   const preset = createDefaultPreset(
-    getDefaultPresetOptionsFromEditorProps(props),
+    getDefaultPresetOptionsFromEditorProps(props, createAnalyticsEvent),
   );
+  const featureFlags = createFeatureFlagsFromProps(props);
+  const allowLocalIdGenerationOnTables = featureFlags.localIdGenerationOnTables;
 
   if (props.allowAnalyticsGASV3) {
-    const { performanceTracking, transactionTracking } = props;
+    const { performanceTracking } = props;
 
     preset.add([
       analyticsPlugin,
       {
         createAnalyticsEvent,
-        // TODO: https://product-fabric.atlassian.net/browse/ED-8985
-        ...(performanceTracking || transactionTracking
-          ? {
-              performanceTracking: {
-                ...(performanceTracking || {}),
-                ...(transactionTracking ? { transactionTracking } : {}),
-              },
-            }
-          : {}),
+        performanceTracking,
       },
     ]);
   }
@@ -224,16 +196,21 @@ export default function createPluginsList(
     preset.add(alignmentPlugin);
   }
 
+  if (featureFlags.dataConsumerMark) {
+    preset.add([
+      dataConsumerMarkPlugin,
+      {
+        allowDataConsumerMarks: true,
+      },
+    ]);
+  }
+
   if (props.allowTextColor) {
     preset.add([textColorPlugin, props.allowTextColor]);
   }
 
   // Needs to be after allowTextColor as order of buttons in toolbar depends on it
-  if (props.UNSAFE_predictableLists) {
-    preset.add(listsPredictablePlugin);
-  } else {
-    preset.add(listsPlugin);
-  }
+  preset.add(listPlugin);
 
   if (props.allowRule) {
     preset.add(rulePlugin);
@@ -281,6 +258,11 @@ export default function createPluginsList(
         alignLeftOnInsert,
       },
     ]);
+
+    // EDM-799: inside caption plugin we do the feature flag in enabling the plugin
+    if (getMediaFeatureFlag('captions', props.media.featureFlags)) {
+      preset.add(captionPlugin);
+    }
   }
 
   if (props.mentionProvider) {
@@ -289,9 +271,11 @@ export default function createPluginsList(
       {
         createAnalyticsEvent,
         sanitizePrivateContent: props.sanitizePrivateContent,
-        mentionInsertDisplayName: props.mentionInsertDisplayName,
+        insertDisplayName:
+          props.mention?.insertDisplayName ?? props.mentionInsertDisplayName,
         useInlineWrapper: isMobile,
         allowZeroWidthSpaceAfter: !isMobile,
+        HighlightComponent: props.mention?.HighlightComponent,
       },
     ]);
   }
@@ -321,6 +305,7 @@ export default function createPluginsList(
         fullWidthEnabled: props.appearance === 'full-width',
         wasFullWidthEnabled: prevProps && prevProps.appearance === 'full-width',
         dynamicSizingEnabled: props.allowDynamicTextSizing,
+        allowLocalIdGeneration: allowLocalIdGenerationOnTables,
       },
     ]);
   }
@@ -416,9 +401,9 @@ export default function createPluginsList(
           extensionConfig.allowBreakout !== false,
         stickToolbarToBottom: extensionConfig.stickToolbarToBottom,
         allowAutoSave: extensionConfig.allowAutoSave,
-        allowLocalIdGeneration: extensionConfig.allowLocalIdGeneration,
         extensionHandlers: props.extensionHandlers,
         useLongPressSelection: false,
+        appearance,
       },
     ]);
   }
@@ -454,12 +439,13 @@ export default function createPluginsList(
     ]);
   }
 
-  if (props.UNSAFE_cards) {
+  if (props.smartLinks || props.UNSAFE_cards) {
     const fullWidthMode = props.appearance === 'full-width';
     preset.add([
       cardPlugin,
       {
         ...props.UNSAFE_cards,
+        ...props.smartLinks,
         platform: isMobile ? 'mobile' : 'web',
         fullWidthMode,
       },
@@ -498,8 +484,11 @@ export default function createPluginsList(
     preset.add(scrollIntoViewPlugin);
   }
 
-  if (isMobile) {
+  if (isMobile || props.UNSAFE_allowUndoRedoButtons) {
     preset.add(historyPlugin);
+  }
+
+  if (isMobile) {
     preset.add(mobileScrollPlugin);
     preset.add(mobileSelectionPlugin);
   }
@@ -517,11 +506,26 @@ export default function createPluginsList(
         (props.elementBrowser && props.elementBrowser.showModal) || false,
       replacePlusMenuWithElementBrowser:
         (props.elementBrowser && props.elementBrowser.replacePlusMenu) || false,
+      allowLocalIdGenerationOnTables: allowLocalIdGenerationOnTables,
     },
   ]);
 
+  if (props.featureFlags?.showAvatarGroupAsPlugin === true) {
+    preset.add([
+      avatarGroupPlugin,
+      {
+        collabEdit: props.collabEdit,
+      },
+    ]);
+  }
+
   if (props.allowFindReplace) {
-    preset.add(findReplacePlugin);
+    preset.add([
+      findReplacePlugin,
+      {
+        takeFullWidth: !!props.featureFlags?.showAvatarGroupAsPlugin === false,
+      },
+    ]);
   }
 
   const excludes = new Set<string>();

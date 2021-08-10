@@ -11,9 +11,14 @@ import {
   akEditorMediaResizeHandlerPaddingWide,
   akEditorMediaResizeHandlerPadding,
   akEditorSelectedNodeClassName,
+  akEditorDeleteIconColor,
 } from '@atlaskit/editor-shared-styles';
 import { N60, B200 } from '@atlaskit/theme/colors';
-import { fileCardImageViewSelector } from '@atlaskit/media-card';
+import {
+  fileCardImageViewSelector,
+  inlinePlayerClassName,
+  newFileExperienceClassName,
+} from '@atlaskit/media-card';
 
 export const mediaStyles = css`
   .ProseMirror {
@@ -138,12 +143,20 @@ export const mediaStyles = css`
   .danger {
     /* Media single */
     .${richMediaClassName} .${fileCardImageViewSelector}::after {
-      border: ${akEditorSelectedBorderBoldSize}px solid ${akEditorDeleteBorder};
+      border: 1px solid ${akEditorDeleteIconColor};
     }
-
-    .richMedia-selected .richMedia-resize-handle-right::after,
-    .richMedia-selected .richMedia-resize-handle-left::after {
-      background: ${akEditorDeleteBorder};
+    /* Media single video player */
+    .${richMediaClassName} .${inlinePlayerClassName}::after {
+      border: 1px solid ${akEditorDeleteIconColor};
+    }
+    /* New file experience */
+    .${richMediaClassName} .${newFileExperienceClassName} {
+      box-shadow: 0 0 0 1px ${akEditorDeleteIconColor} !important;
+    }
+    /* Media resize handlers */
+    .richMedia-resize-handle-right::after,
+    .richMedia-resize-handle-left::after {
+      background: ${akEditorDeleteIconColor};
     }
 
     /* Smart cards */

@@ -4,7 +4,7 @@ import { exampleDocumentWithComments } from '../example-helpers/example-doc-with
 import {
   ExampleCreateInlineCommentComponent,
   ExampleViewInlineCommentComponent,
-} from '@atlaskit/editor-test-helpers';
+} from '@atlaskit/editor-test-helpers/example-inline-comment-component';
 import { default as FullPageExample } from './5-full-page';
 import { AnnotationUpdateEmitter } from '../src';
 
@@ -72,7 +72,7 @@ export default class ExampleAnnotationExperiment extends React.Component<
 
   inlineCommentGetState = async (annotationsIds: string[]) => {
     const { annotationStates } = this.state;
-    return annotationsIds.map(id => ({
+    return annotationsIds.map((id) => ({
       id,
       annotationType: AnnotationTypes.INLINE_COMMENT,
       state: { resolved: annotationStates.get(id) || false },

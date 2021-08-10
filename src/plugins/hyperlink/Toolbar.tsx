@@ -8,11 +8,7 @@ import {
 } from './pm-plugins/main';
 import {
   removeLink,
-  setLinkText,
-  insertLink,
   editInsertedLink,
-  hideLinkToolbar,
-  setLinkHref,
   updateLink,
   insertLinkWithAnalytics,
 } from './commands';
@@ -61,55 +57,6 @@ function getLinkText(
   return activeLinkMark.node.text;
 }
 
-const handleBlur = (
-  activeLinkMark: EditInsertedState | InsertState,
-  view: EditorView,
-) => (
-  type: string,
-  url: string,
-  title?: string,
-  displayText?: string,
-  isTabPressed?: boolean,
-) => {
-  const text = title || displayText;
-  switch (type) {
-    case 'url': {
-      if (url) {
-        return setLinkHref(
-          url,
-          isEditLink(activeLinkMark) ? activeLinkMark.pos : activeLinkMark.from,
-          isEditLink(activeLinkMark) ? undefined : activeLinkMark.to,
-          isTabPressed,
-        )(view.state, view.dispatch);
-      }
-      if (isEditLink(activeLinkMark) && activeLinkMark.node && !url) {
-        removeLink(activeLinkMark.pos)(view.state, view.dispatch);
-      }
-      return hideLinkToolbar()(view.state, view.dispatch);
-    }
-    case 'text': {
-      if (text && url) {
-        return activeLinkMark.type === 'INSERT'
-          ? insertLink(
-              activeLinkMark.from,
-              activeLinkMark.to,
-              url,
-              undefined,
-              text,
-            )(view.state, view.dispatch)
-          : setLinkText(text, (activeLinkMark as EditInsertedState).pos)(
-              view.state,
-              view.dispatch,
-            );
-      }
-      return hideLinkToolbar()(view.state, view.dispatch);
-    }
-    default: {
-      return hideLinkToolbar()(view.state, view.dispatch);
-    }
-  }
-};
-
 export const getToolbarConfig: FloatingToolbarHandler = (
   state,
   intl,
@@ -130,7 +77,8 @@ export const getToolbarConfig: FloatingToolbarHandler = (
         state.schema.nodes.heading,
         state.schema.nodes.taskItem,
         state.schema.nodes.decisionItem,
-      ].filter(nodeType => !!nodeType), // Use only the node types existing in the schema ED-6745
+        state.schema.nodes.caption,
+      ].filter((nodeType) => !!nodeType), // Use only the node types existing in the schema ED-6745
       align: 'left' as AlignType,
       className: activeLinkMark.type.match('INSERT|EDIT_INSERTED')
         ? 'hyperlink-floating-toolbar'
@@ -141,7 +89,7 @@ export const getToolbarConfig: FloatingToolbarHandler = (
       case 'EDIT': {
         const { pos, node } = activeLinkMark;
         const linkMark = node.marks.filter(
-          mark => mark.type === state.schema.marks.link,
+          (mark) => mark.type === state.schema.marks.link,
         );
         const link = linkMark[0] && (linkMark[0].attrs as LinkAttributes).href;
         const isValidUrl = isSafeUrl(link);
@@ -152,6 +100,13 @@ export const getToolbarConfig: FloatingToolbarHandler = (
         );
         const labelUnlink = formatMessage(linkToolbarCommonMessages.unlink);
         const editLink = formatMessage(linkToolbarCommonMessages.editLink);
+        let metadata = {
+          url: link,
+          title: '',
+        };
+        if (activeLinkMark.node.text) {
+          metadata.title = activeLinkMark.node.text;
+        }
 
         return {
           ...hyperLinkToolbar,
@@ -160,7 +115,8 @@ export const getToolbarConfig: FloatingToolbarHandler = (
           items: [
             {
               type: 'custom',
-              render: editorView => {
+              fallback: [],
+              render: (editorView) => {
                 return (
                   <HyperlinkToolbarAppearance
                     key="link-appearance"
@@ -176,16 +132,19 @@ export const getToolbarConfig: FloatingToolbarHandler = (
               },
             },
             {
+              id: 'editor.link.edit',
               type: 'button',
               onClick: editInsertedLink(),
               selected: false,
               title: editLink,
               showTitle: true,
+              metadata: metadata,
             },
             {
               type: 'separator',
             },
             {
+              id: 'editor.link.openLink',
               type: 'button',
               disabled: !isValidUrl,
               target: '_blank',
@@ -195,11 +154,13 @@ export const getToolbarConfig: FloatingToolbarHandler = (
               title: labelOpenLink,
               icon: OpenIcon,
               className: 'hyperlink-open-link',
+              metadata: metadata,
             },
             {
               type: 'separator',
             },
             {
+              id: 'editor.link.unlink',
               type: 'button',
               onClick: removeLink(pos),
               selected: false,
@@ -231,6 +192,7 @@ export const getToolbarConfig: FloatingToolbarHandler = (
           items: [
             {
               type: 'custom',
+              fallback: [],
               render: (
                 view?: EditorView,
                 idx?: number,
@@ -263,10 +225,10 @@ export const getToolbarConfig: FloatingToolbarHandler = (
                             href,
                             title,
                             displayText,
+                            !!(cardOptions && cardOptions.provider),
                           )(view.state, view.dispatch);
                       view.focus();
                     }}
-                    onBlur={handleBlur(activeLinkMark, view)}
                   />
                 );
               },

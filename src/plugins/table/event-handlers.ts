@@ -47,7 +47,10 @@ import {
 import { getPluginState } from './pm-plugins/plugin-factory';
 import { getPluginState as getResizePluginState } from './pm-plugins/table-resizing/plugin-factory';
 import { deleteColumns, deleteRows } from './transforms';
-import { RESIZE_HANDLE_AREA_DECORATION_GAP } from './types';
+import {
+  RESIZE_HANDLE_AREA_DECORATION_GAP,
+  ElementContentRects,
+} from './types';
 import {
   getColumnOrRowIndex,
   getMousePositionHorizontalRelativeByElement,
@@ -64,17 +67,27 @@ import {
   isTableContainerOrWrapper,
 } from './utils';
 import { getAllowAddColumnCustomStep } from './utils/get-allow-add-column-custom-step';
+import { getFeatureFlags } from '../feature-flags-context';
 
 const isFocusingCalendar = (event: Event) =>
   event instanceof FocusEvent &&
   event.relatedTarget instanceof HTMLElement &&
   event.relatedTarget.getAttribute('aria-label') === 'calendar';
 
+const isFocusingModal = (event: Event) =>
+  event instanceof FocusEvent &&
+  event.relatedTarget instanceof HTMLElement &&
+  event.relatedTarget.closest('[role="dialog"]');
+
 export const handleBlur = (view: EditorView, event: Event): boolean => {
   const { state, dispatch } = view;
   // IE version check for ED-4665
   // Calendar focus check for ED-10466
-  if (browser.ie_version !== 11 && !isFocusingCalendar(event)) {
+  if (
+    browser.ie_version !== 11 &&
+    !isFocusingCalendar(event) &&
+    !isFocusingModal(event)
+  ) {
     setEditorFocus(false)(state, dispatch);
   }
   event.preventDefault();
@@ -281,7 +294,12 @@ export const handleMouseLeave = (view: EditorView, event: Event): boolean => {
   return false;
 };
 
-export const handleMouseMove = (view: EditorView, event: Event) => {
+export const handleMouseMove = (
+  view: EditorView,
+  event: Event,
+  tableCellOptimization?: boolean,
+  elementContentRects?: ElementContentRects,
+) => {
   if (!(event.target instanceof HTMLElement)) {
     return false;
   }
@@ -293,8 +311,11 @@ export const handleMouseMove = (view: EditorView, event: Event) => {
     const [startIndex, endIndex] = getColumnOrRowIndex(element);
 
     const positionColumn =
-      getMousePositionHorizontalRelativeByElement(event as MouseEvent) ===
-      'right'
+      getMousePositionHorizontalRelativeByElement(
+        event as MouseEvent,
+        tableCellOptimization,
+        elementContentRects,
+      ) === 'right'
         ? endIndex
         : startIndex;
 
@@ -319,9 +340,17 @@ export const handleMouseMove = (view: EditorView, event: Event) => {
     }
   }
 
+  const { mouseMoveOptimization } = getFeatureFlags(view.state) || {};
+  // we only want to allow mouseMoveOptimisation when tableCellOptimization is enabled
+  // because it relies on tableCell node view that is added  via tableCellOptimization
+  const useMouseMoveOptimisation =
+    tableCellOptimization && mouseMoveOptimization;
+
   if (!isResizeHandleDecoration(element) && isCell(element)) {
     const positionColumn = getMousePositionHorizontalRelativeByElement(
       event as MouseEvent,
+      useMouseMoveOptimisation,
+      elementContentRects,
       RESIZE_HANDLE_AREA_DECORATION_GAP,
     );
 
@@ -449,18 +478,28 @@ export const handleCut = (
 };
 
 export const whenTableInFocus = (
-  eventHandler: (view: EditorView, mouseEvent: Event) => boolean,
+  eventHandler: (
+    view: EditorView,
+    mouseEvent: Event,
+    tableCellOptimization?: boolean,
+    elementContentRects?: ElementContentRects,
+  ) => boolean,
+  elementContentRects?: ElementContentRects,
 ) => (view: EditorView, mouseEvent: Event): boolean => {
   const tableResizePluginState = getResizePluginState(view.state);
   const tablePluginState = getPluginState(view.state);
   const isDragging =
     tableResizePluginState && !!tableResizePluginState.dragging;
   const hasTableNode = tablePluginState && tablePluginState.tableNode;
+  const tableCellOptimization =
+    tablePluginState?.pluginConfig?.tableCellOptimization;
 
   if (!hasTableNode || isDragging) {
     return false;
   }
 
   // debounce event handler
-  return rafSchedule(eventHandler(view, mouseEvent));
+  return rafSchedule(
+    eventHandler(view, mouseEvent, tableCellOptimization, elementContentRects),
+  );
 };

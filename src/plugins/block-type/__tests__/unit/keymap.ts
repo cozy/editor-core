@@ -13,12 +13,13 @@ import {
   tr,
   tdEmpty,
   tdCursor,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import simulatePlatform, {
   Platforms,
-} from '@atlaskit/editor-test-helpers/simulatePlatform';
+} from '@atlaskit/editor-test-helpers/simulate-platform';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -38,7 +39,7 @@ import tablesPlugin from '../../../table';
 import mentionsPlugin from '../../../mentions';
 import rulePlugin from '../../../rule';
 import codeBlockPlugin from '../../../code-block';
-import listsPlugin from '../../../lists';
+import listPlugin from '../../../list';
 
 const codeBlockGASV3Payload = {
   action: 'formatted',
@@ -54,7 +55,7 @@ describe('codeBlock - keymaps', () => {
   const createEditor = createProsemirrorEditorFactory();
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
 
     const providerFactory = ProviderFactory.create({
@@ -70,7 +71,7 @@ describe('codeBlock - keymaps', () => {
         .add(rulePlugin)
         .add(mentionsPlugin)
         .add(codeBlockPlugin)
-        .add(listsPlugin)
+        .add(listPlugin)
         .add(typeAheadPlugin),
       providerFactory,
     });
@@ -83,7 +84,7 @@ describe('codeBlock - keymaps', () => {
         insertText(editorView, '# ', sel);
         expect(editorView.state.doc).toEqualDocument(doc(h1()));
         sendKeyToPm(editorView, 'Mod-z');
-        expect(editorView.state.doc).toEqualDocument(doc(p('# ')));
+        expect(editorView.state.doc).toEqualDocument(doc(p('#')));
       });
     });
 
@@ -513,7 +514,7 @@ describe('codeBlock - keymaps', () => {
 
       describe('when blockquote nodetype is not in schema', () => {
         it('corresponding keymaps should not work', () => {
-          const editor = (doc: any) =>
+          const editor = (doc: DocBuilder) =>
             createEditor({
               doc,
               preset: new Preset<LightEditorPlugin>().add([

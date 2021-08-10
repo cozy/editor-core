@@ -8,7 +8,7 @@ import { Node as ProsemirrorNode, Fragment, Slice } from 'prosemirror-model';
 import { TextSelection, Transaction } from 'prosemirror-state';
 // @ts-ignore
 import { __serializeForClipboard } from 'prosemirror-view';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
 import {
   doc,
@@ -21,7 +21,8 @@ import {
   br,
   expand,
   panel,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import {
   TablePluginState,
@@ -53,7 +54,7 @@ const selectCell = (cell: {
 describe('table plugin', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     const tableOptions = {
       allowNumberColumn: true,
       allowHeaderRow: true,

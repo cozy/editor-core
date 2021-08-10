@@ -16,6 +16,7 @@ import basePlugin from './plugins/base';
 export { Preset } from './labs/next/presets/preset';
 export type { LightEditorPlugin } from './create-editor/get-plugins';
 export type { DispatchAnalyticsEvent } from './plugins/analytics/types';
+export type { FeatureFlags } from './types/feature-flags';
 
 export interface LightEditorConfig {
   nodes: NodeConfig[];
@@ -32,7 +33,7 @@ function lightProcessPluginsList(
    */
   const pluginsOptions = editorPlugins.reduce((acc, plugin) => {
     if (plugin.pluginsOptions) {
-      Object.keys(plugin.pluginsOptions).forEach(pluginName => {
+      Object.keys(plugin.pluginsOptions).forEach((pluginName) => {
         if (!acc[pluginName]) {
           acc[pluginName] = [];
         }
@@ -102,7 +103,7 @@ export const createPMSchemaAndPlugins = (
   const plugins = editorConfig.plugins
     .sort(sortByOrder('plugins'))
     .map(({ plugin }) => plugin({ ...pluginFactoryParams, schema }))
-    .filter(plugin => !!plugin) as Plugin[];
+    .filter((plugin) => !!plugin) as Plugin[];
 
   return {
     plugins,

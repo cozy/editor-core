@@ -6,12 +6,13 @@ import {
   mediaSingle,
   mediaSingleWithCaption,
 } from '@atlaskit/adf-schema';
-import { EditorPlugin, PMPluginFactoryParams } from '../../types';
+import { EditorPlugin, PMPlugin, PMPluginFactoryParams } from '../../types';
 import {
   stateKey as pluginKey,
   createPlugin,
   MediaState,
 } from './pm-plugins/main';
+import { getMediaFeatureFlag } from '@atlaskit/media-common';
 import { createPlugin as createMediaEditorPlugin } from './pm-plugins/media-editor';
 import { pluginKey as mediaEditorPluginKey } from './pm-plugins/media-editor-plugin-factory';
 import { createPlugin as createMediaAltTextPlugin } from './pm-plugins/alt-text';
@@ -23,7 +24,7 @@ import linkingPlugin from './pm-plugins/linking';
 import ToolbarMedia from './ui/ToolbarMedia';
 import { ReactMediaGroupNode } from './nodeviews/mediaGroup';
 import { ReactMediaSingleNode } from './nodeviews/mediaSingle';
-import { CustomMediaPicker, MediaEditorState, MediaOptions } from './types';
+import { CustomMediaPicker, MediaOptions } from './types';
 import { floatingToolbar } from './toolbar';
 
 import {
@@ -48,21 +49,18 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
   name: 'media',
 
   nodes() {
-    const {
-      allowMediaGroup = true,
-      allowMediaSingle = false,
-      UNSAFE_allowImageCaptions = false,
-    } = options || {};
+    const { allowMediaGroup = true, allowMediaSingle = false, featureFlags } =
+      options || {};
 
-    const mediaSingleNode = UNSAFE_allowImageCaptions
-      ? mediaSingleWithCaption
-      : mediaSingle;
+    const captions = getMediaFeatureFlag('captions', featureFlags);
+
+    const mediaSingleNode = captions ? mediaSingleWithCaption : mediaSingle;
 
     return [
       { name: 'mediaGroup', node: mediaGroup },
       { name: 'mediaSingle', node: mediaSingleNode },
       { name: 'media', node: media },
-    ].filter(node => {
+    ].filter((node) => {
       if (node.name === 'mediaGroup') {
         return allowMediaGroup;
       }
@@ -76,7 +74,7 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
   },
 
   pmPlugins() {
-    const pmPlugins = [
+    const pmPlugins: Array<PMPlugin> = [
       {
         name: 'media',
         plugin: ({
@@ -127,7 +125,7 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
             options,
           ),
       },
-      { name: 'mediaKeymap', plugin: () => keymapPlugin() },
+      { name: 'mediaKeymap', plugin: () => keymapPlugin(options) },
     ];
 
     if (options && options.allowMediaSingle) {
@@ -167,7 +165,7 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
     return pmPlugins;
   },
 
-  contentComponent({ editorView, eventDispatcher }) {
+  contentComponent({ editorView, eventDispatcher, appearance }) {
     // render MediaEditor separately because it doesn't depend on media plugin state
     // so we can utilise EventDispatcher-based rerendering
     const mediaEditor =
@@ -176,13 +174,9 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
           editorView={editorView}
           plugins={{ mediaEditorState: mediaEditorPluginKey }}
           eventDispatcher={eventDispatcher}
-          render={({
-            mediaEditorState,
-          }: {
-            mediaEditorState: MediaEditorState;
-          }) => (
+          render={({ mediaEditorState }) => (
             <MediaEditor
-              mediaEditorState={mediaEditorState}
+              mediaEditorState={mediaEditorState!}
               view={editorView}
             />
           )}
@@ -197,7 +191,11 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
             mediaState: pluginKey,
           }}
           render={({ mediaState }) => (
-            <MediaPickerComponents mediaState={mediaState} />
+            <MediaPickerComponents
+              editorDomElement={editorView.dom}
+              mediaState={mediaState!}
+              appearance={appearance}
+            />
           )}
         />
 
@@ -226,9 +224,7 @@ const mediaPlugin = (options?: MediaOptions): EditorPlugin => ({
         description: formatMessage(messages.filesAndImagesDescription),
         priority: 400,
         keywords: ['attachment', 'gif', 'media', 'picture'],
-        icon: () => (
-          <IconImages label={formatMessage(messages.filesAndImages)} />
-        ),
+        icon: () => <IconImages />,
         action(insert, state) {
           const pluginState = pluginKey.getState(state);
           pluginState.showMediaPicker();

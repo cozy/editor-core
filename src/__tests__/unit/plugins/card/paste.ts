@@ -2,25 +2,26 @@ import { pluginKey } from '../../../../plugins/card/pm-plugins/main';
 import { setProvider } from '../../../../plugins/card/pm-plugins/actions';
 
 import { EditorTestCardProvider } from '@atlaskit/editor-test-helpers/card-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
 import {
   doc,
+  DocBuilder,
   p,
   inlineCard,
   blockquote,
   blockCard,
   embedCard,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 describe('card', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps: {
-        UNSAFE_cards: {
+        smartLinks: {
           allowEmbeds: true,
         },
       },
@@ -173,12 +174,13 @@ describe('card', () => {
         <div
           data-embed-card="true"
           data-layout="center"
+          data-width="50"
           data-card-url="https://drive.google.com/file/d/1Y5S4AYkoLjseAiSCdsjgYd6LjWOS1qtA/view?usp=sharing"
         >
           <div>
             <div class="media-card-frame sc-jQMNup dcXBMK" data-testid="resolved-view">
               <div
-                class="embed-header sc-TuwoP kxyEBi"      >
+                class="embed-header sc-TuwoP kxyEBi">
                 <div
                   class="sc-fQkuQJ gtHBSu"
                 >
@@ -222,6 +224,7 @@ describe('card', () => {
               url:
                 'https://drive.google.com/file/d/1Y5S4AYkoLjseAiSCdsjgYd6LjWOS1qtA/view?usp=sharing',
               layout: 'center',
+              width: 50,
             })(),
           ),
         );

@@ -5,6 +5,8 @@ export {
   EVENT_TYPE,
   INPUT_METHOD,
   TRIGGER_METHOD,
+  CONTENT_COMPONENT,
+  FLOATING_CONTROLS_TITLE,
 } from './enums';
 export type {
   AnalyticsDispatch,
@@ -44,7 +46,6 @@ export type {
   PasteSource,
   PasteType,
 } from './paste-events';
-export type { HistoryEventPayload } from './history-events';
 export type {
   MediaAltTextActionType,
   MediaEventPayload,

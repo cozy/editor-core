@@ -13,7 +13,8 @@ import {
   hardBreak,
   RefsNode,
   panel,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -22,7 +23,7 @@ import {
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
 import {
   surroundingMarks,
   getAllAnnotations,
@@ -70,16 +71,24 @@ const annotationPreset = new Preset<LightEditorPlugin>()
     },
   ]);
 
-const emojiProvider = emojiData.testData.getEmojiResourcePromise();
+const emojiProvider = getTestEmojiResource();
 const providerFactory = ProviderFactory.create({ emojiProvider });
 
-function mockCommentsStateWithAnnotations(annotations: InlineCommentMap) {
-  const testInlineCommentState: InlineCommentPluginState = {
-    annotations: annotations,
+function mockCommentsStateWithAnnotations(
+  annotations: InlineCommentMap,
+  options?: object,
+) {
+  const defaultOptions = {
     selectedAnnotations: [],
     mouseData: { isSelecting: false },
     disallowOnWhitespace: false,
     isVisible: true,
+  };
+
+  const testInlineCommentState: InlineCommentPluginState = {
+    annotations: annotations,
+    ...defaultOptions,
+    ...options,
   };
   return jest
     .spyOn(inlineCommentPluginKey, 'getState')
@@ -88,7 +97,7 @@ function mockCommentsStateWithAnnotations(annotations: InlineCommentMap) {
 
 describe('annotation', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       providerFactory,
@@ -353,32 +362,79 @@ describe('annotation', () => {
   });
 
   describe('isSelectionValid', () => {
-    test.each([
-      ['text', doc(p('{<}Corsair smartly{>}')), AnnotationSelectionType.VALID],
-      [
-        'inline node',
-        doc(p('{<}Corsair', emoji({ shortName: ':smiley:' })(), '{>}')),
-        AnnotationSelectionType.DISABLED,
-      ],
-      [
-        'node selection',
-        doc(p('Corsair', '{<node>}', emoji({ shortName: ':smiley:' })())),
-        AnnotationSelectionType.INVALID,
-      ],
-      [
-        'empty selection',
-        doc(p('{<>}Corsair smartly')),
-        AnnotationSelectionType.INVALID,
-      ],
-      [
-        'no selection',
-        doc(p('{<>}Corsair smartly')),
-        AnnotationSelectionType.INVALID,
-      ],
-    ])('%s', (_, inputDoc, expected) => {
-      const { editorView } = editor(inputDoc);
+    let pluginState: jest.SpyInstance;
+    afterEach(() => {
+      pluginState.mockClear();
+    });
+    describe('with disallowOnWhitespace disabled', () => {
+      beforeEach(() => {
+        pluginState = mockCommentsStateWithAnnotations(
+          {},
+          { disallowOnWhitespace: false },
+        );
+      });
+      test.each([
+        [
+          'empty selection across multiple paragraphs',
+          doc(p('{<}'), p('{>}')),
+          AnnotationSelectionType.INVALID,
+        ],
+        [
+          'white space selection',
+          doc(p('{<} {>}')),
+          AnnotationSelectionType.VALID,
+        ],
+      ])('%s', (_, inputDoc, expected) => {
+        const { editorView } = editor(inputDoc);
 
-      expect(isSelectionValid(editorView.state)).toBe(expected);
+        expect(isSelectionValid(editorView.state)).toBe(expected);
+      });
+    });
+
+    describe('with disallowOnWhitespace enabled', () => {
+      beforeEach(() => {
+        pluginState = mockCommentsStateWithAnnotations(
+          {},
+          { disallowOnWhitespace: true },
+        );
+      });
+
+      test.each([
+        [
+          'text',
+          doc(p('{<}Corsair smartly{>}')),
+          AnnotationSelectionType.VALID,
+        ],
+        [
+          'inline node',
+          doc(p('{<}Corsair', emoji({ shortName: ':smiley:' })(), '{>}')),
+          AnnotationSelectionType.DISABLED,
+        ],
+        [
+          'node selection',
+          doc(p('Corsair', '{<node>}', emoji({ shortName: ':smiley:' })())),
+          AnnotationSelectionType.INVALID,
+        ],
+        [
+          'empty selection',
+          doc(p('{<>}Corsair smartly')),
+          AnnotationSelectionType.INVALID,
+        ],
+        [
+          'no selection',
+          doc(p('{<>}Corsair smartly')),
+          AnnotationSelectionType.INVALID,
+        ],
+        [
+          'white space selection',
+          doc(p('{<} {>}')),
+          AnnotationSelectionType.INVALID,
+        ],
+      ])('%s', (_, inputDoc, expected) => {
+        const { editorView } = editor(inputDoc);
+
+        expect(isSelectionValid(editorView.state)).toBe(expected);
+      });
     });
   });
 
@@ -497,11 +553,11 @@ describe('annotation', () => {
       const slice = new Slice(Fragment.from(testNode), 0, 0);
       const annotationNode = slice.content.firstChild!.firstChild!;
       expect(
-        annotationNode.marks.some(mark => mark.type.name === 'annotation'),
+        annotationNode.marks.some((mark) => mark.type.name === 'annotation'),
       ).toBe(true);
       stripNonExistingAnnotations(slice, state);
       expect(
-        annotationNode.marks.some(mark => mark.type.name === 'annotation'),
+        annotationNode.marks.some((mark) => mark.type.name === 'annotation'),
       ).toBe(expected);
     }
 

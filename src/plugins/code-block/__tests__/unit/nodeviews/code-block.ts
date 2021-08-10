@@ -4,7 +4,7 @@ import {
   doc,
   p,
   RefsNode,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import { codeBlockNodeView } from '../../../nodeviews/code-block';
 import { createProsemirrorEditorFactory } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
@@ -35,12 +35,11 @@ describe('Code Block - NodeView', () => {
   });
 
   describe('on initial render', () => {
-    it('should render a contentDOM of `code` inside `pre`', () => {
+    it('should render a contentDOM of `code`', () => {
       const node = codeBlock()('this is code');
       const nodeView = createCodeBlockNodeview(node);
 
       expect(nodeView.contentDOM.tagName).toBe('CODE');
-      expect(nodeView.contentDOM.parentElement!.tagName).toBe('PRE');
     });
 
     it('should render language on contentDOM as `data-language`', () => {

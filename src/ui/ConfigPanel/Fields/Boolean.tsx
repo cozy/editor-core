@@ -1,27 +1,14 @@
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
-import { Checkbox } from '@atlaskit/checkbox';
-import { Field, FieldProps } from '@atlaskit/form';
+import { Checkbox as AKCheckbox } from '@atlaskit/checkbox';
+import { Field } from '@atlaskit/form';
 import { BooleanField } from '@atlaskit/editor-common/extensions';
-import Toggle from '@atlaskit/toggle';
+import AKToggle from '@atlaskit/toggle';
 
-import { getSafeParentedName } from '../utils';
-import { ValidationError, OnBlur } from '../types';
-
+import { ValidationError, OnFieldChange } from '../types';
 import FieldMessages from '../FieldMessages';
-
-function isChecked(value: string | boolean | undefined) {
-  if (typeof value === 'string') {
-    return value === 'true';
-  }
-
-  if (typeof value === 'boolean') {
-    return value;
-  }
-
-  return false;
-}
+import { RequiredIndicator } from './common/RequiredIndicator';
 
 const ToggleFieldWrapper = styled.div`
   display: flex;
@@ -31,36 +18,6 @@ const ToggleLabel = styled.label`
   padding: 3px 3px 3px 0px;
   flex-grow: 1;
 `;
-const RequiredIndicator = styled.span`
-  color: #bf2600;
-`;
-
-function BooleanToggle({
-  label,
-  defaultValue,
-  ...fieldProps
-}: {
-  label: string;
-  defaultValue: boolean;
-} & FieldProps<boolean>) {
-  const { id, isRequired, value } = fieldProps;
-
-  return (
-    <ToggleFieldWrapper>
-      <ToggleLabel id={id} htmlFor={id}>
-        {label}
-        {isRequired ? (
-          <RequiredIndicator aria-hidden="true">*</RequiredIndicator>
-        ) : null}
-      </ToggleLabel>
-      <Toggle
-        {...fieldProps}
-        defaultChecked={defaultValue}
-        value={value ? 'true' : 'false'}
-      />
-    </ToggleFieldWrapper>
-  );
-}
 
 function validate(value: boolean | undefined, isRequired: boolean) {
   if (isRequired && !value) {
@@ -68,62 +25,119 @@ function validate(value: boolean | undefined, isRequired: boolean) {
   }
 }
 
-export default function Boolean({
+function handleOnChange(
+  onChange: (value: boolean) => void,
+  onFieldChange: OnFieldChange,
+  event: React.ChangeEvent<HTMLInputElement>,
+) {
+  onChange(event?.target?.checked || false);
+  onFieldChange(name, true);
+}
+
+function Checkbox({
+  name,
   field,
-  onBlur,
-  parentName,
+  onFieldChange,
 }: {
+  name: string;
   field: BooleanField;
-  onBlur: OnBlur;
-  parentName?: string;
+  onFieldChange: OnFieldChange;
 }) {
   const {
-    name,
     label,
     description,
     isRequired = false,
     defaultValue = false,
   } = field;
-  const showToggle = field.style === 'toggle';
-  // WARNING: strings were previously used for booleans, protect that here
-  const defaultIsChecked = isChecked(defaultValue);
 
   return (
     <Field<boolean>
-      name={getSafeParentedName(name, parentName)}
+      name={name}
       isRequired={isRequired}
-      validate={value => validate(value, isRequired)}
-      defaultValue={defaultIsChecked}
+      validate={(value) => validate(value, isRequired)}
+      defaultValue={defaultValue}
     >
       {({ fieldProps, error }) => {
-        const { value = false } = fieldProps;
-        const props = {
-          ...fieldProps,
-          label,
-          onChange: (value?: boolean | React.FormEvent<HTMLInputElement>) => {
-            if (typeof value === 'boolean') {
-              fieldProps.onChange(value);
-            } else {
-              fieldProps.onChange(
-                (value as React.ChangeEvent<HTMLInputElement>)?.target?.checked,
-              );
-            }
-            onBlur(name);
-          },
-          value,
-        };
-
+        const { value: isChecked, ...restFieldProps } = fieldProps;
         return (
           <Fragment>
-            {showToggle ? (
-              <BooleanToggle {...props} defaultValue={defaultIsChecked} />
-            ) : (
-              <Checkbox {...props} value={value ? 'true' : 'false'} />
-            )}
+            <AKCheckbox
+              {...restFieldProps}
+              label={label}
+              onChange={(event) =>
+                handleOnChange(fieldProps.onChange, onFieldChange, event)
+              }
+              isChecked={isChecked}
+            />
             <FieldMessages error={error} description={description} />
           </Fragment>
         );
       }}
     </Field>
   );
+}
+
+function Toggle({
+  name,
+  field,
+  onFieldChange,
+}: {
+  name: string;
+  field: BooleanField;
+  onFieldChange: OnFieldChange;
+}) {
+  const {
+    label,
+    description,
+    isRequired = false,
+    defaultValue = false,
+  } = field;
+
+  return (
+    <Field<boolean>
+      name={name}
+      isRequired={isRequired}
+      validate={(value) => validate(value, isRequired)}
+      defaultValue={defaultValue}
+    >
+      {({ fieldProps, error }) => {
+        const { id, value: isChecked, ...restFieldProps } = fieldProps;
+        return (
+          <Fragment>
+            <ToggleFieldWrapper>
+              <ToggleLabel id={id} htmlFor={id}>
+                {label}
+                {isRequired ? (
+                  <RequiredIndicator aria-hidden="true">*</RequiredIndicator>
+                ) : null}
+              </ToggleLabel>
+              <AKToggle
+                {...restFieldProps}
+                onChange={(event) =>
+                  handleOnChange(fieldProps.onChange, onFieldChange, event)
+                }
+                isChecked={isChecked}
+              />
+            </ToggleFieldWrapper>
+            <FieldMessages error={error} description={description} />
+          </Fragment>
+        );
+      }}
+    </Field>
+  );
+}
+
+export default function Boolean({
+  name,
+  field,
+  onFieldChange,
+}: {
+  name: string;
+  field: BooleanField;
+  onFieldChange: OnFieldChange;
+}) {
+  if (field.style === 'toggle') {
+    return <Toggle name={name} field={field} onFieldChange={onFieldChange} />;
+  }
+  return <Checkbox name={name} field={field} onFieldChange={onFieldChange} />;
 }

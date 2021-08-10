@@ -4,7 +4,9 @@ import { EditorPlugin } from '../../types';
 import { ContextPanelHandler } from './types';
 import { Dispatch } from '../../event-dispatcher';
 
-export const pluginKey = new PluginKey('contextPanelPluginKey');
+export const pluginKey = new PluginKey<ContextPanelPluginState>(
+  'contextPanelPluginKey',
+);
 
 export type ContextPanelPluginState = {
   handlers: ContextPanelHandler[];
@@ -25,7 +27,7 @@ function contextPanelPluginFactory(
       init(_config, state) {
         return {
           handlers: contextPanels,
-          contents: contextPanels.map(panelContent => panelContent(state)),
+          contents: contextPanels.map((panelContent) => panelContent(state)),
         };
       },
 
@@ -34,13 +36,15 @@ function contextPanelPluginFactory(
         const meta = tr.getMeta(pluginKey);
 
         if (tr.docChanged || tr.selectionSet || (meta && meta.changed)) {
-          const newContents = pluginState.handlers.map(panelContent =>
+          const newContents = pluginState.handlers.map((panelContent) =>
             panelContent(newState),
           );
 
           if (
             newContents.length !== newPluginState.contents.length ||
-            newContents.some(node => newPluginState.contents.indexOf(node) < 0)
+            newContents.some(
+              (node) => newPluginState.contents.indexOf(node) < 0,
+            )
           ) {
             newPluginState = {
               ...newPluginState,

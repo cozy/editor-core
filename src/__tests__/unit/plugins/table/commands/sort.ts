@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -10,11 +10,11 @@ import {
   date,
   a,
   status,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { EditorView } from 'prosemirror-view';
-import { mention as mentionDataTest } from '@atlaskit/util-data-test';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { sortByColumn } from '../../../../../plugins/table/commands/sort';
-import { SortOrder } from '../../../../../plugins/table/types';
+import { TableSortOrder as SortOrder } from '@atlaskit/adf-schema/steps';
 
 describe('Sort Table', () => {
   const createEditor = createEditorFactory();
@@ -96,9 +96,7 @@ describe('Sort Table', () => {
           allowTables: {
             allowHeaderRow: true,
           },
-          mentionProvider: Promise.resolve(
-            mentionDataTest.storyData.resourceProvider,
-          ),
+          mentionProvider: Promise.resolve(mentionResourceProvider),
         },
         doc: doc(
           table()(

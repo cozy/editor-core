@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 import {
   doc,
@@ -19,9 +19,10 @@ import {
   media,
   mediaGroup,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
-import { MockMentionResource } from '@atlaskit/util-data-test';
+import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 import { toggleMark } from 'prosemirror-commands';
 
 import {
@@ -40,7 +41,7 @@ import { closestElement } from '../../../utils/dom';
 describe('@atlaskit/editore-core/utils', () => {
   const createEditor = createEditorFactory();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: {
@@ -468,7 +469,7 @@ describe('@atlaskit/editore-core/utils', () => {
         },
       ];
 
-      expect(dedupe(l, item => item.item)).toEqual(deduped);
+      expect(dedupe(l, (item) => item.item)).toEqual(deduped);
     });
   });
 

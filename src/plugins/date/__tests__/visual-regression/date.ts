@@ -1,25 +1,47 @@
 import {
-  snapshot,
-  initEditorWithAdf,
   Appearance,
+  initEditorWithAdf,
+  snapshot,
 } from '../../../../__tests__/visual-regression/_utils';
 import adf from './__fixtures__/date-adf.json';
 import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import {
   clickOnDate,
+  dateSelectors,
   waitForDatePicker,
   waitForNoDatePicker,
 } from '../../../../__tests__/__helpers/page-objects/_date';
-import { pressKey } from '../../../../__tests__/__helpers/page-objects/_keyboard';
+import {
+  pressKey,
+  pressKeyCombo,
+} from '../../../../__tests__/__helpers/page-objects/_keyboard';
 import {
   animationFrame,
   typeInEditorAtEndOfDocument,
 } from '../../../../__tests__/__helpers/page-objects/_editor';
 import { waitForTypeAheadMenu } from '../../../../__tests__/__helpers/page-objects/_quick-insert';
 import { standardDateMockMillisUnixTime } from '@atlaskit/visual-regression/helper/mock-date';
-import { dateSelectors } from '../../../../__tests__/__helpers/page-objects/_date';
+import { THEME_MODES } from '@atlaskit/theme/constants';
+import { getModeFromTheme } from '@atlaskit/editor-common';
 
 const { dateInput, dateInputFocused } = dateSelectors;
+const defaultViewPort = { width: 600, height: 600 };
+
+const initEditor = async (
+  page: PuppeteerPage,
+  viewport: { width: number; height: number },
+  theme: string,
+  adf?: Object,
+) =>
+  initEditorWithAdf(page, {
+    adf: adf,
+    appearance: Appearance.fullPage,
+    viewport: viewport,
+    editorProps: {
+      allowKeyboardAccessibleDatepicker: true,
+    },
+    mode: getModeFromTheme(theme),
+  });
 
 describe('Date:', () => {
   let page: PuppeteerPage;
@@ -28,56 +50,45 @@ describe('Date:', () => {
   });
 
   describe('keyboard accessible picker', () => {
-    it('should autofocus textfield and select text when creating new date', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
+    describe.each(THEME_MODES)('Theme: %s', (theme) => {
+      it('should autofocus textfield and select text when creating new date', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+
+        await waitForDatePicker(page);
+        await snapshot(page);
+      });
+      it('should autofocus textfield, select text and allow editing when creating new date', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        // Insert date by quick insert
+
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+        await waitForDatePicker(page);
+
+        // Date picker is now open
+
+        // Remove date in datepicker
+        await pressKey(page, 'Backspace');
+
+        // Type new date
+        // US locale by default
+        await page.type(dateInput, '2/26/2019');
+
+        // Commit date
+        await pressKey(page, 'Enter');
+
+        // Ensure date saves correctly
+        await snapshot(page);
       });
 
-      await typeInEditorAtEndOfDocument(page, '//');
-      await waitForTypeAheadMenu(page);
-      await pressKey(page, 'Enter');
-
-      await waitForDatePicker(page);
-      await snapshot(page);
-    });
-    it('should autofocus textfield, select text and allow editing when creating new date', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
-      // Insert date by quick insert
-
-      await typeInEditorAtEndOfDocument(page, '//');
-      await waitForTypeAheadMenu(page);
-      await pressKey(page, 'Enter');
-      await waitForDatePicker(page);
-
-      // Date picker is now open
-
-      // Remove date in datepicker
-      await pressKey(page, 'Backspace');
-
-      // Type new date
-      // US locale by default
-      await page.type(dateInput, '2/26/2019');
-
-      // Commit date
-      await pressKey(page, 'Enter');
-
-      // Ensure date saves correctly
-      await snapshot(page);
-    });
-
-    it('should not autofocus the textfield when selecting an existing date', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+      it('should not autofocus the textfield when selecting an existing date', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -93,21 +104,15 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
+        };
+        await initEditor(page, defaultViewPort, theme, adf);
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await snapshot(page);
-    });
-    it('should focus existing date input on tab press', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await snapshot(page);
+      });
+      it('should focus existing date input on tab press', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -123,28 +128,96 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
+        };
+        await initEditor(page, defaultViewPort, theme, adf);
+
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await pressKey(page, 'Tab');
+        await page.waitForSelector(dateInputFocused);
+        await snapshot(page);
       });
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await pressKey(page, 'Tab');
-      await page.waitForSelector(dateInputFocused);
-      await snapshot(page);
+      it('should change calendar view when changing date with keyboard', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        // Insert date by quick insert
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+        await waitForDatePicker(page);
+
+        // Date picker is now open
+
+        // Remove date in datepicker
+        await pressKey(page, 'Backspace');
+
+        // Type new date
+        // US locale by default
+        await page.type(dateInput, '2/26/2019');
+
+        await snapshot(page);
+      });
+      it('should display invalid date error when textfield full of letters', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        // Insert date by quick insert
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+        await waitForDatePicker(page);
+
+        // Date picker is now open
+
+        // Remove date in datepicker
+        await pressKey(page, 'Backspace');
+
+        // Type in input
+        await page.type(dateInput, 'notadate');
+
+        await snapshot(page);
+      });
+      it('should display invalid date error when textfield empty', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        // Insert date by quick insert
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+        await waitForDatePicker(page);
+
+        // Date picker is now open
+
+        // Remove date in datepicker
+        await pressKey(page, 'Backspace');
+
+        await snapshot(page);
+      });
+      it('should display invalid date error when year > 9999', async () => {
+        await initEditor(page, defaultViewPort, theme);
+
+        // Insert date by quick insert
+        await typeInEditorAtEndOfDocument(page, '//');
+        await waitForTypeAheadMenu(page);
+        await pressKey(page, 'Enter');
+        await waitForDatePicker(page);
+
+        // Date picker is now open
+
+        // Remove date in datepicker
+        await pressKey(page, 'Backspace');
+
+        // Type new date
+        // US locale by default
+        await page.type(dateInput, '2/26/10000');
+
+        await snapshot(page);
+      });
     });
     it('should delete date when pressing enter in empty textfield', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
+      // Test flakes when run in dark theme
+      await initEditor(page, defaultViewPort, 'light');
+
       await typeInEditorAtEndOfDocument(page, 'hello //');
       await waitForTypeAheadMenu(page);
       await pressKey(page, 'Enter');
@@ -167,116 +240,54 @@ describe('Date:', () => {
       await snapshot(page);
     });
 
-    it('should change calendar view when changing date with keyboard', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
-      // Insert date by quick insert
+    it('should dismiss the date picker when deleting the date', async () => {
+      await initEditor(page, defaultViewPort, 'light');
+
       await typeInEditorAtEndOfDocument(page, '//');
       await waitForTypeAheadMenu(page);
       await pressKey(page, 'Enter');
+
       await waitForDatePicker(page);
-
-      // Date picker is now open
-
-      // Remove date in datepicker
-      await pressKey(page, 'Backspace');
-
-      // Type new date
-      // US locale by default
-      await page.type(dateInput, '2/26/2019');
-
-      await snapshot(page);
-    });
-    it('should display invalid date error when textfield full of letters', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
-      // Insert date by quick insert
-      await typeInEditorAtEndOfDocument(page, '//');
-      await waitForTypeAheadMenu(page);
       await pressKey(page, 'Enter');
+      await waitForNoDatePicker(page);
+      await clickOnDate(page);
       await waitForDatePicker(page);
 
-      // Date picker is now open
-
-      // Remove date in datepicker
-      await pressKey(page, 'Backspace');
-
-      // Type in input
-      await page.type(dateInput, 'notadate');
-
-      await snapshot(page);
-    });
-    it('should display invalid date error when textfield empty', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
-      // Insert date by quick insert
-      await typeInEditorAtEndOfDocument(page, '//');
-      await waitForTypeAheadMenu(page);
-      await pressKey(page, 'Enter');
-      await waitForDatePicker(page);
-
-      // Date picker is now open
-
-      // Remove date in datepicker
       await pressKey(page, 'Backspace');
 
       await snapshot(page);
     });
-    it('should display invalid date error when year > 9999', async () => {
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-        editorProps: {
-          allowKeyboardAccessibleDatepicker: true,
-        },
-      });
-      // Insert date by quick insert
+
+    it('should dismiss the date picker when cutting a date', async () => {
+      await initEditor(page, defaultViewPort, 'light');
+
       await typeInEditorAtEndOfDocument(page, '//');
       await waitForTypeAheadMenu(page);
       await pressKey(page, 'Enter');
+
+      await waitForDatePicker(page);
+      await pressKey(page, 'Enter');
+      await waitForNoDatePicker(page);
+      await clickOnDate(page);
       await waitForDatePicker(page);
 
-      // Date picker is now open
-
-      // Remove date in datepicker
-      await pressKey(page, 'Backspace');
-
-      // Type new date
-      // US locale by default
-      await page.type(dateInput, '2/26/10000');
+      await pressKeyCombo(page, ['Control', 'KeyX']);
 
       await snapshot(page);
     });
   });
 
   describe('standard picker', () => {
-    it('should render and stay within bounds', async () => {
-      await initEditorWithAdf(page, {
-        adf,
-        appearance: Appearance.fullPage,
-        viewport: { width: 1280, height: 600 },
-      });
-      await snapshot(page);
-    });
+    describe.each(THEME_MODES)('Theme: %s', (theme) => {
+      it('should render and stay within bounds', async () => {
+        const viewport = { width: 1280, height: 600 };
 
-    it('should display as selected', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+        await initEditor(page, viewport, theme, adf);
+        await snapshot(page);
+      });
+
+      it('should display as selected', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -302,19 +313,18 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 300, height: 300 },
+        };
+        const viewport = { width: 300, height: 300 };
+
+        await initEditor(page, viewport, theme, adf);
+
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await snapshot(page);
       });
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await snapshot(page);
-    });
-
-    it('should show the current date as selected in the calendar of the picker', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+      it('should show the current date as selected in the calendar of the picker', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -330,18 +340,15 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
-      });
+        };
+        await initEditor(page, defaultViewPort, theme, adf);
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await snapshot(page);
-    });
-    it('should dismiss the picker when using keys to navigate away', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await snapshot(page);
+      });
+      it('should dismiss the picker when using keys to navigate away', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -357,24 +364,25 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 300, height: 300 },
+        };
+        const viewport = { width: 300, height: 300 };
+
+        await initEditor(page, viewport, theme, adf);
+
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await snapshot(page);
+        await pressKey(page, 'ArrowRight');
+        await animationFrame(page);
+        await snapshot(page);
       });
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await snapshot(page);
-      await pressKey(page, 'ArrowRight');
-      await animationFrame(page);
-      await snapshot(page);
-    });
-
-    // Failing for a different reason than expected:
-    // `Node is either not visible or not an HTMLElement`
-    it('should show next month when clicking calendar arrow', async () => {
-      await initEditorWithAdf(page, {
-        adf: {
+      // Failing for a different reason than expected:
+      // `Node is either not visible or not an HTMLElement`
+      // FIXME: Test is inconsistent and block Pupeeteer's upgrade
+      // https://product-fabric.atlassian.net/browse/ED-13502
+      it.skip('should show next month when clicking calendar arrow', async () => {
+        const adf = {
           version: 1,
           type: 'doc',
           content: [
@@ -390,54 +398,52 @@ describe('Date:', () => {
               ],
             },
           ],
-        },
-        appearance: Appearance.fullPage,
-        viewport: { width: 600, height: 600 },
+        };
+        await initEditor(page, defaultViewPort, theme, adf);
+
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+        await snapshot(page);
+        await page.click(dateSelectors.calendarNextMonth);
+        await snapshot(page);
       });
 
-      await clickOnDate(page);
-      await waitForDatePicker(page);
-      await snapshot(page);
-      await page.click(dateSelectors.calendarNextMonth);
-      await snapshot(page);
-    });
-  });
-
-  it('should underline the current (non-selected) day', async () => {
-    const weekInMilliseconds = 7 * 24 * 60 * 60 * 1000;
-    const oneWeekBeforeStandardMillisUnixTime =
-      standardDateMockMillisUnixTime - weekInMilliseconds;
-    /*
-     * The timestamp is roughly a week before the mocked date (Wed Aug 16 00:00:00 2017 +0000).
-     * This ensures the underline shows to make sure the mock is working.
-     */
-    await initEditorWithAdf(page, {
-      adf: {
-        version: 1,
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'date',
-                attrs: {
-                  // A week before the mocked date
-                  timestamp: oneWeekBeforeStandardMillisUnixTime.toString(),
+      it('should underline the current (non-selected) day', async () => {
+        const weekInMilliseconds = 7 * 24 * 60 * 60 * 1000;
+        const oneWeekBeforeStandardMillisUnixTime =
+          standardDateMockMillisUnixTime - weekInMilliseconds;
+        /*
+         * The timestamp is roughly a week before the mocked date (Wed Aug 16 00:00:00 2017 +0000).
+         * This ensures the underline shows to make sure the mock is working.
+         */
+        const adf = {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'date',
+                  attrs: {
+                    // A week before the mocked date
+                    timestamp: oneWeekBeforeStandardMillisUnixTime.toString(),
+                  },
                 },
-              },
-            ],
-          },
-        ],
-      },
-      appearance: Appearance.fullPage,
-      viewport: { width: 400, height: 500 },
+              ],
+            },
+          ],
+        };
+        const viewport = { width: 400, height: 500 };
+
+        await initEditor(page, viewport, theme, adf);
+
+        await clickOnDate(page);
+        await waitForDatePicker(page);
+
+        // With tolerance of 0.001 it passes even if date not mocked
+        await snapshot(page, { tolerance: 0.0005 });
+      });
     });
-
-    await clickOnDate(page);
-    await waitForDatePicker(page);
-
-    // With tolerance of 0.001 it passes even if date not mocked
-    await snapshot(page, { tolerance: 0.0005 });
   });
 });

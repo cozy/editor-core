@@ -17,7 +17,8 @@ import {
   tdCursor,
   tdEmpty,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import tablePlugin from '../../../../../table';
 import {
@@ -31,7 +32,7 @@ import { TableDecorations, TablePluginState } from '../../../../types';
 
 describe('tables: column resizing decorations', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<TablePluginState, PluginKey>({
       doc,
       preset: new Preset<LightEditorPlugin>().add([
@@ -52,7 +53,7 @@ describe('tables: column resizing decorations', () => {
       return decorationSet.find(
         cells[0].pos,
         lastCell.pos + lastCell.node.nodeSize,
-        spec => spec.key.indexOf(key) > -1,
+        (spec) => spec.key.indexOf(key) > -1,
       );
     }
 
@@ -81,7 +82,7 @@ describe('tables: column resizing decorations', () => {
           const decorations = nextDecorationSet.find(
             undefined,
             undefined,
-            spec => spec.key.indexOf(decorationKey) > -1,
+            (spec) => spec.key.indexOf(decorationKey) > -1,
           );
 
           expect(decorations).toHaveLength(expectedDecorations);

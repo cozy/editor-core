@@ -7,7 +7,7 @@ import {
   findCutBefore,
   toggleMark,
 } from '../../../utils/commands';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 import {
   p,
@@ -25,7 +25,8 @@ import {
   code,
   emoji,
   mention,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
@@ -398,7 +399,7 @@ describe('utils -> commands', () => {
   describe('toggleMark', () => {
     const helgaMention = mention({ id: '1234', text: '@helga' });
     const grinningEmoji = emoji({ shortName: ':grinning:', text: '😀' });
-    const editor = (doc: any) => {
+    const editor = (doc: DocBuilder) => {
       return createEditor({
         doc,
         editorProps: {

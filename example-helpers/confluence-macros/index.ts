@@ -12,17 +12,11 @@ import {
   Parameters,
 } from '@atlaskit/editor-common/extensions';
 
-import {
-  spaceKeyFieldResolver,
-  usernameFieldResolver,
-  labelFieldResolver,
-  confluenceContentFieldResolver,
-} from '../config-panel/confluence-fields-data-providers';
+import { mockFieldResolver } from '../config-panel/confluence-fields-data-providers';
 
 import { cqlSerializer, cqlDeserializer } from '../config-panel/cql-helpers';
-import { setEnv } from '@atlaskit/user-picker/src/components/smart-user-picker/config';
+import { setSmartUserPickerEnv } from '@atlaskit/user-picker';
 
-import mainResponse from './browse-macros.json';
 import { getIconComponent } from './IconImage';
 import EditorActions from '../../src/actions';
 import { editSelectedExtension } from '../../src/extensions';
@@ -31,8 +25,11 @@ const isNativeFieldType = (fieldType: string) => {
   return /^(enum|string|number|boolean|date)$/.test(fieldType);
 };
 
-const getMacrosManifestList = (editorActions?: EditorActions) => {
-  return mainResponse.macros.map((macro: LegacyMacroManifest) =>
+const getMacrosManifestList = async (editorActions?: EditorActions) => {
+  const response = await fetch('./editor-data/browse-macros.json');
+  const data = await response.json();
+
+  return data.macros.map((macro: LegacyMacroManifest) =>
     transformLegacyMacrosToExtensionManifest(macro, editorActions),
   );
 };
@@ -105,7 +102,9 @@ const getIcon = (macro: LegacyMacroManifest) => {
     return Promise.resolve(() => getIconComponent(macro.icon.location));
   }
 
-  return import('@atlaskit/icon/glyph/editor/code');
+  return import(
+    /* webpackChunkName: "@atlaskit-internal_editor-icon-code" */ '@atlaskit/icon/glyph/editor/code'
+  ).then((mod) => mod.default);
 };
 
 const buildIconObject = (macro: LegacyMacroManifest) => {
@@ -137,11 +136,11 @@ const transformLegacyMacrosToExtensionManifest = (
   const extensionKey = safeGetMacroName(macro);
 
   const hasAnyMissingParameterRequired = macro.formDetails.parameters.some(
-    param => param.required && param.defaultValue === null,
+    (param) => param.required && param.defaultValue === null,
   );
 
   const defaultParameters = macro.formDetails.parameters
-    .filter(param => param.defaultValue)
+    .filter((param) => param.defaultValue)
     .reduce<Parameters>((curr, next) => {
       if (next.defaultValue !== null) {
         curr[next.name] = next.defaultValue;
@@ -237,9 +236,9 @@ const transformLegacyMacrosToExtensionManifest = (
       type: getExtensionBodyType(macro),
       render: () =>
         import(
-          /* webpackChunkName:"@atlaskit-internal-editor-example-macro-component" */
+          /* webpackChunkName: "@atlaskit-internal_editor-example-macro-component" */
           './MacroComponent'
-        ),
+        ).then((mod) => mod.default),
     } as ExtensionModuleNode,
   };
 
@@ -269,18 +268,18 @@ const transformLegacyMacrosToExtensionManifest = (
       // the context panel for editing, and then wraps it back after saving.
       return new Promise(() => {
         actions!.editInContextPanel(
-          parameters => parameters.macroParams,
-          parameters => Promise.resolve({ macroParams: parameters }),
+          (parameters) => parameters.macroParams,
+          (parameters) => Promise.resolve({ macroParams: parameters }),
         );
       });
     };
 
     nodes.default.getFieldsDefinition = () =>
-      new Promise(resolve => {
+      new Promise((resolve) => {
         setTimeout(
           () =>
             resolve(
-              macro.formDetails.parameters.map(params =>
+              macro.formDetails.parameters.map((params) =>
                 transformFormDetailsIntoFields(params, {
                   pluginKey: macro.pluginKey,
                   macroName: safeGetMacroName(macro),
@@ -305,7 +304,7 @@ const transformLegacyMacrosToExtensionManifest = (
       quickInsert,
       autoConvert: {
         url: [
-          text => {
+          (text) => {
             if (text.startsWith(`http://${extensionKey}-convert`)) {
               return {
                 type: 'extension',
@@ -327,17 +326,8 @@ const transformLegacyMacrosToExtensionManifest = (
       nodes,
       fields: {
         custom: {
-          spacekey: {
-            resolver: spaceKeyFieldResolver,
-          },
-          username: {
-            resolver: usernameFieldResolver,
-          },
-          label: {
-            resolver: labelFieldResolver,
-          },
-          'confluence-content': {
-            resolver: confluenceContentFieldResolver,
+          'mock-resolver': {
+            resolver: mockFieldResolver,
           },
         },
         fieldset: {
@@ -350,10 +340,10 @@ const transformLegacyMacrosToExtensionManifest = (
           'user-jdog-provider': {
             provider: async () => {
               // WARNING: this is required by the SmartUserPicker for testing environments
-              setEnv('local');
+              setSmartUserPickerEnv('local');
 
               return {
-                siteId: '497ea592-beb4-43c3-9137-a6e5fa301088',
+                siteId: '49d8b9d6-ee7d-4931-a0ca-7fcae7d1c3b5',
                 principalId: 'Context',
                 fieldId: 'storybook',
                 productKey: 'jira',
@@ -418,6 +408,8 @@ const cqlFields: NestedFieldDefinition[] = [
     type: 'string',
     name: 'text',
     label: 'Including text',
+    isRequired: true,
+    allowDuplicates: true,
   },
   {
     type: 'custom',
@@ -500,6 +492,7 @@ const cqlFields: NestedFieldDefinition[] = [
     name: 'created',
     label: 'Created',
     style: 'radio',
+    isRequired: true,
     defaultValue: 'any date',
     items: [
       {
@@ -575,7 +568,7 @@ const transformFormDetailsIntoFields = (
       ...baseAttributes,
       type: 'enum',
       style: 'select',
-      items: (params.enumValues || []).map(item => ({
+      items: (params.enumValues || []).map((item) => ({
         label: item,
         value: item,
       })),
@@ -617,9 +610,9 @@ const transformFieldType = (
   return 'custom';
 };
 
-export const getConfluenceMacrosExtensionProvider = (
+export const getConfluenceMacrosExtensionProvider = async (
   editorActions?: EditorActions,
 ) => {
-  const manifests = getMacrosManifestList(editorActions);
+  const manifests = await getMacrosManifestList(editorActions);
   return new DefaultExtensionProvider(manifests);
 };

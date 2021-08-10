@@ -1,4 +1,4 @@
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import createEvent from '@atlaskit/editor-test-helpers/create-event';
 import { createProsemirrorEditorFactory } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { focusStateKey } from '../../pm-plugins/focus-handler';
@@ -8,7 +8,7 @@ const event = createEvent('event');
 
 describe('isEditorFocused', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor<boolean, PluginKey>({
       doc,
       pluginKey: focusStateKey,

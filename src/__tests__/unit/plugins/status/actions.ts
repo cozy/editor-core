@@ -1,4 +1,4 @@
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -7,7 +7,8 @@ import {
   table,
   tr,
   td,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
@@ -27,7 +28,7 @@ describe('status plugin: actions', () => {
   const createEditor = createEditorFactory();
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,

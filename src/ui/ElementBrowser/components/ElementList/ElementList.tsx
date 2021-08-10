@@ -7,6 +7,7 @@ import { QuickInsertItem } from '@atlaskit/editor-common/provider-factory';
 import Item from '@atlaskit/item';
 import { B100, N20, N200 } from '@atlaskit/theme/colors';
 import Tooltip from '@atlaskit/tooltip';
+import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 
 import {
   withAnalyticsContext,
@@ -137,7 +138,13 @@ function ElementList({
                       )}
                       height={height}
                       width={containerWidth - ELEMENT_LIST_PADDING * 2} // containerWidth - padding on Left/Right (for focus outline)
-                      key={containerWidth} // Refresh Collection on WidthObserver value change.
+                      /**
+                       * Refresh Collection on WidthObserver value change.
+                       * Length of the items used to force re-render to solve Firefox bug with react-virtualized retaining
+                       * scroll position after updating the data. If new data has different number of cells, a re-render
+                       * is forced to prevent the scroll position render bug.
+                       */
+                      key={containerWidth + items.length}
                       scrollToCell={selectedItemIndex}
                     />
                   )}
@@ -151,7 +158,7 @@ function ElementList({
   );
 }
 
-const getStyles = memoizeOne(mode => {
+const getStyles = memoizeOne((mode) => {
   return {
     ...(mode === Modes.full && {
       '-ms-flex': 'auto',
@@ -255,24 +262,26 @@ function ElementItem({
 
   const { icon, title, description, keyshortcut } = item;
   return (
-    <Item
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-      elemBefore={<ElementBefore icon={icon} title={title} />}
-      isSelected={selected}
-      aria-describedby={title}
-      innerRef={ref}
-      onKeyPress={onKeyPress}
-      data-testid={`element-item-${index}`}
-      tabIndex={-1}
-      style={inlineMode ? null : itemStyleOverrides}
-    >
-      <ItemContent
-        title={title}
-        description={description}
-        keyshortcut={keyshortcut}
-      />
-    </Item>
+    <Tooltip content={description} testId={`element-item-tooltip-${index}`}>
+      <Item
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        elemBefore={<ElementBefore icon={icon} title={title} />}
+        isSelected={selected}
+        aria-describedby={title}
+        innerRef={ref}
+        onKeyPress={onKeyPress}
+        data-testid={`element-item-${index}`}
+        tabIndex={-1}
+        style={inlineMode ? null : itemStyleOverrides}
+      >
+        <ItemContent
+          title={title}
+          description={description}
+          keyshortcut={keyshortcut}
+        />
+      </Item>
+    </Tooltip>
   );
 }
 
@@ -287,26 +296,22 @@ const itemStyleOverrides = {
 };
 
 const ElementBefore = memo(({ icon, title }: Partial<QuickInsertItem>) => (
-  <StyledItemIcon>
-    {icon ? icon() : <IconFallback label={title} />}
-  </StyledItemIcon>
+  <StyledItemIcon>{icon ? icon() : <IconFallback />}</StyledItemIcon>
 ));
 
 const ItemContent = memo(
   ({ title, description, keyshortcut }: Partial<QuickInsertItem>) => (
-    <Tooltip content={description}>
-      <ItemBody className="item-body">
-        <ItemText>
-          <ItemTitleWrapper>
-            <ItemTitle>{title}</ItemTitle>
-            <ItemAfter>
-              {keyshortcut && <Shortcut>{keyshortcut}</Shortcut>}
-            </ItemAfter>
-          </ItemTitleWrapper>
-          {description && <ItemDescription>{description}</ItemDescription>}
-        </ItemText>
-      </ItemBody>
-    </Tooltip>
+    <ItemBody className="item-body">
+      <ItemText>
+        <ItemTitleWrapper>
+          <ItemTitle>{title}</ItemTitle>
+          <ItemAfter>
+            {keyshortcut && <Shortcut>{keyshortcut}</Shortcut>}
+          </ItemAfter>
+        </ItemTitleWrapper>
+        {description && <ItemDescription>{description}</ItemDescription>}
+      </ItemText>
+    </ItemBody>
   ),
 );
 
@@ -389,7 +394,7 @@ const ItemDescription = styled.p`
   ${multilineStyle};
 
   overflow: hidden;
-  font-size: 11.67px;
+  font-size: ${relativeFontSizeToBase16(11.67)};
   color: ${N200};
   margin-top: 2px;
 `;

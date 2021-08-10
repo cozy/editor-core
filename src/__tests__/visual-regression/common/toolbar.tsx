@@ -15,6 +15,7 @@ import {
   clickToolbarMenu,
   ToolbarMenuItem,
   toolbarMenuItemsSelectors as selectors,
+  mainToolbarSelector,
 } from '../../__helpers/page-objects/_toolbar';
 import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import { scrollToBottom } from '../../__helpers/page-objects/_editor';
@@ -39,11 +40,6 @@ describe('Toolbar', () => {
   it('should display headings menu correctly', async () => {
     await clickToolbarMenu(page, ToolbarMenuItem.fontStyle);
     await waitForTooltip(page, 'Text styles');
-  });
-
-  it('should display text formatting menu correctly', async () => {
-    await clickToolbarMenu(page, ToolbarMenuItem.moreFormatting);
-    await waitForTooltip(page, 'More formatting');
   });
 
   it('should display text color menu correctly', async () => {
@@ -125,5 +121,45 @@ describe('Toolbar: IconBefore', () => {
       adf: parapgrahADF,
       viewport: { width: 1000, height: 350 },
     });
+  });
+});
+
+describe('Toolbar: Undo Redo', () => {
+  let page: PuppeteerPage;
+
+  beforeEach(async () => {
+    page = global.page;
+    await initEditorWithAdf(page, {
+      appearance: Appearance.fullPage,
+      editorProps: {
+        UNSAFE_allowUndoRedoButtons: true,
+      },
+    });
+  });
+
+  afterEach(async () => {
+    await snapshot(page, undefined, mainToolbarSelector);
+  });
+
+  it('should show the Undo / Redo buttons in a disabled state', async () => {
+    await page.waitForSelector(selectors[ToolbarMenuItem.undo]);
+  });
+
+  // FIXME These tests were flakey in the Puppeteer v10 Upgrade
+  it.skip('should show the Undo button in a active state', async () => {
+    await page.waitForSelector(selectors[ToolbarMenuItem.undo]);
+    // Add a bullet list to the doc so something can be undone and the Undo button become active
+    await clickToolbarMenu(page, ToolbarMenuItem.bulletList);
+  });
+
+  it('should show the Redo button in a active state', async () => {
+    await page.waitForSelector(selectors[ToolbarMenuItem.undo]);
+    // Add a bullet list to the doc so something can be undone and the Undo button become active
+    await clickToolbarMenu(page, ToolbarMenuItem.bulletList);
+    await clickToolbarMenu(page, ToolbarMenuItem.undo);
+  });
+
+  it('should not have overlapping buttons on smaller devices', async () => {
+    await page.setViewport({ width: 400, height: 350 });
   });
 });

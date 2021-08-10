@@ -1,13 +1,12 @@
 import React from 'react';
 import { ProviderFactory } from '@atlaskit/editor-common';
-import { taskDecision, emoji } from '@atlaskit/util-data-test';
+import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
-import { cardClient } from '@atlaskit/media-integration-test-helpers';
-import {
-  storyMediaProviderFactory,
-  storyContextIdentifierProviderFactory,
-  extensionHandlers,
-} from '@atlaskit/editor-test-helpers';
+import { cardClient } from '@atlaskit/media-integration-test-helpers/card-client';
+import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
+import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import { ReactRenderer, RendererProps } from '@atlaskit/renderer';
 import { MentionProvider } from '@atlaskit/mention/types';
 import Editor, { EditorProps } from '../src/editor';
@@ -17,15 +16,13 @@ function useRendererProviderFactory() {
     const mediaProvider = storyMediaProviderFactory({
       useMediaPickerAuthProvider: false,
     });
-    const emojiProvider = emoji.storyData.getEmojiResource();
+    const emojiProvider = getEmojiProvider();
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
     const mentionProvider = Promise.resolve({
       shouldHighlightMention: (mention: { id: string }) =>
         mention.id === 'ABCDE-ABCDE-ABCDE-ABCDE',
     } as MentionProvider);
-    const taskDecisionProvider = Promise.resolve(
-      taskDecision.getMockTaskDecisionResource(),
-    );
+    const taskDecisionProvider = Promise.resolve(getMockTaskDecisionResource());
 
     return ProviderFactory.create({
       mediaProvider,
@@ -47,7 +44,7 @@ function useWindowBinding(props: { [key: string]: Function }) {
   React.useEffect(() => {
     const win = window as any;
     Object.entries(props).map(([key, fn]) => (win[key] = fn));
-    return () => Object.keys(props).forEach(key => delete win[key]);
+    return () => Object.keys(props).forEach((key) => delete win[key]);
   }, [props]);
 }
 
@@ -58,7 +55,12 @@ const WysiwygEditor = React.forwardRef<
   return (
     <div ref={ref} id="editor-container">
       {props.props ? (
-        <Editor {...props.props} appearance="chromeless" disabled />
+        <Editor
+          {...props.props}
+          appearance="chromeless"
+          allowTables={true}
+          disabled
+        />
       ) : null}
     </div>
   );
@@ -96,9 +98,15 @@ export default function WysiwygTesting() {
   ] = useProps<RendererProps>();
 
   const __mount = React.useCallback(
-    (content: any) => {
-      __mountEditor({ defaultValue: content });
-      __mountRenderer({ document: content });
+    (
+      content: any,
+      {
+        editorProps = {},
+        rendererProps = {},
+      }: { editorProps: any; rendererProps: any },
+    ) => {
+      __mountEditor({ ...editorProps, defaultValue: content });
+      __mountRenderer({ ...rendererProps, document: content });
     },
     [__mountEditor, __mountRenderer],
   );

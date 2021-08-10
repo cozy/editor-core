@@ -1,11 +1,14 @@
 import {
+  evaluateTeardownMockDate,
   PuppeteerPage,
   waitForLoadedImageElements,
 } from '@atlaskit/visual-regression/helper';
 import { Device, initFullPageEditorWithAdf, snapshot } from '../_utils';
 import cardAdf from './__fixtures__/card-adf.json';
 import cardSelectionAdf from './__fixtures__/card-selection-adf.json';
+import cardAdfRequestAccess from './__fixtures__/card-request-access.adf.json';
 import cardAdfBlock from './__fixtures__/card-adf.block.json';
+import cardAdfBlockLongTitle from './__fixtures__/card-adf-long-title.block.json';
 import {
   openPreviewState,
   waitForBlockCardSelection,
@@ -15,6 +18,7 @@ import {
   waitForResolvedBlockCard,
   waitForResolvedEmbedCard,
   waitForResolvedInlineCard,
+  waitForSuccessfullyResolvedEmbedCard,
 } from '@atlaskit/media-integration-test-helpers';
 
 const themes = ['light', 'dark'];
@@ -30,27 +34,28 @@ describe('Cards:', () => {
     page = global.page;
   });
 
-  describe.each(themes)('Theme: %s', theme => {
+  describe.each(themes)('Theme: %s', (theme) => {
     it('displays links with correct appearance', async () => {
       await initFullPageEditorWithAdf(
         page,
         cardAdf,
         Device.LaptopHiDPI,
-        undefined,
         {
-          UNSAFE_cards: {
+          width: 800,
+          height: 4500,
+        },
+        {
+          smartLinks: {
             resolveBeforeMacros: ['jira'],
             allowBlockCards: true,
             allowEmbeds: true,
           },
         },
         getMode(theme),
+        undefined,
+        true,
       );
-
-      await page.setViewport({
-        width: 800,
-        height: 4200,
-      });
+      await evaluateTeardownMockDate(page);
 
       // Render an assortment of inline cards.
       await waitForResolvedInlineCard(page);
@@ -69,8 +74,8 @@ describe('Cards:', () => {
       await waitForResolvedBlockCard(page, 'errored');
 
       // Render an assortment of embed cards.
-      await waitForResolvedEmbedCard(page);
-      await waitForResolvedBlockCard(page, 'resolving');
+      await waitForSuccessfullyResolvedEmbedCard(page);
+      await waitForResolvedEmbedCard(page, 'resolving');
       await waitForResolvedEmbedCard(page, 'unauthorized');
       await waitForResolvedEmbedCard(page, 'forbidden');
       await waitForResolvedEmbedCard(page, 'not_found');
@@ -83,6 +88,36 @@ describe('Cards:', () => {
     });
   });
 
+  it('displays request access forbidden links with correct appearance', async () => {
+    await initFullPageEditorWithAdf(
+      page,
+      cardAdfRequestAccess,
+      Device.LaptopHiDPI,
+      {
+        width: 800,
+        height: 5300,
+      },
+      {
+        smartLinks: {
+          resolveBeforeMacros: ['jira'],
+          allowBlockCards: true,
+          allowEmbeds: true,
+        },
+      },
+      undefined,
+      undefined,
+      true,
+    );
+    await evaluateTeardownMockDate(page);
+
+    await waitForResolvedInlineCard(page, 'forbidden');
+    await waitForResolvedBlockCard(page, 'forbidden');
+    await waitForResolvedEmbedCard(page, 'forbidden');
+    await waitForLoadedImageElements(page, 3000);
+
+    await snapshot(page);
+  });
+
   it('displays selection styles', async () => {
     await initFullPageEditorWithAdf(
       page,
@@ -93,17 +128,21 @@ describe('Cards:', () => {
         height: 1020,
       },
       {
-        UNSAFE_cards: {
+        smartLinks: {
           resolveBeforeMacros: ['jira'],
           allowBlockCards: true,
           allowEmbeds: true,
         },
       },
+      undefined,
+      undefined,
+      true,
     );
+    await evaluateTeardownMockDate(page);
 
     await waitForResolvedInlineCard(page);
     await waitForResolvedBlockCard(page);
-    await waitForResolvedEmbedCard(page);
+    await waitForSuccessfullyResolvedEmbedCard(page);
 
     await waitForInlineCardSelection(page);
     await page.mouse.move(0, 0);
@@ -118,29 +157,66 @@ describe('Cards:', () => {
     await snapshot(page);
   });
 
-  it('displays preview state with correct appearance', async () => {
+  it('displays hover styles', async () => {
     await initFullPageEditorWithAdf(
       page,
-      cardAdfBlock,
-      Device.LaptopHiDPI,
+      cardSelectionAdf,
       undefined,
       {
-        UNSAFE_cards: {
+        width: 950,
+        height: 1020,
+      },
+      {
+        smartLinks: {
           resolveBeforeMacros: ['jira'],
           allowBlockCards: true,
           allowEmbeds: true,
         },
       },
+      undefined,
+      undefined,
+      true,
     );
+    await evaluateTeardownMockDate(page);
 
-    await page.setViewport({
-      width: 800,
-      height: 1500,
-    });
-
+    await waitForResolvedInlineCard(page);
     await waitForResolvedBlockCard(page);
-    await openPreviewState(page);
-    await waitForPreviewState(page);
+    await waitForSuccessfullyResolvedEmbedCard(page);
+
+    await page.hover('[data-testid="inline-card-resolved-view"]');
     await snapshot(page);
   });
+
+  [
+    [cardAdfBlock, 'regular length title'],
+    [cardAdfBlockLongTitle, 'long length title'],
+  ].forEach((adf) =>
+    it(`displays preview with correct appearance for ${adf[1]}`, async () => {
+      await initFullPageEditorWithAdf(
+        page,
+        adf[0],
+        Device.LaptopHiDPI,
+        {
+          width: 800,
+          height: 1500,
+        },
+        {
+          smartLinks: {
+            resolveBeforeMacros: ['jira'],
+            allowBlockCards: true,
+            allowEmbeds: true,
+          },
+        },
+        undefined,
+        undefined,
+        true,
+      );
+      await evaluateTeardownMockDate(page);
+
+      await waitForResolvedBlockCard(page);
+      await openPreviewState(page);
+      await waitForPreviewState(page);
+      await snapshot(page);
+    }),
+  );
 });

@@ -15,7 +15,7 @@ import {
   mediaSingle,
   media,
   panel,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import schema from '@atlaskit/editor-test-helpers/schema';
 import {
@@ -80,7 +80,7 @@ describe(name, () => {
         hardBreak(),
       ];
 
-      nodesWithVisibleContent.forEach(nodeBuilder => {
+      nodesWithVisibleContent.forEach((nodeBuilder) => {
         const node = nodeBuilder(schema);
         it(`should return true for none empty node: ${JSON.stringify(
           node.toJSON(),
@@ -89,7 +89,7 @@ describe(name, () => {
         });
       });
 
-      nodesWithoutVisibleContent.forEach(nodeBuilder => {
+      nodesWithoutVisibleContent.forEach((nodeBuilder) => {
         const node = nodeBuilder(schema);
         it(`should return false for empty node: ${JSON.stringify(
           node.toJSON(),
@@ -305,6 +305,813 @@ describe(name, () => {
         expect(result!.toJSON()).toEqual(expected);
       });
 
+      it('should wrap in unsupportedBlock for blockquote node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'blockquote',
+              content: [
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'paragraph1',
+                      content: [{ type: 'text', text: 'foo' }],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          type: 'doc',
+          content: [
+            {
+              type: 'blockquote',
+              content: [
+                {
+                  type: 'paragraph1',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'foo',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedBlock for panel node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'panel',
+              attrs: {
+                panelType: 'info',
+              },
+              content: [
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'paragraph1',
+                      content: [{ type: 'text', text: 'foo' }],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'panel',
+              attrs: {
+                panelType: 'info',
+              },
+              content: [
+                {
+                  type: 'paragraph1',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'foo',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap unsupported children in unsupportedBlock for layoutSection node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'layoutCol',
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [{ type: 'text', text: 'hello' }],
+                        },
+                      ],
+                      attrs: { width: 50 },
+                    },
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  attrs: { width: 50 },
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [{ type: 'text', text: 'world' }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'layoutCol',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'hello',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 50,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'world',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 50,
+                  },
+                },
+              ],
+            },
+          ],
+        });
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap layoutColumn children in unsupportedBlock for LayoutSection node when passing more than the maximum allowed children', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'first',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'second',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'third',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'layoutColumn',
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [
+                            {
+                              type: 'text',
+                              text: 'forth and false',
+                            },
+                          ],
+                        },
+                      ],
+                      attrs: {
+                        width: 33.33,
+                      },
+                    },
+                  },
+                },
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'layoutColumn',
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [
+                            {
+                              type: 'text',
+                              text: 'fifth and false',
+                            },
+                          ],
+                        },
+                      ],
+                      attrs: {
+                        width: 33.33,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'first',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'second',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'third',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'forth and false',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'fifth and false',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 33.33,
+                  },
+                },
+              ],
+            },
+          ],
+        });
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap unsupported children in unsupportedBlock for layoutColumn node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'layoutColumn',
+                  attrs: { width: 50 },
+                  content: [
+                    {
+                      type: 'unsupportedBlock',
+                      attrs: {
+                        originalValue: {
+                          type: 'para',
+                          content: [{ type: 'text', text: 'hello' }],
+                        },
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: 'layoutColumn',
+                  attrs: { width: 50 },
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [{ type: 'text', text: 'world' }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'layoutSection',
+              content: [
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'para',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'hello',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 50,
+                  },
+                },
+                {
+                  type: 'layoutColumn',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'world',
+                        },
+                      ],
+                    },
+                  ],
+                  attrs: {
+                    width: 50,
+                  },
+                },
+              ],
+            },
+          ],
+        });
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedInline node for code block', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'codeBlock',
+              attrs: {
+                language: 'none',
+                uniqueId: null,
+              },
+              content: [
+                {
+                  type: 'unsupportedInline',
+                  attrs: {
+                    originalValue: {
+                      type: 'unknownText',
+                      text: 'asd asdsfa safsasaf',
+                    },
+                  },
+                },
+                {
+                  type: 'text',
+                  text: ' some other text',
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'codeBlock',
+              attrs: {
+                language: 'none',
+              },
+              content: [
+                {
+                  type: 'unknownText',
+                  text: 'asd asdsfa safsasaf',
+                },
+                {
+                  type: 'text',
+                  text: ' some other text',
+                },
+              ],
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedBlock node for taskList node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'taskList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'NotAtaskItem',
+                      attrs: {
+                        localId: '456',
+                        state: 'TODO',
+                      },
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'This is a task',
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'taskList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'NotAtaskItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'TODO',
+                  },
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'This is a task',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedInline node for taskItem node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'taskList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'taskItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'TODO',
+                  },
+                  content: [
+                    {
+                      type: 'unsupportedInline',
+                      attrs: {
+                        originalValue: {
+                          type: 'notAValidChild',
+                          content: [
+                            {
+                              type: 'text',
+                              text: 'this is the first task',
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'taskList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'taskItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'TODO',
+                  },
+                  content: [
+                    {
+                      type: 'notAValidChild',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'this is the first task',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedBlock node for decisionList node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'decisionList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'unsupportedBlock',
+                  attrs: {
+                    originalValue: {
+                      type: 'NotADecisionItem',
+
+                      attrs: {
+                        localId: '456',
+                        state: 'DECIDED',
+                      },
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'This is the first decision',
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'decisionList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'NotADecisionItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'DECIDED',
+                  },
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'This is the first decision',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('should wrap in unsupportedInline node for decisionItem node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'decisionList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'decisionItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'DECIDED',
+                  },
+                  content: [
+                    {
+                      type: 'unsupportedInline',
+                      attrs: {
+                        originalValue: {
+                          type: 'invalidChildComponent',
+
+                          content: [
+                            {
+                              type: 'text',
+
+                              text: 'This is the first decision',
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'decisionList',
+              attrs: {
+                localId: '123',
+              },
+              content: [
+                {
+                  type: 'decisionItem',
+                  attrs: {
+                    localId: '456',
+                    state: 'DECIDED',
+                  },
+                  content: [
+                    {
+                      type: 'invalidChildComponent',
+                      content: [
+                        {
+                          type: 'text',
+                          text: 'This is the first decision',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
       it('should wrap unsupported mark for inline node where no marks specified in spec', () => {
         const unsupportedMark = {
           type: 'dasdsad',
@@ -353,7 +1160,6 @@ describe(name, () => {
         });
 
         expect(result).toBeDefined();
-
         expect(result!.toJSON()).toEqual(expected);
       });
 
@@ -408,7 +1214,6 @@ describe(name, () => {
         });
 
         expect(result).toBeDefined();
-
         expect(result!.toJSON()).toEqual(expected);
       });
 
@@ -468,85 +1273,6 @@ describe(name, () => {
         expect(result!.toJSON()).toEqual(expected);
       });
 
-      it(
-        'should invoke error callback with  erorr code as "REDUNDANT_ATTRIBUTES" ' +
-          ' when we apply attribute to a mark which does not support any attributes' +
-          'and the node has multiple specs with multiple marks',
-        () => {
-          const strongMarkWithAttribute = {
-            type: 'strong',
-            attrs: {
-              bgStrong: 'red',
-            },
-          };
-          const strikeMarkWithAttribute = {
-            type: 'strike',
-            attrs: {
-              bg: 'red',
-            },
-          };
-          const entity = {
-            version: 1,
-            type: 'doc',
-            content: [
-              {
-                type: 'paragraph',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Hello',
-                    marks: [strongMarkWithAttribute, strikeMarkWithAttribute],
-                  },
-                ],
-              },
-            ],
-          };
-
-          const result = processRawValue(schema, entity);
-
-          const expected = {
-            type: 'doc',
-            content: [
-              {
-                type: 'paragraph',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Hello',
-                    marks: [
-                      {
-                        attrs: {
-                          originalValue: {
-                            attrs: {
-                              bgStrong: 'red',
-                            },
-                            type: 'strong',
-                          },
-                        },
-                        type: 'unsupportedMark',
-                      },
-                      {
-                        attrs: {
-                          originalValue: {
-                            attrs: {
-                              bg: 'red',
-                            },
-                            type: 'strike',
-                          },
-                        },
-                        type: 'unsupportedMark',
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          };
-
-          expect(result).toBeDefined();
-          expect(result!.toJSON()).toEqual(expected);
-        },
-      );
       it(`should wrap mark with unsupportedMark, when a known not supported mark
           is applied to a node with single spec`, () => {
         const intialEntity = {
@@ -704,161 +1430,6 @@ describe(name, () => {
           expect(result!.toJSON()).toEqual(expected);
         },
       );
-
-      it(`should wrap mark with unsupportedMark when we apply known and valid marks, and that marks
-          does not support any attributes and the node has multiple validation specs`, () => {
-        const strongMarkWithAttribute = {
-          type: 'strong',
-          attrs: {
-            bgStrong: 'red',
-          },
-        };
-        const strikeMarkWithAttribute = {
-          type: 'strike',
-          attrs: {
-            bg: 'red',
-          },
-        };
-        const initialEntity = {
-          version: 1,
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Hello',
-                  marks: [strongMarkWithAttribute, strikeMarkWithAttribute],
-                },
-              ],
-            },
-          ],
-        };
-        const expected = {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Hello',
-                  marks: [
-                    {
-                      type: 'unsupportedMark',
-                      attrs: {
-                        originalValue: strongMarkWithAttribute,
-                      },
-                    },
-                    {
-                      type: 'unsupportedMark',
-                      attrs: {
-                        originalValue: strikeMarkWithAttribute,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        };
-
-        const result = processRawValue(schema, initialEntity);
-        expect(result).toBeDefined();
-        expect(result!.toJSON()).toEqual(expected);
-      });
-
-      it(`should wrap unknown mark(s) with unsupportedMark's when a known and valid mark(s) are applied along
-          with unknown mark(s) to a node(s) with multple specs.`, () => {
-        const unknownFontSize = {
-          type: 'fontSize',
-          attrs: {
-            mode: 'wide',
-          },
-        };
-        const unknownBackground = {
-          type: 'background',
-          attrs: {
-            mode: 'wide',
-          },
-        };
-        const alignment = {
-          type: 'alignment',
-          attrs: {
-            align: 'center',
-          },
-        };
-
-        const code = {
-          type: 'code',
-        };
-        const unknownTextBackground = {
-          type: 'textBackground',
-        };
-        const unknownTextForeground = {
-          type: 'textForeground',
-        };
-
-        const initialEntity = {
-          version: 1,
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Some Text',
-                  marks: [code, unknownTextBackground, unknownTextForeground],
-                },
-              ],
-              marks: [alignment, unknownBackground, unknownFontSize],
-            },
-          ],
-        };
-
-        const expected = {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Some Text',
-                  marks: [
-                    code,
-                    {
-                      type: 'unsupportedMark',
-                      attrs: { originalValue: unknownTextBackground },
-                    },
-                    {
-                      type: 'unsupportedMark',
-                      attrs: { originalValue: unknownTextForeground },
-                    },
-                  ],
-                },
-              ],
-              marks: [
-                alignment,
-                {
-                  type: 'unsupportedMark',
-                  attrs: { originalValue: unknownBackground },
-                },
-                {
-                  type: 'unsupportedMark',
-                  attrs: { originalValue: unknownFontSize },
-                },
-              ],
-            },
-          ],
-        };
-
-        const result = processRawValue(schema, initialEntity);
-        expect(result).toBeDefined();
-        expect(result!.toJSON()).toEqual(expected);
-      });
 
       describe('unsupportedNodeAttribute', () => {
         it.each<[string, object, object]>([
@@ -1644,6 +2215,307 @@ describe(name, () => {
           expect(result).toBeDefined();
           expect(result!.toJSON()).toEqual(expected);
         });
+      });
+    });
+
+    describe('Nodes with Multiple Validator Specs', () => {
+      it(`should invoke error callback with  erorr code as "REDUNDANT_ATTRIBUTES"
+        when we apply attribute to a mark which does not support any attributes
+        and the node has multiple specs with multiple marks`, () => {
+        const strongMarkWithAttribute = {
+          type: 'strong',
+          attrs: {
+            bgStrong: 'red',
+          },
+        };
+        const strikeMarkWithAttribute = {
+          type: 'strike',
+          attrs: {
+            bg: 'red',
+          },
+        };
+        const entity = {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Hello',
+                  marks: [strongMarkWithAttribute, strikeMarkWithAttribute],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, entity);
+
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Hello',
+                  marks: [
+                    {
+                      attrs: {
+                        originalValue: {
+                          attrs: {
+                            bgStrong: 'red',
+                          },
+                          type: 'strong',
+                        },
+                      },
+                      type: 'unsupportedMark',
+                    },
+                    {
+                      attrs: {
+                        originalValue: {
+                          attrs: {
+                            bg: 'red',
+                          },
+                          type: 'strike',
+                        },
+                      },
+                      type: 'unsupportedMark',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it(`should wrap mark with unsupportedMark when we apply known and valid marks, and that marks
+          does not support any attributes and the node has multiple validation specs`, () => {
+        const strongMarkWithAttribute = {
+          type: 'strong',
+          attrs: {
+            bgStrong: 'red',
+          },
+        };
+        const strikeMarkWithAttribute = {
+          type: 'strike',
+          attrs: {
+            bg: 'red',
+          },
+        };
+        const initialEntity = {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Hello',
+                  marks: [strongMarkWithAttribute, strikeMarkWithAttribute],
+                },
+              ],
+            },
+          ],
+        };
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Hello',
+                  marks: [
+                    {
+                      type: 'unsupportedMark',
+                      attrs: {
+                        originalValue: strongMarkWithAttribute,
+                      },
+                    },
+                    {
+                      type: 'unsupportedMark',
+                      attrs: {
+                        originalValue: strikeMarkWithAttribute,
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, initialEntity);
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it(`should wrap unknown mark(s) with unsupportedMark's when a known and valid mark(s) are applied along
+      with unknown mark(s) to a node(s) with multple specs.`, () => {
+        const unknownFontSize = {
+          type: 'fontSize',
+          attrs: {
+            mode: 'wide',
+          },
+        };
+        const unknownBackground = {
+          type: 'background',
+          attrs: {
+            mode: 'wide',
+          },
+        };
+        const alignment = {
+          type: 'alignment',
+          attrs: {
+            align: 'center',
+          },
+        };
+
+        const code = {
+          type: 'code',
+        };
+        const unknownTextBackground = {
+          type: 'textBackground',
+        };
+        const unknownTextForeground = {
+          type: 'textForeground',
+        };
+
+        const initialEntity = {
+          version: 1,
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Some Text',
+                  marks: [code, unknownTextBackground, unknownTextForeground],
+                },
+              ],
+              marks: [alignment, unknownBackground, unknownFontSize],
+            },
+          ],
+        };
+        /**
+         * Valid marks are also wrapped in unsupportedMark because
+         * For a node if none of the spec is valid we return the first Spec.
+         */
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Some Text',
+                  marks: [
+                    {
+                      type: 'unsupportedMark',
+                      attrs: { originalValue: code },
+                    },
+                    {
+                      type: 'unsupportedMark',
+                      attrs: { originalValue: unknownTextBackground },
+                    },
+                    {
+                      type: 'unsupportedMark',
+                      attrs: { originalValue: unknownTextForeground },
+                    },
+                  ],
+                },
+              ],
+              marks: [
+                {
+                  type: 'unsupportedMark',
+                  attrs: { originalValue: alignment },
+                },
+                {
+                  type: 'unsupportedMark',
+                  attrs: { originalValue: unknownBackground },
+                },
+                {
+                  type: 'unsupportedMark',
+                  attrs: { originalValue: unknownFontSize },
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, initialEntity);
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
+      it('Inline comment on a Inline code when resolved should not wrap inline code in unsupportedMark', () => {
+        const content = {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'This is ',
+            },
+            {
+              type: 'text',
+              text: 'some ',
+              marks: [
+                {
+                  type: 'code',
+                },
+              ],
+            },
+            {
+              type: 'text',
+              text: 'inline',
+              marks: [
+                {
+                  type: 'code',
+                },
+                {
+                  type: 'annotation',
+                  attrs: {
+                    id: '80f91695-4e24-433d-93e1-6458b8bb12476',
+                    annotationType: 'inlineComment',
+                  },
+                },
+              ],
+            },
+            {
+              type: 'text',
+              text: ' code',
+              marks: [
+                {
+                  type: 'code',
+                },
+              ],
+            },
+          ],
+        };
+        const initialEntity = {
+          version: 1,
+          type: 'doc',
+          content: [content],
+        };
+        const expectedEntity = {
+          type: 'doc',
+          content: [content],
+        };
+        const result = processRawValue(schema, initialEntity);
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expectedEntity);
       });
     });
   });

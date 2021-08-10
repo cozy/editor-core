@@ -36,7 +36,7 @@ describe('collab-edit: index.ts', () => {
   const dispatch = jest.fn();
 
   describe('when onEditorViewStateUpdated is called', () => {
-    it('should call collab send function', done => {
+    it('should call collab send function', (done) => {
       const editorPlugin = collabEditPlugin({});
       const collabFactoryPlugin: PMPlugin = editorPlugin.pmPlugins!()[0];
       const props: PMPluginFactoryParams = {
@@ -59,7 +59,8 @@ describe('collab-edit: index.ts', () => {
       sendMock.mockReset();
 
       editorPlugin.onEditorViewStateUpdated!({
-        transaction,
+        originalTransaction: transaction,
+        transactions: [transaction],
         newEditorState,
         oldEditorState,
       });

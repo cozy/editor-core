@@ -12,20 +12,26 @@ import {
   BROWSER_FREEZE_INTERACTION_TYPE,
   EVENT_TYPE,
   DispatchAnalyticsEvent,
+  AnalyticsEventPayload,
 } from '../../analytics';
 import { getParticipantsCount } from '../../collab-edit/get-participants-count';
 import { countNodes } from '../../../utils/count-nodes';
 import {
   InputTracking,
-  BFreezeTracking,
+  BrowserFreezetracking,
 } from '../../../types/performance-tracking';
 import { getContextIdentifier } from './context-identifier';
 import { setInteractionType } from '../utils/frozen-editor';
+import { getTimeSince } from '../../../utils/performance/get-performance-timing';
+
 const DEFAULT_KEYSTROKE_SAMPLING_LIMIT = 100;
 const DEFAULT_SLOW_THRESHOLD = 300;
 export const DEFAULT_FREEZE_THRESHOLD = 600;
 export const NORMAL_SEVERITY_THRESHOLD = 2000;
 export const DEGRADED_SEVERITY_THRESHOLD = 3000;
+const DEFAULT_TRACK_SEVERITY_ENABLED = false;
+export const DEFAULT_TRACK_SEVERITY_THRESHOLD_NORMAL = 100;
+export const DEFAULT_TRACK_SEVERITY_THRESHOLD_DEGRADED = 500;
 
 const dispatchLongTaskEvent = (
   dispatchAnalyticsEvent: DispatchAnalyticsEvent,
@@ -37,6 +43,8 @@ const dispatchLongTaskEvent = (
 ) => {
   const { state } = view;
 
+  const nodesCount = allowCountNodes ? countNodes(view.state) : {};
+
   return dispatchAnalyticsEvent({
     action: ACTION.BROWSER_FREEZE,
     actionSubject: ACTION_SUBJECT.EDITOR,
@@ -44,7 +52,7 @@ const dispatchLongTaskEvent = (
       objectId: getContextIdentifier(state)?.objectId,
       freezeTime: time,
       nodeSize: state.doc.nodeSize,
-      nodeCount: allowCountNodes ? countNodes(view.state) : undefined,
+      ...nodesCount,
       participants: getParticipantsCount(view.state),
       interactionType,
       severity,
@@ -56,7 +64,7 @@ const dispatchLongTaskEvent = (
 export default (
   dispatchAnalyticsEvent: DispatchAnalyticsEvent,
   inputTracking?: InputTracking,
-  browserFreezeTracking?: BFreezeTracking,
+  browserFreezeTracking?: BrowserFreezetracking,
 ) => {
   let keystrokeCount = 0;
   let interactionType: BROWSER_FREEZE_INTERACTION_TYPE;
@@ -83,6 +91,16 @@ export default (
       : DEFAULT_FREEZE_THRESHOLD;
 
   const allowCountNodes = inputTracking && inputTracking.countNodes;
+
+  const shouldTrackSeverity =
+    inputTracking?.trackSeverity || DEFAULT_TRACK_SEVERITY_ENABLED;
+  const severityThresholdNormal =
+    inputTracking?.severityNormalThreshold ||
+    DEFAULT_TRACK_SEVERITY_THRESHOLD_NORMAL;
+  const severityThresholdDegraded =
+    inputTracking?.severityDegradedThreshold ||
+    DEFAULT_TRACK_SEVERITY_THRESHOLD_DEGRADED;
+
   return new Plugin({
     props: isPerformanceAPIAvailable()
       ? {
@@ -94,36 +112,50 @@ export default (
             }
 
             requestAnimationFrame(() => {
-              const diff = performance.now() - now;
+              const diff = getTimeSince(now);
 
               if (samplingRate && ++keystrokeCount === samplingRate) {
+                const nodesCount = allowCountNodes
+                  ? countNodes(view.state)
+                  : {};
                 keystrokeCount = 0;
-                dispatchAnalyticsEvent({
+
+                const payload: AnalyticsEventPayload = {
                   action: ACTION.INPUT_PERF_SAMPLING,
                   actionSubject: ACTION_SUBJECT.EDITOR,
                   attributes: {
                     time: diff,
                     nodeSize: state.doc.nodeSize,
-                    nodeCount: allowCountNodes
-                      ? countNodes(view.state)
-                      : undefined,
+                    ...nodesCount,
                     participants: getParticipantsCount(state),
                     objectId: getContextIdentifier(state)?.objectId,
                   },
                   eventType: EVENT_TYPE.OPERATIONAL,
-                });
+                };
+
+                if (shouldTrackSeverity) {
+                  payload.attributes!.severity = getAnalyticsEventSeverity(
+                    diff,
+                    severityThresholdNormal,
+                    severityThresholdDegraded,
+                  );
+                }
+
+                dispatchAnalyticsEvent(payload);
               }
 
               if (diff > slowThreshold) {
+                const nodesCount = allowCountNodes
+                  ? countNodes(view.state)
+                  : {};
+
                 dispatchAnalyticsEvent({
                   action: ACTION.SLOW_INPUT,
                   actionSubject: ACTION_SUBJECT.EDITOR,
                   attributes: {
                     time: diff,
                     nodeSize: state.doc.nodeSize,
-                    nodeCount: allowCountNodes
-                      ? countNodes(view.state)
-                      : undefined,
+                    ...nodesCount,
                     participants: getParticipantsCount(state),
                     objectId: getContextIdentifier(state)?.objectId,
                   },
@@ -157,7 +189,7 @@ export default (
       }
       let observer: PerformanceObserver | undefined;
       try {
-        const observer = new PerformanceObserver(list => {
+        const observer = new PerformanceObserver((list) => {
           const perfEntries = list.getEntries();
           for (let i = 0; i < perfEntries.length; i++) {
             const { duration } = perfEntries[i];
@@ -173,8 +205,10 @@ export default (
                 browserFreezeTracking?.trackSeverity
                   ? getAnalyticsEventSeverity(
                       duration,
-                      browserFreezeTracking.severityNormalThreshold,
-                      browserFreezeTracking.severityDegradedThreshold,
+                      browserFreezeTracking.severityNormalThreshold ||
+                        NORMAL_SEVERITY_THRESHOLD,
+                      browserFreezeTracking.severityDegradedThreshold ||
+                        DEGRADED_SEVERITY_THRESHOLD,
                     )
                   : undefined,
               );

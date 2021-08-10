@@ -11,8 +11,9 @@ import WithEditorActions from './../src/ui/WithEditorActions';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
-import { mention, emoji, taskDecision } from '@atlaskit/util-data-test';
-import { EmojiProvider } from '@atlaskit/emoji/resource';
+import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProviderWithResolver } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
 import { createSocketIOCollabProvider } from '@atlaskit/collab-provider/socket-io-provider';
 import { EditorActions } from '../src';
@@ -39,7 +40,7 @@ const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => (
       onClick={() =>
         props.editorActions
           .getValue()
-          .then(value => console.log(value.toJSON()))
+          .then((value) => console.log(value.toJSON()))
       }
     >
       Publish
@@ -147,12 +148,25 @@ export default class Example extends React.Component<Props, State> {
 
   renderEditor() {
     const { documentId, collabUrl } = this.state;
+    // Enable the debug log
+    (window as any).COLLAB_PROVIDER_LOGGER = true;
+    const collabProvider = createSocketIOCollabProvider({
+      url: collabUrl,
+      documentAri: `ari:cloud:confluence:collab-test:blog/${documentId}`,
+    });
+    collabProvider.on('error', (err) => {
+      console.error('error from collabProvider:', {
+        message: err.message,
+        code: err.code,
+        status: err.status,
+      });
+    });
     return (
       <div>
         {this.renderErrorFlag()}
         {this.renderDocumentId()}
         <DropzoneEditorWrapper>
-          {parentContainer => (
+          {(parentContainer) => (
             <EditorContext>
               <Editor
                 appearance="full-page"
@@ -172,25 +186,18 @@ export default class Example extends React.Component<Props, State> {
                   customDropzoneContainer: parentContainer,
                 }}
                 allowPanel={true}
-                emojiProvider={
-                  emoji.storyData.getEmojiResource() as Promise<EmojiProvider>
-                }
+                emojiProvider={getEmojiProvider()}
                 mentionProvider={Promise.resolve(
-                  mention.storyData.resourceProviderWithResolver,
+                  mentionResourceProviderWithResolver,
                 )}
                 taskDecisionProvider={Promise.resolve(
-                  taskDecision.getMockTaskDecisionResource(),
+                  getMockTaskDecisionResource(),
                 )}
                 contextIdentifierProvider={storyContextIdentifierProviderFactory()}
                 sanitizePrivateContent={true}
                 collabEdit={{
                   useNativePlugin: true,
-                  provider: Promise.resolve(
-                    createSocketIOCollabProvider({
-                      url: collabUrl,
-                      documentAri: `ari:cloud:confluence:collab-test:blog/${documentId}`,
-                    }),
-                  ),
+                  provider: Promise.resolve(collabProvider),
                   inviteToEditHandler: this.inviteToEditHandler,
                   isInviteToEditButtonSelected: this.state
                     .isInviteToEditButtonSelected,
@@ -199,7 +206,7 @@ export default class Example extends React.Component<Props, State> {
                 shouldFocus={false}
                 primaryToolbarComponents={
                   <WithEditorActions
-                    render={actions => (
+                    render={(actions) => (
                       <SaveAndCancelButtons editorActions={actions} />
                     )}
                   />

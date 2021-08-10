@@ -4,10 +4,10 @@ import {
   Client as SmartCardClient,
 } from '@atlaskit/smart-card';
 import { ReactRenderer } from '@atlaskit/renderer';
-import { extensionHandlers } from '@atlaskit/editor-test-helpers';
+import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { RendererPadding } from './kitchen-sink-styles';
 import { EditorAppearance } from '../../src/types';
-import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers';
+import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers/exampleMediaFeatureFlags';
 
 export interface KitchenSinkRendererProps {
   appearance: EditorAppearance;
@@ -15,10 +15,11 @@ export interface KitchenSinkRendererProps {
   document: any;
   isFullPage: boolean;
   locale: string;
+  featureFlags: Record<string, boolean>;
 }
 
 export const KitchenSinkRenderer: React.StatelessComponent<KitchenSinkRendererProps> = React.memo(
-  props => {
+  (props) => {
     const smartCardClient = React.useMemo(() => new SmartCardClient('stg'), []);
 
     return (
@@ -37,10 +38,13 @@ export const KitchenSinkRenderer: React.StatelessComponent<KitchenSinkRendererPr
             allowAltTextOnImages={true}
             extensionHandlers={extensionHandlers}
             media={{
-              featureFlags: exampleMediaFeatureFlags,
+              featureFlags: { ...exampleMediaFeatureFlags, captions: true },
               allowLinking: true,
             }}
             allowCopyToClipboard={true}
+            useSpecBasedValidator={true}
+            allowSelectAllTrap
+            featureFlags={props.featureFlags}
           />
         </SmartCardProvider>
       </RendererPadding>

@@ -13,13 +13,17 @@ import { findReplacePluginKey } from '../../types';
 import { selectedSearchMatchClass } from '../../styles';
 import analyticsPlugin from '../../../analytics/plugin';
 import { textFormattingPlugin } from '../../../index';
+import { DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 
 export const createEditor = createProsemirrorEditorFactory();
 
 export const getFindReplacePreset = (
   createAnalyticsEvent?: CreateUIAnalyticsEvent,
 ) => {
-  let preset = new Preset<LightEditorPlugin>().add([findReplacePlugin]);
+  let preset = new Preset<LightEditorPlugin>().add([
+    findReplacePlugin,
+    { takeFullWidth: false },
+  ]);
   if (createAnalyticsEvent) {
     preset = preset.add([analyticsPlugin, { createAnalyticsEvent }]);
   }
@@ -28,7 +32,7 @@ export const getFindReplacePreset = (
 };
 
 export const editor = (
-  doc: any,
+  doc: DocBuilder,
   createAnalyticsEvent?: CreateUIAnalyticsEvent,
   options: Partial<CreatePMEditorOptions> = {},
 ) => {
@@ -62,7 +66,7 @@ export const getSelectedWordDecorations = (state: EditorState) => {
   return decorationSet
     .find()
     .filter(
-      decoration =>
+      (decoration) =>
         (decoration as any).type.attrs.class.indexOf(
           selectedSearchMatchClass,
         ) >= 0,

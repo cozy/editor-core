@@ -1,9 +1,11 @@
-import { EditorState, Transaction } from 'prosemirror-state';
+import { EditorState, Transaction, TextSelection } from 'prosemirror-state';
 import { mapSlice } from '../../../utils/slice';
-import { Mark } from 'prosemirror-model';
+import { NodeType } from 'prosemirror-model';
 
 export function transformToCodeBlockAction(
   state: EditorState,
+  start: number,
+  end: number,
   attrs?: any,
 ): Transaction {
   if (!state.selection.empty) {
@@ -11,14 +13,14 @@ export function transformToCodeBlockAction(
     return state.tr;
   }
 
-  const codeBlock = state.schema.nodes.codeBlock;
   const startOfCodeBlockText = state.selection.$from;
-  const parentPos = startOfCodeBlockText.before();
-  const end = startOfCodeBlockText.end();
+  const endLinePosition = startOfCodeBlockText.end();
+  const startLinePosition = startOfCodeBlockText.start();
+  const parentStartPosition = startOfCodeBlockText.before();
 
   const codeBlockSlice = mapSlice(
-    state.doc.slice(startOfCodeBlockText.pos, end),
-    node => {
+    state.doc.slice(startOfCodeBlockText.pos, endLinePosition),
+    (node) => {
       if (node.type === state.schema.nodes.hardBreak) {
         return state.schema.text('\n');
       }
@@ -33,20 +35,35 @@ export function transformToCodeBlockAction(
     },
   );
 
-  const tr = state.tr.replaceRange(
-    startOfCodeBlockText.pos,
-    end,
-    codeBlockSlice,
+  const tr = state.tr;
+
+  // Replace current block node
+  const startMapped = startLinePosition === start ? parentStartPosition : start;
+
+  const codeBlock: NodeType = state.schema.nodes.codeBlock;
+  const codeBlockNode = codeBlock.createChecked(attrs, codeBlockSlice.content);
+  tr.replaceWith(
+    startMapped,
+    Math.min(endLinePosition, tr.doc.content.size),
+    codeBlockNode,
   );
-  // If our offset isnt at 3 (backticks) at the start of line, cater for content.
-  if (startOfCodeBlockText.parentOffset >= 3) {
-    return tr.split(startOfCodeBlockText.pos, undefined, [
-      { type: codeBlock, attrs },
-    ]);
+
+  // Reposition cursor when inserting into layouts or table headers
+  const mapped = tr.doc.resolve(tr.mapping.map(startMapped) + 1);
+  const selection = TextSelection.findFrom(mapped, 1, true);
+  if (selection) {
+    return tr.setSelection(selection);
   }
-  // TODO: Check parent node for valid code block marks, ATM It's not necessary because code block doesn't have any valid mark.
-  const codeBlockMarks: Array<Mark> = [];
-  return tr.setNodeMarkup(parentPos, codeBlock, attrs, codeBlockMarks);
+
+  return tr.setSelection(
+    TextSelection.create(
+      tr.doc,
+      Math.min(
+        start + startOfCodeBlockText.node().nodeSize - 1,
+        tr.doc.content.size,
+      ),
+    ),
+  );
 }
 
 export function isConvertableToCodeBlock(state: EditorState): boolean {

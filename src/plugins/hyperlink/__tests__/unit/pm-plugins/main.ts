@@ -18,18 +18,19 @@ import {
   layoutColumn,
   ul,
   li,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import { setTextSelection } from '../../../../../utils';
 import hyperlinkPlugin from '../../../index';
 import layoutPlugin from '../../../../layout';
 import { PluginKey } from 'prosemirror-state';
-import listPlugin from '../../../../lists';
+import listPlugin from '../../../../list';
 
 describe('hyperlink', () => {
   const createEditor = createProsemirrorEditorFactory();
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor<HyperlinkState, PluginKey>({
       doc,
       pluginKey: hyperlinkStateKey,

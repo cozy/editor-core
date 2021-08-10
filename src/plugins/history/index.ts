@@ -15,7 +15,9 @@ import { HistoryPluginState } from './types';
  * https://github.com/ProseMirror/prosemirror-history
  */
 
-export const historyPluginKey = new PluginKey('historyPlugin');
+export const historyPluginKey = new PluginKey<HistoryPluginState>(
+  'historyPlugin',
+);
 
 const getInitialState = (): HistoryPluginState => ({
   canUndo: false,
@@ -34,7 +36,7 @@ const createPlugin = (dispatch: Dispatch) =>
     appendTransaction: (transactions, oldState, newState) => {
       if (
         transactions.find(
-          tr => tr.docChanged && tr.getMeta('addToHistory') !== false,
+          (tr) => tr.docChanged && tr.getMeta('addToHistory') !== false,
         )
       ) {
         const pmHistoryPluginState = getPmHistoryPluginState(newState);
@@ -64,7 +66,10 @@ const historyPlugin = (): EditorPlugin => ({
   name: 'history',
   pmPlugins() {
     return [
-      { name: 'history', plugin: ({ dispatch }) => createPlugin(dispatch) },
+      {
+        name: 'history',
+        plugin: ({ dispatch }) => createPlugin(dispatch),
+      },
     ];
   },
 });

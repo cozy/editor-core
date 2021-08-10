@@ -1,14 +1,16 @@
 import { EditorState, TextSelection, PluginSpec } from 'prosemirror-state';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 import { Node, Slice } from 'prosemirror-model';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   layoutSection,
   layoutColumn,
   doc,
   p,
   RefsNode,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+  unsupportedBlock,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
@@ -31,7 +33,7 @@ describe('layout', () => {
     allowBreakout: true,
     UNSAFE_addSidebarLayouts: true,
   });
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,
@@ -65,7 +67,7 @@ describe('layout', () => {
           expect(pluginState.pos).toBe(0);
         });
 
-        layouts.forEach(layout => {
+        layouts.forEach((layout) => {
           it(`should set selectedLayout to "${layout.name}"`, () => {
             const document = doc(buildLayoutForWidths(layout.widths, true))(
               defaultSchema,
@@ -117,7 +119,7 @@ describe('layout', () => {
           expect(pluginKey.getState(editorView.state).pos).toEqual(2);
         });
 
-        layouts.forEach(layout => {
+        layouts.forEach((layout) => {
           it(`should set selectedLayout to "${layout.name}"`, () => {
             const document = doc(
               p('{<>}'),
@@ -410,6 +412,36 @@ describe('layout', () => {
           layoutSection(
             layoutColumn({ width: 33.33 })(p('Not Overflow')),
             layoutColumn({ width: 66.66 })(p('Column')),
+          ),
+        ),
+      );
+    });
+
+    it('should display unsupported content as child of layout section', () => {
+      const { editorView } = editor(
+        doc(
+          layoutSection(
+            layoutColumn({ width: 50 })(p('Overfl{<>}ow')),
+            unsupportedBlock({
+              originalValue: {
+                attrs: { width: 50 },
+                type: 'layout-column',
+              },
+            })(),
+          ),
+        ),
+      );
+
+      expect(editorView.state.doc).toEqualDocument(
+        doc(
+          layoutSection(
+            layoutColumn({ width: 50 })(p('Overfl{<>}ow')),
+            unsupportedBlock({
+              originalValue: {
+                attrs: { width: 50 },
+                type: 'layout-column',
+              },
+            })(),
           ),
         ),
       );

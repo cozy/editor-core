@@ -1,5 +1,5 @@
 import { EditorView } from 'prosemirror-view';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 import {
   doc,
@@ -12,7 +12,8 @@ import {
   li,
   code_block,
   mediaSingle,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
@@ -29,7 +30,7 @@ import { createHorizontalRule } from '../../../plugins/rule/pm-plugins/input-rul
 
 describe('@atlaskit/editor-core/utils insert', () => {
   const createEditor = createEditorFactory();
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     return createEditor({
       doc,
       editorProps: {

@@ -5,9 +5,7 @@ import { InjectedIntlProps, injectIntl } from 'react-intl';
 import { EmojiPicker as AkEmojiPicker } from '@atlaskit/emoji/picker';
 import { EmojiId } from '@atlaskit/emoji/types';
 import { Popup } from '@atlaskit/editor-common';
-import { akEditorMenuZIndex } from '@atlaskit/editor-shared-styles';
-import DropdownMenu from '../../../../ui/DropdownMenu';
-import ToolbarButton from '../../../../ui/ToolbarButton';
+import ToolbarButton, { ToolbarButtonRef } from '../../../../ui/ToolbarButton';
 import { Separator, ButtonGroup, Wrapper } from '../../../../ui/styles';
 import { createTable } from '../../../table/commands';
 import { insertDate, openDatePicker } from '../../../date/actions';
@@ -30,15 +28,11 @@ import {
 } from '../../../analytics';
 import { insertEmoji } from '../../../emoji/commands/insert-emoji';
 import { DropdownItem } from '../../../block-type/ui/ToolbarBlockType';
-
-import InsertMenu from '../../../../ui/ElementBrowser/InsertMenu';
 import { OnInsert } from '../../../../ui/ElementBrowser/types';
-
 import { messages } from './messages';
 import { Props, State, TOOLBAR_MENU_TYPE } from './types';
-import { createItems, BlockMenuItem } from './create-items';
-import { DropDownButton } from './dropdown-button';
-import memoizeOne from 'memoize-one';
+import { createItems } from './create-items';
+import { BlockInsertMenu } from './block-insert-menu';
 
 /**
  * Checks if an element is detached (i.e. not in the current document)
@@ -153,7 +147,7 @@ class ToolbarInsertBlock extends React.PureComponent<
     inputMethod: TOOLBAR_MENU_TYPE = INPUT_METHOD.TOOLBAR,
   ) => {
     this.setState(
-      prevState => ({ emojiPickerOpen: !prevState.emojiPickerOpen }),
+      (prevState) => ({ emojiPickerOpen: !prevState.emojiPickerOpen }),
       () => {
         if (this.state.emojiPickerOpen) {
           const { dispatchAnalyticsEvent } = this.props;
@@ -178,12 +172,15 @@ class ToolbarInsertBlock extends React.PureComponent<
       popupsBoundariesElement,
       popupsScrollableElement,
       emojiProvider,
+      replacePlusMenuWithElementBrowser,
     } = this.props;
     const dropdownEmoji = this.state.dropdownItems.some(
       ({ value: { name } }) => name === 'emoji',
     );
-
-    const ref = dropdownEmoji ? this.dropdownButtonRef : this.emojiButtonRef;
+    const dropDownButtonRef = replacePlusMenuWithElementBrowser
+      ? this.plusButtonRef
+      : this.dropdownButtonRef;
+    const ref = dropdownEmoji ? dropDownButtonRef : this.emojiButtonRef;
 
     if (!emojiPickerOpen || !ref || !emojiProvider) {
       return null;
@@ -208,140 +205,21 @@ class ToolbarInsertBlock extends React.PureComponent<
     );
   }
 
-  private getLegacyInsertMenu() {
-    const { isPlusMenuOpen, dropdownItems } = this.state;
-    const {
-      popupsMountPoint,
-      popupsBoundariesElement,
-      popupsScrollableElement,
-      isDisabled,
-      isReducedSpacing,
-      intl: { formatMessage },
-    } = this.props;
-
-    const dropDownLabel = formatMessage(messages.insertMenu);
-    const spacing = isReducedSpacing ? 'none' : 'default';
-
-    return (
-      <DropdownMenu
-        items={this.toDropdownItems(dropdownItems)}
-        onItemActivated={this.insertInsertMenuItem}
-        onOpenChange={this.onOpenChange}
-        mountTo={popupsMountPoint}
-        boundariesElement={popupsBoundariesElement}
-        scrollableElement={popupsScrollableElement}
-        isOpen={isPlusMenuOpen}
-        fitHeight={188}
-        fitWidth={175}
-        zIndex={akEditorMenuZIndex}
-      >
-        <DropDownButton
-          handleRef={this.handleDropDownButtonRef}
-          selected={isPlusMenuOpen}
-          disabled={isDisabled}
-          onClick={this.togglePlusMenuVisibility}
-          spacing={spacing}
-          label={dropDownLabel}
-        />
-      </DropdownMenu>
-    );
-  }
-
-  private getElementBrowserForInsertMenu() {
-    const { isPlusMenuOpen, dropdownItems } = this.state;
-    const {
-      popupsMountPoint,
-      popupsBoundariesElement,
-      popupsScrollableElement,
-      isDisabled,
-      isReducedSpacing,
-      intl: { formatMessage },
-      editorView,
-    } = this.props;
-
-    const dropDownLabel = formatMessage(messages.insertMenu);
-
-    const spacing = isReducedSpacing ? 'none' : 'default';
-
-    return (
-      <>
-        {isPlusMenuOpen && (
-          <Popup
-            target={this.plusButtonRef}
-            fitHeight={500}
-            fitWidth={350}
-            offset={[0, 3]}
-            mountTo={popupsMountPoint}
-            boundariesElement={popupsBoundariesElement}
-            scrollableElement={popupsScrollableElement}
-          >
-            <InsertMenu
-              editorView={editorView}
-              dropdownItems={dropdownItems}
-              onInsert={this.insertInsertMenuItem as OnInsert}
-              toggleVisiblity={this.togglePlusMenuVisibility}
-            />
-          </Popup>
-        )}
-        <DropDownButton
-          handleRef={this.handlePlusButtonRef}
-          selected={isPlusMenuOpen}
-          disabled={isDisabled}
-          onClick={this.togglePlusMenuVisibility}
-          spacing={spacing}
-          label={dropDownLabel}
-        />
-      </>
-    );
-  }
-
-  private renderInsertMenu() {
-    const { isPlusMenuOpen, dropdownItems } = this.state;
-    const {
-      isDisabled,
-      isReducedSpacing,
-      intl: { formatMessage },
-      replacePlusMenuWithElementBrowser,
-    } = this.props;
-
-    const dropDownLabel = formatMessage(messages.insertMenu);
-    const spacing = isReducedSpacing ? 'none' : 'default';
-
-    if (dropdownItems.length === 0 || isDisabled) {
-      return (
-        <div>
-          <DropDownButton
-            handleRef={this.handleDropDownButtonRef}
-            selected={isPlusMenuOpen}
-            disabled={isDisabled}
-            onClick={this.togglePlusMenuVisibility}
-            spacing={spacing}
-            label={dropDownLabel}
-          />
-        </div>
-      );
-    }
-
-    return replacePlusMenuWithElementBrowser
-      ? this.getElementBrowserForInsertMenu()
-      : this.getLegacyInsertMenu();
-  }
-
-  private handleEmojiButtonRef = (button: ToolbarButton | null): void => {
+  private handleEmojiButtonRef = (button: ToolbarButtonRef): void => {
     const ref = ReactDOM.findDOMNode(button) as HTMLElement | null;
     if (ref) {
       this.emojiButtonRef = ref;
     }
   };
 
-  private handlePlusButtonRef = (button: ToolbarButton | null): void => {
+  private handlePlusButtonRef = (button: ToolbarButtonRef): void => {
     const ref = ReactDOM.findDOMNode(button) as HTMLElement | null;
     if (ref) {
       this.plusButtonRef = ref;
     }
   };
 
-  private handleDropDownButtonRef = (button: ToolbarButton | null) => {
+  private handleDropDownButtonRef = (button: ToolbarButtonRef) => {
     const ref = ReactDOM.findDOMNode(button) as HTMLElement | null;
     if (ref) {
       this.dropdownButtonRef = ref;
@@ -373,8 +251,6 @@ class ToolbarInsertBlock extends React.PureComponent<
     }
   };
 
-  private toDropdownItems = memoizeOne((items: BlockMenuItem[]) => [{ items }]);
-
   render() {
     const { buttons, dropdownItems } = this.state;
     const { isDisabled, isReducedSpacing } = this.props;
@@ -385,7 +261,7 @@ class ToolbarInsertBlock extends React.PureComponent<
 
     return (
       <ButtonGroup width={isReducedSpacing ? 'small' : 'large'}>
-        {buttons.map(btn => (
+        {buttons.map((btn) => (
           <ToolbarButton
             item={btn}
             ref={btn.value.name === 'emoji' ? this.handleEmojiButtonRef : noop}
@@ -400,7 +276,28 @@ class ToolbarInsertBlock extends React.PureComponent<
         ))}
         <Wrapper>
           {this.renderPopup()}
-          {this.renderInsertMenu()}
+          <BlockInsertMenu
+            popupsMountPoint={this.props.popupsMountPoint}
+            popupsBoundariesElement={this.props.popupsBoundariesElement}
+            popupsScrollableElement={this.props.popupsScrollableElement}
+            disabled={this.props.isDisabled ?? false}
+            editorView={this.props.editorView}
+            spacing={this.props.isReducedSpacing ? 'none' : 'default'}
+            label={this.props.intl.formatMessage(messages.insertMenu)}
+            open={this.state.isPlusMenuOpen}
+            plusButtonRef={this.plusButtonRef}
+            items={this.state.dropdownItems}
+            onRef={this.handleDropDownButtonRef}
+            onPlusButtonRef={this.handlePlusButtonRef}
+            onClick={this.togglePlusMenuVisibility}
+            onItemActivated={this.insertInsertMenuItem}
+            onInsert={this.insertInsertMenuItem as OnInsert}
+            onOpenChange={this.onOpenChange}
+            togglePlusMenuVisibility={this.togglePlusMenuVisibility}
+            replacePlusMenuWithElementBrowser={
+              this.props.replacePlusMenuWithElementBrowser ?? false
+            }
+          />
         </Wrapper>
         {this.props.showSeparator && <Separator />}
       </ButtonGroup>
@@ -420,14 +317,18 @@ class ToolbarInsertBlock extends React.PureComponent<
   };
 
   private insertTable = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
+    const { editorView, allowLocalIdGenerationOnTables } = this.props;
+
     return commandWithAnalytics({
       action: ACTION.INSERTED,
       actionSubject: ACTION_SUBJECT.DOCUMENT,
       actionSubjectId: ACTION_SUBJECT_ID.TABLE,
       attributes: { inputMethod },
       eventType: EVENT_TYPE.TRACK,
-    })(createTable)(editorView.state, editorView.dispatch);
+    })(createTable(allowLocalIdGenerationOnTables))(
+      editorView.state,
+      editorView.dispatch,
+    );
   };
 
   private createDate = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {

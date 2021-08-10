@@ -6,16 +6,18 @@ import {
   akEditorFloatingPanelZIndex,
   akEditorMobileMaxWidth,
 } from '@atlaskit/editor-shared-styles';
-import ToolbarButton from '../../../ui/ToolbarButton';
+import ToolbarButton, { TOOLBAR_BUTTON } from '../../../ui/ToolbarButton';
 import Dropdown from '../../../ui/Dropdown';
 import FindReplace, { FindReplaceProps } from './FindReplace';
 import { TRIGGER_METHOD, DispatchAnalyticsEvent } from '../../analytics/types';
 import { ToolTipContent, findKeymapByDescription } from '../../../keymaps';
 
-const ToolbarButtonWrapper = styled.div`
+const ToolbarButtonWrapper = styled.div<{ takeFullWidth: boolean }>`
   display: flex;
   flex: 1 1 auto;
+  flex-grow: ${(props) => (props.takeFullWidth ? 1 : 0)};
   justify-content: flex-end;
+  align-items: center;
   padding: 0 8px;
   @media (max-width: ${akEditorMobileMaxWidth}px) {
     justify-content: center;
@@ -48,6 +50,7 @@ export interface FindReplaceToolbarButtonProps
   popupsBoundariesElement?: HTMLElement;
   popupsScrollableElement?: HTMLElement;
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
+  takeFullWidth: boolean;
 }
 
 class FindReplaceToolbarButton extends React.PureComponent<
@@ -91,13 +94,14 @@ class FindReplaceToolbarButton extends React.PureComponent<
       index,
       numMatches,
       intl: { formatMessage },
+      takeFullWidth,
     } = this.props;
 
     const title = formatMessage(messages.findReplaceToolbarButton);
     const stackBelowOtherEditorFloatingPanels = akEditorFloatingPanelZIndex - 1;
 
     return (
-      <ToolbarButtonWrapper>
+      <ToolbarButtonWrapper takeFullWidth={takeFullWidth}>
         <Dropdown
           mountTo={popupsMountPoint}
           boundariesElement={popupsBoundariesElement}
@@ -112,6 +116,7 @@ class FindReplaceToolbarButton extends React.PureComponent<
           zIndex={stackBelowOtherEditorFloatingPanels}
           trigger={
             <ToolbarButton
+              buttonId={TOOLBAR_BUTTON.FIND_REPLACE}
               spacing={isReducedSpacing ? 'none' : 'default'}
               selected={isActive}
               title={

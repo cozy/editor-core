@@ -4,7 +4,7 @@ import { EditorView } from 'prosemirror-view';
 import { uuid } from '@atlaskit/adf-schema';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
 import { ProviderFactory } from '@atlaskit/editor-common';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   blockquote,
   br,
@@ -17,7 +17,8 @@ import {
   panel,
   taskItem,
   taskList,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { compareSelection } from '@atlaskit/editor-test-helpers/selection';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 
@@ -47,7 +48,7 @@ describe('tasks and decisions - commands', () => {
     uuid.setStatic(false);
   });
 
-  const editorFactory = (doc: any) => {
+  const editorFactory = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn().mockReturnValue({ fire() {} });
     providerFactory = new ProviderFactory();
     providerFactory.setProvider(

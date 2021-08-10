@@ -24,10 +24,10 @@ import { EditorView } from 'prosemirror-view';
 import { CellAttributes } from '@atlaskit/adf-schema';
 
 import { Command } from '../../../types';
-import { isNodeTypeParagraph, isTextSelection } from '../../../utils';
+import { isParagraph, isTextSelection } from '../../../utils';
 import { closestElement } from '../../../utils/dom';
 import { mapSlice } from '../../../utils/slice';
-import { outdentList } from '../../lists/commands';
+import { outdentList } from '../../list/commands';
 import { getDecorations } from '../pm-plugins/decorations/plugin';
 import { buildColumnResizingDecorations } from '../pm-plugins/decorations/utils';
 import { createCommand, getPluginState } from '../pm-plugins/plugin-factory';
@@ -56,10 +56,10 @@ export const setEditorFocus = (editorHasFocus: boolean) =>
     },
   });
 
-export const setTableRef = (ref?: HTMLTableElement | null) =>
+export const setTableRef = (ref?: HTMLTableElement) =>
   createCommand(
-    state => {
-      const tableRef = ref || undefined;
+    (state) => {
+      const tableRef = ref;
       const foundTable = findTable(state.selection);
       const tableNode = ref && foundTable ? foundTable.node : undefined;
       const tablePos = ref && foundTable ? foundTable.pos : undefined;
@@ -88,7 +88,7 @@ export const setTableRef = (ref?: HTMLTableElement | null) =>
         },
       };
     },
-    tr => tr.setMeta('addToHistory', false),
+    (tr) => tr.setMeta('addToHistory', false),
   );
 
 export const setCellAttr = (name: string, value: any): Command => (
@@ -160,7 +160,7 @@ export const transformSliceRemoveCellBackgroundColor = (
   schema: Schema,
 ): Slice => {
   const { tableCell, tableHeader } = schema.nodes;
-  return mapSlice(slice, maybeCell => {
+  return mapSlice(slice, (maybeCell) => {
     if (maybeCell.type === tableCell || maybeCell.type === tableHeader) {
       const cellAttrs: CellAttributes = { ...maybeCell.attrs };
       cellAttrs.background = undefined;
@@ -180,12 +180,12 @@ export const transformSliceToAddTableHeaders = (
 ): Slice => {
   const { table, tableHeader, tableRow } = schema.nodes;
 
-  return mapSlice(slice, maybeTable => {
+  return mapSlice(slice, (maybeTable) => {
     if (maybeTable.type === table) {
       const firstRow = maybeTable.firstChild;
       if (firstRow) {
         const headerCols = [] as PMNode[];
-        firstRow.forEach(oldCol => {
+        firstRow.forEach((oldCol) => {
           headerCols.push(
             tableHeader.createChecked(
               oldCol.attrs,
@@ -212,7 +212,7 @@ export const transformSliceToRemoveColumnsWidths = (
 ): Slice => {
   const { tableHeader, tableCell } = schema.nodes;
 
-  return mapSlice(slice, maybeCell => {
+  return mapSlice(slice, (maybeCell) => {
     if (maybeCell.type === tableCell || maybeCell.type === tableHeader) {
       if (!maybeCell.attrs.colwidth) {
         return maybeCell;
@@ -352,7 +352,7 @@ export const setMultipleCellAttrs = (
 
 export const selectColumn = (column: number, expand?: boolean) =>
   createCommand(
-    state => {
+    (state) => {
       const cells = getCellsInColumn(column)(state.tr.selection);
       if (!cells || !cells.length || typeof cells[0].pos !== 'number') {
         return false;
@@ -379,7 +379,7 @@ export const selectColumn = (column: number, expand?: boolean) =>
 
 export const selectRow = (row: number, expand?: boolean) =>
   createCommand(
-    state => {
+    (state) => {
       let targetCellPosition;
       const cells = getCellsInRow(row)(state.tr.selection);
       if (cells && cells.length) {
@@ -388,31 +388,31 @@ export const selectRow = (row: number, expand?: boolean) =>
 
       return { type: 'SET_TARGET_CELL_POSITION', data: { targetCellPosition } };
     },
-    tr => selectRowTransform(row, expand)(tr).setMeta('addToHistory', false),
+    (tr) => selectRowTransform(row, expand)(tr).setMeta('addToHistory', false),
   );
 
 export const showInsertColumnButton = (columnIndex: number) =>
   createCommand(
-    _ =>
+    (_) =>
       columnIndex > -1
         ? {
             type: 'SHOW_INSERT_COLUMN_BUTTON',
             data: { insertColumnButtonIndex: columnIndex },
           }
         : false,
-    tr => tr.setMeta('addToHistory', false),
+    (tr) => tr.setMeta('addToHistory', false),
   );
 
 export const showInsertRowButton = (rowIndex: number) =>
   createCommand(
-    _ =>
+    (_) =>
       rowIndex > -1
         ? {
             type: 'SHOW_INSERT_ROW_BUTTON',
             data: { insertRowButtonIndex: rowIndex },
           }
         : false,
-    tr => tr.setMeta('addToHistory', false),
+    (tr) => tr.setMeta('addToHistory', false),
   );
 
 export const hideInsertColumnOrRowButton = () =>
@@ -420,12 +420,12 @@ export const hideInsertColumnOrRowButton = () =>
     {
       type: 'HIDE_INSERT_COLUMN_OR_ROW_BUTTON',
     },
-    tr => tr.setMeta('addToHistory', false),
+    (tr) => tr.setMeta('addToHistory', false),
   );
 
 export const addResizeHandleDecorations = (columnIndex: number) =>
   createCommand(
-    state => {
+    (state) => {
       const tableNode = findTable(state.selection);
       const {
         pluginConfig: { allowColumnResizing },
@@ -445,6 +445,18 @@ export const addResizeHandleDecorations = (columnIndex: number) =>
           resizeHandleColumnIndex: columnIndex,
         },
       };
+    },
+    (tr: Transaction) => tr.setMeta('addToHistory', false),
+  );
+
+export const setTableSize = (
+  tableHeight: number,
+  tableWidth: number,
+): Command =>
+  createCommand(
+    {
+      type: 'SET_TABLE_SIZE',
+      data: { tableHeight, tableWidth },
     },
     (tr: Transaction) => tr.setMeta('addToHistory', false),
   );
@@ -476,7 +488,7 @@ export const addBoldInEmptyHeaderCells = (
     tr.selection.$from.depth === tableCellHeader.depth + 1 &&
     // this logic is applied only for empty paragraph
     tableCellHeader.node.nodeSize === 4 &&
-    isNodeTypeParagraph(tableCellHeader.node.firstChild)
+    isParagraph(tableCellHeader.node.firstChild, state.schema)
   ) {
     const { strong } = state.schema.marks;
     tr.setStoredMarks([strong.create()]).setMeta('addToHistory', false);

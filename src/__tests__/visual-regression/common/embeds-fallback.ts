@@ -2,13 +2,14 @@ import { snapshot, initFullPageEditorWithAdf, Device } from '../_utils';
 import adf from './__fixtures__/embeds-fallback.adf.json';
 import erroredViewAdf from './__fixtures__/embeds-errored.adf.json';
 import { waitForBlockCardSelection } from '@atlaskit/media-integration-test-helpers';
+import { evaluateTeardownMockDate } from '@atlaskit/visual-regression/helper';
 
 describe('Embed Cards:', () => {
   it('falls back to block card', async () => {
     const page = global.page;
 
     await initFullPageEditorWithAdf(page, adf, Device.LaptopHiDPI, undefined, {
-      UNSAFE_cards: {
+      smartLinks: {
         resolveBeforeMacros: ['jira'],
         allowBlockCards: true,
         allowEmbeds: true,
@@ -31,19 +32,19 @@ describe('Embed Cards:', () => {
       page,
       erroredViewAdf,
       Device.LaptopHiDPI,
-      undefined,
       {
-        UNSAFE_cards: {
+        width: 1440,
+        height: 4000,
+      },
+      {
+        smartLinks: {
           resolveBeforeMacros: ['jira'],
           allowBlockCards: true,
           allowEmbeds: true,
         },
       },
     );
-    await page.setViewport({
-      width: 1440,
-      height: 4000,
-    });
+    await evaluateTeardownMockDate(page);
 
     // Assert that the resolved view of the block card is rendered.
     await page.waitForSelector('[data-testid="err-view-retry"]');

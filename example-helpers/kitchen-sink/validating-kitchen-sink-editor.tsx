@@ -1,29 +1,32 @@
 import React from 'react';
+import { Schema } from 'prosemirror-model';
 
 import { EditorView } from 'prosemirror-view';
 
+import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
+import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
+import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers/exampleMediaFeatureFlags';
 import {
-  customInsertMenuItems,
-  extensionHandlers,
-} from '@atlaskit/editor-test-helpers';
-import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers';
-import { validator, ErrorCallback, ADFEntity } from '@atlaskit/adf-utils';
+  ADFEntity,
+  ErrorCallback,
+  ValidationError,
+  validator,
+} from '@atlaskit/adf-utils';
 import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
-import { mention } from '@atlaskit/util-data-test';
-import {
-  ConfluenceCardClient,
-  ConfluenceCardProvider,
-} from '../../examples/5-full-page-with-confluence-smart-cards';
+import { mentionResourceProviderWithTeamMentionHighlight } from '@atlaskit/util-data-test/mention-story-data';
+import { ConfluenceCardClient } from '@atlaskit/editor-test-helpers/confluence-card-client';
+import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
 import Editor from '../../src/editor';
-import { EditorAppearance, EditorProps } from '../../src/types';
+import { EditorAppearance, EditorPlugin, EditorProps } from '../../src/types';
 import { EditorActions } from '../../src';
 
 import {
-  providers,
   mediaProvider,
+  providers,
   quickInsertProvider,
 } from '../../examples/5-full-page';
 import { Error } from '../ErrorReport';
+import { validationErrorHandler } from '@atlaskit/editor-common';
 
 export type ValidatingKitchenSinkEditorProps = {
   actions: EditorActions;
@@ -36,6 +39,8 @@ export type ValidatingKitchenSinkEditorProps = {
   onDocumentChanged?: (adf: any) => void;
   onDocumentValidated?: (errors?: Error[]) => void;
   extensionProviders: EditorProps['extensionProviders'];
+  featureFlags: EditorProps['featureFlags'];
+  editorPlugins?: EditorPlugin[];
 };
 
 export type ValidatingKitchenSinkEditorState = {
@@ -44,6 +49,7 @@ export type ValidatingKitchenSinkEditorState = {
 
 const smartCardClient = new ConfluenceCardClient('stg');
 const DEFAULT_VALIDATION_TIMEOUT = 500;
+const EMPTY: EditorPlugin[] = [];
 
 export class ValidatingKitchenSinkEditor extends React.Component<
   ValidatingKitchenSinkEditorProps,
@@ -75,6 +81,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           quickInsert={{
             provider: this.quickInsertProviderPromise,
           }}
+          UNSAFE_allowUndoRedoButtons={true}
           allowTextColor={true}
           allowTables={{
             advanced: true,
@@ -85,6 +92,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           allowExtension={{
             allowBreakout: true,
             allowAutoSave: true,
+            allowExtendFloatingToolbars: true,
           }}
           allowRule={true}
           allowDate={true}
@@ -95,7 +103,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           allowTextAlignment={true}
           allowIndentation={true}
           allowTemplatePlaceholders={{ allowInserting: true }}
-          UNSAFE_cards={{
+          smartLinks={{
             provider: this.cardProviderPromise,
             allowBlockCards: true,
             allowEmbeds: true,
@@ -106,7 +114,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           codeBlock={{ allowCopyToClipboard: true }}
           {...providers}
           mentionProvider={Promise.resolve(
-            mention.storyData.resourceProviderWithTeamMentionHighlight,
+            mentionResourceProviderWithTeamMentionHighlight,
           )} // enable highlight only for kitchen sink example
           media={{
             provider: mediaProvider,
@@ -116,7 +124,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
             allowLinking: true,
             allowResizingInTables: true,
             allowAltTextOnImages: true,
-            featureFlags: exampleMediaFeatureFlags,
+            featureFlags: { ...exampleMediaFeatureFlags, captions: true },
           }}
           insertMenuItems={customInsertMenuItems}
           extensionHandlers={extensionHandlers}
@@ -128,6 +136,15 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           onChange={() => this.onEditorChanged(actions)}
           popupsMountPoint={popupMountPoint}
           primaryToolbarComponents={primaryToolbarComponents}
+          featureFlags={{
+            'local-id-generation-on-tables': true,
+            'data-consumer-mark': true,
+            // Spread here as we want to make sure we can still override flags added above
+            ...this.props.featureFlags,
+          }}
+          dangerouslyAppendPlugins={{
+            __plugins: this.props.editorPlugins ?? EMPTY,
+          }}
         />
       </SmartCardProvider>
     );
@@ -209,20 +226,77 @@ export class ValidatingKitchenSinkEditor extends React.Component<
       const nodes = Object.keys(schema.nodes);
       const errors: Array<Error> = [];
 
-      const errorCb: ErrorCallback = (entity, error) => {
-        errors.push({
+      const validate = validator(nodes, marks, {
+        allowPrivateAttributes: true,
+      });
+
+      const errorCb: ErrorCallback = (entity, error, options) => {
+        const wrappedEntity = validationErrorHandler(
           entity,
           error,
-        });
+          options,
+          marks,
+          validate,
+        );
 
-        return entity;
+        if (!wrappedEntity) {
+          return entity;
+        }
+
+        return {
+          ...wrappedEntity,
+          attrs: { ...wrappedEntity.attrs, error, entity },
+        };
       };
 
-      validator(nodes, marks, {
-        allowPrivateAttributes: true,
-      })(doc as ADFEntity, errorCb);
+      const { entity } = validate(doc as ADFEntity, errorCb);
+
+      findErrorsRecursively(entity as ADFEntity, schema, (error, entity) => {
+        errors.push({ entity, error });
+        // TODO: investigate why `getAttr` can't source an error for `unsupportedNodeAttribute`s now
+        if (!error) {
+          console.error('Got an undefined error in `findErrorsRecursively`?');
+        }
+      });
 
       this.props.onDocumentValidated(errors);
     });
   };
 }
+
+const getAttr = (entity: ADFEntity, attr: string) => {
+  if (!entity || !entity.attrs) {
+    return undefined;
+  }
+  return entity.attrs[attr];
+};
+
+const findErrorsRecursively = (
+  entity: ADFEntity,
+  schema: Schema,
+  errorCallback: (error: ValidationError, entity: ADFEntity) => void,
+) => {
+  const { type: entityType, marks: entityMarks } = entity;
+  const { unsupportedMark, unsupportedNodeAttribute } = schema.marks;
+  const { unsupportedInline, unsupportedBlock } = schema.nodes;
+  if (entityMarks) {
+    entityMarks.forEach((mark) => {
+      if (
+        mark.type === unsupportedMark.name ||
+        mark.type === unsupportedNodeAttribute.name
+      ) {
+        errorCallback(getAttr(mark, 'error'), getAttr(mark, 'entity'));
+      }
+    });
+  }
+  if (
+    entityType === unsupportedInline.name ||
+    entityType === unsupportedBlock.name
+  ) {
+    errorCallback(getAttr(entity, 'error'), getAttr(entity, 'entity'));
+  } else {
+    (entity.content || []).forEach((childEntity) =>
+      findErrorsRecursively(childEntity as ADFEntity, schema, errorCallback),
+    );
+  }
+};

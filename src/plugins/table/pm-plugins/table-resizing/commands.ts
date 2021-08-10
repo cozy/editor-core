@@ -1,5 +1,6 @@
 import { Node as PMNode } from 'prosemirror-model';
 import { Transaction } from 'prosemirror-state';
+
 import { isTableSelected } from '@atlaskit/editor-tables/utils';
 
 import { Command, DomAtPos } from '../../../../types';
@@ -16,6 +17,8 @@ import {
   ScaleOptions,
   scaleWithParent,
 } from './utils';
+
+import { ContentNodeWithPos } from 'prosemirror-utils';
 
 // Scale the table to meet new requirements (col, layout change etc)
 export const scaleTable = (
@@ -87,7 +90,7 @@ export const evenColumns = ({
     isClickNear(event, lastClick)
   ) {
     const newState = evenAllColumnsWidths(resizeState);
-    setLastClick(null, tr => updateColumnWidths(newState, table, start)(tr))(
+    setLastClick(null, (tr) => updateColumnWidths(newState, table, start)(tr))(
       state,
       dispatch,
     );
@@ -103,6 +106,22 @@ export const evenColumns = ({
   return false;
 };
 
+export const distributeColumnsWidths = (
+  newResizeState: ResizeState,
+  table: ContentNodeWithPos,
+): Command => (state, dispatch) => {
+  if (dispatch) {
+    const tr = updateColumnWidths(
+      newResizeState,
+      table.node,
+      table.start,
+    )(state.tr);
+    stopResizing(tr)(state, dispatch);
+  }
+
+  return true;
+};
+
 export const setResizeHandlePos = (resizeHandlePos: number | null) =>
   createCommand({
     type: 'SET_RESIZE_HANDLE_POSITION',
@@ -116,7 +135,7 @@ export const stopResizing = (tr?: Transaction) =>
     {
       type: 'STOP_RESIZING',
     },
-    originalTr => (tr || originalTr).setMeta('scrollIntoView', false),
+    (originalTr) => (tr || originalTr).setMeta('scrollIntoView', false),
   );
 
 export const setDragging = (
@@ -130,7 +149,7 @@ export const setDragging = (
         dragging,
       },
     },
-    originalTr => tr || originalTr,
+    (originalTr) => tr || originalTr,
   );
 
 export const setLastClick = (

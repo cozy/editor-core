@@ -1,12 +1,13 @@
 import { MediaAttributes } from '@atlaskit/adf-schema';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
 import randomId from '@atlaskit/editor-test-helpers/random-id';
 import {
   media,
   mediaGroup,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { stateKey as mediaPluginKey } from '../../../../plugins/media/pm-plugins/plugin-key';
 import { EditorProps } from '../../../../types';
@@ -56,26 +57,12 @@ export const imagePreview: ImagePreview = {
 export const getFreshMediaProvider = (collectionName = testCollectionName) =>
   storyMediaProviderFactory({
     collectionName,
-    includeUserAuthProvider: true,
+    includeUserAuthProvider: false,
   });
-
-export const waitForAllPickersInitialised = async (
-  pluginState: MediaPluginState,
-) => {
-  let loopBreaker = 0;
-  while (pluginState.pickers.length < 1) {
-    await new Promise(resolve => resolve());
-    if (loopBreaker++ > 100) {
-      throw new Error(
-        'Infinite loop detected. Could not initialise pickers after 100 ticks',
-      );
-    }
-  }
-};
 
 const createEditor = createEditorFactory<MediaPluginState>();
 export const mediaEditor = (
-  doc: any,
+  doc: DocBuilder,
   additionalProps: Partial<EditorProps> = {},
   uploadErrorHandler?: () => void,
 ) => {

@@ -5,20 +5,26 @@ import { EditorView } from 'prosemirror-view';
 import { Step } from 'prosemirror-transform';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
 import { AtlaskitThemeProvider } from '@atlaskit/theme/components';
-import { EmojiProvider } from '@atlaskit/emoji/resource';
-import { mention, emoji, taskDecision } from '@atlaskit/util-data-test';
+import {
+  getEmojiProvider,
+  currentUser,
+} from '@atlaskit/util-data-test/get-emoji-provider';
+import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
+import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { createCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
 import { ExtensionHandlers } from '@atlaskit/editor-common';
+import { cardProvider } from '@atlaskit/editor-test-helpers/card-provider';
+import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
+import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
+import { extensionHandlers as exampleExtensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import {
-  cardProvider,
-  storyMediaProviderFactory,
-  storyContextIdentifierProviderFactory,
-  macroProvider,
-  extensionHandlers as exampleExtensionHandlers,
   ExampleCreateInlineCommentComponent,
   ExampleViewInlineCommentComponent,
-  createEditorMediaMock,
-} from '@atlaskit/editor-test-helpers';
+} from '@atlaskit/editor-test-helpers/example-inline-comment-component';
+import { createEditorMediaMock } from '@atlaskit/editor-test-helpers/media-mock';
+import { TestExtensionProviders } from '@atlaskit/editor-test-helpers/vr-utils';
+
 import {
   JSONTransformer,
   JSONDocNode,
@@ -30,6 +36,8 @@ import { withSidebarContainer } from './SidebarContainer';
 import quickInsertProviderFactory from './quick-insert-provider';
 
 import { EditorProps } from '../src';
+import { createTestExtensionProvider } from '../src/plugins/floating-toolbar/__tests__/_helpers';
+import { createExtensionFramesProvider } from '../src/__tests__/visual-regression/common/__helpers__/extensionFrameManifest';
 
 const mediaMockServer = createEditorMediaMock();
 /**
@@ -76,7 +84,10 @@ function createEditorWindowBindings<T>(
     }
 
     options.providers = mapPropsToProviders(options.providers, props);
-    const providers = createProviders(options.providers);
+    const providers = createProviders(options.providers, {
+      editorProps: {},
+      withTestExtensionProviders: options.withTestExtensionProviders,
+    });
 
     const Wrapper = MaybeWrapper || createWrappers(options, render);
     const extensionHandlers = createExtensionHandlers(
@@ -117,13 +128,13 @@ function createEditorWindowBindings<T>(
                 state: { schema, tr },
               } = view!;
 
-              const stepsAsJSON = stepsAsString.map(s => JSON.parse(s));
-              const steps = stepsAsJSON.map(step =>
+              const stepsAsJSON = stepsAsString.map((s) => JSON.parse(s));
+              const steps = stepsAsJSON.map((step) =>
                 Step.fromJSON(schema, step),
               );
 
               if (tr) {
-                steps.forEach(step => tr.step(step));
+                steps.forEach((step) => tr.step(step));
 
                 tr.setMeta('addToHistory', false);
                 tr.setMeta('isRemote', true);
@@ -216,19 +227,21 @@ function addDummyMediaAltTextValidator(
 
 function createProviders(
   opts: Record<string, any> = {},
-  props: EditorProps = {},
+  {
+    withTestExtensionProviders = {},
+    editorProps: props = {},
+  }: {
+    withTestExtensionProviders?: TestExtensionProviders;
+    editorProps?: EditorProps;
+  },
 ) {
   const providers: Record<string, any> = {
-    emojiProvider: emoji.storyData.getEmojiResource({
+    emojiProvider: getEmojiProvider({
       uploadSupported: true,
-      currentUser: {
-        id: emoji.storyData.loggedUser,
-      },
-    }) as Promise<EmojiProvider>,
-    mentionProvider: Promise.resolve(mention.storyData.resourceProvider),
-    taskDecisionProvider: Promise.resolve(
-      taskDecision.getMockTaskDecisionResource(),
-    ),
+      currentUser,
+    }),
+    mentionProvider: Promise.resolve(mentionResourceProvider),
+    taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
     contextIdentifierProvider: storyContextIdentifierProviderFactory(),
     activityProvider: Promise.resolve(new MockActivityResource()),
     macroProvider: Promise.resolve(macroProvider),
@@ -240,11 +253,23 @@ function createProviders(
       useMediaPickerAuthProvider: false,
     });
   }
-  if (opts.cards || (props && props.UNSAFE_cards)) {
+  if (opts.cards || (props && (props.smartLinks || props.UNSAFE_cards))) {
     providers.cardsProvider = Promise.resolve(cardProvider);
   }
   if (opts.collab) {
     providers.collabEditProvider = createCollabEditProvider(opts.collab);
+  }
+
+  if (opts.extensionProviders) {
+    const extensionProvidersArr = [];
+    if (withTestExtensionProviders.extensionFrameManifest) {
+      extensionProvidersArr.push(createExtensionFramesProvider());
+    }
+    if (withTestExtensionProviders.floatingToolbarManifest) {
+      extensionProvidersArr.push(createTestExtensionProvider(() => {}));
+    }
+
+    providers.extensionProviders = extensionProvidersArr;
   }
 
   return providers;
@@ -257,12 +282,19 @@ export function mapPropsToProviders(
   providers: Record<string, boolean> = {},
   props: EditorProps,
 ): Record<string, boolean> {
-  if (props && props.UNSAFE_cards) {
+  if (props && (props.smartLinks || props.UNSAFE_cards)) {
     providers.cards = true;
   }
 
   if (props && props.media) {
     providers.media = true;
+  }
+
+  if (
+    typeof props.allowExtension === 'object' &&
+    props.allowExtension?.allowExtendFloatingToolbars
+  ) {
+    providers.extensionProviders = true;
   }
 
   return providers;
@@ -275,6 +307,13 @@ export function mapProvidersToProps(
   providers: Record<string, any> = {},
   props: EditorProps,
 ): EditorProps {
+  if (props && props.smartLinks) {
+    props.smartLinks = {
+      ...props.smartLinks,
+      provider: providers.cardsProvider,
+    };
+  }
+
   if (props && props.UNSAFE_cards) {
     props.UNSAFE_cards = {
       ...props.UNSAFE_cards,
@@ -300,7 +339,7 @@ export function mapProvidersToProps(
         createComponent: ExampleCreateInlineCommentComponent,
         viewComponent: ExampleViewInlineCommentComponent,
         getState: async (ids: string[]) =>
-          ids.map(id => ({
+          ids.map((id) => ({
             annotationType: AnnotationTypes.INLINE_COMMENT,
             id,
             state: { resolved: false },
@@ -314,7 +353,7 @@ export function mapProvidersToProps(
 }
 
 function createWrappers(options: MountEditorOptions, RenderCmp: any) {
-  let Cmp: EditorExampleComponent<any> = props =>
+  let Cmp: EditorExampleComponent<any> = (props) =>
     RenderCmp(
       props.props,
       props.nonSerializableProps,
@@ -340,7 +379,7 @@ function createWrappers(options: MountEditorOptions, RenderCmp: any) {
 function withDarkMode(
   Wrapper: EditorExampleComponent<any>,
 ): EditorExampleComponent<any> {
-  return props => (
+  return (props) => (
     <AtlaskitThemeProvider mode={'dark'}>
       <Wrapper {...props} />
     </AtlaskitThemeProvider>
@@ -351,7 +390,7 @@ function withI18n(
   locale: string,
   Wrapper: EditorExampleComponent<any>,
 ): EditorExampleComponent<any> {
-  return props => (
+  return (props) => (
     <IntlProvider locale={locale}>
       <Wrapper {...props} />
     </IntlProvider>
@@ -364,11 +403,11 @@ function createLoadReactIntlLocale(win: WindowWithExtensionsForTesting) {
     done: (value?: any) => any,
   ) => {
     const modulesToLoad = locales.map(
-      locale => import(`react-intl/locale-data/${locale}`),
+      (locale) => import(`react-intl/locale-data/${locale}`),
     );
     Promise.all(modulesToLoad)
-      .then(localeData => {
-        localeData.forEach(data => addLocaleData(data.default));
+      .then((localeData) => {
+        localeData.forEach((data) => addLocaleData(data.default));
         done();
       })
       .catch(() => {
@@ -451,6 +490,8 @@ export type MountEditorOptions = {
   i18n?: { locale: string };
   mode?: 'dark';
   withSidebar?: boolean;
+  /** Toggles chosen extension providers */
+  withTestExtensionProviders?: TestExtensionProviders;
   withContextPanel?: boolean;
   providers?: Record<string, boolean>;
   extensionHandlers?: boolean;

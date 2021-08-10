@@ -1,3 +1,4 @@
+import { IntlProvider } from 'react-intl';
 import { PluginKey, NodeSelection } from 'prosemirror-state';
 import { isNodeSelection } from 'prosemirror-utils';
 import {
@@ -7,7 +8,8 @@ import {
   table,
   tr,
   td,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   Preset,
@@ -17,7 +19,7 @@ import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
-import { CodeBlockState } from '../../pm-plugins/main';
+import { CodeBlockState } from '../../pm-plugins/main-state';
 import { pluginKey as codeBlockPluginKey } from '../../plugin-key';
 import {
   removeCodeBlock,
@@ -32,13 +34,15 @@ import basePlugin from '../../../base';
 import typeAheadPlugin from '../../../type-ahead';
 import quickInsertPlugin from '../../../quick-insert';
 import analyticsPlugin from '../../../analytics';
+import { getToolbarConfig } from '../../toolbar';
+
 jest.mock('../../../../utils/clipboard');
 
 describe('code-block', () => {
   const createEditor = createProsemirrorEditorFactory();
   let createAnalyticsEvent: jest.Mock<UIAnalyticsEvent>;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = createAnalyticsEventMock();
 
     return createEditor<CodeBlockState, PluginKey>({
@@ -294,6 +298,81 @@ describe('code-block', () => {
           });
         });
       });
+    });
+  });
+
+  describe('toolbar', () => {
+    const { editorView } = editor(doc(code_block({})('Some code here')));
+    const intlProvider = new IntlProvider({ locale: 'en' });
+    const { intl } = intlProvider.getChildContext();
+
+    it('should not show clipboard button in toolbar when allowCopyToClipboard is false', () => {
+      const createToolbar = getToolbarConfig(false);
+      // @ts-ignore
+      const toolbar = createToolbar(editorView.state, intl, {});
+
+      expect(toolbar?.items).toHaveLength(3);
+    });
+
+    it('should show clipboard button in toolbar when allowCopyToClipboard is true', () => {
+      const createToolbar = getToolbarConfig(true);
+      // @ts-ignore
+      const toolbar = createToolbar(editorView.state, intl, {});
+
+      expect(toolbar?.items).toHaveLength(5);
+      // @ts-ignore
+      const button = toolbar.items[2] as { onClick: () => boolean };
+      expect(button.onClick).toEqual(copyContentToClipboard);
+    });
+
+    it('should find the selected language from the language provided', () => {
+      const { editorView } = editor(
+        doc(code_block({ language: 'javascript' })('Some code here')),
+      );
+
+      const createToolbar = getToolbarConfig(false);
+      // @ts-ignore
+      const toolbar = createToolbar(editorView.state, intl, {});
+
+      expect(toolbar?.items).toHaveLength(3);
+      // @ts-ignore
+      expect(toolbar?.items[0].defaultValue).toEqual({
+        label: 'JavaScript',
+        value: 'javascript',
+        alias: ['javascript', 'js'],
+      });
+    });
+
+    it('should find the selected language from the language provided if it is an alias', () => {
+      const { editorView } = editor(
+        doc(code_block({ language: 'js' })('Some code here')),
+      );
+
+      const createToolbar = getToolbarConfig(false);
+      // @ts-ignore
+      const toolbar = createToolbar(editorView.state, intl, {});
+
+      expect(toolbar?.items).toHaveLength(3);
+      // @ts-ignore
+      expect(toolbar?.items[0].defaultValue).toEqual({
+        label: 'JavaScript',
+        value: 'javascript',
+        alias: ['javascript', 'js'],
+      });
+    });
+
+    it('should not find the selected language from the language provided does not exist', () => {
+      const { editorView } = editor(
+        doc(code_block({ language: 'patagonia' })('Some code here')),
+      );
+
+      const createToolbar = getToolbarConfig(false);
+      // @ts-ignore
+      const toolbar = createToolbar(editorView.state, intl, {});
+
+      expect(toolbar?.items).toHaveLength(3);
+      // @ts-ignore
+      expect(toolbar?.items[0].defaultValue).toEqual(undefined);
     });
   });
 });

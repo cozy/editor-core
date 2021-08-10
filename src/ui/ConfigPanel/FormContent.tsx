@@ -1,12 +1,16 @@
-import React, { Fragment } from 'react';
-import { ExtensionManifest } from '@atlaskit/editor-common';
+import React from 'react';
+import {
+  ExtensionManifest,
+  ContextIdentifierProvider,
+} from '@atlaskit/editor-common';
 
 import {
   FieldDefinition,
   isFieldset,
   Parameters,
+  TabField,
 } from '@atlaskit/editor-common/extensions';
-
+import ColorPicker from './Fields/ColorPicker';
 import Boolean from './Fields/Boolean';
 import CustomSelect from './Fields/CustomSelect';
 import Date from './Fields/Date';
@@ -18,53 +22,50 @@ import Number from './Fields/Number';
 import String from './Fields/String';
 import UnhandledType from './Fields/UnhandledType';
 import UserSelect from './Fields/UserSelect';
+import Expand from './Fields/Expand';
+import TabGroup from './Fields/TabGroup';
 
 import RemovableField from './NestedForms/RemovableField';
-import { OnBlur } from './types';
+import { OnFieldChange } from './types';
+import { getSafeParentedName } from './utils';
+import { FormErrorBoundary } from './FormErrorBoundary';
 
-type FormProps = {
-  fields: FieldDefinition[];
-  parentName?: string;
-  parameters?: Parameters;
-  extensionManifest: ExtensionManifest;
-  canRemoveFields?: boolean;
-  onClickRemove?: (fieldName: string) => void;
-  onFieldBlur: OnBlur;
-  firstVisibleFieldName?: string;
-};
-
-type FieldProps = {
+export interface FieldComponentProps {
   field: FieldDefinition;
+  parameters: Parameters;
   parentName?: string;
-  parameters?: Parameters;
   extensionManifest: ExtensionManifest;
   firstVisibleFieldName?: string;
-  onBlur: OnBlur;
-};
+  onFieldChange: OnFieldChange;
+}
 
-function FieldComponent({
+export function FieldComponent({
   field,
-  parentName,
   parameters,
+  parentName,
   extensionManifest,
   firstVisibleFieldName,
-  onBlur,
-}: FieldProps) {
-  const { name } = field;
+  onFieldChange,
+}: FieldComponentProps) {
+  const { name, type } = field;
   const autoFocus = name === firstVisibleFieldName;
-
-  if (!isFieldset(field)) {
-    field.defaultValue = (parameters && parameters[name]) || field.defaultValue;
+  const defaultValue = parameters[name];
+  const error = parameters.errors?.[name];
+  const parentedName = getSafeParentedName(name, parentName);
+  const fieldDefaultValue =
+    field.type === 'enum' ? field.defaultValue : undefined;
+  if (name in parameters && !isFieldset(field)) {
+    field = { ...field, defaultValue };
   }
 
   switch (field.type) {
     case 'string':
       return (
         <String
-          parentName={parentName}
+          name={parentedName}
           field={field}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
           placeholder={field.placeholder}
         />
       );
@@ -72,24 +73,39 @@ function FieldComponent({
     case 'number':
       return (
         <Number
-          parentName={parentName}
+          name={parentedName}
           field={field}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
           placeholder={field.placeholder}
         />
       );
 
     case 'boolean':
-      return <Boolean parentName={parentName} field={field} onBlur={onBlur} />;
+      return (
+        <Boolean
+          name={parentedName}
+          field={field}
+          onFieldChange={onFieldChange}
+        />
+      );
+
+    case 'color':
+      return (
+        <ColorPicker
+          name={parentedName}
+          field={field}
+          onFieldChange={onFieldChange}
+        />
+      );
 
     case 'date':
       return (
         <Date
-          parentName={parentName}
+          name={parentedName}
           field={field}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
           placeholder={field.placeholder}
         />
       );
@@ -97,63 +113,98 @@ function FieldComponent({
     case 'date-range':
       return (
         <DateRange
-          parentName={parentName}
+          name={parentedName}
           field={field}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
         />
       );
 
     case 'enum':
       return (
         <Enum
-          parentName={parentName}
+          name={parentedName}
           field={field}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
+          fieldDefaultValue={fieldDefaultValue}
         />
       );
-
     case 'custom':
       return (
         <CustomSelect
-          parentName={parentName}
+          name={parentedName}
           field={field}
           extensionManifest={extensionManifest}
           placeholder={field.placeholder}
           autoFocus={autoFocus}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
+          parameters={parameters}
         />
       );
 
     case 'fieldset':
       return (
         <Fieldset
+          name={parentedName}
           field={field}
           firstVisibleFieldName={firstVisibleFieldName}
-          onFieldBlur={onBlur}
+          onFieldChange={onFieldChange}
           extensionManifest={extensionManifest}
-          parameters={(parameters && parameters[field.name]) || {}}
-          error={parameters?.errors?.[field.name]}
+          parameters={defaultValue || {}}
+          error={error}
         />
       );
 
     case 'user':
       return (
         <UserSelect
+          name={parentedName}
           field={field}
-          autoFocus={field.name === firstVisibleFieldName}
+          autoFocus={name === firstVisibleFieldName}
           extensionManifest={extensionManifest}
-          onBlur={onBlur}
+          onFieldChange={onFieldChange}
         />
       );
+
+    case 'expand':
+      // if expand is under a tab.
+      const resolvedParentName = parentName
+        ? `${parentName}.${field.name}`
+        : field.name;
+      return (
+        <Expand field={field} isExpanded={field.isExpanded}>
+          <FormContent
+            parentName={resolvedParentName}
+            fields={field.fields}
+            parameters={parameters[field.name] || {}}
+            onFieldChange={onFieldChange}
+            extensionManifest={extensionManifest}
+          />
+        </Expand>
+      );
+
+    case 'tab-group':
+      const renderPanel = (tabField: TabField) => {
+        const tabParameters = parameters[field.name] || {};
+        return (
+          <FormContent
+            parentName={`${field.name}.${tabField.name}`}
+            fields={tabField.fields}
+            parameters={tabParameters[tabField.name] || {}}
+            onFieldChange={onFieldChange}
+            extensionManifest={extensionManifest}
+          />
+        );
+      };
+
+      return <TabGroup field={field} renderPanel={renderPanel} />;
 
     default:
       return (
         <UnhandledType
           field={field}
-          // @ts-ignore, not possible, but maybe Typescript is wrong
-          errorMessage={`Field "${name}" of type "${field.type}" not supported`}
+          errorMessage={`Field "${name}" of type "${type}" not supported`}
         />
       );
   }
@@ -170,22 +221,35 @@ export default function FormContent({
   extensionManifest,
   canRemoveFields,
   onClickRemove,
-  onFieldBlur,
+  onFieldChange,
   firstVisibleFieldName,
-}: FormProps) {
+  contextIdentifierProvider,
+}: {
+  fields: FieldDefinition[];
+  parentName?: string;
+  parameters?: Parameters;
+  extensionManifest: ExtensionManifest;
+  canRemoveFields?: boolean;
+  onClickRemove?: (fieldName: string) => void;
+  onFieldChange: OnFieldChange;
+  firstVisibleFieldName?: string;
+  contextIdentifierProvider?: ContextIdentifierProvider;
+}) {
   return (
-    <Fragment>
+    <FormErrorBoundary
+      contextIdentifierProvider={contextIdentifierProvider}
+      extensionKey={extensionManifest.key}
+      fields={fields}
+    >
       {fields.map((field: FieldDefinition) => {
-        const { name } = field;
-
         let fieldElement = (
           <FieldComponent
             field={field}
+            parameters={parameters || {}}
             parentName={parentName}
-            parameters={parameters}
             extensionManifest={extensionManifest}
             firstVisibleFieldName={firstVisibleFieldName}
-            onBlur={onFieldBlur}
+            onFieldChange={onFieldChange}
           />
         );
 
@@ -194,17 +258,19 @@ export default function FormContent({
           fieldElement = <Hidden>{fieldElement}</Hidden>;
         }
 
+        const { name, type } = field;
         return (
           <RemovableField
             key={name}
             name={name}
-            canRemoveField={canRemoveFields}
+            canRemoveField={canRemoveFields && !field.isRequired}
             onClickRemove={onClickRemove}
+            className={`field-wrapper-${type}`}
           >
             {fieldElement}
           </RemovableField>
         );
       })}
-    </Fragment>
+    </FormErrorBoundary>
   );
 }

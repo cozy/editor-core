@@ -15,15 +15,15 @@ export class ReactNodeViewState {
   }
 
   unsubscribe(cb: StateChangeHandler) {
-    this.changeHandlers = this.changeHandlers.filter(ch => ch !== cb);
+    this.changeHandlers = this.changeHandlers.filter((ch) => ch !== cb);
   }
 
   notifyNewSelection(fromPos: number, toPos: number) {
-    this.changeHandlers.forEach(cb => cb(fromPos, toPos));
+    this.changeHandlers.forEach((cb) => cb(fromPos, toPos));
   }
 }
 
-export const stateKey = new PluginKey('reactNodeView');
+export const stateKey = new PluginKey<ReactNodeViewState>('reactNodeView');
 
 export const plugin = new Plugin({
   state: {

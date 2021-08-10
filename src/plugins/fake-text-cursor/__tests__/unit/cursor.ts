@@ -4,7 +4,8 @@ import { Slice } from 'prosemirror-model';
 import {
   doc,
   p as paragraph,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   Preset,
   createProsemirrorEditorFactory,
@@ -21,7 +22,7 @@ import fakeTextCursorPlugin from '../../index';
 
 describe('FakeTextCursor -> Cursor', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>().add(fakeTextCursorPlugin),

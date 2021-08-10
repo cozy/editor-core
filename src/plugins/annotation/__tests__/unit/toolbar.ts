@@ -7,9 +7,10 @@ import {
   p,
   taskItem,
   taskList,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
-import { emoji as emojiData } from '@atlaskit/util-data-test';
+import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -36,7 +37,7 @@ const annotationPreset = new Preset<LightEditorPlugin>()
   .add(blockTypePlugin)
   .add(tasksAndDecisionsPlugin);
 
-const emojiProvider = emojiData.testData.getEmojiResourcePromise();
+const emojiProvider = getTestEmojiResource();
 const providerFactory = ProviderFactory.create({ emojiProvider });
 
 describe('annotation', () => {
@@ -44,7 +45,7 @@ describe('annotation', () => {
   const intlProvider = new IntlProvider({ locale: 'en' });
   const { intl } = intlProvider.getChildContext();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       providerFactory,

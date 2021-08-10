@@ -10,8 +10,8 @@ import {
 } from '../../../../plugins/analytics';
 import { extendPayload } from '../../../../plugins/analytics/plugin';
 import { EditorState, Transaction } from 'prosemirror-state';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p } from '@atlaskit/editor-test-helpers/schema-builder';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
 import { CommandDispatch } from '../../../../types';
 import { AnalyticsStep } from '@atlaskit/adf-schema/steps';
 
@@ -34,7 +34,7 @@ describe('analytics', () => {
     let state: EditorState;
     let tr: Transaction;
 
-    const editor = (doc: any) => {
+    const editor = (doc: DocBuilder) => {
       fireMock = jest.fn();
       createAnalyticsEvent = jest.fn(() => ({ fire: fireMock }));
       return createEditor({

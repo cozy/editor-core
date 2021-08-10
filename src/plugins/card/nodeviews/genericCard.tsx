@@ -15,6 +15,7 @@ import { getPosHandler, ReactComponentProps } from '../../../nodeviews';
 import { titleUrlPairFromNode } from '../utils';
 import { EventDispatcher } from '../../../event-dispatcher';
 import { DispatchAnalyticsEvent } from '../../../plugins/analytics';
+import { changeSelectedCardToLink } from '../pm-plugins/doc';
 
 export type EditorContext<T> = React.Context<T> & { value: T };
 
@@ -34,6 +35,7 @@ export interface CardProps extends CardNodeViewProps {
   eventDispatcher?: EventDispatcher<any>;
   allowResizing?: boolean;
   fullWidthMode?: boolean;
+  useAlternativePreloader?: boolean;
 }
 
 export interface SmartCardProps extends CardProps {
@@ -64,7 +66,7 @@ export function Card(
           return (
             <a
               href={url}
-              onClick={e => {
+              onClick={(e) => {
                 e.preventDefault();
               }}
             >
@@ -89,9 +91,22 @@ export function Card(
       // Depending on the kind of error, the expectation for this component is to either:
       // (1) Render a blue link whilst retaining `inlineCard` in the ADF (non-fatal errs);
       // (2) Render a blue link whilst downgrading to `link` in the ADF (fatal errs).
+
       if (maybeAPIError.kind && maybeAPIError.kind === 'fatal') {
-        // TODO: EDM-340, add proper editor integration here.
         this.setState({ isError: true });
+        const { view, node, getPos } = this.props;
+        const { url } = titleUrlPairFromNode(node);
+        if (!getPos || typeof getPos === 'boolean') {
+          return;
+        }
+        changeSelectedCardToLink(
+          undefined,
+          url,
+          true,
+          node,
+          getPos(),
+        )(view.state, view.dispatch);
+        return null;
       } else {
         // Otherwise, render a blue link as fallback (above in render()).
         this.setState({ isError: true });

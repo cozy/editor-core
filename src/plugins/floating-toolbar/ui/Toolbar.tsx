@@ -5,19 +5,25 @@ import { EditorView } from 'prosemirror-view';
 import { Node } from 'prosemirror-model';
 
 import ButtonGroup from '@atlaskit/button/button-group';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { ExtensionProvider, ProviderFactory } from '@atlaskit/editor-common';
 import { themed } from '@atlaskit/theme/components';
 import { borderRadius, gridSize } from '@atlaskit/theme/constants';
 import { DN70 } from '@atlaskit/theme/colors';
 
+import { getFeatureFlags } from '../../feature-flags-context';
 import { DispatchAnalyticsEvent } from '../../analytics';
 import { FloatingToolbarItem } from '../types';
 import { compareArrays, shallowEqual } from '../utils';
+import { showConfirmDialog } from '../pm-plugins/toolbar-data/commands';
 import Button from './Button';
 import Dropdown from './Dropdown';
 import Select, { SelectOption } from './Select';
 import Separator from './Separator';
 import Input from './Input';
+import { ExtensionsPlaceholder } from './ExtensionsPlaceholder';
+import ColorPickerButton from '../../../ui/ColorPickerButton';
+import { PaletteColor } from '../../../ui/ColorPalette/Palettes';
+import { EmojiPickerButton } from './EmojiPickerButton';
 
 const akGridSize = gridSize();
 
@@ -36,6 +42,7 @@ export interface Props {
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
   target?: HTMLElement;
   node: Node;
+  extensionsProvider?: ExtensionProvider;
 }
 
 const ToolbarContainer = styled.div`
@@ -64,8 +71,8 @@ const compareItemWithKeys = <T, U extends keyof T>(
   excludedKeys: Array<U> = [],
 ): boolean =>
   (Object.keys(leftItem) as Array<U>)
-    .filter(key => excludedKeys.indexOf(key) === -1)
-    .every(key =>
+    .filter((key) => excludedKeys.indexOf(key) === -1)
+    .every((key) =>
       leftItem[key] instanceof Object
         ? shallowEqual(leftItem[key], rightItem[key])
         : leftItem[key] === rightItem[key],
@@ -127,6 +134,8 @@ export const isSameItem = (leftItem: Item, rightItem: Item): boolean => {
       return false;
     case 'separator':
       return compareItemWithKeys(leftItem, rightItem as typeof leftItem);
+    case 'extensions-placeholder':
+      return compareItemWithKeys(leftItem, rightItem as typeof leftItem);
   }
   return true;
 };
@@ -161,6 +170,9 @@ export default class Toolbar extends Component<Props> {
       popupsScrollableElement,
       className,
       editorView,
+      node,
+      extensionsProvider,
+      providerFactory,
     } = this.props;
     if (!items || !items.length) {
       return null;
@@ -177,11 +189,20 @@ export default class Toolbar extends Component<Props> {
       >
         <ButtonGroup>
           {items
-            .filter(item => !item.hidden)
+            .filter((item) => !item.hidden)
             .map((item, idx) => {
               switch (item.type) {
                 case 'button':
                   const ButtonIcon = item.icon as React.ComponentClass<any>;
+
+                  const onClickHandler = () => {
+                    if (item.confirmDialog) {
+                      dispatchCommand(showConfirmDialog(idx));
+                    } else {
+                      dispatchCommand(item.onClick);
+                    }
+                  };
+
                   return (
                     <Button
                       className={item.className}
@@ -195,7 +216,7 @@ export default class Toolbar extends Component<Props> {
                       }
                       appearance={item.appearance}
                       target={item.target}
-                      onClick={() => dispatchCommand(item.onClick)}
+                      onClick={onClickHandler}
                       onMouseEnter={() => dispatchCommand(item.onMouseEnter)}
                       onMouseLeave={() => dispatchCommand(item.onMouseLeave)}
                       selected={item.selected}
@@ -216,8 +237,10 @@ export default class Toolbar extends Component<Props> {
                       boundariesElement={popupsBoundariesElement}
                       defaultValue={item.defaultValue}
                       placeholder={item.placeholder}
-                      onSubmit={value => dispatchCommand(item.onSubmit(value))}
-                      onBlur={value => dispatchCommand(item.onBlur(value))}
+                      onSubmit={(value) =>
+                        dispatchCommand(item.onSubmit(value))
+                      }
+                      onBlur={(value) => dispatchCommand(item.onBlur(value))}
                     />
                   );
 
@@ -244,24 +267,79 @@ export default class Toolbar extends Component<Props> {
                   );
 
                 case 'select':
+                  if (item.selectType === 'list') {
+                    return (
+                      <Select
+                        key={idx}
+                        dispatchCommand={dispatchCommand}
+                        options={item.options}
+                        hideExpandIcon={item.hideExpandIcon}
+                        mountPoint={popupsMountPoint}
+                        boundariesElement={popupsBoundariesElement}
+                        scrollableElement={popupsScrollableElement}
+                        defaultValue={item.defaultValue}
+                        placeholder={item.placeholder}
+                        onChange={(selected) =>
+                          dispatchCommand(
+                            item.onChange(selected as SelectOption),
+                          )
+                        }
+                        filterOption={item.filterOption}
+                      />
+                    );
+                  }
+                  if (item.selectType === 'color') {
+                    return (
+                      <ColorPickerButton
+                        key={idx}
+                        title={item.title}
+                        onChange={(selected) => {
+                          dispatchCommand(item.onChange(selected));
+                        }}
+                        colorPalette={item.options as PaletteColor[]}
+                        currentColor={
+                          item.defaultValue
+                            ? item.defaultValue.value
+                            : undefined
+                        }
+                        placement="Panels"
+                      />
+                    );
+                  }
+                  return null;
+
+                case 'emoji-picker':
                   return (
-                    <Select
+                    <EmojiPickerButton
                       key={idx}
-                      dispatchCommand={dispatchCommand}
-                      options={item.options}
-                      hideExpandIcon={item.hideExpandIcon}
-                      mountPoint={popupsMountPoint}
-                      boundariesElement={popupsBoundariesElement}
-                      scrollableElement={popupsScrollableElement}
-                      defaultValue={item.defaultValue}
-                      placeholder={item.placeholder}
-                      onChange={selected =>
-                        dispatchCommand(item.onChange(selected as SelectOption))
+                      view={editorView}
+                      title={item.title}
+                      providerFactory={providerFactory}
+                      onChange={(selected) =>
+                        dispatchCommand(item.onChange(selected.shortName))
                       }
-                      filterOption={item.filterOption}
                     />
                   );
 
+                case 'extensions-placeholder':
+                  if (!editorView || !extensionsProvider) {
+                    return null;
+                  }
+                  const { extendFloatingToolbar } =
+                    getFeatureFlags(editorView.state) || {};
+                  if (!extendFloatingToolbar) {
+                    return null;
+                  }
+
+                  return (
+                    <ExtensionsPlaceholder
+                      key={idx}
+                      node={node}
+                      editorView={editorView}
+                      extensionProvider={extensionsProvider}
+                      separator={item.separator}
+                    />
+                  );
                 case 'separator':
                   return <Separator key={idx} />;
               }
@@ -274,6 +352,7 @@ export default class Toolbar extends Component<Props> {
   shouldComponentUpdate(nextProps: Props) {
     return (
       this.props.node.type !== nextProps.node.type ||
+      this.props.node.attrs.localId !== nextProps.node.attrs.localId ||
       !areSameItems(this.props.items, nextProps.items)
     );
   }

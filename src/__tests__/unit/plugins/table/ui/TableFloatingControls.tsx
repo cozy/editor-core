@@ -1,7 +1,7 @@
 import { shallow, mount } from 'enzyme';
 import React from 'react';
 
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -9,7 +9,8 @@ import {
   tr,
   tdEmpty,
   tdCursor,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { TablePluginState } from '../../../../../plugins/table/types';
 import { hoverTable } from '../../../../../plugins/table/commands';
@@ -22,7 +23,7 @@ import { getDecorations } from '../../../../../plugins/table/pm-plugins/decorati
 describe('TableFloatingControls', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor({
       doc,
       editorProps: { allowTables: true },
@@ -50,6 +51,7 @@ describe('TableFloatingControls', () => {
       const floatingControls = shallow(
         <TableFloatingControls
           tableRef={document.querySelector('table')!}
+          tableActive={true}
           editorView={editorView}
         />,
       );

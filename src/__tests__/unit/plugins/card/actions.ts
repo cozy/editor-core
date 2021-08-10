@@ -7,14 +7,15 @@ import {
 
 import { EditorTestCardProvider } from '@atlaskit/editor-test-helpers/card-provider';
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
+  DocBuilder,
   p,
   inlineCard,
   blockCard,
   Refs,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import { setNodeSelection } from '../../../../utils';
 import { visitCardLink, removeCard } from '../../../../plugins/card/toolbar';
@@ -27,13 +28,13 @@ describe('card', () => {
   const createEditor = createEditorFactory();
   let createAnalyticsEvent: jest.MockInstance<UIAnalyticsEvent, any>;
 
-  const editor = (doc: any) => {
+  const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = createAnalyticsEventMock();
     const wrapper = createEditor({
       doc,
       pluginKey,
       createAnalyticsEvent: createAnalyticsEvent as any,
-      editorProps: { allowAnalyticsGASV3: true, UNSAFE_cards: {} },
+      editorProps: { allowAnalyticsGASV3: true, smartLinks: {} },
     });
     createAnalyticsEvent.mockClear();
     return wrapper;
@@ -126,7 +127,7 @@ describe('card', () => {
       },
     ];
 
-    linkTypes.forEach(type => {
+    linkTypes.forEach((type) => {
       describe(`Toolbar ${type.name}`, () => {
         let editorView: EditorView;
         let refs: Refs;

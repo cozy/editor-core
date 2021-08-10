@@ -6,7 +6,7 @@ import { isRowSelected } from '@atlaskit/editor-tables/utils';
 import { EditorView } from 'prosemirror-view';
 
 import { defaultSchema } from '@atlaskit/adf-schema';
-import createEditorFactory from '@atlaskit/editor-test-helpers/create-editor';
+import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   doc,
   p,
@@ -17,7 +17,8 @@ import {
   tdEmpty,
   th,
   tr,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import {
   getFreshMediaProvider,
@@ -45,7 +46,7 @@ import { TablePluginState } from '../../types';
 describe('table plugin: actions', () => {
   const createEditor = createEditorFactory<TablePluginState>();
 
-  const editor = (doc: any, props: Partial<EditorProps> = {}) =>
+  const editor = (doc: DocBuilder, props: Partial<EditorProps> = {}) =>
     createEditor({
       doc,
       editorProps: {

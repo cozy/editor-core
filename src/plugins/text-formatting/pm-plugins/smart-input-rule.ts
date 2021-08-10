@@ -1,19 +1,21 @@
-import { InputRule } from 'prosemirror-inputrules';
-import { Plugin, Selection, Transaction } from 'prosemirror-state';
+import { Selection, Transaction } from 'prosemirror-state';
+import { FeatureFlags } from '../../../types/feature-flags';
 
 import {
-  createInputRule,
-  InputRuleHandler,
-  InputRuleWithHandler,
-  instrumentedInputRule,
+  createPlugin,
+  createRule,
+  ruleWithAnalytics,
 } from '../../../utils/input-rules';
+import {
+  InputRuleWrapper,
+  InputRuleHandler,
+} from '@atlaskit/prosemirror-input-rules';
 import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
   PUNC,
-  ruleWithAnalytics,
   SYMBOL,
 } from '../../analytics';
 
@@ -39,8 +41,8 @@ function replaceTextUsingCaptureGroup(text: string): InputRuleHandler {
   };
 }
 
-function createReplacementRule(to: string, from: RegExp): InputRuleWithHandler {
-  return createInputRule(from, replaceTextUsingCaptureGroup(to));
+function createReplacementRule(to: string, from: RegExp): InputRuleWrapper {
+  return createRule(from, replaceTextUsingCaptureGroup(to));
 }
 
 /**
@@ -53,9 +55,9 @@ function createReplacementRules(
   replMap: { [replacement: string]: RegExp },
   replacementRuleWithAnalytics?: (
     replacement: string,
-  ) => (rule: InputRuleWithHandler) => InputRuleWithHandler,
-): Array<InputRule> {
-  return Object.keys(replMap).map(replacement => {
+  ) => (rule: InputRuleWrapper) => InputRuleWrapper,
+): Array<InputRuleWrapper> {
+  return Object.keys(replMap).map((replacement) => {
     const regex = replMap[replacement];
     const rule = createReplacementRule(replacement, regex);
 
@@ -70,10 +72,10 @@ function createReplacementRules(
 // We don't agressively upgrade single quotes to smart quotes because
 // they may clash with an emoji. Only do that when we have a matching
 // single quote, or a contraction.
-function createSingleQuotesRules(): Array<InputRuleWithHandler> {
+function createSingleQuotesRules(): Array<InputRuleWrapper> {
   return [
     // wrapped text
-    createInputRule(
+    createRule(
       /(\s+|^)'(\S+.*\S+)'$/,
       (state, match, start, end): Transaction => {
         const [, spacing, innerContent] = match;
@@ -90,7 +92,7 @@ function createSingleQuotesRules(): Array<InputRuleWithHandler> {
 /**
  * Get replacement rules related to product
  */
-function getProductRules(): Array<InputRule> {
+function getProductRules(): Array<InputRuleWrapper> {
   const productRuleWithAnalytics = (product: string) =>
     ruleWithAnalytics((_state, match) => ({
       action: ACTION.SUBSTITUTED,
@@ -196,12 +198,17 @@ function getPunctuationRules() {
   return [
     ...dashEllipsisRules,
     ...doubleQuoteRules,
-    ...singleQuoteRules.map(rule =>
+    ...singleQuoteRules.map((rule) =>
       punctuationRuleWithAnalytics(PUNC.QUOTE_SINGLE)(rule),
     ),
   ];
 }
 
-export default instrumentedInputRule('text-formatting:smart-input', {
-  rules: [...getProductRules(), ...getSymbolRules(), ...getPunctuationRules()],
-}) as Plugin;
+export default (featureFlags: FeatureFlags) =>
+  createPlugin(
+    'text-formatting:smart-input',
+    [...getProductRules(), ...getSymbolRules(), ...getPunctuationRules()],
+    {
+      useUnpredictableInputRule: featureFlags.useUnpredictableInputRule,
+    },
+  );

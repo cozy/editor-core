@@ -11,7 +11,8 @@ import {
   tr,
   ul,
   li,
-} from '@atlaskit/editor-test-helpers/schema-builder';
+  DocBuilder,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   createProsemirrorEditorFactory,
   LightEditorPlugin,
@@ -20,13 +21,13 @@ import {
 import { pluginKey as alignmentPluginKey } from '../../pm-plugins/main';
 import { changeAlignment } from '../../commands';
 import { insertBlockType } from '../../../block-type/commands';
-import { toggleBulletList } from '../../../lists/commands';
+import { toggleBulletList } from '../../../list/commands';
 
 import alignmentPlugin from '../../';
 import tablePlugin from '../../../table';
 
 import panelPlugin from '../../../panel';
-import listPlugin from '../../../lists';
+import listPlugin from '../../../list';
 import codeBlockPlugin from '../../../code-block';
 import blockTypePlugin from '../../../block-type';
 import { AlignmentPluginState } from '../../pm-plugins/types';
@@ -41,7 +42,7 @@ const alignmentPreset = new Preset<LightEditorPlugin>()
 
 describe('alignment', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const editor = (doc: any) =>
+  const editor = (doc: DocBuilder) =>
     createEditor<AlignmentPluginState, PluginKey>({
       doc,
       pluginKey: alignmentPluginKey,

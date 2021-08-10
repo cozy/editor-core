@@ -9,6 +9,7 @@ export { default as CollapsedEditor } from './ui/CollapsedEditor';
 export { default as ToolbarHelp } from './ui/ToolbarHelp';
 export { default as ToolbarFeedback } from './ui/ToolbarFeedback';
 export { default as ContextPanel } from './ui/ContextPanel';
+export type { FeatureFlags as EditorFeatureFlags } from './types/feature-flags';
 
 export { EmojiResource } from '@atlaskit/emoji/resource';
 export { default as mediaPlugin, insertMediaSingleNode } from './plugins/media';
@@ -63,15 +64,9 @@ export {
   stateKey as hyperlinkStateKey,
 } from './plugins/hyperlink/pm-plugins/main';
 export type { HyperlinkState } from './plugins/hyperlink/pm-plugins/main';
-export { pluginKey as listsStateKey } from './plugins/lists/pm-plugins/main';
-export type { ListsPluginState as ListsState } from './plugins/lists/pm-plugins/main';
-export {
-  indentList,
-  outdentList,
-  toggleOrderedList,
-  toggleBulletList,
-} from './plugins/lists/commands';
-export type { InputMethod as ListInputMethod } from './plugins/lists/commands';
+export { pluginKey as listStateKey } from './plugins/list/pm-plugins/main';
+export type { ListState } from './plugins/list/types';
+export type { InputMethod as ListInputMethod } from './plugins/list/commands';
 export {
   toggleSuperscript,
   toggleSuperscriptWithAnalytics,
@@ -105,6 +100,10 @@ export type { TaskDecisionInputMethod } from './plugins/tasks-and-decisions/type
 export { EventDispatcher } from './event-dispatcher';
 export { pluginKey as statusPluginKey } from './plugins/status/plugin';
 export type { StatusState, StatusType } from './plugins/status/plugin';
+export type { DatePluginState } from './plugins/date/pm-plugins/types';
+export { insertDate, openDatePicker } from './plugins/date/actions';
+export { dateToDateType } from './plugins/date/utils/formatParse';
+export { pluginKey as datePluginKey } from './plugins/date/pm-plugins/plugin-key';
 export {
   commitStatusPicker,
   setStatusPickerAt,
@@ -115,7 +114,7 @@ export { typeAheadPluginKey } from './plugins/type-ahead';
 export type { TypeAheadPluginState } from './plugins/type-ahead';
 export {
   pluginKey as quickInsertPluginKey,
-  processItems as processQuickInsertItems,
+  memoProcessItems as processQuickInsertItems,
 } from './plugins/quick-insert';
 export type { QuickInsertPluginState } from './plugins/quick-insert';
 export type { TypeAheadItem } from './plugins/type-ahead/types';
@@ -124,11 +123,11 @@ export { insertTypeAheadQuery } from './plugins/type-ahead/commands/insert-query
 export { dismissCommand } from './plugins/type-ahead/commands/dismiss';
 export {
   insertLink,
+  insertLinkWithAnalyticsMobileNative,
   insertLinkWithAnalytics,
   isTextAtPos,
   isLinkAtPos,
-  setLinkHref,
-  setLinkText,
+  updateLink,
 } from './plugins/hyperlink/commands';
 export type { LinkInputType as LinkInputMethod } from './plugins/hyperlink/types';
 export { historyPluginKey } from './plugins/history';
@@ -146,7 +145,14 @@ export {
 } from './plugins/mobile-scroll/commands';
 
 // Used in editor-test-helpers
-export { setTextSelection } from './utils';
+export {
+  setTextSelection,
+  dedupe,
+  getNodesCount,
+  measurements,
+  hasVisibleContent,
+} from './utils';
+export { getListCommands } from './utils/list-commands';
 export { ReactEditorView } from './create-editor';
 export { getDefaultPresetOptionsFromEditorProps } from './create-editor';
 export type {
@@ -154,6 +160,7 @@ export type {
   EditorPlugin,
   EditorProps,
   EditorInstance,
+  CommandDispatch,
 } from './types';
 export { default as EditorActions } from './actions';
 // Re-export from provider factory to not cause a breaking change
@@ -183,3 +190,22 @@ export type {
   SelectionDataState,
 } from './plugins/mobile-selection';
 export { insertExpand } from './plugins/expand/commands';
+
+export { default as WithPluginState } from './ui/WithPluginState';
+export { pluginKey as floatingToolbarPluginKey } from './plugins/floating-toolbar';
+export type { FloatingToolbarPluginState } from './plugins/floating-toolbar';
+export type {
+  FloatingToolbarConfig,
+  FloatingToolbarItem,
+  FloatingToolbarButton,
+  FloatingToolbarDropdown,
+  FloatingToolbarSelect,
+  FloatingToolbarColorPicker,
+  FloatingToolbarDatePicker,
+  FloatingToolbarInput,
+  FloatingToolbarEmojiPicker,
+} from './plugins/floating-toolbar/types';
+export type { DropdownOptionT } from './plugins/floating-toolbar/ui/types';
+export type { SelectOption } from './plugins/floating-toolbar/ui/Select';
+export type { PaletteColor } from './ui/ColorPalette/Palettes/type';
+export { DEFAULT_BORDER_COLOR } from './ui/ColorPalette/Palettes/common';

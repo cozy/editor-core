@@ -238,14 +238,18 @@ export function transformSliceForMedia(slice: Slice, schema: Schema) {
         expand,
       ])(selection)
     ) {
-      newSlice = mapSlice(newSlice, node =>
-        node.type.name === 'mediaSingle'
-          ? mediaSingle.createChecked({}, node.content, node.marks)
-          : node,
-      );
+      newSlice = mapSlice(newSlice, (node) => {
+        const attrs = hasParentNodeOfType([layoutSection, table])(selection)
+          ? { layout: node.attrs.layout }
+          : {};
+
+        return node.type.name === 'mediaSingle'
+          ? mediaSingle.createChecked(attrs, node.content, node.marks)
+          : node;
+      });
     }
 
-    newSlice = mapSlice(newSlice, node =>
+    newSlice = mapSlice(newSlice, (node) =>
       node.type.name === 'media' && node.attrs.type === 'external'
         ? media.createChecked(
             { ...node.attrs, __external: true },

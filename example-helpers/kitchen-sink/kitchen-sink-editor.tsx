@@ -1,6 +1,6 @@
 import React from 'react';
 import { PopupWrapper, PopUps } from './kitchen-sink-styles';
-import { EditorAppearance, EditorProps } from '../../src/types';
+import { EditorAppearance, EditorPlugin, EditorProps } from '../../src/types';
 import EditorActions from '../../src/actions';
 import { ValidatingKitchenSinkEditor } from './validating-kitchen-sink-editor';
 import { KitchenSinkToolbar } from './kitchen-sink-toolbar';
@@ -20,10 +20,12 @@ export interface KitchenSinkEditorProps {
   onDocumentChanged(adf: any): void;
   onDocumentValidated(): void;
   loadLocale(locale: string): void;
+  featureFlags: EditorProps['featureFlags'];
+  editorPlugins?: EditorPlugin[];
 }
 
 export const KitchenSinkEditor: React.StatelessComponent<KitchenSinkEditorProps> = React.memo(
-  props => {
+  (props) => {
     const { actions, locale, loadLocale } = props;
 
     const primaryToolbarComponents = React.useMemo(
@@ -50,6 +52,8 @@ export const KitchenSinkEditor: React.StatelessComponent<KitchenSinkEditorProps>
           onDocumentValidated={props.onDocumentValidated}
           extensionProviders={props.extensionProviders}
           primaryToolbarComponents={primaryToolbarComponents}
+          featureFlags={props.featureFlags}
+          editorPlugins={props.editorPlugins}
         />
       </PopupWrapper>
     );
