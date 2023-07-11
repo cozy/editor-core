@@ -14,7 +14,7 @@ import TaskItemWithProviders from './task-item-with-providers';
 const messages = defineMessages({
   placeholder: {
     id: 'fabric.editor.taskPlaceholder',
-    defaultMessage: "Type your action, use '@' to assign to someone.",
+    defaultMessage: "Type your action,",
     description:
       'Placeholder description for an empty action/task in the editor',
   },
