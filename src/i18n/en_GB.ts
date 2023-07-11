@@ -153,7 +153,7 @@ export default {
   'fabric.editor.cellOptions': 'Cell options',
   'fabric.editor.decisionPlaceholder': 'Add a decision…',
   'fabric.editor.taskPlaceholder':
-    "Type your action, use '@' to assign to someone.",
+    "Type your action",
   'fabric.editor.textColor': 'Text colour',
   'fabric.editor.underline': 'Underline',
   'fabric.editor.strike': 'Strikethrough',
