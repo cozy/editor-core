@@ -1,32 +1,36 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
-import {
-  p,
-  ul,
-  li,
-  doc,
-  DocBuilder,
-} from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { p, ul, li, doc } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
   undo as pmHistoryUndo,
   redo as pmHistoryRedo,
-} from 'prosemirror-history';
+} from '@atlaskit/editor-prosemirror/history';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import undoPlugin from '../../..';
-import panelPlugin from '../../../../panel';
-import analyticsPlugin, {
+import { panelPlugin } from '@atlaskit/editor-plugin-panel';
+import {
   ACTION,
   ACTION_SUBJECT,
   INPUT_METHOD,
   EVENT_TYPE,
-} from '../../../../analytics';
-import listPlugin from '../../../../list';
+} from '@atlaskit/editor-common/analytics';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+import { listPlugin } from '@atlaskit/editor-plugin-list';
 import { pluginKey as undoPluginKey } from '../../../pm-plugins/plugin-key';
 import { attachInputMeta } from '../../../attach-input-meta';
 import { InputSource } from '../../../enums';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { decorationsPlugin } from '@atlaskit/editor-plugin-decorations';
+import { historyPlugin } from '@atlaskit/editor-plugin-history';
 
 describe('change input method from undo/redo events', () => {
   let fireMock: jest.Mock;
@@ -36,9 +40,13 @@ describe('change input method from undo/redo events', () => {
     createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()
+        .add([featureFlagsPlugin, {}])
+        .add(decorationsPlugin)
+        .add([analyticsPlugin, { createAnalyticsEvent }])
+        .add(typeAheadPlugin)
         .add(listPlugin)
         .add(panelPlugin)
-        .add([analyticsPlugin, { createAnalyticsEvent }])
+        .add(historyPlugin)
         .add(undoPlugin),
       pluginKey: undoPluginKey,
     });

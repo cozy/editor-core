@@ -1,5 +1,3 @@
-import { nextMajorVersion } from '../version-wrapper';
-
 export interface DeprecationWarning {
   property: string;
   description?: string;
@@ -12,7 +10,9 @@ const deprecationWarnings = (
   props: any,
   deprecations: Array<DeprecationWarning>,
 ): void => {
-  const nextVersion = nextMajorVersion();
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
   for (const deprecation of deprecations) {
     const {
       property,
@@ -25,7 +25,7 @@ const deprecationWarnings = (
       if (condition(props)) {
         // eslint-disable-next-line no-console
         console.warn(
-          `${property} property for ${className} is deprecated. ${description} [Will be ${type} in editor-core@${nextVersion}]`,
+          `${property} property for ${className} is deprecated. ${description} [Will be ${type} in the next major editor-core version]`,
         );
       }
     }

@@ -1,25 +1,34 @@
 import React from 'react';
-import { EditorView, NodeView } from 'prosemirror-view';
-import { Node as PmNode } from 'prosemirror-model';
-import { ProviderFactory, ExtensionHandlers } from '@atlaskit/editor-common';
-import { EditorAppearance } from '../../../types/editor-appearance';
-import { ReactNodeView } from '../../../nodeviews';
+import type { EditorView, NodeView } from '@atlaskit/editor-prosemirror/view';
+import type { Node as PmNode } from '@atlaskit/editor-prosemirror/model';
+import type { ExtensionHandlers } from '@atlaskit/editor-common/extensions';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type {
+  PluginInjectionAPIWithDependency,
+  EditorAppearance,
+} from '@atlaskit/editor-common/types';
+import type {
+  ForwardRef,
+  getPosHandler,
+  ProsemirrorGetPosHandler,
+} from '@atlaskit/editor-common/react-node-view';
+import ReactNodeView from '@atlaskit/editor-common/react-node-view';
+
 import Extension from '../ui/Extension';
 import ExtensionNodeWrapper from '../ui/Extension/ExtensionNodeWrapper';
-import { PortalProviderAPI } from '../../../ui/PortalProvider';
-import { ForwardRef, getPosHandler } from '../../../nodeviews/';
-import { EventDispatcher } from '../../../event-dispatcher';
+import type { PortalProviderAPI } from '@atlaskit/editor-common/portal-provider';
+import type { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
+import type { WidthPlugin } from '@atlaskit/editor-plugin-width';
 
 interface ExtensionNodeViewOptions {
   appearance?: EditorAppearance;
 }
 
-export interface Props {
-  node: PmNode;
-  providerFactory: ProviderFactory;
-  view: EditorView;
-}
-
+// getInlineNodeViewProducer is a new api to use instead of ReactNodeView
+// when creating inline node views, however, it is difficult to test the impact
+// on selections when migrating inlineExtension to use the new api.
+// The ReactNodeView api will be visited in the second phase of the selections
+// project whilst investigating block nodes. We will revisit the Extension node view there too.
 export class ExtensionNode extends ReactNodeView {
   ignoreMutation(
     mutation: MutationRecord | { type: 'selection'; target: Element },
@@ -51,6 +60,9 @@ export class ExtensionNode extends ReactNodeView {
       extensionHandlers: ExtensionHandlers;
       // referentiality plugin won't utilise appearance just yet
       extensionNodeViewOptions?: ExtensionNodeViewOptions;
+      pluginInjectionApi:
+        | PluginInjectionAPIWithDependency<WidthPlugin>
+        | undefined;
     },
     forwardRef: ForwardRef,
   ) {
@@ -59,10 +71,18 @@ export class ExtensionNode extends ReactNodeView {
         <Extension
           editorView={this.view}
           node={this.node}
+          // The getPos arg is always a function when used with nodes
+          // the version of the types we use has a union with the type
+          // for marks.
+          // This has been fixed in later versions of the definitly typed
+          // types (and also in prosmirror-views inbuilt types).
+          // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/57384
+          getPos={this.getPos as ProsemirrorGetPosHandler}
           providerFactory={props.providerFactory}
           handleContentDOMRef={forwardRef}
           extensionHandlers={props.extensionHandlers}
           editorAppearance={props.extensionNodeViewOptions?.appearance}
+          pluginInjectionApi={props.pluginInjectionApi}
         />
       </ExtensionNodeWrapper>
     );
@@ -75,8 +95,10 @@ export default function ExtensionNodeView(
   providerFactory: ProviderFactory,
   extensionHandlers: ExtensionHandlers,
   extensionNodeViewOptions: ExtensionNodeViewOptions,
+  pluginInjectionApi: PluginInjectionAPIWithDependency<WidthPlugin> | undefined,
 ) {
   return (node: PmNode, view: EditorView, getPos: getPosHandler): NodeView => {
+    const hasIntlContext = true;
     return new ExtensionNode(
       node,
       view,
@@ -87,7 +109,12 @@ export default function ExtensionNodeView(
         providerFactory,
         extensionHandlers,
         extensionNodeViewOptions,
+        pluginInjectionApi,
       },
+      undefined,
+      undefined,
+      undefined,
+      hasIntlContext,
     ).init();
   };
 }

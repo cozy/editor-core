@@ -1,15 +1,24 @@
 import React from 'react';
-import { InjectedIntlProps } from 'react-intl';
-import { ReactWrapper } from 'enzyme';
-import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
+import type { WrappedComponentProps } from 'react-intl-next';
+import type { ReactWrapper } from 'enzyme';
+import { mountWithIntl } from '../../../../../__tests__/__helpers/enzyme';
 import Textfield from '@atlaskit/textfield';
-import FindReplace, { FindReplaceProps } from '../../../ui/FindReplace';
-import Find from '../../../ui/Find';
-import { Count } from '../../../ui/styles';
+import type { FindReplaceProps } from '../../../ui/FindReplace';
+import FindReplace from '../../../ui/FindReplace';
+import Find, { FIND_DEBOUNCE_MS } from '../../../ui/Find';
 import Replace from '../../../ui/Replace';
+import { replaceRaf } from 'raf-stub';
+import MockDate from 'mockdate';
+import { act } from 'react-dom/test-utils';
+
+jest.useFakeTimers();
+jest.unmock('lodash/debounce');
+
+replaceRaf();
+const raf = window.requestAnimationFrame as any;
 
 describe('FindReplace', () => {
-  let findReplace: ReactWrapper<FindReplaceProps & InjectedIntlProps>;
+  let findReplace: ReactWrapper<FindReplaceProps & WrappedComponentProps>;
   const onFindSpy = jest.fn();
   const onFindNextSpy = jest.fn();
   const onFindPrevSpy = jest.fn();
@@ -20,8 +29,8 @@ describe('FindReplace', () => {
   const onToggleMatchCaseSpy = jest.fn();
   const dispatchAnalyticsEventSpy = jest.fn();
 
-  const mountComponent = (props: Partial<FindReplaceProps> = {}) =>
-    mountWithIntl<FindReplaceProps & InjectedIntlProps, any>(
+  const mountComponent = (props: Partial<FindReplaceProps> = {}) => {
+    const wrapper = mountWithIntl(
       <FindReplace
         findText=""
         count={{ index: 0, total: 0 }}
@@ -41,6 +50,10 @@ describe('FindReplace', () => {
         {...props}
       />,
     );
+    return wrapper as unknown as ReactWrapper<
+      FindReplaceProps & WrappedComponentProps
+    >;
+  };
 
   const getInput = (component: typeof Find | typeof Replace) =>
     findReplace.find(component).find(Textfield).find('input');
@@ -86,21 +99,28 @@ describe('FindReplace', () => {
     getInput(component).simulate('keydown', data);
   };
 
+  const fastForward = (ms: number) => {
+    act(() => {
+      MockDate.set(ms);
+      jest.advanceTimersByTime(ms);
+    });
+  };
+
+  beforeEach(() => {
+    MockDate.set(0);
+  });
+
   afterEach(() => {
-    onFindSpy.mockClear();
-    onFindNextSpy.mockClear();
-    onFindPrevSpy.mockClear();
-    onFindBlurSpy.mockClear();
-    onCancelSpy.mockClear();
-    onReplaceSpy.mockClear();
-    onReplaceAllSpy.mockClear();
-    dispatchAnalyticsEventSpy.mockClear();
+    jest.clearAllMocks();
+    jest.clearAllTimers();
     if (findReplace) {
       findReplace.unmount();
     }
   });
 
   describe('Find', () => {
+    const textfieldCount = 'span[data-testid="textfield-count"]';
+
     it('should display search text', () => {
       findReplace = mountComponent({
         findText: 'quokka',
@@ -113,7 +133,7 @@ describe('FindReplace', () => {
         findText: 'quokka',
         count: { index: 2, total: 32 },
       });
-      expect(findReplace.find(Count).text()).toBe('3 of 32');
+      expect(findReplace.find(textfieldCount).text()).toBe('3 of 32');
     });
 
     it('should display "No results" if no results', () => {
@@ -121,7 +141,7 @@ describe('FindReplace', () => {
         findText: 'quokka',
         count: { index: 0, total: 0 },
       });
-      expect(findReplace.find(Count).text()).toBe('No results');
+      expect(findReplace.find(textfieldCount).text()).toBe('No results');
     });
 
     it('should not display num results if no search text', () => {
@@ -129,7 +149,15 @@ describe('FindReplace', () => {
         findText: '',
         count: { index: 0, total: 0 },
       });
-      expect(findReplace.find(Count).exists()).toBe(false);
+      expect(findReplace.find(textfieldCount).exists()).toBe(false);
+    });
+
+    it('should have aria-live region', () => {
+      findReplace = mountComponent({
+        findText: '',
+        count: { index: 0, total: 0 },
+      });
+      expect(findReplace.find('div[aria-live="polite"]').exists()).toBe(true);
     });
 
     it('should set focus to replace textfield when arrow down', () => {
@@ -141,6 +169,8 @@ describe('FindReplace', () => {
       jest.spyOn(input, 'focus');
 
       simulateKeydownEvent(Find, { key: 'ArrowDown' });
+      raf.step();
+
       expect(input.focus).toHaveBeenCalled();
     });
 
@@ -148,7 +178,17 @@ describe('FindReplace', () => {
       it('should call props.onFind', () => {
         findReplace = mountComponent();
         simulateChangeEvent(Find, { target: { value: 'quokka' } });
+        fastForward(FIND_DEBOUNCE_MS);
         expect(onFindSpy).toHaveBeenCalledWith('quokka');
+      });
+
+      it('debounces find to be called shortly after stopped typing, to not block typing', () => {
+        findReplace = mountComponent();
+        ['q', 'o', 'k', 'k', 'a'].forEach((value) => {
+          simulateChangeEvent(Find, { target: { value } });
+        });
+        fastForward(FIND_DEBOUNCE_MS);
+        expect(onFindSpy).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -188,7 +228,21 @@ describe('FindReplace', () => {
 
       it('should call props.onFindNext when hit enter inside find textfield', () => {
         simulateKeydownEvent(Find, { key: 'Enter' });
+        raf.step();
         expect(onFindNextSpy).toHaveBeenCalled();
+      });
+
+      it('limited to call props.onFindNext once per animation frame to avoid slow performance on big pages', () => {
+        simulateKeydownEvent(Find, { key: 'Enter' });
+        simulateKeydownEvent(Find, { key: 'Enter' });
+        raf.step();
+        expect(onFindNextSpy).toHaveBeenCalledTimes(1);
+        onFindNextSpy.mockClear();
+        simulateKeydownEvent(Find, { key: 'Enter' });
+        simulateKeydownEvent(Find, { key: 'Enter' });
+        simulateKeydownEvent(Find, { key: 'Enter' });
+        raf.step();
+        expect(onFindNextSpy).toHaveBeenCalledTimes(1);
       });
 
       it('is disabled when <= 1 results', () => {
@@ -218,7 +272,21 @@ describe('FindReplace', () => {
 
       it('should call props.onFindPrev when hit shift + enter inside find textfield', () => {
         simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        raf.step();
         expect(onFindPrevSpy).toHaveBeenCalled();
+      });
+
+      it('limited to call props.onFindPrev once per animation frame to avoid slow performance on big pages', () => {
+        simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        raf.step();
+        expect(onFindPrevSpy).toHaveBeenCalledTimes(1);
+        onFindPrevSpy.mockClear();
+        simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        simulateKeydownEvent(Find, { key: 'Enter', shiftKey: true });
+        raf.step();
+        expect(onFindPrevSpy).toHaveBeenCalledTimes(1);
       });
 
       it('is disabled when <= 1 results', () => {
@@ -258,8 +326,20 @@ describe('FindReplace', () => {
           expect(onFindSpy).not.toHaveBeenCalled();
         });
 
+        it('allows the input value to change while composing', () => {
+          const currentText = (
+            findReplace
+              .find(Find)
+              .find(Textfield)
+              .find('input')
+              .getDOMNode() as HTMLInputElement
+          ).value;
+          expect(currentText).toBe('かようび');
+        });
+
         it('calls props.onFind on composition end', () => {
           endComposition();
+          fastForward(FIND_DEBOUNCE_MS);
           expect(onFindSpy).toHaveBeenCalledWith('かようび');
         });
 
@@ -282,6 +362,7 @@ describe('FindReplace', () => {
             ],
           );
           endComposition();
+          fastForward(FIND_DEBOUNCE_MS);
           expect(onFindSpy).toHaveBeenCalledWith('かようびげつようび');
         });
       });

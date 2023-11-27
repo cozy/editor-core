@@ -1,15 +1,18 @@
 import { uuid } from '@atlaskit/adf-schema';
-import {
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   taskItem,
   taskList,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { testKeymap } from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 
@@ -267,6 +270,39 @@ describe('tasks and decisions - keymaps', () => {
               taskList(listProps)(
                 taskItem(itemProps)('Nested second'),
                 taskList(listProps)(taskItem(itemProps)('Nested third')),
+              ),
+            ),
+          ),
+          ['Shift-Tab'],
+        );
+      });
+
+      it('should only lift task items that are visually selected', () => {
+        testKeymap(
+          editorFactory,
+          doc(
+            taskList(listProps)(
+              taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              taskList(listProps)(
+                taskItem(itemProps)("Ya'll wanna live in the dream{<}"),
+                taskList(listProps)(
+                  taskItem(itemProps)(
+                    "Ay-ya, ya'll never been with the team{>}",
+                  ),
+                ),
+                taskItem(itemProps)('Ay-ya, ya-ya-ya, ya-ya-ya'),
+                taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              ),
+            ),
+          ),
+          doc(
+            taskList(listProps)(
+              taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              taskList(listProps)(
+                taskItem(itemProps)("Ya'll wanna live in the dream{<}"),
+                taskItem(itemProps)("Ay-ya, ya'll never been with the team{>}"),
+                taskItem(itemProps)('Ay-ya, ya-ya-ya, ya-ya-ya'),
+                taskItem(itemProps)("Say ya'll wanna roll in the scene"),
               ),
             ),
           ),

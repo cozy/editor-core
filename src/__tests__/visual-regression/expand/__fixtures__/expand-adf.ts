@@ -13,8 +13,7 @@ export const expandADF = (breakoutMode = 'default') => ({
           content: [
             {
               type: 'text',
-              text:
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mi nisl, venenatis eget auctor vitae, venenatis quis lorem. Suspendisse maximus tortor vel dui tincidunt cursus. ',
+              text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mi nisl, venenatis eget auctor vitae, venenatis quis lorem. Suspendisse maximus tortor vel dui tincidunt cursus. ',
             },
             {
               type: 'mention',
@@ -621,8 +620,7 @@ export const wrappingMediaADF = {
                 type: 'external',
                 width: 320,
                 height: 320,
-                url:
-                  'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
+                url: 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
               },
             },
           ],
@@ -639,8 +637,7 @@ export const wrappingMediaADF = {
                 type: 'external',
                 width: 320,
                 height: 320,
-                url:
-                  'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
+                url: 'data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==',
               },
             },
           ],
@@ -732,43 +729,6 @@ export const mediaInNestedExpandADF = {
               ],
             },
           ],
-        },
-      ],
-    },
-  ],
-};
-
-export const extensionInsideExpandADF = {
-  version: 1,
-  type: 'doc',
-  content: [
-    {
-      type: 'expand',
-      attrs: {
-        title: '',
-      },
-      content: [
-        {
-          type: 'extension',
-          attrs: {
-            extensionType: 'com.atlassian.confluence.macro.core',
-            extensionKey: 'block-eh',
-            parameters: {
-              macroParams: {},
-              macroMetadata: {
-                placeholder: [
-                  {
-                    data: {
-                      url: '',
-                    },
-                    type: 'icon',
-                  },
-                ],
-              },
-            },
-            text: 'Block extension demo',
-            layout: 'default',
-          },
         },
       ],
     },

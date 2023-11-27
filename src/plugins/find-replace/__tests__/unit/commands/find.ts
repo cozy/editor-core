@@ -1,12 +1,9 @@
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import createStub from 'raf-stub';
-import {
-  doc,
-  p,
-  em,
-  DocBuilder,
-} from '@atlaskit/editor-test-helpers/doc-builder';
-import {
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p, em } from '@atlaskit/editor-test-helpers/doc-builder';
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
@@ -19,13 +16,15 @@ import {
   getContainerElement,
 } from '../_utils';
 import { getPluginState } from '../../../plugin';
-import { flushPromises } from '../../../../../__tests__/__helpers/utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 const containerElement = getContainerElement();
 const createAnalyticsEvent: CreateUIAnalyticsEvent = jest.fn(
   () => ({ fire: () => {} } as UIAnalyticsEvent),
 );
 let editorView: EditorView;
+let editorAPI: any;
 let refs: { [name: string]: number };
 let rafStub: {
   add: (cb: Function) => number;
@@ -36,7 +35,7 @@ let rafSpy: jest.SpyInstance;
 let dispatchSpy: jest.SpyInstance;
 
 const initEditor = (doc: DocBuilder) => {
-  ({ editorView, refs } = editor(doc, createAnalyticsEvent));
+  ({ editorView, refs, editorAPI } = editor(doc, createAnalyticsEvent));
   dispatchSpy = jest.spyOn(editorView, 'dispatch');
 };
 
@@ -346,7 +345,7 @@ describe('find/replace commands: find', () => {
 describe('find/replace commands: findWithAnalytics', () => {
   it('should fire analytics event', () => {
     initEditor(doc(p('{<>}word')));
-    findWithAnalytics({
+    findWithAnalytics(editorAPI?.analytics?.actions)({
       editorView,
       containerElement,
       keyword: 'word',

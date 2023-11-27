@@ -1,23 +1,39 @@
-import { Plugin } from 'prosemirror-state';
-import { ProviderFactory } from '@atlaskit/editor-common';
-import { Dispatch } from '../../event-dispatcher';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type { Dispatch } from '../../event-dispatcher';
 import { initialize } from './events/initialize';
-import { PrivateCollabEditOptions, ProviderCallback } from './types';
-import { CollabEditProvider } from './provider';
+import type { PrivateCollabEditOptions, ProviderCallback } from './types';
 import { PluginState } from './plugin-state';
 import { pluginKey } from './plugin-key';
 import { addSynchronyErrorAnalytics } from './analytics';
+import {
+  fireAnalyticsEvent,
+  ACTION,
+  ACTION_SUBJECT,
+  EVENT_TYPE,
+} from '@atlaskit/editor-common/analytics';
+import type {
+  FeatureFlags,
+  ExtractInjectionAPI,
+} from '@atlaskit/editor-common/types';
+import type {
+  CollabEditProvider,
+  SyncUpErrorFunction,
+} from '@atlaskit/editor-common/collab';
+import type collabEditPlugin from './index';
 
 export { PluginState, pluginKey };
-export type { CollabEditProvider };
 
 export const createPlugin = (
   dispatch: Dispatch,
   providerFactory: ProviderFactory,
+  providerResolver: (value: CollabEditProvider) => void,
   collabProviderCallback: ProviderCallback,
   options: PrivateCollabEditOptions,
+  featureFlags: FeatureFlags,
+  pluginInjectionApi: ExtractInjectionAPI<typeof collabEditPlugin> | undefined,
 ) => {
-  return new Plugin({
+  return new SafePlugin({
     key: pluginKey,
     state: {
       init(config) {
@@ -35,8 +51,8 @@ export const createPlugin = (
       },
     },
     props: {
-      decorations(this: Plugin, state) {
-        return this.getState(state).decorations;
+      decorations(state) {
+        return pluginKey.getState(state)?.decorations;
       },
     },
     filterTransaction(tr, state) {
@@ -49,7 +65,7 @@ export const createPlugin = (
         return true;
       }
 
-      if (!pluginState.isReady && tr.docChanged) {
+      if (!pluginState?.isReady && tr.docChanged) {
         return false;
       }
 
@@ -59,12 +75,44 @@ export const createPlugin = (
       const addErrorAnalytics = addSynchronyErrorAnalytics(
         view.state,
         view.state.tr,
+        featureFlags,
+        pluginInjectionApi?.analytics?.actions,
       );
-
+      const onSyncUpError: SyncUpErrorFunction = (attributes) => {
+        const fireAnalyticsCallback = fireAnalyticsEvent(
+          pluginInjectionApi?.analytics?.sharedState.currentState()
+            ?.createAnalyticsEvent ?? undefined,
+        );
+        fireAnalyticsCallback({
+          payload: {
+            action: ACTION.NEW_COLLAB_SYNC_UP_ERROR_NO_STEPS,
+            actionSubject: ACTION_SUBJECT.EDITOR,
+            eventType: EVENT_TYPE.OPERATIONAL,
+            attributes,
+          },
+        });
+      };
+      options.onSyncUpError = onSyncUpError;
       const cleanup = collabProviderCallback(
-        initialize({ view, options, providerFactory }),
+        initialize({
+          view,
+          options,
+          providerFactory,
+          featureFlags,
+          editorAnalyticsApi: pluginInjectionApi?.analytics?.actions,
+        }),
         addErrorAnalytics,
       );
+
+      providerFactory &&
+        providerFactory.subscribe(
+          'collabEditProvider',
+          (_name: string, providerPromise?: Promise<CollabEditProvider>) => {
+            if (providerPromise) {
+              providerPromise.then((provider) => providerResolver(provider));
+            }
+          },
+        );
 
       return {
         destroy() {

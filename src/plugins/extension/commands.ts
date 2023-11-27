@@ -1,17 +1,22 @@
-import { removeSelectedNode, removeParentNodeOfType } from 'prosemirror-utils';
-import { ExtensionLayout } from '@atlaskit/adf-schema';
+import {
+  removeSelectedNode,
+  removeParentNodeOfType,
+} from '@atlaskit/editor-prosemirror/utils';
+import type { ExtensionLayout } from '@atlaskit/adf-schema';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
 
-import { applyChange } from '../context-panel/transforms';
 import { createCommand } from './plugin-factory';
-import { ExtensionAction, ExtensionState } from './types';
+import type { ExtensionAction, ExtensionState } from './types';
 import { getSelectedExtension } from './utils';
+import { removeConnectedNodes } from '@atlaskit/editor-common/utils';
 // AFP-2532 TODO: Fix automatic suppressions below
 // eslint-disable-next-line @atlassian/tangerine/import/entry-points
-import {
+import type {
   Parameters,
   TransformBefore,
   TransformAfter,
 } from '@atlaskit/editor-common/src/extensions';
+import type { ApplyChangeHandler } from '@atlaskit/editor-plugin-context-panel';
 
 export function updateState(state: Partial<ExtensionState>) {
   return createCommand({
@@ -21,10 +26,11 @@ export function updateState(state: Partial<ExtensionState>) {
 }
 
 export function setEditingContextToContextPanel<
-  T extends Parameters = Parameters
+  T extends Parameters = Parameters,
 >(
   processParametersBefore: TransformBefore<T>,
   processParametersAfter: TransformAfter<T>,
+  applyChangeToContextPanel: ApplyChangeHandler | undefined,
 ) {
   return createCommand<ExtensionAction<T>>(
     {
@@ -35,48 +41,51 @@ export function setEditingContextToContextPanel<
         processParametersAfter,
       },
     },
-    applyChange,
+    applyChangeToContextPanel,
   );
 }
 
-export const clearEditingContext = createCommand(
-  {
-    type: 'UPDATE_STATE',
-    data: {
-      showContextPanel: false,
-      processParametersBefore: undefined,
-      processParametersAfter: undefined,
-    },
-  },
-  applyChange,
-);
-
-export const forceAutoSave = (value: () => void) =>
+export const clearEditingContext = (
+  applyChangeToContextPanel: ApplyChangeHandler | undefined,
+) =>
   createCommand(
     {
       type: 'UPDATE_STATE',
-      data: { autoSaveResolve: value },
+      data: {
+        showContextPanel: false,
+        processParametersBefore: undefined,
+        processParametersAfter: undefined,
+      },
     },
-    applyChange,
+    applyChangeToContextPanel,
   );
 
-export const showContextPanel = createCommand(
-  {
-    type: 'UPDATE_STATE',
-    data: { showContextPanel: true },
-  },
-  applyChange,
-);
+export const forceAutoSave =
+  (applyChangeToContextPanel: ApplyChangeHandler | undefined) =>
+  (resolve: () => void, reject?: (reason?: any) => void) =>
+    createCommand(
+      {
+        type: 'UPDATE_STATE',
+        data: { autoSaveResolve: resolve, autoSaveReject: reject },
+      },
+      applyChangeToContextPanel,
+    );
 
 export const updateExtensionLayout = (layout: ExtensionLayout) =>
   createCommand({ type: 'UPDATE_STATE', data: { layout } }, (tr, state) => {
     const selectedExtension = getSelectedExtension(state, true);
 
     if (selectedExtension) {
-      return tr.setNodeMarkup(selectedExtension.pos, undefined, {
-        ...selectedExtension.node.attrs,
-        layout,
-      });
+      const trWithNewNodeMarkup = tr.setNodeMarkup(
+        selectedExtension.pos,
+        undefined,
+        {
+          ...selectedExtension.node.attrs,
+          layout,
+        },
+      );
+      trWithNewNodeMarkup.setMeta('scrollIntoView', false);
+      return trWithNewNodeMarkup;
     }
 
     return tr;
@@ -94,5 +103,16 @@ export const removeExtension = () =>
       } else {
         return removeParentNodeOfType(state.schema.nodes.bodiedExtension)(tr);
       }
+    },
+  );
+
+export const removeDescendantNodes = (sourceNode?: PMNode) =>
+  createCommand(
+    {
+      type: 'UPDATE_STATE',
+      data: { element: undefined },
+    },
+    (tr, state) => {
+      return sourceNode ? removeConnectedNodes(state, sourceNode) : tr;
     },
   );

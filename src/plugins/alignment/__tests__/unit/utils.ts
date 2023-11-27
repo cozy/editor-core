@@ -1,15 +1,18 @@
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   alignment as alignmentMark,
   doc,
   p,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
-import { removeBlockMarks } from '../../../../utils/mark';
+import { removeBlockMarks } from '@atlaskit/editor-common/utils';
 import alignmentPlugin from '../../';
 
 const alignmentPreset = new Preset<LightEditorPlugin>().add(alignmentPlugin);

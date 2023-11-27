@@ -1,13 +1,15 @@
+import type { AnalyticsEventPayload } from '@atlaskit/editor-common/analytics';
 import {
   fireAnalyticsEvent,
-  AnalyticsEventPayload,
   ACTION,
   ACTION_SUBJECT,
   INPUT_METHOD,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
-} from '../../../../plugins/analytics';
-import { editorAnalyticsChannel } from '../../../../plugins/analytics/consts';
+} from '@atlaskit/editor-common/analytics';
+import { FabricChannel } from '@atlaskit/analytics-listeners';
+
+const editorAnalyticsChannel = FabricChannel.editor;
 
 describe('analytics', () => {
   const payload: AnalyticsEventPayload = {

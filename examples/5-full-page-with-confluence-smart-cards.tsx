@@ -3,7 +3,7 @@ import React from 'react';
 import { ConfluenceCardClient } from '@atlaskit/editor-test-helpers/confluence-card-client';
 import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
 import SectionMessage from '@atlaskit/section-message';
-import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
+import { SmartCardProvider } from '@atlaskit/link-provider';
 import Toggle from '@atlaskit/toggle';
 
 import { default as FullPageExample } from './5-full-page';
@@ -51,14 +51,16 @@ class FullPageWithFF extends React.Component<
         </div>
         {!this.state.reloadEditor && (
           <FullPageExample
-            defaultValue={this.props.doc}
-            smartLinks={{
-              // This is how we pass in the provider for smart cards
-              provider: Promise.resolve(cardProvider),
-              resolveBeforeMacros: this.state.resolveBeforeMacros,
-              allowBlockCards: true,
-              allowEmbeds: true,
-              allowResizing: true,
+            editorProps={{
+              defaultValue: this.props.doc,
+              smartLinks: {
+                // This is how we pass in the provider for smart cards
+                provider: Promise.resolve(cardProvider),
+                resolveBeforeMacros: this.state.resolveBeforeMacros,
+                allowBlockCards: true,
+                allowEmbeds: true,
+                allowResizing: true,
+              },
             }}
           />
         )}
@@ -81,7 +83,7 @@ export function Example(doc?: string | Object) {
         <SectionMessage title="Smart Cards in Confluence Editor">
           <p>
             Make sure you're logged into{' '}
-            <a href="https://api-private.stg.atlassian.com/me" target="_blank">
+            <a href="https://pug.jira-dev.com" target="_blank">
               Atlassian Cloud on Staging
             </a>
             . Try pasting URLs to Hello, Google Drive, Asana, Dropbox, Trello
@@ -89,7 +91,7 @@ export function Example(doc?: string | Object) {
             card. Links pasted inside other elements (like lists, tables,
             panels) will be converted to a smaller, inline version of card. A
             gallery of available types of cards{' '}
-            <a href="/packages/media/smart-card/example/gallery">
+            <a href="/packages/linking-platform/smart-card/example/gallery">
               can be found here
             </a>
           </p>
@@ -172,8 +174,7 @@ const demoTable = {
                         {
                           type: 'inlineCard',
                           attrs: {
-                            url:
-                              'https://app.box.com/s/2emx282bjxpzvwa5bcz428u6imbgmasg',
+                            url: 'https://app.box.com/s/2emx282bjxpzvwa5bcz428u6imbgmasg',
                           },
                         },
                       ],
@@ -189,8 +190,7 @@ const demoTable = {
                         {
                           type: 'inlineCard',
                           attrs: {
-                            url:
-                              'https://app.box.com/s/2emx282bjxpzvwa5bcz428u6imbgmasg',
+                            url: 'https://app.box.com/s/2emx282bjxpzvwa5bcz428u6imbgmasg',
                           },
                         },
                       ],
@@ -327,8 +327,7 @@ const exampleDocument = {
     {
       type: 'blockCard',
       attrs: {
-        url:
-          'https://pug.jira-dev.com/wiki/spaces/~kihlberg/pages/4210950327/Klaus+on+Leave+28th+of+June+to+28th+of+July',
+        url: 'https://pug.jira-dev.com/wiki/spaces/~kihlberg/pages/4210950327/Klaus+on+Leave+28th+of+June+to+28th+of+July',
       },
     },
     {
@@ -368,8 +367,7 @@ const exampleDocument = {
     {
       type: 'blockCard',
       attrs: {
-        url:
-          'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
+        url: 'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
       },
     },
     {
@@ -402,8 +400,7 @@ const exampleDocument = {
             {
               type: 'inlineCard',
               attrs: {
-                url:
-                  'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
+                url: 'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
               },
             },
           ],
@@ -421,8 +418,7 @@ const exampleDocument = {
         {
           type: 'inlineCard',
           attrs: {
-            url:
-              'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
+            url: 'https://docs.google.com/spreadsheets/d/168cPaeXw_2zbo6md4pGUdEmXzRsXRQmNP0712ID2TKA/edit?usp=sharing',
           },
         },
         {
@@ -438,8 +434,7 @@ const exampleDocument = {
       content: [
         {
           type: 'text',
-          text:
-            'Here are some example URLs to get you started. You can copy and paste them back into the Editor - they will get converted into cards',
+          text: 'Here are some example URLs to get you started. You can copy and paste them back into the Editor - they will get converted into cards',
           marks: [
             {
               type: 'strong',
@@ -453,8 +448,7 @@ const exampleDocument = {
       content: [
         {
           type: 'text',
-          text:
-            'https://product-fabric.atlassian.net/wiki/spaces/FIL/blog/2018/10/04/782762723/Media+premium+storage',
+          text: 'https://product-fabric.atlassian.net/wiki/spaces/FIL/blog/2018/10/04/782762723/Media+premium+storage',
         },
       ],
     },
@@ -463,8 +457,7 @@ const exampleDocument = {
       content: [
         {
           type: 'text',
-          text:
-            'https://hello.atlassian.net/wiki/spaces/~achamas/blog/2018/08/22/273578928/How+robots+can+write+docs+better+than+you+-+FEF+Talk',
+          text: 'https://hello.atlassian.net/wiki/spaces/~achamas/blog/2018/08/22/273578928/How+robots+can+write+docs+better+than+you+-+FEF+Talk',
         },
       ],
     },
@@ -473,8 +466,7 @@ const exampleDocument = {
       content: [
         {
           type: 'text',
-          text:
-            'https://docs.google.com/document/d/1nXGwmxJuvQ8CdVQsGnRLOJOo7kJPqesmiBgvcaXD4Aw/edit',
+          text: 'https://docs.google.com/document/d/1nXGwmxJuvQ8CdVQsGnRLOJOo7kJPqesmiBgvcaXD4Aw/edit',
         },
       ],
     },
@@ -492,8 +484,7 @@ const exampleDocument = {
       content: [
         {
           type: 'text',
-          text:
-            'https://www.dropbox.com/s/2mh79iuglsnmbwf/Get%20Started%20with%20Dropbox.pdf?dl=0',
+          text: 'https://www.dropbox.com/s/2mh79iuglsnmbwf/Get%20Started%20with%20Dropbox.pdf?dl=0',
         },
       ],
     },

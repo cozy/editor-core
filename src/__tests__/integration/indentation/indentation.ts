@@ -1,7 +1,12 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import Page from '@atlaskit/webdriver-runner/wd-wrapper';
-import { fullpage, getDocFromElement } from '../_helpers';
-import { selectors } from '../../__helpers/page-objects/_editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  fullpage,
+  getDocFromElement,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
 
 // Modifiers like Ctrl, Shift, Alt and Meta will stay pressed so you need to trigger them again to release them.
 
@@ -19,7 +24,7 @@ const createRepeatedArray = <T>(seq: T[], timesRepeated: number): T[] => {
 
 BrowserTestCase(
   'indentation.ts: Should indent when tab is pressed',
-  { skip: ['edge', 'safari', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: any, testName: string) => {
     const page = new Page(client);
     await page.goto(fullpage.path);
@@ -36,7 +41,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'indentation.ts: Should indent to max indentation and no more',
-  { skip: ['edge', 'safari', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: any, testName: string) => {
     const page = new Page(client);
     await page.goto(fullpage.path);
@@ -53,7 +58,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'indentation.ts: Should not indent backwards when at 0 indentation',
-  { skip: ['edge', 'safari', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: any, testName: string) => {
     const page = new Page(client);
     await page.goto(fullpage.path);
@@ -70,7 +75,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'indentation.ts: Should indent back to 0 when at max indentation',
-  { skip: ['edge', 'safari', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: any, testName: string) => {
     const page = new Page(client);
     await page.goto(fullpage.path);

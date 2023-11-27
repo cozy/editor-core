@@ -1,32 +1,95 @@
 import React from 'react';
 
-import { Node as PMNode } from 'prosemirror-model';
-import { Decoration, NodeView } from 'prosemirror-view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
+import type {
+  Decoration,
+  EditorView,
+  NodeView,
+} from '@atlaskit/editor-prosemirror/view';
 
-import {
+import type {
   AnalyticsEventPayload,
-  AnalyticsListener,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { AnalyticsListener } from '@atlaskit/analytics-next';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import { SetAttrsStep } from '@atlaskit/adf-schema/steps';
 
-import { EventDispatcher } from '../../../event-dispatcher';
-import {
-  ForwardRef,
-  getPosHandler,
-  getPosHandlerNode,
-  ReactNodeView,
-} from '../../../nodeviews';
-import { PortalProviderAPI } from '../../../ui/PortalProvider';
-import WithPluginState from '../../../ui/WithPluginState';
-import { stateKey as taskPluginKey } from '../pm-plugins/plugin-key';
+import type { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
+
+import ReactNodeView from '@atlaskit/editor-common/react-node-view';
+
+import type { PortalProviderAPI } from '@atlaskit/editor-common/portal-provider';
+import type { ExtractInjectionAPI } from '@atlaskit/editor-common/types';
+import { useSharedPluginState } from '@atlaskit/editor-common/hooks';
+
+import { useShowPlaceholder } from './hooks/use-show-placeholder';
 import TaskItem from '../ui/Task';
+import type { TaskAndDecisionsPlugin } from '../types';
 
+type ForwardRef = (node: HTMLElement | null) => void;
+type getPosHandler = getPosHandlerNode | boolean;
+type getPosHandlerNode = () => number | undefined;
 export interface Props {
   providerFactory: ProviderFactory;
 }
 
+type TaskItemWrapperProps = {
+  localId: string;
+  forwardRef: ForwardRef;
+  isContentNodeEmpty: boolean;
+  providerFactory: ProviderFactory;
+  isDone: boolean;
+  api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined;
+  getPos: () => number | undefined;
+  onChange: (taskId: string, isChecked: boolean) => false | undefined;
+  editorView: EditorView;
+};
+const TaskItemWrapper = ({
+  localId,
+  forwardRef,
+  isDone,
+  onChange,
+  providerFactory,
+  isContentNodeEmpty,
+  api,
+  getPos,
+  editorView,
+}: TaskItemWrapperProps) => {
+  const { taskDecisionState } = useSharedPluginState(api, ['taskDecision']);
+  const isFocused = Boolean(
+    taskDecisionState?.focusedTaskItemLocalId === localId,
+  );
+
+  const showPlaceholder = useShowPlaceholder({
+    editorView,
+    isContentNodeEmpty,
+    getPos,
+    api,
+  });
+
+  return (
+    <TaskItem
+      taskId={localId}
+      contentRef={forwardRef}
+      isDone={isDone}
+      onChange={onChange}
+      isFocused={isFocused}
+      showPlaceholder={showPlaceholder}
+      providers={providerFactory}
+    />
+  );
+};
+
 class Task extends ReactNodeView<Props> {
+  private api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined;
+
+  initWithAPI(api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined) {
+    this.api = api;
+    this.init();
+    return this;
+  }
+
   private isContentEmpty(node: PMNode) {
     return node.content.childCount === 0;
   }
@@ -35,10 +98,19 @@ class Task extends ReactNodeView<Props> {
     const { tr } = this.view.state;
     const nodePos = (this.getPos as getPosHandlerNode)();
 
-    tr.setNodeMarkup(nodePos, undefined, {
-      state: isChecked ? 'DONE' : 'TODO',
-      localId: taskId,
-    });
+    if (typeof nodePos !== 'number') {
+      return false;
+    }
+
+    // SetAttrsStep should be used to prevent task updates from being dropped when mapping task ticks
+    // from a previous version of the document, such as a published page.
+    tr.step(
+      new SetAttrsStep(nodePos, {
+        state: isChecked ? 'DONE' : 'TODO',
+        localId: taskId,
+      }),
+    );
+    tr.setMeta('scrollIntoView', false);
 
     this.view.dispatch(tr);
   };
@@ -54,9 +126,12 @@ class Task extends ReactNodeView<Props> {
    */
   private addListAnalyticsData = (event: UIAnalyticsEvent) => {
     try {
-      const resolvedPos = this.view.state.doc.resolve(
-        (this.getPos as getPosHandlerNode)(),
-      );
+      const nodePos = (this.getPos as getPosHandlerNode)();
+      if (typeof nodePos !== 'number') {
+        return false;
+      }
+
+      const resolvedPos = this.view.state.doc.resolve(nodePos);
       const position = resolvedPos.index();
       const listSize = resolvedPos.parent.childCount;
       const listLocalId = resolvedPos.parent.attrs.localId;
@@ -100,27 +175,24 @@ class Task extends ReactNodeView<Props> {
 
   render(props: Props, forwardRef: ForwardRef) {
     const { localId, state } = this.node.attrs;
+    const isContentNodeEmpty = this.isContentEmpty(this.node);
     return (
       <AnalyticsListener
         channel="fabric-elements"
         onEvent={this.addListAnalyticsData}
       >
-        <WithPluginState
-          plugins={{
-            taskDecisionPlugin: taskPluginKey,
-          }}
-          render={() => {
-            return (
-              <TaskItem
-                taskId={localId}
-                contentRef={forwardRef}
-                isDone={state === 'DONE'}
-                onChange={this.handleOnChange}
-                showPlaceholder={this.isContentEmpty(this.node)}
-                providers={props.providerFactory}
-              />
-            );
-          }}
+        <TaskItemWrapper
+          localId={localId}
+          forwardRef={forwardRef}
+          isDone={state === 'DONE'}
+          onChange={this.handleOnChange}
+          isContentNodeEmpty={isContentNodeEmpty}
+          providerFactory={props.providerFactory}
+          // The getPosHandler type is wrong, there is no `boolean` in the real implementation
+          // @ts-expect-error 2322: Type 'getPosHandler' is not assignable to type '() => number | undefined'.
+          getPos={this.getPos}
+          editorView={this.view}
+          api={this.api}
         />
       </AnalyticsListener>
     );
@@ -135,10 +207,11 @@ class Task extends ReactNodeView<Props> {
     return this.isContentEmpty(this.node) && !!nextNode.content.childCount;
   }
 
-  update(node: PMNode, decorations: Decoration[]) {
+  update(node: PMNode, decorations: readonly Decoration[]) {
     return super.update(
       node,
       decorations,
+      undefined,
       (currentNode: PMNode, newNode: PMNode) =>
         // Toggle the placeholder based on whether user input exists
         !this.isContentEmpty(newNode) &&
@@ -151,10 +224,23 @@ export function taskItemNodeViewFactory(
   portalProviderAPI: PortalProviderAPI,
   eventDispatcher: EventDispatcher,
   providerFactory: ProviderFactory,
+  api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined,
 ) {
-  return (node: any, view: any, getPos: getPosHandler): NodeView => {
-    return new Task(node, view, getPos, portalProviderAPI, eventDispatcher, {
-      providerFactory,
-    }).init();
+  return (node: PMNode, view: EditorView, getPos: getPosHandler): NodeView => {
+    const hasIntlContext = true;
+    return new Task(
+      node,
+      view,
+      getPos,
+      portalProviderAPI,
+      eventDispatcher,
+      {
+        providerFactory,
+      },
+      undefined,
+      undefined,
+      undefined,
+      hasIntlContext,
+    ).initWithAPI(api);
   };
 }

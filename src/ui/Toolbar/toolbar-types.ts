@@ -1,10 +1,10 @@
-import { EditorView } from 'prosemirror-view';
-import { ProviderFactory } from '@atlaskit/editor-common';
-import { EditorAppearance } from '../../types/editor-appearance';
-import { ToolbarSize, ToolbarUIComponentFactory } from './types';
-import { EventDispatcher } from '../../event-dispatcher';
-import EditorActions from '../../actions';
-import { DispatchAnalyticsEvent } from '../../plugins/analytics';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type { EditorAppearance } from '../../types/editor-appearance';
+import type { ToolbarSize, ToolbarUIComponentFactory } from './types';
+import type { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
+import type EditorActions from '../../actions';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
 
 export interface ToolbarBreakPoint {
   width: number;
@@ -26,6 +26,7 @@ export interface ToolbarProps {
   toolbarSize: ToolbarSize;
   containerElement: HTMLElement | null;
   hasMinWidth?: boolean;
+  twoLineEditorToolbar?: boolean;
 }
 
 export type ToolbarWithSizeDetectorProps = Omit<ToolbarProps, 'toolbarSize'>;

@@ -1,21 +1,26 @@
-import { RESOLVE_METHOD } from './../../analytics/types/inline-comment-events';
-import { EditorState, Plugin } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import { RESOLVE_METHOD } from '@atlaskit/editor-common/analytics';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type { EditorState } from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { Decoration, DecorationSet } from '@atlaskit/editor-prosemirror/view';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
-import { AnnotationNodeView } from '../nodeviews';
+import { AnnotationNodeView, getAnnotationViewClassname } from '../nodeviews';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
 import {
   updateInlineCommentResolvedState,
   updateMouseState,
   clearDirtyMark,
   setInlineCommentsVisibility,
+  setSelectedAnnotation,
+  closeComponent,
 } from '../commands';
-import { InlineCommentAnnotationProvider } from '../types';
-import {
+import type { InlineCommentAnnotationProvider } from '../types';
+import type {
   InlineCommentPluginState,
   InlineCommentMap,
   InlineCommentPluginOptions,
 } from './types';
-import { CommandDispatch } from '../../../types';
+import type { CommandDispatch } from '../../../types';
 import {
   getAllAnnotations,
   inlineCommentPluginKey,
@@ -43,6 +48,7 @@ const fetchState = async (
   provider: InlineCommentAnnotationProvider,
   annotationIds: string[],
   editorView: EditorView,
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined,
 ) => {
   if (!annotationIds || !annotationIds.length) {
     return;
@@ -54,7 +60,7 @@ const fetchState = async (
   );
 
   if (editorView.dispatch) {
-    updateInlineCommentResolvedState(inlineCommentStates)(
+    updateInlineCommentResolvedState(editorAnalyticsAPI)(inlineCommentStates)(
       editorView.state,
       editorView.dispatch,
     );
@@ -72,6 +78,7 @@ const initialState = (
     },
     disallowOnWhitespace,
     isVisible: true,
+    skipSelectionHandling: false,
   };
 };
 
@@ -80,31 +87,32 @@ const hideToolbar = (state: EditorState, dispatch: CommandDispatch) => () => {
 };
 
 // Subscribe to updates from consumer
-const onResolve = (state: EditorState, dispatch: CommandDispatch) => (
-  annotationId: string,
-) => {
-  updateInlineCommentResolvedState(
-    { [annotationId]: true },
-    RESOLVE_METHOD.CONSUMER,
-  )(state, dispatch);
-};
+const onResolve =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  (state: EditorState, dispatch: CommandDispatch) =>
+  (annotationId: string) => {
+    updateInlineCommentResolvedState(editorAnalyticsAPI)(
+      { [annotationId]: true },
+      RESOLVE_METHOD.CONSUMER,
+    )(state, dispatch);
+  };
 
-const onUnResolve = (state: EditorState, dispatch: CommandDispatch) => (
-  annotationId: string,
-) => {
-  updateInlineCommentResolvedState({ [annotationId]: false })(state, dispatch);
-};
+const onUnResolve =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  (state: EditorState, dispatch: CommandDispatch) =>
+  (annotationId: string) => {
+    updateInlineCommentResolvedState(editorAnalyticsAPI)({
+      [annotationId]: false,
+    })(state, dispatch);
+  };
 
-const onMouseUp = (state: EditorState, dispatch: CommandDispatch) => (
-  e: Event,
-) => {
-  const {
-    mouseData: { isSelecting },
-  } = getPluginState(state);
-  if (isSelecting) {
-    updateMouseState({ isSelecting: false })(state, dispatch);
-  }
-};
+const onMouseUp =
+  (state: EditorState, dispatch: CommandDispatch) => (e: Event) => {
+    const { mouseData } = getPluginState(state) || {};
+    if (mouseData?.isSelecting) {
+      updateMouseState({ isSelecting: false })(state, dispatch);
+    }
+  };
 
 const onSetVisibility = (view: EditorView) => (isVisible: boolean) => {
   const { state, dispatch } = view;
@@ -123,7 +131,7 @@ const onSetVisibility = (view: EditorView) => (isVisible: boolean) => {
 export const inlineCommentPlugin = (options: InlineCommentPluginOptions) => {
   const { provider, portalProviderAPI, eventDispatcher } = options;
 
-  return new Plugin({
+  return new SafePlugin({
     key: inlineCommentPluginKey,
     state: createPluginState(
       options.dispatch,
@@ -133,16 +141,37 @@ export const inlineCommentPlugin = (options: InlineCommentPluginOptions) => {
     view(editorView: EditorView) {
       // Get initial state
       // Need to pass `editorView` to mitigate editor state going stale
-      fetchState(provider, getAllAnnotations(editorView.state.doc), editorView);
+      fetchState(
+        provider,
+        getAllAnnotations(editorView.state.doc),
+        editorView,
+        options.editorAnalyticsAPI,
+      );
 
       const resolve = (annotationId: string) =>
-        onResolve(editorView.state, editorView.dispatch)(annotationId);
+        onResolve(options.editorAnalyticsAPI)(
+          editorView.state,
+          editorView.dispatch,
+        )(annotationId);
       const unResolve = (annotationId: string) =>
-        onUnResolve(editorView.state, editorView.dispatch)(annotationId);
+        onUnResolve(options.editorAnalyticsAPI)(
+          editorView.state,
+          editorView.dispatch,
+        )(annotationId);
       const mouseUp = (event: Event) =>
         onMouseUp(editorView.state, editorView.dispatch)(event);
       const setVisibility = (isVisible: boolean) =>
         onSetVisibility(editorView)(isVisible);
+      const setSelectedAnnotationFn = (annotationId?: string) => {
+        if (!annotationId) {
+          closeComponent()(editorView.state, editorView.dispatch);
+        } else {
+          setSelectedAnnotation(annotationId)(
+            editorView.state,
+            editorView.dispatch,
+          );
+        }
+      };
 
       const { updateSubscriber } = provider;
       if (updateSubscriber) {
@@ -151,20 +180,26 @@ export const inlineCommentPlugin = (options: InlineCommentPluginOptions) => {
           .on('delete', resolve)
           .on('unresolve', unResolve)
           .on('create', unResolve)
-          .on('setvisibility', setVisibility);
+          .on('setvisibility', setVisibility)
+          .on('setselectedannotation', setSelectedAnnotationFn);
       }
 
       editorView.root.addEventListener('mouseup', mouseUp);
 
       return {
         update(view: EditorView, _prevState: EditorState) {
-          const { dirtyAnnotations } = getPluginState(view.state);
+          const { dirtyAnnotations } = getPluginState(view.state) || {};
           if (!dirtyAnnotations) {
             return;
           }
 
           clearDirtyMark()(view.state, view.dispatch);
-          fetchState(provider, getAllAnnotations(view.state.doc), view);
+          fetchState(
+            provider,
+            getAllAnnotations(view.state.doc),
+            view,
+            options.editorAnalyticsAPI,
+          );
         },
 
         destroy() {
@@ -175,7 +210,8 @@ export const inlineCommentPlugin = (options: InlineCommentPluginOptions) => {
               .off('delete', resolve)
               .off('unresolve', unResolve)
               .off('create', unResolve)
-              .off('setvisibility', setVisibility);
+              .off('setvisibility', setVisibility)
+              .off('setselectedannotation', setSelectedAnnotationFn);
           }
         },
       };
@@ -190,20 +226,57 @@ export const inlineCommentPlugin = (options: InlineCommentPluginOptions) => {
             getPos,
             portalProviderAPI,
             eventDispatcher,
+            // resolved
           ).init(),
       },
       handleDOMEvents: {
         mousedown: (view) => {
           const pluginState = getPluginState(view.state);
-          if (!pluginState.mouseData.isSelecting) {
+          if (!pluginState?.mouseData.isSelecting) {
             hideToolbar(view.state, view.dispatch)();
           }
           return false;
         },
       },
       decorations(state) {
-        const { draftDecorationSet } = getPluginState(state);
-        return draftDecorationSet;
+        // highlight comments, depending on state
+        const {
+          draftDecorationSet,
+          annotations,
+          selectedAnnotations,
+          isVisible,
+        } = getPluginState(state) || {};
+
+        let decorations = draftDecorationSet ?? DecorationSet.empty;
+        const focusDecorations: Decoration[] = [];
+
+        state.doc.descendants((node, pos) => {
+          node.marks
+            .filter((mark) => mark.type === state.schema.marks.annotation)
+            .forEach((mark) => {
+              const isSelected = !!selectedAnnotations?.some(
+                (selectedAnnotation) => selectedAnnotation.id === mark.attrs.id,
+              );
+              const isUnresolved =
+                !!annotations && annotations[mark.attrs.id] === false;
+
+              if (isVisible) {
+                focusDecorations.push(
+                  Decoration.inline(pos, pos + node.nodeSize, {
+                    class: `${getAnnotationViewClassname(
+                      isUnresolved,
+                      isSelected,
+                    )} ${isUnresolved}`,
+                    nodeName: 'span',
+                  }),
+                );
+              }
+            });
+        });
+
+        decorations = decorations.add(state.doc, focusDecorations);
+
+        return decorations;
       },
     },
   });

@@ -1,16 +1,15 @@
-import React, { Component, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import React, { Component } from 'react';
 
 import { FabricElementsAnalyticsContext } from '@atlaskit/analytics-namespaced-context';
-import { ContextIdentifierProvider } from '@atlaskit/editor-common';
-import {
-  ContentRef,
-  ResourcedTaskItem,
-  TaskDecisionProvider,
-} from '@atlaskit/task-decision';
+import type { ContextIdentifierProvider } from '@atlaskit/editor-common/provider-factory';
+import type { ContentRef, TaskDecisionProvider } from '@atlaskit/task-decision';
+import { ResourcedTaskItem } from '@atlaskit/task-decision';
 
 export interface Props {
   taskId: string;
   isDone: boolean;
+  isFocused?: boolean;
   contentRef?: ContentRef;
   onChange?: (taskId: string, isChecked: boolean) => void;
   showPlaceholder?: boolean;

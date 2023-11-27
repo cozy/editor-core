@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -11,8 +12,9 @@ import {
   td,
   underline,
   strong,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import schema from '@atlaskit/editor-test-helpers/schema';
 import { getDocStructure } from '../../../utils/document-logger';
 

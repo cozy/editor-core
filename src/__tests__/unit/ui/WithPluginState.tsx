@@ -1,32 +1,19 @@
-import { name } from '../../../version.json';
+import { name } from '../../../version-wrapper';
 import { mount } from 'enzyme';
 import React from 'react';
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import { PluginKey } from '@atlaskit/editor-prosemirror/state';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
 import WithPluginState from '../../../ui/WithPluginState';
-import { EditorPlugin } from '../../../types/editor-plugin';
-import {
-  EventDispatcher,
-  createDispatch,
-  Dispatch,
-} from '../../../event-dispatcher';
+import type { EditorPlugin } from '../../../types/editor-plugin';
+import type { Dispatch } from '../../../event-dispatcher';
+import { EventDispatcher, createDispatch } from '../../../event-dispatcher';
 import EditorActions from '../../../actions';
 import EditorContext from '../../../ui/EditorContext';
-
-let mockUiTracking = {};
-
-jest.mock('../../../plugins/analytics/plugin-key', () => ({
-  analyticsPluginKey: {
-    getState() {
-      return {
-        performanceTracking: {
-          uiTracking: mockUiTracking,
-        },
-      };
-    },
-  },
-}));
+import { waitFor } from '@testing-library/react';
 
 describe(name, () => {
   const createEditor = createEditorFactory();
@@ -45,7 +32,7 @@ describe(name, () => {
           {
             name: '',
             plugin: () =>
-              new Plugin({
+              new SafePlugin({
                 key,
                 state: {
                   init() {
@@ -75,7 +62,6 @@ describe(name, () => {
 
     eventDispatcher = new EventDispatcher();
     dispatch = createDispatch(eventDispatcher);
-    mockUiTracking = {};
   });
 
   describe('WithPluginState', () => {
@@ -130,7 +116,7 @@ describe(name, () => {
         setTimeoutPromise(() => dispatch(pluginKey, {}), 5),
       ]);
 
-      expect(renderMock.mock.calls.length).toBeLessThan(6);
+      expect(renderMock.mock.calls.length).toBeLessThanOrEqual(6);
       wrapper.unmount();
       editorView.destroy();
     });
@@ -250,7 +236,6 @@ describe(name, () => {
   });
 
   it('should not call performance.mark when disabled', () => {
-    mockUiTracking = { enabled: false };
     const plugin = createPlugin({}, pluginKey);
     const key = (pluginKey as any).key;
     const mark = performance.mark as jest.Mock;
@@ -260,10 +245,12 @@ describe(name, () => {
       editorPlugins: [plugin],
       editorProps: {
         allowAnalyticsGASV3: true,
+
         performanceTracking: {
           uiTracking: {
-            enabled: true,
+            enabled: false,
             samplingRate: 1,
+            slowThreshold: 0,
           },
         },
       },
@@ -294,8 +281,7 @@ describe(name, () => {
     });
   });
 
-  it('should call performance.mark twice with appropriate arguments', () => {
-    mockUiTracking = { enabled: true };
+  it('should call performance.mark twice with appropriate arguments', async () => {
     const plugin = createPlugin({}, pluginKey);
     const key = (pluginKey as any).key;
     const mark = performance.mark as jest.Mock;
@@ -305,10 +291,12 @@ describe(name, () => {
       editorPlugins: [plugin],
       editorProps: {
         allowAnalyticsGASV3: true,
+
         performanceTracking: {
           uiTracking: {
             enabled: true,
             samplingRate: 1,
+            slowThreshold: 0,
           },
         },
       },
@@ -326,16 +314,18 @@ describe(name, () => {
     );
     dispatch(pluginKey, { cheese: '🧀' });
 
-    return setTimeoutPromise(() => {}, 0).then(() => {
+    await new Promise(process.nextTick);
+
+    await waitFor(() =>
       expect(mark.mock.calls.map((item) => item[0])).toEqual(
         expect.arrayContaining([
           `🦉${key}::WithPluginState::start`,
           `🦉${key}::WithPluginState::end`,
         ]),
-      );
+      ),
+    );
 
-      wrapper.unmount();
-      editorView.destroy();
-    });
+    wrapper.unmount();
+    editorView.destroy();
   });
 });

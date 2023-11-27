@@ -1,7 +1,7 @@
-import React from 'react';
+/** @jsx jsx */
+import React, { useContext } from 'react';
+import { css, jsx } from '@emotion/react';
 import Transition from 'react-transition-group/Transition';
-import styled from 'styled-components';
-import { css } from 'styled-components';
 import { N30 } from '@atlaskit/theme/colors';
 import {
   akEditorSwoopCubicBezier,
@@ -11,17 +11,17 @@ import {
   akEditorContextPanelWidth,
   ATLASSIAN_NAVIGATION_HEIGHT,
 } from '@atlaskit/editor-shared-styles';
-import { ContextPanelConsumer } from './context';
+import { ContextPanelConsumer, WidthContext } from '@atlaskit/editor-common/ui';
 import WithPluginState from '../WithPluginState';
-import { pluginKey as contextPanelPluginKey } from '../../plugins/context-panel';
-import {
-  pluginKey as widthPluginKey,
-  WidthPluginState,
-} from '../../plugins/width';
+import type { WidthPluginState } from '@atlaskit/editor-plugin-width';
 import WithEditorActions from '../WithEditorActions';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { getBooleanFF } from '@atlaskit/platform-feature-flags';
 import { getChildBreakoutModes } from '../../utils/document';
-import { BreakoutMarkAttrs } from '@atlaskit/adf-schema';
+import type { BreakoutMarkAttrs } from '@atlaskit/adf-schema';
+import { token } from '@atlaskit/tokens';
+import type EditorActions from '../../actions';
+import { findChildrenByType } from '@atlaskit/editor-prosemirror/utils';
 
 export type Props = {
   visible: boolean;
@@ -36,15 +36,7 @@ const WIDE_MODE = 'wide';
 
 type EditorWidth = WidthPluginState & {
   contentBreakoutModes: BreakoutMarkAttrs['mode'][];
-};
-
-type StyleProps = {
-  panelWidth: number;
-  visible: boolean;
-};
-
-type PanelProps = StyleProps & {
-  positionPanelOverEditor: boolean;
+  containerWidth?: number;
 };
 
 const absolutePanelStyles = css`
@@ -53,9 +45,16 @@ const absolutePanelStyles = css`
   height: calc(100% - ${ATLASSIAN_NAVIGATION_HEIGHT});
 `;
 
+const checkTableExistsInDoc = (editorView: EditorView) => {
+  const tableNodeSchema = editorView.state.schema.nodes.table;
+  let findResult = findChildrenByType(editorView.state.doc, tableNodeSchema);
+  return findResult.length > 0;
+};
+
 export const shouldPanelBePositionedOverEditor = (
   editorWidth: EditorWidth,
   panelWidth: number,
+  editorView?: EditorView,
 ): boolean => {
   const { lineLength, containerWidth = 0, contentBreakoutModes } = editorWidth;
   const editorNotFullWidth = !(
@@ -68,38 +67,43 @@ export const shouldPanelBePositionedOverEditor = (
     !contentBreakoutModes.includes(FULLWIDTH_MODE) &&
     contentBreakoutModes.includes(WIDE_MODE) &&
     containerWidth >= panelWidth * 2 + WIDE_EDITOR_WIDTH;
-
-  return (
-    editorNotFullWidth && (hasSpaceForPanel || hasSpaceForWideBreakoutsAndPanel)
-  );
-};
-
-/**
- * Only use absolute position for panel when screen size is wide enough
- * to accomodate breakout content and editor is not in wide mode.
- */
-const panelSlideStyles = ({ positionPanelOverEditor }: PanelProps) => {
-  if (positionPanelOverEditor) {
-    return absolutePanelStyles;
+  if (!getBooleanFF('platform.editor.custom-table-width') || !editorView) {
+    return (
+      editorNotFullWidth &&
+      (hasSpaceForPanel || hasSpaceForWideBreakoutsAndPanel)
+    );
+  } else {
+    // when custom table width feature flag is on,
+    // there are scenarios when a table has attr layout default, but width is in full-width or very wide
+    // but in this case we still want the shouldPanelBePositionedOverEditor return false
+    // previous logic is returning false when table layout default
+    // but when custom table width feature flag is one, we want to return false whenever there is a table in the doc
+    const isTableInDoc = checkTableExistsInDoc(editorView);
+    return (
+      editorNotFullWidth &&
+      (hasSpaceForPanel || hasSpaceForWideBreakoutsAndPanel) &&
+      !isTableInDoc
+    );
   }
-  return;
 };
 
-export const Panel = styled.div<PanelProps>`
-  width: ${(p) => (p.visible ? p.panelWidth : 0)}px;
+const panelHidden = css`
+  width: 0;
+`;
+
+export const panel = css`
+  width: ${akEditorContextPanelWidth}px;
   height: 100%;
   transition: width ${ANIM_SPEED_MS}ms ${akEditorSwoopCubicBezier};
   overflow: hidden;
-  box-shadow: inset 2px 0 0 0 ${N30};
-
-  ${(props) => panelSlideStyles(props)};
+  box-shadow: inset 2px 0 0 0 ${token('color.border', N30)};
 `;
 
-export const Content = styled.div<StyleProps>`
+export const content = css`
   transition: width 600ms ${akEditorSwoopCubicBezier};
   box-sizing: border-box;
-  padding: 16px 16px 0px;
-  width: ${(p) => (p.visible ? p.panelWidth : 0)}px;
+  padding: ${token('space.200', '16px')} ${token('space.200', '16px')} 0px;
+  width: ${akEditorContextPanelWidth}px;
   height: 100%;
   overflow-y: auto;
 `;
@@ -141,6 +145,12 @@ export class SwappableContentArea extends React.PureComponent<
   private unsetPluginContent() {
     this.setState({ currentPluginContent: undefined });
   }
+  focusEditor = () => {
+    const { editorView } = this.props;
+    if (editorView && !editorView.hasFocus()) {
+      editorView.focus?.();
+    }
+  };
 
   componentDidMount() {
     // use this to trigger an animation
@@ -183,6 +193,7 @@ export class SwappableContentArea extends React.PureComponent<
         in={isVisible}
         mountOnEnter
         unmountOnExit
+        onExiting={this.focusEditor}
       >
         {children}
       </Transition>
@@ -190,34 +201,45 @@ export class SwappableContentArea extends React.PureComponent<
   };
 
   render() {
-    const { editorWidth } = this.props;
+    const { editorWidth, editorView } = this.props;
     const width = akEditorContextPanelWidth;
-
     const userVisible = !!this.props.visible;
     const visible = userVisible || !!this.state.currentPluginContent;
 
     return (
       <ContextPanelConsumer>
         {({ broadcastWidth, broadcastPosition, positionedOverEditor }) => {
+          const contextPanelWidth = visible ? width : 0;
           const newPosition = editorWidth
-            ? shouldPanelBePositionedOverEditor(editorWidth, width)
+            ? shouldPanelBePositionedOverEditor(editorWidth, width, editorView)
             : false;
-          broadcastWidth(visible ? width : 0);
+          broadcastWidth(contextPanelWidth);
           (newPosition && visible) !== positionedOverEditor &&
             broadcastPosition(newPosition && visible);
 
           return (
-            <Panel
-              panelWidth={width}
-              visible={visible}
-              positionPanelOverEditor={newPosition}
+            <div
+              css={[
+                panel,
+                !visible && panelHidden,
+                /**
+                 * Only use absolute position for panel when screen size is wide enough
+                 * to accommodate breakout content and editor is not in wide mode.
+                 */
+                newPosition && absolutePanelStyles,
+              ]}
               data-testid="context-panel-panel"
+              aria-labelledby="context-panel-title"
+              role="dialog"
             >
-              <Content panelWidth={width} visible={visible}>
+              <div
+                data-testid="context-panel-content"
+                css={[content, !visible && panelHidden]}
+              >
                 {this.showPluginContent() ||
                   this.showProvidedContent(userVisible)}
-              </Content>
-            </Panel>
+              </div>
+            </div>
           );
         }}
       </ContextPanelConsumer>
@@ -225,61 +247,85 @@ export class SwappableContentArea extends React.PureComponent<
   }
 }
 
-export default class ContextPanel extends React.Component<Props> {
-  render() {
-    return (
-      <WithEditorActions
-        render={(actions) => {
-          const eventDispatcher = actions._privateGetEventDispatcher();
-          const editorView = actions._privateGetEditorView();
+// TODO: ED-17837 We have this workaround because we do
+// not have access to the pluginInjectionApi at this location.
+// It might be that we need to inject the pluginInjectionApi
+// via context so that we can use it in this file (similar to
+// WithEditorActions). To be investigated further.
+import type {
+  PluginKey,
+  EditorState,
+} from '@atlaskit/editor-prosemirror/state';
 
-          if (!eventDispatcher) {
-            return (
-              <SwappableContentArea editorView={editorView} {...this.props} />
-            );
-          }
+// @ts-ignore
+const widthPluginKey = {
+  key: 'widthPlugin$',
+  getState: (state: EditorState) => {
+    return (state as any)['widthPlugin$'];
+  },
+} as PluginKey;
 
-          return (
-            <WithPluginState
-              eventDispatcher={eventDispatcher}
-              plugins={{
-                contextPanel: contextPanelPluginKey,
-                widthState: widthPluginKey,
-              }}
-              render={({
-                contextPanel,
-                widthState = {
-                  width: 0,
-                  containerWidth: 0,
-                  lineLength: akEditorDefaultLayoutWidth,
-                },
-              }) => {
-                const firstContent =
-                  contextPanel && contextPanel.contents.find(Boolean);
+// @ts-ignore
+const contextPanelPluginKey = {
+  key: 'contextPanelPluginKey$',
+  getState: (state: EditorState) => {
+    return (state as any)['contextPanelPluginKey$'];
+  },
+} as PluginKey;
 
-                const editorWidth = {
-                  ...widthState,
-                  contentBreakoutModes: editorView
-                    ? getChildBreakoutModes(
-                        editorView.state.doc,
-                        editorView.state.schema,
-                      )
-                    : [],
-                };
+function ContextPanelWithActions({
+  actions,
+  ...props
+}: Props & { actions: EditorActions }) {
+  const eventDispatcher = actions._privateGetEventDispatcher();
+  const editorView = actions._privateGetEditorView();
+  const { width } = useContext(WidthContext);
 
-                return (
-                  <SwappableContentArea
-                    {...this.props}
-                    editorView={editorView}
-                    pluginContent={firstContent}
-                    editorWidth={editorWidth}
-                  />
-                );
-              }}
-            />
-          );
-        }}
-      />
-    );
+  if (!eventDispatcher) {
+    return <SwappableContentArea editorView={editorView} {...props} />;
   }
+
+  return (
+    <WithPluginState
+      eventDispatcher={eventDispatcher}
+      plugins={{
+        contextPanel: contextPanelPluginKey,
+        widthState: widthPluginKey,
+      }}
+      render={({ contextPanel, widthState }) => {
+        const firstContent =
+          contextPanel && contextPanel.contents.find(Boolean);
+
+        const editorWidth = {
+          ...widthState,
+          containerWidth: width,
+          contentBreakoutModes: editorView
+            ? getChildBreakoutModes(
+                editorView.state.doc,
+                editorView.state.schema,
+              )
+            : [],
+        };
+
+        return (
+          <SwappableContentArea
+            {...props}
+            editorView={editorView}
+            pluginContent={firstContent}
+            editorWidth={editorWidth}
+          />
+        );
+      }}
+    />
+  );
+}
+
+export default function ContextPanel(props: Props) {
+  return (
+    <WithEditorActions
+      render={(actions) => (
+        <ContextPanelWithActions actions={actions} {...props} />
+      )}
+    />
+  );
 }

@@ -1,9 +1,12 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { mount } from 'enzyme';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { WithEditorView } from '../../WithEditorView';

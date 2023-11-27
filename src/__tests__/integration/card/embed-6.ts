@@ -1,8 +1,9 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 import * as inlineCardAdf from './_fixtures_/embed-card.adf.unauth.json';
 import {
   waitForResolvedEmbedCard,
@@ -11,9 +12,10 @@ import {
 
 type ClientType = Parameters<typeof goToEditorTestingWDExample>[0];
 
+it.todo('Unskip embed test click for safari');
 BrowserTestCase(
   'embed: should open a new window to authenticate with a provider when connecting a different account',
-  { skip: ['safari', 'edge'] },
+  { skip: ['safari'] },
   async (client: ClientType) => {
     const page = await goToEditorTestingWDExample(client);
     const authorizationWindow = new AuthorizationWindow(client, page);

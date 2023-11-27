@@ -1,22 +1,25 @@
-import { receiveTransaction } from 'prosemirror-collab';
-import { Step } from 'prosemirror-transform';
+import { receiveTransaction } from '@atlaskit/prosemirror-collab';
+import { Step } from '@atlaskit/editor-prosemirror/transform';
+import type {
+  Selection,
+  Transaction,
+} from '@atlaskit/editor-prosemirror/state';
 import {
   AllSelection,
   NodeSelection,
-  Selection,
-  Transaction,
-} from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+} from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 
-import {
+import type {
   CollabEventInitData,
   CollabEventRemoteData,
   CollabEventConnectionData,
   CollabEventPresenceData,
-  CollabEventTelepointerData,
+  CollabTelepointerPayload,
   CollabSendableSelection,
-  PrivateCollabEditOptions,
-} from './types';
+} from '@atlaskit/editor-common/collab';
+
+import type { PrivateCollabEditOptions } from './types';
 
 import { replaceDocument } from './utils';
 
@@ -32,7 +35,7 @@ export const handleInit = (
     tr.setMeta('isRemote', true);
     view.dispatch(tr);
   } else if (json) {
-    applyRemoteSteps(json, undefined, view);
+    applyRemoteSteps(json, view);
   }
 };
 
@@ -63,14 +66,14 @@ export const applyRemoteData = (
 ) => {
   const { json, userIds = [] } = remoteData;
   if (json) {
-    applyRemoteSteps(json, userIds, view, options);
+    applyRemoteSteps(json, view, userIds, options);
   }
 };
 
 export const applyRemoteSteps = (
   json: any[],
-  userIds: string[] | undefined,
   view: EditorView,
+  userIds?: (number | string)[],
   options?: PrivateCollabEditOptions,
 ) => {
   if (!json || !json.length) {
@@ -100,6 +103,15 @@ export const applyRemoteSteps = (
     const { from, to } = state.selection;
     const [firstStep] = json;
 
+    /*
+     * Persist marks across transactions. Fixes an issue where
+     * marks are lost if remote transactions are dispatched
+     * between a user creating the mark and typing.
+     */
+    if (state.tr.storedMarks) {
+      tr.setStoredMarks(state.tr.storedMarks);
+    }
+
     /**
      * If the cursor is a the same position as the first step in
      * the remote data, we need to manually set it back again
@@ -114,7 +126,7 @@ export const applyRemoteSteps = (
 };
 
 export const handleTelePointer = (
-  telepointerData: CollabEventTelepointerData,
+  telepointerData: CollabTelepointerPayload,
   view: EditorView,
 ) => {
   const {

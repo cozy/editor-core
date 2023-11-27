@@ -1,20 +1,21 @@
 import React from 'react';
-import { InjectedIntlProps, injectIntl } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
 import SectionMessage from '@atlaskit/section-message';
-import { ContextIdentifierProvider } from '@atlaskit/editor-common';
-import { FieldDefinition } from '@atlaskit/editor-common/extensions';
+import type { ContextIdentifierProvider } from '@atlaskit/editor-common/provider-factory';
+import type { FieldDefinition } from '@atlaskit/editor-common/extensions';
+import type { WithAnalyticsEventsProps } from '@atlaskit/analytics-next';
 import {
   withAnalyticsContext,
   withAnalyticsEvents,
-  WithAnalyticsEventsProps,
 } from '@atlaskit/analytics-next';
+import type { AnalyticsEventPayload } from '@atlaskit/editor-common/analytics';
 import {
   ACTION,
   ACTION_SUBJECT,
   EVENT_TYPE,
-  AnalyticsEventPayload,
-} from '../../plugins/analytics';
-import { editorAnalyticsChannel } from '../../plugins/analytics/consts';
+  editorAnalyticsChannel,
+} from '@atlaskit/editor-common/analytics';
 import { messages } from './messages';
 
 interface ErrorInfo {
@@ -36,7 +37,7 @@ interface State {
   error?: Error;
 }
 class FormErrorBoundaryInner extends React.Component<
-  Props & WithAnalyticsEventsProps & InjectedIntlProps,
+  Props & WithAnalyticsEventsProps & WrappedComponentProps,
   State
 > {
   state: State = { error: undefined };

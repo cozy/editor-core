@@ -1,7 +1,7 @@
 import React from 'react';
-import { AvatarProps } from '@atlaskit/avatar-group';
-import memoizeOne, { EqualityFn } from 'memoize-one';
-import { CollabParticipant } from '../types';
+import type { AvatarProps } from '@atlaskit/avatar-group';
+import memoizeOne from 'memoize-one';
+import type { CollabParticipant } from '@atlaskit/editor-common/collab';
 import { ColoredAvatarItem } from './colored-avatar-item';
 
 const toAvatar = (participant: CollabParticipant): AvatarProps => ({
@@ -16,12 +16,8 @@ const toAvatar = (participant: CollabParticipant): AvatarProps => ({
   ),
 });
 
-const participantEquals: EqualityFn = ([aRaw], [bRaw]) => {
-  const a = aRaw as CollabParticipant;
-  const b = bRaw as CollabParticipant;
+export default memoizeOne(toAvatar, function participantEquals([a], [b]) {
   return (
     a.name === b.name && a.avatar === b.avatar && a.sessionId === b.sessionId
   );
-};
-
-export default memoizeOne(toAvatar, participantEquals);
+});

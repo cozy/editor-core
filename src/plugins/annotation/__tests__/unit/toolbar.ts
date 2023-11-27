@@ -1,5 +1,7 @@
 import { getPluginState, inlineCommentPluginKey } from './../../utils';
-import { IntlProvider } from 'react-intl';
+import { createIntl } from 'react-intl-next';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   emoji,
@@ -7,32 +9,36 @@ import {
   p,
   taskItem,
   taskList,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import annotationPlugin from '../..';
-import emojiPlugin from '../../../emoji';
-import blockTypePlugin from '../../../block-type';
+import { emojiPlugin } from '@atlaskit/editor-plugin-emoji';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
 import tasksAndDecisionsPlugin from '../../../tasks-and-decisions';
 import { buildToolbar } from '../../toolbar';
 import { inlineCommentProvider } from '../_utils';
-import {
+import type {
   FloatingToolbarConfig,
   FloatingToolbarButton,
-} from '../../../floating-toolbar/types';
-import { Command } from '../../../../types';
-import { SelectionBookmark, AllSelection } from 'prosemirror-state';
-import { DecorationSet } from 'prosemirror-view';
-import { AnnotationSharedClassNames } from '@atlaskit/editor-common';
+  Command,
+} from '@atlaskit/editor-common/types';
+import type { SelectionBookmark } from '@atlaskit/editor-prosemirror/state';
+import { AllSelection } from '@atlaskit/editor-prosemirror/state';
+import type { DecorationSet } from '@atlaskit/editor-prosemirror/view';
+import { AnnotationSharedClassNames } from '@atlaskit/editor-common/styles';
 
 const annotationPreset = new Preset<LightEditorPlugin>()
   .add([annotationPlugin, { inlineComment: inlineCommentProvider }])
+  .add(typeAheadPlugin)
   .add(emojiPlugin)
   .add(blockTypePlugin)
   .add(tasksAndDecisionsPlugin);
@@ -42,8 +48,9 @@ const providerFactory = ProviderFactory.create({ emojiProvider });
 
 describe('annotation', () => {
   const createEditor = createProsemirrorEditorFactory();
-  const intlProvider = new IntlProvider({ locale: 'en' });
-  const { intl } = intlProvider.getChildContext();
+  const intl = createIntl({
+    locale: 'en',
+  });
 
   const editor = (doc: DocBuilder) =>
     createEditor({
@@ -59,7 +66,7 @@ describe('annotation', () => {
         doc(p('Trysail Sail ho {<}Corsair smartly{>} boom gangway.')),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeDefined();
 
       expect((toolbar as FloatingToolbarConfig).items.length).toBe(1);
@@ -70,7 +77,7 @@ describe('annotation', () => {
         doc(h1('Trysail Sail ho {<}Corsair smartly{>} boom gangway.')),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeDefined();
     });
 
@@ -85,7 +92,7 @@ describe('annotation', () => {
         ),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeDefined();
     });
 
@@ -100,7 +107,7 @@ describe('annotation', () => {
         ),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeDefined();
     });
 
@@ -109,7 +116,7 @@ describe('annotation', () => {
         doc(p('Trysail Sail ho {<>}Corsair smartly boom gangway.')),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeUndefined();
     });
 
@@ -118,7 +125,7 @@ describe('annotation', () => {
         doc(p('Corsair', '{<node>}', emoji({ shortName: ':smiley:' })())),
       );
 
-      const toolbar = buildToolbar(editorView.state, intl);
+      const toolbar = buildToolbar(undefined)(editorView.state, intl);
       expect(toolbar).toBeUndefined();
     });
   });
@@ -128,7 +135,7 @@ describe('annotation', () => {
       doc(p('Trysail Sail ho {<}Corsair smartly{>} boom gangway.')),
     );
 
-    const toolbar = buildToolbar(editorView.state, intl);
+    const toolbar = buildToolbar(undefined)(editorView.state, intl);
     expect(toolbar).toBeDefined();
 
     expect((<FloatingToolbarConfig>toolbar).items.length).toBe(1);
@@ -137,7 +144,7 @@ describe('annotation', () => {
     ))[0] as FloatingToolbarButton<Command>;
     createButton.onClick(editorView.state, editorView.dispatch);
 
-    const pluginState = getPluginState(editorView.state);
+    const pluginState = getPluginState(editorView.state)!;
 
     expect(pluginState.bookmark).toBeTruthy();
     const resolvedBookmark = (<SelectionBookmark>pluginState.bookmark).resolve(

@@ -1,12 +1,17 @@
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import type { ViewportSize } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+import {
+  deviceViewPorts,
+  Device,
+} from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+
 import {
   snapshot,
-  Device,
   initEditorWithAdf,
   Appearance,
-  deviceViewPorts,
-} from '../_utils';
-import { waitForMediaToBeLoaded } from '../../__helpers/page-objects/_media';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import { waitForMediaToBeLoaded } from '@atlaskit/editor-test-helpers/page-objects/media';
 import { traverse } from '@atlaskit/adf-utils/traverse';
 import smartLinksAdf from './__fixtures__/smart-link-nested-in-list.adf.json';
 import extensionAdf from './__fixtures__/inline-extension-inside-lists.adf.json';
@@ -14,28 +19,27 @@ import statusAdf from './__fixtures__/status-inside-lists.adf.json';
 import dateAdf from './__fixtures__/date-inside-lists.adf.json';
 import floatsAdf from './__fixtures__/lists-adjacent-floats-adf.json';
 import floatsAdf2 from './__fixtures__/action-decision-lists-adjacent-floats-adf.json';
-import list100ItemsAdf from './__fixtures__/lists-100-items.adf';
+import { createListWithNItems } from './__fixtures__/very-long-lists.adf';
+import listsWithOrderAndNestedListsAdf from './__fixtures__/lists-with-order-and-nested-lists-adf.json';
 import {
   waitForCardToolbar,
   clickOnCard,
-} from '../../__helpers/page-objects/_smart-links';
+} from '@atlaskit/editor-test-helpers/page-objects/smart-links';
 import {
   waitForExtensionToolbar,
   clickOnExtension,
-} from '../../__helpers/page-objects/_extensions';
+} from '@atlaskit/editor-test-helpers/page-objects/extensions';
 import {
   waitForStatusToolbar,
   clickOnStatus,
-} from '../../__helpers/page-objects/_status';
-import {
-  waitForDatePicker,
-  clickOnDate,
-} from '../../__helpers/page-objects/_date';
+} from '@atlaskit/editor-test-helpers/page-objects/status';
+import { clickOnDate } from '@atlaskit/editor-test-helpers/page-objects/date';
 import {
   animationFrame,
   scrollToBottom,
-} from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
 import { EditorTestCardProvider } from '@atlaskit/editor-test-helpers/card-provider';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 import { waitForResolvedInlineCard } from '@atlaskit/media-integration-test-helpers';
 
 describe('Lists', () => {
@@ -45,9 +49,7 @@ describe('Lists', () => {
   const initEditor = async (
     page: PuppeteerPage,
     adf: any,
-    viewport: { width: number; height: number } = deviceViewPorts[
-      Device.Default
-    ],
+    viewport: ViewportSize = deviceViewPorts[Device.Default],
     editorProps = {},
   ) =>
     await initEditorWithAdf(page, {
@@ -100,12 +102,51 @@ describe('Lists', () => {
   it('should render date picker on click when its nested inside lists', async () => {
     await initEditor(page, dateAdf);
     await clickOnDate(page);
-    await waitForDatePicker(page);
   });
 
-  it('should not cut off numbers in long ordered lists', async () => {
-    await initEditor(page, list100ItemsAdf);
-    await scrollToBottom(page);
+  describe('when restartNumberedLists (custom start numbers in ordered lists) is disabled', () => {
+    const featureFlags = { restartNumberedLists: false };
+    const listWithNItems = createListWithNItems(101);
+    it('should not cut off numbers in long ordered lists (100+)', async () => {
+      await initEditor(page, listWithNItems, undefined, { featureFlags });
+      await scrollToBottom(page);
+    });
+  });
+
+  describe('when restartNumberedLists (custom start numbers in ordered lists) is enabled', () => {
+    const featureFlags = { restartNumberedLists: true };
+
+    // TODO: Add back 9999 case (flaky timing out VR test: https://product-fabric.atlassian.net/browse/ED-16361)
+    const totalListItemsTestCases = [1, 9, 99, 999];
+
+    totalListItemsTestCases.forEach((totalListItems) => {
+      it(`should not cut off numbers in long ordered lists (list with ${totalListItems} items)`, async () => {
+        const listWithNItems = createListWithNItems(totalListItems);
+        await initEditor(page, listWithNItems, undefined, {
+          featureFlags,
+        });
+        await scrollToBottom(page);
+      });
+    });
+    totalListItemsTestCases.forEach((totalListItems) => {
+      it(`should not cut off numbers in long ordered lists inside tables (list with ${totalListItems} items)`, async () => {
+        const listInTableWithNItems = createListWithNItems(
+          totalListItems,
+          true,
+        );
+        await initEditor(page, listInTableWithNItems, undefined, {
+          featureFlags,
+          allowTables: { advanced: true },
+        });
+        await scrollToBottom(page);
+      });
+    });
+    it('should render indented lists inside ordered lists with specific padding', async () => {
+      await initEditor(page, listsWithOrderAndNestedListsAdf, undefined, {
+        featureFlags,
+        allowTables: { advanced: true },
+      });
+    });
   });
 });
 

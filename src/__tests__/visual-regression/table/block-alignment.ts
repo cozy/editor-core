@@ -1,21 +1,24 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  Device,
   snapshot,
   initFullPageEditorWithAdf,
-  initCommentEditorWithAdf,
-  editorCommentContentSelector,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/table-with-blocks.adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   setTableLayout,
   getSelectorForTableCell,
-} from '../../__helpers/page-objects/_table';
-import { emojiSelectors } from '../../__helpers/page-objects/_emoji';
-import { retryUntilStablePosition } from '../../__helpers/page-objects/_toolbar';
-import {
-  PuppeteerPage,
-  waitForLoadedBackgroundImages,
-} from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { animationFrame } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { emojiSelectors } from '@atlaskit/editor-test-helpers/page-objects/emoji';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { retryUntilStablePosition } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { waitForLoadedBackgroundImages } from '@atlaskit/visual-regression/helper';
 
 describe('Table with block looks correct for fullpage:', () => {
   let page: PuppeteerPage;
@@ -25,7 +28,9 @@ describe('Table with block looks correct for fullpage:', () => {
   });
 
   afterEach(async () => {
+    await animationFrame(page);
     await waitForLoadedBackgroundImages(page, emojiSelectors.standard, 10000);
+    await animationFrame(page);
     await snapshot(page);
   });
 
@@ -50,37 +55,27 @@ describe('Table with block looks correct for fullpage:', () => {
       undefined,
       'dark',
     );
+    await animationFrame(page);
     await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
   });
 
   it('wide layout ', async () => {
     await initFullPageEditorWithAdf(page, adf, Device.LaptopMDPI);
+    await animationFrame(page);
     await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
+    await animationFrame(page);
     await setTableLayout(page, 'wide');
+    await animationFrame(page);
     await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
   });
 
   it('full-width layout ', async () => {
     await initFullPageEditorWithAdf(page, adf, Device.LaptopHiDPI);
+    await animationFrame(page);
     await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
+    await animationFrame(page);
     await setTableLayout(page, 'fullWidth');
-    await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
-  });
-});
-
-describe('Table with block looks correct for comment:', () => {
-  let page: PuppeteerPage;
-
-  beforeAll(async () => {
-    page = global.page;
-  });
-
-  afterEach(async () => {
-    await snapshot(page, undefined, editorCommentContentSelector);
-  });
-
-  it('default layout ', async () => {
-    await initCommentEditorWithAdf(page, adf, Device.LaptopMDPI);
+    await animationFrame(page);
     await page.click(getSelectorForTableCell({ row: 4, cell: 1 }));
   });
 });

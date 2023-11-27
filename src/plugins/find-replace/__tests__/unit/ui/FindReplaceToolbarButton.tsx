@@ -1,40 +1,52 @@
 import React from 'react';
-import { InjectedIntlProps } from 'react-intl';
-import { ReactWrapper } from 'enzyme';
-import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
+import type { WrappedComponentProps } from 'react-intl-next';
+import type { ReactWrapper } from 'enzyme';
+import { mountWithIntl } from '../../../../../__tests__/__helpers/enzyme';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { mockAddEventListener } from '@atlaskit/editor-test-helpers/mock-add-event-listener';
 
-import FindReplaceToolbarButton, {
-  FindReplaceToolbarButtonProps,
-} from '../../../ui/FindReplaceToolbarButton';
+import type { FindReplaceToolbarButtonProps } from '../../../ui/FindReplaceToolbarButton';
+import FindReplaceToolbarButton from '../../../ui/FindReplaceToolbarButton';
 import FindReplace from '../../../ui/FindReplace';
+import ReactEditorViewContext from '../../../../../create-editor/ReactEditorViewContext';
 
 describe('FindReplaceToolbarButton', () => {
   let findReplaceToolbarButton: ReactWrapper<
-    FindReplaceToolbarButtonProps & InjectedIntlProps
+    FindReplaceToolbarButtonProps & WrappedComponentProps
   >;
+
+  const editorRef = {
+    current: document.createElement('div'),
+  };
+
   const mountComponent = (props: Partial<FindReplaceToolbarButtonProps> = {}) =>
-    mountWithIntl<FindReplaceToolbarButtonProps & InjectedIntlProps, any>(
-      <FindReplaceToolbarButton
-        findText=""
-        index={0}
-        isActive
-        numMatches={0}
-        replaceText=""
-        shouldFocus
-        shouldMatchCase
-        onToggleMatchCase={jest.fn()}
-        onActivate={jest.fn()}
-        onCancel={jest.fn()}
-        onFind={jest.fn()}
-        onFindBlur={jest.fn()}
-        onFindNext={jest.fn()}
-        onFindPrev={jest.fn()}
-        onReplace={jest.fn()}
-        onReplaceAll={jest.fn()}
-        takeFullWidth={false}
-        {...props}
-      />,
+    mountWithIntl<FindReplaceToolbarButtonProps & WrappedComponentProps, any>(
+      <ReactEditorViewContext.Provider
+        value={{
+          editorRef,
+        }}
+      >
+        <FindReplaceToolbarButton
+          findText=""
+          index={0}
+          isActive
+          numMatches={0}
+          replaceText=""
+          shouldFocus
+          shouldMatchCase
+          onToggleMatchCase={jest.fn()}
+          onActivate={jest.fn()}
+          onCancel={jest.fn()}
+          onFind={jest.fn()}
+          onFindBlur={jest.fn()}
+          onFindNext={jest.fn()}
+          onFindPrev={jest.fn()}
+          onReplace={jest.fn()}
+          onReplaceAll={jest.fn()}
+          takeFullWidth={false}
+          {...props}
+        />
+      </ReactEditorViewContext.Provider>,
     );
 
   describe('when isActive=true', () => {
@@ -70,12 +82,14 @@ describe('FindReplaceToolbarButton', () => {
       });
 
       it('calls props.onCancel', () => {
-        const { trigger, spy } = mockAddEventListener();
+        const { trigger, spy } = mockAddEventListener({
+          element: editorRef.current,
+        });
         findReplaceToolbarButton = mountComponent({
           isActive: true,
           onCancel: onCancelSpy,
         });
-        trigger('keydown', { code: 'Escape' });
+        trigger('keydown', new KeyboardEvent('keydown', { code: 'Escape' }));
         expect(onCancelSpy).toHaveBeenCalled();
         spy.mockRestore();
       });

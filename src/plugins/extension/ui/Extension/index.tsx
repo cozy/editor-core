@@ -1,25 +1,34 @@
 import React from 'react';
 import { Component } from 'react';
-import { EditorView } from 'prosemirror-view';
-import { Node as PMNode } from 'prosemirror-model';
-import { ADFEntity } from '@atlaskit/adf-utils';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
+import type {
+  ExtensionHandlers,
+  ReferenceEntity,
+} from '@atlaskit/editor-common/extensions';
 import {
   ProviderFactory,
   WithProviders,
-  ExtensionHandlers,
-  Providers,
-} from '@atlaskit/editor-common';
-import { EditorAppearance } from '../../../../types/editor-appearance';
+} from '@atlaskit/editor-common/provider-factory';
+import type { Providers } from '@atlaskit/editor-common/provider-factory';
+import type { ProsemirrorGetPosHandler } from '@atlaskit/editor-common/react-node-view';
 import ExtensionComponent from './ExtensionComponent';
+import type { WidthPlugin } from '@atlaskit/editor-plugin-width';
+import type {
+  PluginInjectionAPIWithDependency,
+  EditorAppearance,
+} from '@atlaskit/editor-common/types';
 
 export interface Props {
   editorView: EditorView;
   node: PMNode;
+  getPos: ProsemirrorGetPosHandler;
   providerFactory?: ProviderFactory;
   handleContentDOMRef: (node: HTMLElement | null) => void;
   extensionHandlers: ExtensionHandlers;
-  refNode?: ADFEntity;
+  references?: ReferenceEntity[];
   editorAppearance?: EditorAppearance;
+  pluginInjectionApi: PluginInjectionAPIWithDependency<WidthPlugin> | undefined;
 }
 
 export default class Extension extends Component<Props, any> {
@@ -43,22 +52,26 @@ export default class Extension extends Component<Props, any> {
   private renderWithProvider = ({ extensionProvider }: Providers) => {
     const {
       node,
+      getPos,
       editorView,
       handleContentDOMRef,
       extensionHandlers,
-      refNode,
+      references,
       editorAppearance,
+      pluginInjectionApi,
     } = this.props;
 
     return (
       <ExtensionComponent
         editorView={editorView}
         node={node}
-        refNode={refNode}
+        getPos={getPos}
+        references={references}
         extensionProvider={extensionProvider}
         handleContentDOMRef={handleContentDOMRef}
         extensionHandlers={extensionHandlers}
         editorAppearance={editorAppearance}
+        pluginInjectionApi={pluginInjectionApi}
       />
     );
   };

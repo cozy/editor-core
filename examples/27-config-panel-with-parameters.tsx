@@ -3,7 +3,7 @@ import React from 'react';
 import {
   combineExtensionProviders,
   DefaultExtensionProvider,
-} from '@atlaskit/editor-common';
+} from '@atlaskit/editor-common/extensions';
 import exampleManifest from '../example-helpers/config-panel/example-manifest-all-fields';
 
 import ConfigPanelWithExtensionPicker from '../example-helpers/config-panel/ConfigPanelWithExtensionPicker';
@@ -17,7 +17,7 @@ const parameters = {
   'date-start': '2020-01-18',
   'enum-select': 'a',
   'enum-select-icon': ['b', 'c', 'd'],
-  'enum-select-icon-multiple': 'b',
+  'enum-select-icon-multiple': 'long',
   'enum-checkbox-multiple': ['a', 'b'],
   'fieldset-cql': 'created-at = now(-1w) AND query = foobar AND flag = BF',
   'fieldset-jira-filter':

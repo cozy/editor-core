@@ -1,8 +1,10 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import { IntlProvider } from 'react-intl';
-import { FieldComponent, FieldComponentProps } from '../../FormContent';
+// import { mount } from 'enzyme';
+import { render as mount, screen } from '@testing-library/react';
+import { IntlProvider } from 'react-intl-next';
+import { FieldComponent } from '../../FormContent';
 import { FieldDefinition } from '@atlaskit/editor-common/extensions';
+import { FieldComponentProps } from '../../types';
 
 describe('Tabs', () => {
   const mountField = (field: FieldDefinition) => {
@@ -47,7 +49,7 @@ describe('Tabs', () => {
             {
               type: 'boolean',
               name: 'checkbox',
-              label: 'Yes or no',
+              label: 'Yes or no b',
             },
           ],
         },
@@ -68,16 +70,20 @@ describe('Tabs', () => {
   };
 
   it('should mount tabs and default to first tab', () => {
-    const target = mountField(getTabs());
+    mountField(getTabs());
 
-    expect(target.find('TabGroup').length).toEqual(1);
-    expect(target.find('TabGroup Tabs').prop('selected')).toEqual(0);
+    const tabGroup = screen.getByRole('tabpanel');
+    expect(tabGroup).not.toBeNull();
+    expect(tabGroup.textContent).toContain('Enter name');
+    expect(tabGroup.textContent).not.toContain('Yes or no b');
   });
 
   it('should mount tabs and show correct tab when defaultTab is set', () => {
-    const target = mountField(getTabs('tabB'));
+    mountField(getTabs('tabB'));
 
-    expect(target.find('TabGroup').length).toEqual(1);
-    expect(target.find('TabGroup Tabs').prop('selected')).toEqual(1);
+    const tabGroup = screen.getByRole('tabpanel');
+    expect(tabGroup).not.toBeNull();
+    expect(tabGroup.textContent).toContain('Yes or no b');
+    expect(tabGroup.textContent).not.toContain('Enter name');
   });
 });

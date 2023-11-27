@@ -1,8 +1,10 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
 import {
   waitForBlockCardSelection,
@@ -14,7 +16,7 @@ type ClientType = Parameters<typeof goToEditorTestingWDExample>[0];
 
 BrowserTestCase(
   'card: should set contentediable=true on blocks and embeds',
-  { skip: ['safari', 'edge', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: ClientType, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -40,8 +42,6 @@ BrowserTestCase(
       ),
     ).toBe(true);
 
-    await page.waitForSelector('span[aria-label="Expand dropdown menu"]');
-    await page.click('span[aria-label="Expand dropdown menu"]');
     await page.waitForSelector('[data-testid="block-appearance"]');
     await page.click('[data-testid="block-appearance"]');
     await waitForBlockCardSelection(page);

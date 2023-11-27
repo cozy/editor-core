@@ -1,15 +1,20 @@
-import { EditorView } from 'prosemirror-view';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 
-import { CollabSendableSelection } from '../../types';
+import type { CollabSendableSelection } from '@atlaskit/editor-common/collab';
 import collabEditPlugin, { pluginKey } from '../../index';
 import { createMockCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
-import { TextSelection } from 'prosemirror-state';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
 
 const findTelepointerBySessionId = (
   editorView: EditorView,
@@ -17,9 +22,9 @@ const findTelepointerBySessionId = (
 ) => {
   const decorationList = pluginKey
     .getState(editorView.state)
-    .decorations.find();
+    ?.decorations.find();
 
-  return decorationList.find(
+  return decorationList?.find(
     (deco: any) => deco.type.spec.key === `telepointer-${sessionId}`,
   );
 };
@@ -77,12 +82,14 @@ describe('collab-edit: plugin-state', () => {
   const collabProvider = createMockCollabEditProvider();
   const createEditor = createProsemirrorEditorFactory();
 
-  const collabPreset = new Preset<LightEditorPlugin>().add([
-    collabEditPlugin,
-    {
-      provider: collabProvider,
-    },
-  ]);
+  const collabPreset = new Preset<LightEditorPlugin>()
+    .add([featureFlagsPlugin, {}])
+    .add([
+      collabEditPlugin,
+      {
+        provider: collabProvider,
+      },
+    ]);
 
   it('decorationSet should be updated correctly', () => {
     const document = doc(p('th{<>}is is a document'));
@@ -105,9 +112,12 @@ describe('collab-edit: plugin-state', () => {
     });
 
     const telepointerDeco = findTelepointerBySessionId(editorView, 'fakeId');
-    const addSpy = jest.spyOn(telepointerDeco.type.toDOM.classList, 'add');
+    const addSpy = jest.spyOn(
+      (telepointerDeco as any).type.toDOM.classList,
+      'add',
+    );
     const removeSpy = jest.spyOn(
-      telepointerDeco.type.toDOM.classList,
+      (telepointerDeco as any).type.toDOM.classList,
       'remove',
     );
 

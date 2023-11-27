@@ -1,11 +1,12 @@
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 import {
   getExampleUrl,
   loadPage,
   takeElementScreenShot,
 } from '@atlaskit/visual-regression/helper';
-
-import { getBoundingClientRect } from '../_utils';
-import { extensionSelectors } from '../../../__tests__/__helpers/page-objects/_extensions';
+import { getBoundingClientRect } from '@atlaskit/editor-test-helpers/vr-utils/bounding-client-rect';
+import { extensionSelectors } from '@atlaskit/editor-test-helpers/page-objects/extensions';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 export async function goToConfigPanelWithParameters() {
   const url = getExampleUrl(
@@ -37,6 +38,15 @@ describe('Snapshot Test', () => {
     const page = await goToConfigPanelWithParameters();
 
     await page.click(iconSelectSelector);
+
+    // Wait for avatar icon
+    const avatarIconSelector1 =
+      'div[id^="enum-select-icon"] div[class*="MenuList"] > div:nth-child(1) span[class*="AvatarImage"] > span > svg';
+    await page.waitForSelector(avatarIconSelector1);
+    const avatarIconSelector2 =
+      'div[id^="enum-select-icon"] div[class*="MenuList"] > div:nth-child(2) span[class*="AvatarImage"] > span > svg';
+    await page.waitForSelector(avatarIconSelector2);
+
     const iconSelectDropDownSelector =
       'div[id^="enum-select-icon"] div[class*="MenuList"]';
     const image = await takeElementScreenShot(page, iconSelectDropDownSelector);
@@ -65,7 +75,11 @@ describe('Snapshot Test', () => {
     }, dateInputElement);
 
     // Clip the screenshot to just the date picker
-    const { top: y, left: x, width } = await getBoundingClientRect(
+    const {
+      top: y,
+      left: x,
+      width,
+    } = await getBoundingClientRect(
       page,
       `${extensionSelectors.configPanel} .field-wrapper-date`,
     );

@@ -1,27 +1,37 @@
-import { Plugin, TextSelection } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
-import { sortByOrder } from './create-editor/sort-by-order';
-import {
+import type { Schema } from '@atlaskit/editor-prosemirror/model';
+import type { Plugin } from '@atlaskit/editor-prosemirror/state';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+
+import type { EditorPluginInjectionAPI } from '@atlaskit/editor-common/preset';
+import { EditorPresetBuilder } from '@atlaskit/editor-common/preset';
+import type {
+  AllEditorPresetPluginTypes,
+  ReactHookFactory,
+  UIComponentFactory,
+} from '@atlaskit/editor-common/types';
+
+import { createSchema } from './create-editor/create-schema';
+import type {
   LightEditorPlugin,
   LightPMPlugin,
   LightPMPluginFactoryParams,
   OnEditorViewStateUpdated,
 } from './create-editor/get-plugins';
-import { Preset } from './labs/next/presets/preset';
-import { Schema } from 'prosemirror-model';
-import { createSchema } from './create-editor/create-schema';
-import { MarkConfig, NodeConfig } from './types/pm-config';
-import basePlugin from './plugins/base';
+import { sortByOrder } from './create-editor/sort-by-order';
+import { basePlugin } from '@atlaskit/editor-plugin-base';
+import type { MarkConfig, NodeConfig } from './types/pm-config';
 
-export { Preset } from './labs/next/presets/preset';
 export type { LightEditorPlugin } from './create-editor/get-plugins';
-export type { DispatchAnalyticsEvent } from './plugins/analytics/types';
+export type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
 export type { FeatureFlags } from './types/feature-flags';
 
 export interface LightEditorConfig {
   nodes: NodeConfig[];
   marks: MarkConfig[];
   plugins: Array<LightPMPlugin>;
+  contentComponents: UIComponentFactory[];
+  pluginHooks: ReactHookFactory[];
   onEditorViewStateUpdatedCallbacks: Array<OnEditorViewStateUpdated>;
 }
 
@@ -62,6 +72,12 @@ function lightProcessPluginsList(
       if (editorPlugin.nodes) {
         acc.nodes.push(...editorPlugin.nodes());
       }
+      if (editorPlugin.contentComponent) {
+        acc.contentComponents.push(editorPlugin.contentComponent);
+      }
+      if (editorPlugin.usePluginHook) {
+        acc.pluginHooks.push(editorPlugin.usePluginHook);
+      }
       if (editorPlugin.onEditorViewStateUpdated) {
         acc.onEditorViewStateUpdatedCallbacks.push(
           editorPlugin.onEditorViewStateUpdated,
@@ -73,6 +89,8 @@ function lightProcessPluginsList(
       nodes: [],
       marks: [],
       plugins: [],
+      contentComponents: [],
+      pluginHooks: [],
       onEditorViewStateUpdatedCallbacks: [],
     } as LightEditorConfig,
   );
@@ -82,44 +100,54 @@ type PluginData = {
   plugins: Plugin[];
   schema: Schema;
   onEditorViewStateUpdatedCallbacks: Array<OnEditorViewStateUpdated>;
+  editorConfig: LightEditorConfig;
 };
-export const createPMSchemaAndPlugins = (
-  preset: Preset<LightEditorPlugin> = new Preset<LightEditorPlugin>(),
-) => (
-  pluginFactoryParams: Omit<LightPMPluginFactoryParams, 'schema'>,
-): PluginData => {
-  let editorPlugins: LightEditorPlugin[] = [];
-  if (!preset.has(basePlugin)) {
-    preset.add(basePlugin);
-  }
-  editorPlugins = preset.getEditorPlugins();
+export const createPMSchemaAndPlugins =
+  (
+    inputPreset: EditorPresetBuilder<
+      string[],
+      AllEditorPresetPluginTypes[]
+    > = new EditorPresetBuilder(),
+  ) =>
+  (
+    pluginFactoryParams: Omit<LightPMPluginFactoryParams, 'schema'> & {
+      pluginInjectionAPI: EditorPluginInjectionAPI;
+    },
+  ): PluginData => {
+    let editorPlugins: LightEditorPlugin[] = [];
 
-  const editorConfig: LightEditorConfig = lightProcessPluginsList(
-    editorPlugins,
-  );
+    const preset = inputPreset.has(basePlugin)
+      ? inputPreset
+      : inputPreset.add(basePlugin);
+    editorPlugins = preset.build({
+      pluginInjectionAPI: pluginFactoryParams.pluginInjectionAPI,
+    });
 
-  const schema = createSchema(editorConfig);
+    const editorConfig: LightEditorConfig =
+      lightProcessPluginsList(editorPlugins);
 
-  const plugins = editorConfig.plugins
-    .sort(sortByOrder('plugins'))
-    .map(({ plugin }) => plugin({ ...pluginFactoryParams, schema }))
-    .filter((plugin) => !!plugin) as Plugin[];
+    const schema = createSchema(editorConfig);
 
-  return {
-    plugins,
-    schema,
-    onEditorViewStateUpdatedCallbacks:
-      editorConfig.onEditorViewStateUpdatedCallbacks,
+    const plugins = editorConfig.plugins
+      .sort(sortByOrder('plugins'))
+      .map(({ plugin }) => plugin({ ...pluginFactoryParams, schema }))
+      .filter((plugin) => !!plugin) as Plugin[];
+
+    return {
+      plugins,
+      schema,
+      onEditorViewStateUpdatedCallbacks:
+        editorConfig.onEditorViewStateUpdatedCallbacks,
+      editorConfig,
+    };
   };
-};
 
-export { PortalProviderAPI } from './ui/PortalProvider';
 export { EventDispatcher } from './event-dispatcher';
 export type { Dispatch } from './event-dispatcher';
 export {
   GapCursorSelection,
   Side as GapCursorSide,
-} from './plugins/selection/gap-cursor/selection';
+} from '@atlaskit/editor-common/selection';
 
 export function setTextSelection(
   view: EditorView,
@@ -132,3 +160,13 @@ export function setTextSelection(
   );
   view.dispatch(tr);
 }
+
+/**
+ * Given a selector, checks if an element matching the selector exists in the
+ * document.
+ * @param selector
+ * @returns true if element matching selector exists in document, false otherwise
+ */
+export const isElementBySelectorInDocument = (selector: string): boolean => {
+  return Boolean(document.querySelector(selector));
+};

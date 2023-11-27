@@ -1,8 +1,13 @@
-import { Fragment, Node as PMNode, Slice } from 'prosemirror-model';
-import { TextSelection, NodeSelection, Transaction } from 'prosemirror-state';
-import { Transform } from 'prosemirror-transform';
+import type { Node as PMNode, Slice } from '@atlaskit/editor-prosemirror/model';
+import { Fragment } from '@atlaskit/editor-prosemirror/model';
+import type { Transaction } from '@atlaskit/editor-prosemirror/state';
+import {
+  TextSelection,
+  NodeSelection,
+} from '@atlaskit/editor-prosemirror/state';
+import { Transform } from '@atlaskit/editor-prosemirror/transform';
 
-import { isEmptyParagraph } from '../../../utils';
+import { isEmptyParagraph } from '@atlaskit/editor-common/utils';
 
 export function insertSliceIntoEmptyNode({
   tr,
@@ -79,6 +84,7 @@ export function insertSliceIntoRangeSelectionInsideList({
     tr.doc.resolve(tr.mapping.map(mapped)),
     -1,
   );
+  // @ts-ignore - [unblock prosemirror bump] assigning to readonly prop
   newSlice.openEnd = newSlice.openStart;
   tr.replaceRange(newSelection.from, newSelection.from, newSlice);
 

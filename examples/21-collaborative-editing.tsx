@@ -1,12 +1,14 @@
 /* eslint-disable no-console */
+/** @jsx jsx */
 import URLSearchParams from 'url-search-params';
-import styled from 'styled-components';
-import React from 'react';
+import { css, jsx } from '@emotion/react';
+import React, { Fragment } from 'react';
 import ButtonGroup from '@atlaskit/button/button-group';
 import Button from '@atlaskit/button/standard-button';
 
-import Editor from './../src/editor';
+import { Editor } from './../src';
 import EditorContext from './../src/ui/EditorContext';
+import { LOCALSTORAGE_defaultTitleKey } from './5-full-page';
 import WithEditorActions from './../src/ui/WithEditorActions';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
@@ -16,7 +18,9 @@ import { mentionResourceProviderWithResolver } from '@atlaskit/util-data-test/me
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
 import { createSocketIOCollabProvider } from '@atlaskit/collab-provider/socket-io-provider';
-import { EditorActions } from '../src';
+import type { Provider } from '@atlaskit/collab-provider';
+import type { EditorActions } from '../src';
+import { TitleInput } from '../example-helpers/PageElements';
 
 export const getRandomUser = () => {
   return Math.floor(Math.random() * 10000).toString();
@@ -25,31 +29,31 @@ export const getRandomUser = () => {
 const defaultCollabUrl =
   'https://pf-collab-service--app.ap-southeast-2.dev.atl-paas.net/ccollab';
 
-export const Content: any = styled.div`
+export const content: any = css`
   padding: 0 20px;
   height: 50%;
   background: #fff;
   box-sizing: border-box;
 `;
-Content.displayName = 'Content';
 
-const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => (
-  <ButtonGroup>
-    <Button
-      appearance="primary"
-      onClick={() =>
-        props.editorActions
-          .getValue()
-          .then((value) => console.log(value.toJSON()))
-      }
-    >
-      Publish
-    </Button>
-    <Button appearance="subtle" onClick={() => props.editorActions.clear()}>
-      Close
-    </Button>
-  </ButtonGroup>
-);
+const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => {
+  const onClickPublish = () => {
+    props.editorActions.getResolvedEditorState().then((value) => {
+      console.log(value);
+    });
+  };
+
+  return (
+    <ButtonGroup>
+      <Button appearance="primary" onClick={onClickPublish}>
+        Publish
+      </Button>
+      <Button appearance="subtle" onClick={() => props.editorActions.clear()}>
+        Close
+      </Button>
+    </ButtonGroup>
+  );
+};
 
 interface DropzoneEditorWrapperProps {
   children: (container: HTMLElement) => React.ReactNode;
@@ -61,25 +65,27 @@ class DropzoneEditorWrapper extends React.Component<
 > {
   dropzoneContainer: HTMLElement | null = null;
 
-  handleRef = (node: HTMLElement) => {
+  handleRef = (node: HTMLDivElement) => {
     this.dropzoneContainer = node;
     this.forceUpdate();
   };
 
   render() {
     return (
-      <Content innerRef={this.handleRef}>
+      <div css={content} ref={this.handleRef}>
         {this.dropzoneContainer
           ? this.props.children(this.dropzoneContainer)
           : null}
-      </Content>
+      </div>
     );
   }
 }
 
 const mediaProvider = storyMediaProviderFactory();
 
-export type Props = {};
+export type Props = {
+  onTitleChange?: (title: string) => void;
+};
 export type State = {
   isInviteToEditButtonSelected: boolean;
   documentId?: string;
@@ -87,6 +93,7 @@ export type State = {
   documentIdInput?: HTMLInputElement;
   collabUrlInput?: HTMLInputElement;
   hasError?: boolean;
+  title?: string;
 };
 
 const getQueryParam = (param: string) => {
@@ -94,7 +101,6 @@ const getQueryParam = (param: string) => {
   const urlParams = new URLSearchParams(win.document.location.search);
   return urlParams.get(param);
 };
-
 export default class Example extends React.Component<Props, State> {
   state = {
     isInviteToEditButtonSelected: false,
@@ -103,6 +109,7 @@ export default class Example extends React.Component<Props, State> {
     documentIdInput: undefined,
     collabUrlInput: undefined,
     hasError: false,
+    title: localStorage.getItem(LOCALSTORAGE_defaultTitleKey) || '',
   };
 
   componentDidCatch() {
@@ -150,17 +157,33 @@ export default class Example extends React.Component<Props, State> {
     const { documentId, collabUrl } = this.state;
     // Enable the debug log
     (window as any).COLLAB_PROVIDER_LOGGER = true;
+
+    const docAriRegex = new RegExp('^ari:cloud:confluence');
+    const incomingDocAri = docAriRegex.test(documentId)
+      ? documentId
+      : `ari:cloud:confluence:collab-test:blog/${documentId}`;
+
     const collabProvider = createSocketIOCollabProvider({
       url: collabUrl,
-      documentAri: `ari:cloud:confluence:collab-test:blog/${documentId}`,
+      documentAri: incomingDocAri,
+      productInfo: {
+        product: 'editor-core example',
+        subProduct: 'collab provider example',
+      },
+      featureFlags: { testFF: false, testAF: true },
     });
     collabProvider.on('error', (err) => {
       console.error('error from collabProvider:', {
         message: err.message,
         code: err.code,
-        status: err.status,
       });
     });
+    collabProvider.on('metadata:changed', (data: any) => {
+      this.setState({
+        title: data.title,
+      });
+    });
+
     return (
       <div>
         {this.renderErrorFlag()}
@@ -178,6 +201,7 @@ export default class Example extends React.Component<Props, State> {
                   advanced: true,
                   allowColumnSorting: true,
                   allowAddColumnWithCustomStep: true,
+                  allowDistributeColumns: true,
                 }}
                 allowTemplatePlaceholders={{ allowInserting: true }}
                 media={{
@@ -199,8 +223,8 @@ export default class Example extends React.Component<Props, State> {
                   useNativePlugin: true,
                   provider: Promise.resolve(collabProvider),
                   inviteToEditHandler: this.inviteToEditHandler,
-                  isInviteToEditButtonSelected: this.state
-                    .isInviteToEditButtonSelected,
+                  isInviteToEditButtonSelected:
+                    this.state.isInviteToEditButtonSelected,
                 }}
                 placeholder="Write something..."
                 shouldFocus={false}
@@ -214,6 +238,22 @@ export default class Example extends React.Component<Props, State> {
                 allowExtension={true}
                 insertMenuItems={customInsertMenuItems}
                 extensionHandlers={extensionHandlers}
+                contentComponents={
+                  <WithEditorActions
+                    render={(actions) => (
+                      <Fragment>
+                        <TitleInput
+                          value={this.state.title}
+                          provider={collabProvider}
+                          onChange={this.handleTitleChange}
+                          onKeyDown={(e: React.KeyboardEvent) => {
+                            this.onKeyPressed(e, actions);
+                          }}
+                        />
+                      </Fragment>
+                    )}
+                  />
+                }
               />
             </EditorContext>
           )}
@@ -286,5 +326,30 @@ export default class Example extends React.Component<Props, State> {
       isInviteToEditButtonSelected: !this.state.isInviteToEditButtonSelected,
     });
     console.log('target', event.target);
+  };
+
+  private onKeyPressed = (e: React.KeyboardEvent, actions: EditorActions) => {
+    if ((e.key === 'Tab' && !e.shiftKey) || e.key === 'Enter') {
+      // Move to the editor view
+      const target = e.currentTarget as HTMLInputElement;
+      target.blur();
+      e.preventDefault();
+      actions.focus();
+      return false;
+    }
+    return;
+  };
+
+  private handleTitleChange = (
+    e: React.FormEvent<HTMLTextAreaElement>,
+    provider?: Provider,
+  ) => {
+    const title = (e.target as HTMLInputElement).value;
+    if (provider) {
+      provider.setMetadata({ title });
+    }
+    this.setState({
+      title,
+    });
   };
 }

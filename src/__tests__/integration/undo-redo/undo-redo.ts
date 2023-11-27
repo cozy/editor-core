@@ -1,10 +1,16 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { fullpage, editable } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  fullpage,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
-import { KEY } from '../../__helpers/page-objects/_keyboard';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { KEY } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
 import { toolbarTestIdPrefix } from '../../../ui/Toolbar/toolbar-types';
 
 const input = 'helloworld ';
@@ -27,12 +33,12 @@ async function redoShortcut(
 
 BrowserTestCase(
   `undo-redo.ts: should be able to undo & redo via toolbar buttons in the full page editor`,
-  { skip: ['edge'] },
+  {},
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
-      UNSAFE_allowUndoRedoButtons: true,
+      allowUndoRedoButtons: true,
     });
 
     await page.click(editable);
@@ -49,12 +55,12 @@ BrowserTestCase(
 
 BrowserTestCase(
   `undo-redo.ts: should be able to undo & redo via keyboard shortcut (Windows)`,
-  { skip: ['safari', 'edge'] },
+  { skip: ['safari'] },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
-      UNSAFE_allowUndoRedoButtons: true,
+      allowUndoRedoButtons: true,
     });
 
     await page.click(editable);
@@ -71,12 +77,12 @@ BrowserTestCase(
 
 BrowserTestCase(
   `undo-redo.ts: should be able to undo & redo via keyboard shortcut (Mac)`,
-  { skip: ['chrome', 'firefox', 'edge'] },
+  { skip: ['chrome', 'firefox'] },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
       appearance: fullpage.appearance,
-      UNSAFE_allowUndoRedoButtons: true,
+      allowUndoRedoButtons: true,
     });
 
     await page.click(editable);

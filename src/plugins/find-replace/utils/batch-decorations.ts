@@ -1,4 +1,4 @@
-import { EditorView, Decoration } from 'prosemirror-view';
+import type { EditorView, Decoration } from '@atlaskit/editor-prosemirror/view';
 import { createDecorations, findDecorationFromMatch } from './index';
 import { getPluginState } from '../plugin';
 
@@ -46,9 +46,8 @@ class BatchDecorations {
     if (!containerElement) {
       return;
     }
-    const pmElement = containerElement.querySelector<HTMLElement>(
-      '.ProseMirror',
-    );
+    const pmElement =
+      containerElement.querySelector<HTMLElement>('.ProseMirror');
     if (!pmElement) {
       return;
     }
@@ -249,11 +248,11 @@ class BatchDecorations {
   private batchRequests(
     fn: (counter: number) => void | undefined | false,
     opts: { increment: number; until: number },
-  ): Promise<undefined> {
+  ): Promise<void> {
     let counter = 0;
     const { increment, until } = opts;
 
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       const batchedFn = () => {
         let result = fn(counter);
         while (result === false && counter < until) {

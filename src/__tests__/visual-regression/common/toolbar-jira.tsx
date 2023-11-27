@@ -1,12 +1,18 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import { VIEWPORT_SIZES } from '@atlaskit/editor-shared-styles';
 import {
   mainToolbarSelector,
   toolbarMenuItemsSelectors,
   ToolbarMenuItem,
-} from '../../__helpers/page-objects/_toolbar';
-import { timeouts } from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import { timeouts } from '@atlaskit/editor-test-helpers/page-objects/editor';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 describe('Toolbar: Jira configurarion', () => {
   let page: PuppeteerPage;
@@ -62,7 +68,7 @@ describe('Toolbar: Jira configurarion', () => {
             viewport.width,
           )
         ) {
-          const emojiButtonSelector = `${mainToolbarSelector} button:not([disabled]) ${
+          const emojiButtonSelector = `${mainToolbarSelector} button:not([disabled])${
             toolbarMenuItemsSelectors[ToolbarMenuItem.emoji]
           }`;
           await page.waitForSelector(emojiButtonSelector, {

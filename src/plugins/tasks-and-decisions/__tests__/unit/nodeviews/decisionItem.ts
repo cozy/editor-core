@@ -1,14 +1,18 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   decisionItem,
   doc,
   p,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 
-import { EventDispatcher } from '../../../../../event-dispatcher';
-import ReactNodeView from '../../../../../nodeviews/ReactNodeView';
-import { decisionItemNodeView } from '../../../../../plugins/tasks-and-decisions/nodeviews/decisionItem';
+import type { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
+import ReactNodeView from '@atlaskit/editor-common/react-node-view';
+
+import { decisionItemNodeView } from '../../../nodeviews/decisionItem';
 
 describe('Decision Item - NodeView', () => {
   const createEditor = createEditorFactory();
@@ -21,11 +25,11 @@ describe('Decision Item - NodeView', () => {
     });
     const node = decisionItem()('this is the decision')(defaultSchema);
 
-    const nodeView = decisionItemNodeView(portalProviderAPI, eventDispatcher)(
-      node,
-      editorView,
-      () => -1,
-    );
+    const nodeView = decisionItemNodeView(
+      portalProviderAPI,
+      eventDispatcher,
+      undefined,
+    )(node, editorView, () => -1);
 
     if (nodeView instanceof ReactNodeView) {
       const contentDOM = nodeView.contentDOM as HTMLElement;

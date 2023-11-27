@@ -1,19 +1,17 @@
-import { ADFEntity } from '@atlaskit/adf-utils';
-import {
-  ProviderFactory,
-  AutoformattingProvider,
-} from '@atlaskit/editor-common/provider-factory';
-import {
-  doc,
-  p,
-  ul,
-  li,
-  DocBuilder,
-} from '@atlaskit/editor-test-helpers/doc-builder';
+import type { ADFEntity } from '@atlaskit/adf-utils/types';
+import type { AutoformattingProvider } from '@atlaskit/editor-common/provider-factory';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p, ul, li } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  LightEditorPlugin,
   Preset,
   createProsemirrorEditorFactory,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
@@ -21,8 +19,10 @@ import {
 import { pluginKey } from '../../utils';
 // Editor plugins
 import customAutoformatPlugin from '../../index';
-import basePlugin from '../../../base';
-import listPlugin from '../../../list';
+import { basePlugin } from '@atlaskit/editor-plugin-base';
+import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
 
 describe('custom-autoformat', () => {
   const createEditor = createProsemirrorEditorFactory();
@@ -50,8 +50,10 @@ describe('custom-autoformat', () => {
     return createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()
-        .add(customAutoformatPlugin)
+        .add([featureFlagsPlugin, {}])
         .add(basePlugin)
+        .add([analyticsPlugin, {}])
+        .add(customAutoformatPlugin)
         .add(listPlugin),
       providerFactory,
       pluginKey,
@@ -230,9 +232,9 @@ describe('custom-autoformat', () => {
   describe('provider validation', () => {
     it('does nothing if provider rejects', async () => {
       const replacementRule = jest.fn(() => {
-        return (Promise.reject('nope').catch(() => {}) as any) as Promise<
-          ADFEntity
-        >;
+        return Promise.reject('nope').catch(
+          () => {},
+        ) as any as Promise<ADFEntity>;
       });
 
       const rejectingProvider: AutoformattingProvider = {

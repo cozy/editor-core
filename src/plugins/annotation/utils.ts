@@ -1,34 +1,51 @@
-import { ResolvedPos, Mark, Node, Slice } from 'prosemirror-model';
-import {
+import type {
+  ResolvedPos,
+  Mark,
+  Node,
+  Slice,
+  Schema,
+} from '@atlaskit/editor-prosemirror/model';
+import type {
   EditorState,
   Selection,
+} from '@atlaskit/editor-prosemirror/state';
+import {
   PluginKey,
   TextSelection,
   AllSelection,
-} from 'prosemirror-state';
-import { Decoration } from 'prosemirror-view';
+} from '@atlaskit/editor-prosemirror/state';
+import { Decoration } from '@atlaskit/editor-prosemirror/view';
+import { AnnotationSharedClassNames } from '@atlaskit/editor-common/styles';
 import {
-  AnnotationSharedClassNames,
   canApplyAnnotationOnRange,
   getAnnotationIdsFromRange,
-} from '@atlaskit/editor-common';
-import {
-  AnnotationMarkAttributes,
-  AnnotationTypes,
-} from '@atlaskit/adf-schema';
-import { AnnotationInfo, AnnotationSelectionType } from './types';
-import { sum } from '../../utils';
-import { InlineCommentPluginState } from './pm-plugins/types';
+  isText,
+  isParagraph,
+  hasAnnotationMark,
+  containsAnyAnnotations,
+} from '@atlaskit/editor-common/utils';
+import type { AnnotationMarkAttributes } from '@atlaskit/adf-schema';
+import { AnnotationTypes } from '@atlaskit/adf-schema';
+import type { AnnotationInfo } from './types';
+import { AnnotationSelectionType } from './types';
+import type { InlineCommentPluginState } from './pm-plugins/types';
 import {
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
   ACTION,
+} from '@atlaskit/editor-common/analytics';
+import type { AnalyticsEventPayloadCallback } from '@atlaskit/editor-common/analytics';
+import type {
   INPUT_METHOD,
+  AnnotationAEPAttributes,
   AnalyticsEventPayload,
-} from '../analytics';
-import { AnalyticsEventPayloadCallback } from '../analytics/utils';
-import { AnnotationAEPAttributes } from '../analytics/types/inline-comment-events';
+} from '@atlaskit/editor-common/analytics';
+
+export { hasAnnotationMark, containsAnyAnnotations };
+function sum<T>(arr: Array<T>, f: (val: T) => number) {
+  return arr.reduce((val, x) => val + f(x), 0);
+}
 /**
  * Finds the marks in the nodes to the left and right.
  * @param $pos Position to center search around
@@ -51,7 +68,7 @@ export const surroundingMarks = ($pos: ResolvedPos) => {
  * Finds annotation marks, and returns their IDs.
  * @param marks Array of marks to search in
  */
-export const filterAnnotationIds = (marks: Array<Mark>): Array<string> => {
+const filterAnnotationIds = (marks: readonly Mark[]): Array<string> => {
   if (!marks.length) {
     return [];
   }
@@ -72,7 +89,7 @@ export const filterAnnotationIds = (marks: Array<Mark>): Array<string> => {
  * @param annotations annotation metadata
  * @param $from location to look around (usually the selection)
  */
-export const reorderAnnotations = (
+const reorderAnnotations = (
   annotations: Array<AnnotationInfo>,
   $from: ResolvedPos,
 ) => {
@@ -91,7 +108,7 @@ export const getAllAnnotations = (doc: Node): string[] => {
   doc.descendants((node) => {
     node.marks
       .filter((mark) => mark.type.name === 'annotation')
-      // filter out annotations with invalid attribues as they cause errors when interacting with them
+      // filter out annotations with invalid attributes as they cause errors when interacting with them
       .filter(validateAnnotationMark)
       .forEach((m) => allAnnotationIds.add(m.attrs.id));
     return true;
@@ -104,10 +121,8 @@ export const getAllAnnotations = (doc: Node): string[] => {
  * verifies if annotation mark contains valid attributes
  */
 const validateAnnotationMark = (annotationMark: Mark): boolean => {
-  const {
-    id,
-    annotationType,
-  } = annotationMark.attrs as AnnotationMarkAttributes;
+  const { id, annotationType } =
+    annotationMark.attrs as AnnotationMarkAttributes;
   return validateAnnotationId(id) && validateAnnotationType(annotationType);
 
   function validateAnnotationId(id: string): boolean {
@@ -125,41 +140,6 @@ const validateAnnotationMark = (annotationMark: Mark): boolean => {
     const allowedTypes = Object.values(AnnotationTypes);
     return allowedTypes.includes(type);
   }
-};
-
-// helper function: return the first selection range for the window
-const getSelectionRange = function (): Range | null {
-  const selection = window.getSelection();
-
-  // no selection made in browser
-  if (!selection || selection.isCollapsed) {
-    return null;
-  }
-
-  const selectionRange = selection.getRangeAt(0);
-
-  return selectionRange;
-};
-
-// helper function: find the bounds of first part within selected content
-export const getSelectionStartRect = (): ClientRect | null => {
-  const range = getSelectionRange();
-
-  if (!range) {
-    return null;
-  }
-
-  const rects = range.getClientRects();
-  if (!rects.length) {
-    return null;
-  }
-  // Find first selection area that width is not 0
-  // Sometimes there is a chance that user is selecting an empty DOM node.
-  const firstRect = Array.from(rects).find(
-    (rect) => rect.width !== 0 && rect.height !== 0,
-  );
-
-  return firstRect || null;
 };
 
 /*
@@ -196,7 +176,7 @@ export const findAnnotationsInSelection = (
   const nodeBefore = $anchor.nodeBefore;
   const anchorAnnotationMarks = (node && node.marks) || [];
 
-  let marks: Mark[] = [];
+  let marks: readonly Mark[] = [];
   if (annotationMark.isInSet(anchorAnnotationMarks)) {
     marks = anchorAnnotationMarks;
   } else if (nodeBefore && annotationMark.isInSet(nodeBefore.marks)) {
@@ -220,9 +200,9 @@ export const findAnnotationsInSelection = (
  */
 export function getSelectionPositions(
   editorState: EditorState,
-  inlineCommentState: InlineCommentPluginState,
+  inlineCommentState?: InlineCommentPluginState | null | undefined,
 ): Selection {
-  const { bookmark } = inlineCommentState;
+  const { bookmark } = inlineCommentState || {};
   // get positions via saved bookmark if it is available
   // this is to make comments box positioned relative to temporary highlight rather then current selection
   if (bookmark) {
@@ -235,9 +215,7 @@ export const inlineCommentPluginKey = new PluginKey<InlineCommentPluginState>(
   'inlineCommentPluginKey',
 );
 
-export const getPluginState = (
-  state: EditorState,
-): InlineCommentPluginState => {
+export const getPluginState = (state: EditorState) => {
   return inlineCommentPluginKey.getState(state);
 };
 
@@ -288,7 +266,7 @@ export const isSelectionValid = (
   state: EditorState,
 ): AnnotationSelectionType => {
   const { selection } = state;
-  const { disallowOnWhitespace } = getPluginState(state);
+  const { disallowOnWhitespace } = getPluginState(state) || {};
 
   if (
     selection.empty ||
@@ -309,7 +287,10 @@ export const isSelectionValid = (
     return AnnotationSelectionType.DISABLED;
   }
 
-  if (disallowOnWhitespace && hasWhitespaceNode(selection)) {
+  if (
+    disallowOnWhitespace &&
+    hasInvalidWhitespaceNode(selection, state.schema)
+  ) {
     return AnnotationSelectionType.INVALID;
   }
 
@@ -360,33 +341,38 @@ function isEmptyTextSelection(
  * Checks if any of the nodes in a given selection are completely whitespace
  * This is to conform to Confluence annotation specifications
  */
-export function hasWhitespaceNode(selection: TextSelection | AllSelection) {
-  let foundWhitespace = false;
-  selection.content().content.descendants((node) => {
-    if (node.textContent.trim() === '') {
-      foundWhitespace = true;
+export function hasInvalidWhitespaceNode(
+  selection: TextSelection | AllSelection,
+  schema: Schema,
+) {
+  let foundInvalidWhitespace = false;
+
+  const content = selection.content().content;
+
+  content.descendants((node) => {
+    if (isText(node, schema)) {
+      return false;
     }
-    return !foundWhitespace;
+    if (node.textContent.trim() === '') {
+      // Trailing new lines do not result in the annotation spanning into
+      // the trailing new line so can be ignored when looking for invalid
+      // whitespace nodes.
+      const nodeIsTrailingNewLine =
+        // it is the final node
+        node.eq(content.lastChild!) &&
+        // and there are multiple nodes
+        !node.eq(content.firstChild!) &&
+        // and it is a paragraph node
+        isParagraph(node, schema);
+
+      if (!nodeIsTrailingNewLine) {
+        foundInvalidWhitespace = true;
+      }
+    }
+
+    return !foundInvalidWhitespace;
   });
-
-  return foundWhitespace;
-}
-
-/*
- * verifies if node contains annotation mark
- */
-export function hasAnnotationMark(node: Node, state: EditorState): boolean {
-  const {
-    schema: {
-      marks: { annotation: annotationMark },
-    },
-  } = state;
-  return !!(
-    annotationMark &&
-    node &&
-    node.marks.length &&
-    annotationMark.isInSet(node.marks)
-  );
+  return foundInvalidWhitespace;
 }
 
 /*
@@ -398,38 +384,9 @@ export function annotationExists(
 ): boolean {
   const commentsPluginState = getPluginState(state);
   return (
-    commentsPluginState.annotations &&
+    !!commentsPluginState?.annotations &&
     Object.keys(commentsPluginState.annotations).includes(annotationId)
   );
-}
-
-/*
- * verifies that slice contains any annotations
- */
-export function containsAnyAnnotations(
-  slice: Slice,
-  state: EditorState,
-): boolean {
-  if (!slice.content.size) {
-    return false;
-  }
-  let hasAnnotation = false;
-  slice.content.forEach((node) => {
-    hasAnnotation = hasAnnotation || hasAnnotationMark(node, state);
-    // return early if annotation found already
-    if (hasAnnotation) {
-      return true;
-    }
-    // check annotations in descendants
-    node.descendants((node) => {
-      if (hasAnnotationMark(node, state)) {
-        hasAnnotation = true;
-        return false;
-      }
-      return true;
-    });
-  });
-  return hasAnnotation;
 }
 
 /*
@@ -454,7 +411,7 @@ export function stripNonExistingAnnotations(slice: Slice, state: EditorState) {
  */
 function stripNonExistingAnnotationsFromNode(node: Node, state: EditorState) {
   if (hasAnnotationMark(node, state)) {
-    node.marks = node.marks.filter((mark) => {
+    (node.marks as Mark[]) = node.marks.filter((mark) => {
       if (mark.type.name === 'annotation') {
         return annotationExists(mark.attrs.id, state);
       }

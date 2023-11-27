@@ -1,4 +1,4 @@
-import { CollabParticipant } from './types';
+import type { CollabParticipant } from '@atlaskit/editor-common/collab';
 
 export interface ReadOnlyParticipants {
   get(sessionId: string): CollabParticipant | undefined;
@@ -45,6 +45,21 @@ export class Participants implements ReadOnlyParticipants {
     newSet.set(sessionId, {
       ...data,
       lastActive,
+    });
+
+    return new Participants(newSet);
+  }
+
+  updateCursorPos(sessionId: string, cursorPos: number) {
+    const newSet = new Map<string, CollabParticipant>(this.participants);
+    const data = newSet.get(sessionId);
+    if (!data) {
+      return this;
+    }
+
+    newSet.set(sessionId, {
+      ...data,
+      cursorPos,
     });
 
     return new Participants(newSet);

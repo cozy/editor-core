@@ -1,20 +1,28 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { comment, fullpage, editable } from '../_helpers';
-import { toolbarMessages as blockTypeMessages } from '../../../plugins/block-type/ui/ToolbarBlockType/toolbar-messages';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  comment,
+  fullpage,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
-import { messages } from '../../../plugins/block-type/messages';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+import {
+  blockTypeMessages,
+  toolbarMessages as textFormattingMessages,
+} from '@atlaskit/editor-common/messages';
 
-const changeFormatting = `[aria-label="${blockTypeMessages.textStyles.defaultMessage}"]`;
+const changeFormatting = `[aria-label="${textFormattingMessages.textStyles.defaultMessage}"]`;
 const input = 'helloworld';
 
 // https://product-fabric.atlassian.net/browse/ED-4531
 [comment, fullpage].forEach((editor) => {
   BrowserTestCase(
     `toolbar-2.ts: should be able to select heading1 for ${editor.name} editor`,
-    { skip: ['safari', 'edge'] },
+    { skip: [] },
     async (client: any) => {
       const page = await goToEditorTestingWDExample(client);
       await mountEditor(page, { appearance: editor.appearance });
@@ -32,7 +40,8 @@ const input = 'helloworld';
 const validateFormat = async (browser: any, heading: number) => {
   const selector =
     'span=' +
-    messages[('heading' + heading) as keyof typeof messages].defaultMessage;
+    blockTypeMessages[('heading' + heading) as keyof typeof blockTypeMessages]
+      .defaultMessage;
   await browser.click(changeFormatting);
   await browser.waitForSelector(selector);
   await browser.click(selector);

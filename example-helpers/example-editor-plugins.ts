@@ -1,5 +1,6 @@
-import { Plugin } from 'prosemirror-state';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { Decoration, DecorationSet } from '@atlaskit/editor-prosemirror/view';
 
 const render = (type: string) => (view: EditorView) => {
   const div = document.createElement('div');
@@ -19,7 +20,7 @@ export const exampleSelectionDebugger = () => {
         {
           name: 'selection-debugger-main',
           plugin() {
-            return new Plugin({
+            return new SafePlugin({
               props: {
                 decorations: (state) =>
                   DecorationSet.create(state.doc, [
@@ -33,9 +34,8 @@ export const exampleSelectionDebugger = () => {
                     const start = view.dom.querySelector<HTMLElement>(
                       '[data-type="start"]',
                     );
-                    const end = view.dom.querySelector<HTMLElement>(
-                      '[data-type="end"]',
-                    );
+                    const end =
+                      view.dom.querySelector<HTMLElement>('[data-type="end"]');
 
                     if (!start || !end) {
                       return;

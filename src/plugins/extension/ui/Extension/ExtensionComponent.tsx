@@ -1,29 +1,43 @@
 import React from 'react';
 import { Component } from 'react';
-import { EditorView } from 'prosemirror-view';
-import { Node as PMNode } from 'prosemirror-model';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
 import memoizeOne from 'memoize-one';
 
 import {
-  ExtensionHandlers,
-  getExtensionRenderer,
   getNodeRenderer,
-  ExtensionProvider,
   getExtensionModuleNodePrivateProps,
-} from '@atlaskit/editor-common';
-import { ADFEntity } from '@atlaskit/adf-utils';
+} from '@atlaskit/editor-common/extensions';
+
+import type {
+  ExtensionHandlers,
+  ExtensionProvider,
+  ReferenceEntity,
+  ExtensionParams,
+  Parameters,
+} from '@atlaskit/editor-common/extensions';
+
+import { getExtensionRenderer } from '@atlaskit/editor-common/utils';
 
 import Extension from './Extension';
 import InlineExtension from './InlineExtension';
-import { EditorAppearance } from '../../../../types/editor-appearance';
+import type { ProsemirrorGetPosHandler } from '@atlaskit/editor-common/react-node-view';
+import type { WidthPlugin } from '@atlaskit/editor-plugin-width';
+import type {
+  PluginInjectionAPIWithDependency,
+  EditorAppearance,
+} from '@atlaskit/editor-common/types';
+
 export interface Props {
   editorView: EditorView;
   node: PMNode;
+  getPos: ProsemirrorGetPosHandler;
   handleContentDOMRef: (node: HTMLElement | null) => void;
   extensionHandlers: ExtensionHandlers;
   extensionProvider?: Promise<ExtensionProvider>;
-  refNode?: ADFEntity;
+  references?: ReferenceEntity[];
   editorAppearance?: EditorAppearance;
+  pluginInjectionApi: PluginInjectionAPIWithDependency<WidthPlugin> | undefined;
 }
 
 export interface State {
@@ -81,8 +95,9 @@ export default class ExtensionComponent extends Component<Props, State> {
       node,
       handleContentDOMRef,
       editorView,
-      refNode,
+      references,
       editorAppearance,
+      pluginInjectionApi,
     } = this.props;
     const extensionHandlerResult = this.tryExtensionHandler();
 
@@ -92,12 +107,14 @@ export default class ExtensionComponent extends Component<Props, State> {
         return (
           <Extension
             node={node}
-            refNode={refNode}
+            getPos={this.props.getPos}
+            references={references}
             extensionProvider={this.state.extensionProvider}
             handleContentDOMRef={handleContentDOMRef}
             view={editorView}
             editorAppearance={editorAppearance}
             hideFrame={this.state._privateProps?.__hideFrame}
+            pluginInjectionApi={pluginInjectionApi}
           >
             {extensionHandlerResult}
           </Extension>
@@ -191,7 +208,11 @@ export default class ExtensionComponent extends Component<Props, State> {
       return;
     }
 
-    const node = {
+    const fragmentLocalId = pmNode?.marks?.find(
+      (m) => m.type.name === 'fragment',
+    )?.attrs?.localId;
+
+    const node: ExtensionParams<Parameters> = {
       type: pmNode.type.name as
         | 'extension'
         | 'inlineExtension'
@@ -200,6 +221,8 @@ export default class ExtensionComponent extends Component<Props, State> {
       extensionKey,
       parameters,
       content: text,
+      localId: pmNode.attrs.localId,
+      fragmentLocalId,
     };
 
     let result;
@@ -220,7 +243,7 @@ export default class ExtensionComponent extends Component<Props, State> {
 
       if (extensionHandlerFromProvider) {
         const NodeRenderer = extensionHandlerFromProvider;
-        return <NodeRenderer node={node} refNode={this.props.refNode} />;
+        return <NodeRenderer node={node} references={this.props.references} />;
       }
     }
 

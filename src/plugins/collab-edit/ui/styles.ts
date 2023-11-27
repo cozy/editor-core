@@ -1,20 +1,20 @@
-import styled from 'styled-components';
-import { gridSize } from '@atlaskit/theme/constants';
+import { css } from '@emotion/react';
 import { N20 } from '@atlaskit/theme/colors';
 import {
   akEditorSmallZIndex,
   relativeFontSizeToBase16,
 } from '@atlaskit/editor-shared-styles';
+import { token } from '@atlaskit/tokens';
 
-export const InviteTeamWrapper = styled.div`
-  background: ${N20};
+export const inviteTeamWrapper = css`
+  background: ${token('color.background.neutral', N20)};
   border-radius: 50%;
-  min-width: ${gridSize() * 4}px;
-  margin-left: -${gridSize() / 2}px;
+  min-width: ${token('space.400', '32px')};
+  margin-left: ${token('space.negative.050', '-4px')};
 `;
 
-export const AvatarContainer = styled.div`
-  margin-right: ${gridSize()}px;
+export const avatarContainer = css`
+  margin-right: ${token('space.100', '8px')};
   display: flex;
   align-items: center;
 
@@ -29,11 +29,11 @@ export const AvatarContainer = styled.div`
     border-radius: 50%;
     height: 32px;
     width: 32px;
-    padding: 2px;
+    padding: ${token('space.025', '2px')};
   }
 `;
 
-export const Badge = styled.div<{ color: string }>`
+export const badge = (color: string) => css`
   display: block;
   position: absolute;
   right: 1px;
@@ -42,12 +42,12 @@ export const Badge = styled.div<{ color: string }>`
   height: 13px;
   z-index: ${akEditorSmallZIndex};
   border-radius: 3px;
-  background: ${({ color }) => color};
-  color: #fff;
+  background: ${color};
+  color: ${token('color.text.inverse', '#fff')};
   font-size: ${relativeFontSizeToBase16(9)};
   line-height: 0;
   padding-top: 7px;
   text-align: center;
-  box-shadow: 0 0 1px #fff;
+  box-shadow: 0 0 1px ${token('color.border.inverse', '#fff')};
   box-sizing: border-box;
 `;

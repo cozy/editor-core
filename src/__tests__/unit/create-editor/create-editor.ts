@@ -1,5 +1,7 @@
-import { name } from '../../../version.json';
-import { Selection } from 'prosemirror-state';
+import { name } from '../../../version-wrapper';
+import { Selection } from '@atlaskit/editor-prosemirror/state';
+import type { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 import {
   sortByRank,
@@ -7,7 +9,7 @@ import {
   createPMPlugins,
   processPluginsList,
 } from '../../../create-editor/create-editor';
-import { EditorConfig } from '../../../types';
+import type { EditorConfig } from '../../../types';
 
 describe(name, () => {
   describe('create-editor', () => {
@@ -71,7 +73,12 @@ describe(name, () => {
             { name: 'skipped', plugin: () => undefined },
             {
               name: 'mocked',
-              plugin: () => ({ spec: {}, props: {}, getState() {} }),
+              plugin: () =>
+                ({
+                  spec: {},
+                  props: {},
+                  getState() {},
+                } as unknown as SafePlugin),
             },
           ],
         };
@@ -88,6 +95,7 @@ describe(name, () => {
             dispatchAnalyticsEvent: () => {},
             performanceTracking: {},
             featureFlags: {},
+            getIntl: () => ({} as any),
           }).length,
         ).toEqual(1);
       });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import {
+import type {
   ExtensionManifest,
   FieldDefinition,
   ExtensionProvider,
@@ -8,6 +8,7 @@ import {
   ExtensionKey,
   Parameters,
 } from '@atlaskit/editor-common/extensions';
+import type { FeatureFlags } from '@atlaskit/editor-common/types';
 
 import { useStateFromPromise } from '../../utils/react-hooks/use-state-from-promise';
 import ConfigPanel from './ConfigPanel';
@@ -20,9 +21,11 @@ export type PublicProps = {
   extensionParameters?: Parameters;
   parameters?: Parameters;
   autoSave?: boolean;
-  autoSaveTrigger?: unknown;
+  autoSaveTrigger?: () => void;
+  autoSaveReject?: (reason?: any) => void;
   closeOnEsc?: boolean;
   showHeader?: boolean;
+  featureFlags?: FeatureFlags;
   onChange: (data: Parameters) => void;
   onCancel: () => void;
 };
@@ -54,12 +57,8 @@ interface FieldDefsPromiseResolverProps {
 const FieldDefinitionsPromiseResolver = (
   props: FieldDefsPromiseResolverProps,
 ) => {
-  const {
-    extensionManifest,
-    nodeKey,
-    extensionParameters,
-    setErrorMessage,
-  } = props;
+  const { extensionManifest, nodeKey, extensionParameters, setErrorMessage } =
+    props;
 
   const [fields, setFields] = useState<FieldDefinition[] | undefined>(
     undefined,
@@ -98,7 +97,7 @@ const FieldDefinitionsPromiseResolver = (
             const dynamicFields: FieldDefinition[] = value(extensionParameters);
             setFields(dynamicFields);
           } catch (err) {
-            if (err && typeof err.message === 'string') {
+            if (err instanceof Error) {
               setErrorMessage(err.message);
             }
             setFields(undefined);
@@ -122,18 +121,19 @@ export default function FieldsLoader({
   parameters = defaultEmptyObject,
   autoSave,
   autoSaveTrigger,
+  autoSaveReject,
   closeOnEsc,
   showHeader,
+  featureFlags,
   onChange,
   onCancel,
 }: PublicProps) {
   const [extensionManifest] = useStateFromPromise<
     ExtensionManifest | undefined
-  >(() => extensionProvider.getExtension(extensionType, extensionKey), [
-    extensionProvider,
-    extensionType,
-    extensionKey,
-  ]);
+  >(
+    () => extensionProvider.getExtension(extensionType, extensionKey),
+    [extensionProvider, extensionType, extensionKey],
+  );
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -152,11 +152,13 @@ export default function FieldsLoader({
           parameters={parameters}
           autoSave={autoSave}
           autoSaveTrigger={autoSaveTrigger}
+          autoSaveReject={autoSaveReject}
           closeOnEsc={closeOnEsc}
           showHeader={showHeader}
           onChange={onChange}
           onCancel={onCancel}
           errorMessage={errorMessage}
+          featureFlags={featureFlags}
         />
       )}
     </FieldDefinitionsPromiseResolver>

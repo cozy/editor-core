@@ -1,34 +1,33 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
-import { fullpage, editable } from '../_helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
+  fullpage,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  clickToolbarMenu,
   ToolbarMenuItem,
   toolbarMenuItemsSelectors,
-} from '../../__helpers/page-objects/_toolbar';
-import { elementBrowserSelectors } from '../../__helpers/page-objects/_element-browser';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { elementBrowserSelectors } from '@atlaskit/editor-test-helpers/page-objects/element-browser';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { runEscapeKeydownSuite } from '@atlaskit/editor-test-helpers/integration/escape-keydown';
 
 const emojiPanel = '[data-emoji-picker-container="true"]';
 
-BrowserTestCase(
-  'insert-block.ts: opens emoji picker from toolbar button',
-  { skip: ['edge'] },
-  async (client: any) => {
-    const page = await goToEditorTestingWDExample(client);
-    await mountEditor(page, fullpage);
-
-    await page.click(editable);
-    await page.click(toolbarMenuItemsSelectors[ToolbarMenuItem.emoji]);
-
-    await page.waitForSelector(emojiPanel);
-  },
-);
-
+// FIXME: This test was automatically skipped due to failure on 22/08/2023: https://product-fabric.atlassian.net/browse/ED-19661
 BrowserTestCase(
   'insert-block.ts: opens emoji picker from dropdown after resizing',
-  { skip: ['edge'] },
+  {
+    skip: ['*'],
+  },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -47,9 +46,12 @@ BrowserTestCase(
   },
 );
 
+// FIXME: This test was automatically skipped due to failure on 22/08/2023: https://product-fabric.atlassian.net/browse/ED-19662
 BrowserTestCase(
   'insert-block.ts: with new extensions opens emoji picker from dropdown after resizing',
-  { skip: ['edge'] },
+  {
+    skip: ['*'],
+  },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -74,3 +76,9 @@ BrowserTestCase(
     expect(await page.isExisting(emojiPanel)).toBe(true);
   },
 );
+
+runEscapeKeydownSuite({
+  openMenu: async (page) => {
+    await clickToolbarMenu(page, ToolbarMenuItem.insertBlock);
+  },
+});

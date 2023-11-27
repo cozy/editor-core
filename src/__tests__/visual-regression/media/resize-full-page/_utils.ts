@@ -1,24 +1,33 @@
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { initFullPageEditorWithAdf, snapshot } from '../../_utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import {
+  initFullPageEditorWithAdf,
+  snapshot,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import {
   getEditorWidth,
-  typeInEditor,
-} from '../../../__helpers/page-objects/_editor';
+  animationFrame,
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
+import type { TestPageConfig } from '@atlaskit/editor-test-helpers/page-objects/media';
 import {
-  insertMedia,
   resizeMediaInPositionWithSnapshot,
   clickMediaInPosition,
   changeMediaLayout,
   MediaLayout,
   MediaResizeSide,
-  TestPageConfig,
   scrollToMedia,
   isLayoutAvailable,
   waitForMediaToBeLoaded,
-} from '../../../__helpers/page-objects/_media';
-import { selectors } from '../../../__helpers/page-objects/_editor';
-import * as layout2Col from '../../common/__fixtures__/basic-columns.adf.json';
-import { EditorProps } from '../../../../types';
+} from '@atlaskit/editor-test-helpers/page-objects/media';
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
+
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import * as layout2Col from './../__fixtures__/mediaSingle-in-column.adf.json';
+import mediaSelectionAdf from './../__fixtures__/mediaSingle-image.adf.json';
+import bulletListAdf from './../__fixtures__/mediaSingle-in-buttetList.adf.json';
+import type { EditorProps } from '../../../../types';
 
 export function createResizeFullPageForConfig(config: TestPageConfig) {
   const initEditor = async (
@@ -39,8 +48,7 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
     await page.click(selectors.editor);
   };
 
-  // FIXME These tests were flakey in the Puppeteer v10 Upgrade
-  describe.skip('Snapshot Test: Media', () => {
+  describe('Snapshot Test: Media', () => {
     describe('full page editor', () => {
       let page: PuppeteerPage;
 
@@ -50,62 +58,58 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
 
       // run the suite of tests for each viewport/prop combination
       const {
-        dynamicTextSizing,
         viewport: { width, height },
       } = config;
 
-      describe(`at ${width}x${height}, without allow resizing, ${
-        dynamicTextSizing ? 'with' : 'without'
-      } dynamic text sizing`, () => {
+      describe(`at ${width}x${height}, without allow resizing`, () => {
         beforeEach(async () => {
           // setup the editor
           await initEditor(
             page,
             {
               media: { allowResizing: false },
-              allowDynamicTextSizing: dynamicTextSizing,
             },
             { width, height },
+            mediaSelectionAdf,
           );
         });
 
         if (isLayoutAvailable(MediaLayout.wide, width)) {
           it('can make an image wide', async () => {
-            // `insertMedia` etc are in each test so we don't load up
-            // the mediapicker for tests that don't end up running in beforeEach
-            await insertMedia(page);
+            await waitForMediaToBeLoaded(page);
             await clickMediaInPosition(page, 0);
+            await animationFrame(page);
             await changeMediaLayout(page, MediaLayout.wide);
             await clickMediaInPosition(page, 0);
+            await animationFrame(page);
             await scrollToMedia(page);
+            await animationFrame(page);
             await snapshot(page);
           });
         }
 
         if (isLayoutAvailable(MediaLayout.fullWidth, width)) {
           it('can make an image full-width', async () => {
-            await insertMedia(page);
+            await waitForMediaToBeLoaded(page);
             await clickMediaInPosition(page, 0);
+            await animationFrame(page);
             await changeMediaLayout(page, MediaLayout.fullWidth);
+            await animationFrame(page);
             await clickMediaInPosition(page, 0);
+            await waitForFloatingControl(page, 'Media floating controls');
             await scrollToMedia(page);
+            await animationFrame(page);
             await snapshot(page);
           });
         }
       });
 
-      describe(`at ${width}x${height} ${
-        dynamicTextSizing ? 'with' : 'without'
-      } dynamic text sizing`, () => {
+      describe(`at ${width}x${height}`, () => {
         let editorWidth: number;
 
         beforeEach(async () => {
           // setup the editor
-          await initEditor(
-            page,
-            { allowDynamicTextSizing: dynamicTextSizing },
-            { width, height },
-          );
+          await initEditor(page, {}, { width, height }, mediaSelectionAdf);
           editorWidth = await getEditorWidth(page);
         });
 
@@ -113,10 +117,9 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
           [2, 6, 10].forEach((cols) => {
             it(`can make an image ${cols} columns wide`, async () => {
               const distance = -((editorWidth / 2) * ((12 - cols) / 12));
-
-              await insertMedia(page);
+              await waitForMediaToBeLoaded(page);
               await scrollToMedia(page);
-
+              await animationFrame(page);
               await resizeMediaInPositionWithSnapshot(page, 0, distance);
             });
           });
@@ -126,9 +129,9 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
           [2, 6, 10].forEach((cols) => {
             it(`can make an wrap-left image ${cols} columns wide`, async () => {
               const distance = -((editorWidth / 12) * (12 - cols));
-
-              await insertMedia(page);
+              await waitForMediaToBeLoaded(page);
               await scrollToMedia(page);
+              await animationFrame(page);
               await clickMediaInPosition(page, 0);
               await changeMediaLayout(page, MediaLayout.wrapLeft);
 
@@ -141,10 +144,13 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
           [2, 6, 10].forEach((cols) => {
             it(`can make an wrap-right image ${cols} columns wide`, async () => {
               const distance = (editorWidth / 12) * (12 - cols);
-              await insertMedia(page);
+              await waitForMediaToBeLoaded(page);
               await scrollToMedia(page);
+              await animationFrame(page);
               await clickMediaInPosition(page, 0);
+              await animationFrame(page);
               await changeMediaLayout(page, MediaLayout.wrapRight);
+              await animationFrame(page);
 
               await resizeMediaInPositionWithSnapshot(
                 page,
@@ -159,12 +165,11 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
         describe('lists', () => {
           [2, 6, 10].forEach((cols) => {
             it(`can make an image in a list ${cols} columns wide`, async () => {
-              const distance = -((editorWidth / 12) * (12 - cols));
-
-              await typeInEditor(page, '* ');
-              await insertMedia(page);
+              await initEditor(page, {}, { width, height }, bulletListAdf);
+              await waitForMediaToBeLoaded(page);
               await scrollToMedia(page);
-
+              await animationFrame(page);
+              const distance = -((editorWidth / 12) * (12 - cols));
               await resizeMediaInPositionWithSnapshot(page, 0, distance);
             });
           });
@@ -183,7 +188,7 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
               { width, height },
               layout2Col,
             );
-
+            await waitForMediaToBeLoaded(page);
             const editorWidth = await getEditorWidth(page);
             const distance = -((editorWidth / 12) * 10);
 
@@ -191,9 +196,7 @@ export function createResizeFullPageForConfig(config: TestPageConfig) {
               'div[data-layout-section] > div:first-of-type';
             await page.waitForSelector(firstLayoutColSelector);
             await page.click(firstLayoutColSelector);
-
-            await insertMedia(page);
-            await waitForMediaToBeLoaded(page);
+            await animationFrame(page);
             await resizeMediaInPositionWithSnapshot(page, 0, distance);
           });
         });

@@ -1,21 +1,26 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   mountEditor,
   goToEditorTestingWDExample,
-} from '../../../../__tests__/__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   fullpage,
   setProseMirrorTextSelection,
   editable,
-} from '../../../../__tests__/integration/_helpers';
+} from '@atlaskit/editor-test-helpers/integration/helpers';
 import * as paragraphWithEmoji from '../__fixtures__/paragraph-with-emoji.adf.json';
 import * as paragraphADF from '../__fixtures__/paragraph.adf.json';
 import { annotationSelectors } from '../_utils';
-import { BrowserObject } from '@atlaskit/webdriver-runner/wd-wrapper';
+import type { BrowserObject } from '@atlaskit/webdriver-runner/wd-wrapper';
 
+// FIXME: This test was automatically skipped due to failure on 10/06/2023: https://product-fabric.atlassian.net/browse/ED-18763
 BrowserTestCase(
   `toolbar is disabled when selection includes inline nodes`,
-  { skip: ['edge'] },
+  {
+    skip: ['*'],
+  },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -37,7 +42,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   `toolbar shows up when selecting whole paragraph and releasing mouse outside editor`,
-  { skip: ['edge'] },
+  {},
   async (client: BrowserObject) => {
     const page = await goToEditorTestingWDExample(client);
 

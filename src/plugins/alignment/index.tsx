@@ -1,17 +1,19 @@
 import React from 'react';
 import { alignment } from '@atlaskit/adf-schema';
-import { EditorPlugin } from '../../types';
+import type { NextEditorPlugin } from '@atlaskit/editor-common/types';
+
 import WithPluginState from '../../ui/WithPluginState';
 import { pluginKey, createPlugin } from './pm-plugins/main';
 import { changeAlignment } from './commands';
 import ToolbarAlignment from './ui/ToolbarAlignment';
 import { AlignmentPluginState, AlignmentState } from './pm-plugins/types';
+import { keymapPlugin } from './pm-plugins/keymap';
 
 export const defaultConfig: AlignmentPluginState = {
   align: 'start',
 };
 
-const alignmentPlugin = (): EditorPlugin => ({
+const alignmentPlugin: NextEditorPlugin<'alignment'> = () => ({
   name: 'alignment',
 
   marks() {
@@ -23,6 +25,10 @@ const alignmentPlugin = (): EditorPlugin => ({
       {
         name: 'alignmentPlugin',
         plugin: ({ dispatch }) => createPlugin(dispatch, defaultConfig),
+      },
+      {
+        name: 'annotationKeymap',
+        plugin: () => keymapPlugin(),
       },
     ];
   },

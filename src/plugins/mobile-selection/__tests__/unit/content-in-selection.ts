@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -7,6 +8,7 @@ import {
   taskList,
   taskItem,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorState } from '@atlaskit/editor-test-helpers/create-editor-state';
 import { contentInSelection } from '../../content-in-selection';
 
@@ -22,7 +24,7 @@ describe('content-in-selection', () => {
     [
       'split nodes',
       doc(p('{<}Hel'), panel()(p('lo{>}'))),
-      ['paragraph', 'text', 'panel'],
+      ['paragraph', 'text', 'panel', 'paragraph', 'text'],
       [],
     ],
     [
@@ -39,14 +41,14 @@ describe('content-in-selection', () => {
     [
       'split mark',
       doc(p('{<}Hel', strong('lo{>}'))),
-      ['paragraph', 'text'],
+      ['paragraph', 'text', 'text'],
       ['strong'],
     ],
     [
       'mixed marks',
       doc(p('He{<}', strong('ll'), strong(em('o t')), strong('he'), '{>}re')),
-      ['paragraph', 'text'],
-      ['strong', 'em'],
+      ['paragraph', 'text', 'text', 'text'],
+      ['strong', 'em', 'strong', 'strong'],
     ],
   ])('%s', (_, inputDoc, expectedNodes, expectedMarks) => {
     const editorState = createEditorState(inputDoc);

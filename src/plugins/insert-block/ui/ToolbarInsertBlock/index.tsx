@@ -1,38 +1,36 @@
-import React, { ReactInstance } from 'react';
+/** @jsx jsx */
+import React from 'react';
+import { jsx } from '@emotion/react';
 import ReactDOM from 'react-dom';
-import { InjectedIntlProps, injectIntl } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
 
 import { EmojiPicker as AkEmojiPicker } from '@atlaskit/emoji/picker';
-import { EmojiId } from '@atlaskit/emoji/types';
-import { Popup } from '@atlaskit/editor-common';
-import ToolbarButton, { ToolbarButtonRef } from '../../../../ui/ToolbarButton';
-import { Separator, ButtonGroup, Wrapper } from '../../../../ui/styles';
-import { createTable } from '../../../table/commands';
-import { insertDate, openDatePicker } from '../../../date/actions';
-import { openElementBrowserModal } from '../../../quick-insert/commands';
-import { showPlaceholderFloatingToolbar } from '../../../placeholder-text/actions';
-import { createHorizontalRule } from '../../../rule/pm-plugins/input-rule';
-import { insertLayoutColumnsWithAnalytics } from '../../../layout/actions';
-import { insertTaskDecision } from '../../../tasks-and-decisions/commands';
-import { insertExpand } from '../../../expand/commands';
-import { showLinkToolbar } from '../../../hyperlink/commands';
-import { insertMentionQuery } from '../../../mentions/commands/insert-mention-query';
-import { updateStatusWithAnalytics } from '../../../status/actions';
+import type { EmojiId } from '@atlaskit/emoji/types';
+import { Popup } from '@atlaskit/editor-common/ui';
+import type { ToolbarButtonRef } from '@atlaskit/editor-common/ui-menu';
+import { ToolbarButton } from '@atlaskit/editor-common/ui-menu';
+import {
+  separatorStyles,
+  buttonGroupStyle,
+  wrapperStyle,
+} from '@atlaskit/editor-common/styles';
+import { akEditorMenuZIndex } from '@atlaskit/editor-shared-styles';
 import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
   INPUT_METHOD,
-  withAnalytics as commandWithAnalytics,
-} from '../../../analytics';
-import { insertEmoji } from '../../../emoji/commands/insert-emoji';
-import { DropdownItem } from '../../../block-type/ui/ToolbarBlockType';
-import { OnInsert } from '../../../../ui/ElementBrowser/types';
+} from '@atlaskit/editor-common/analytics';
+import type { DropdownItem } from '@atlaskit/editor-plugin-block-type';
+import type { OnInsert } from '../ElementBrowser/types';
 import { messages } from './messages';
-import { Props, State, TOOLBAR_MENU_TYPE } from './types';
+import type { Props, State } from './types';
+import type { TOOLBAR_MENU_TYPE } from '@atlaskit/editor-common/types';
 import { createItems } from './create-items';
 import { BlockInsertMenu } from './block-insert-menu';
+import { withReactEditorViewOuterListeners as withOuterListeners } from '@atlaskit/editor-common/ui-react';
 
 /**
  * Checks if an element is detached (i.e. not in the current document)
@@ -40,24 +38,26 @@ import { BlockInsertMenu } from './block-insert-menu';
 const isDetachedElement = (el: HTMLElement) => !document.body.contains(el);
 const noop = () => {};
 
-class ToolbarInsertBlock extends React.PureComponent<
-  Props & InjectedIntlProps,
+const EmojiPickerWithListeners = withOuterListeners(AkEmojiPicker);
+
+export class ToolbarInsertBlock extends React.PureComponent<
+  Props & WrappedComponentProps,
   State
 > {
   private dropdownButtonRef?: HTMLElement;
-  private pickerRef?: ReactInstance;
   private emojiButtonRef?: HTMLElement;
   private plusButtonRef?: HTMLElement;
 
   state: State = {
     isPlusMenuOpen: false,
     emojiPickerOpen: false,
+    isOpenedByKeyboard: false,
     buttons: [],
     dropdownItems: [],
   };
 
   static getDerivedStateFromProps(
-    props: Props & InjectedIntlProps,
+    props: Props & WrappedComponentProps,
     state: State,
   ): State | null {
     const [buttons, dropdownItems] = createItems({
@@ -68,6 +68,7 @@ class ToolbarInsertBlock extends React.PureComponent<
       imageUploadSupported: props.imageUploadSupported,
       imageUploadEnabled: props.imageUploadEnabled,
       mentionsSupported: props.mentionsSupported,
+      mentionsDisabled: props.mentionsDisabled,
       actionSupported: props.actionSupported,
       decisionSupported: props.decisionSupported,
       linkSupported: props.linkSupported,
@@ -79,7 +80,6 @@ class ToolbarInsertBlock extends React.PureComponent<
       horizontalRuleEnabled: props.horizontalRuleEnabled,
       layoutSectionEnabled: props.layoutSectionEnabled,
       expandEnabled: props.expandEnabled,
-      macroProvider: props.macroProvider,
       showElementBrowserLink: props.showElementBrowserLink,
       emojiProvider: props.emojiProvider,
       availableWrapperBlockTypes: props.availableWrapperBlockTypes,
@@ -101,6 +101,15 @@ class ToolbarInsertBlock extends React.PureComponent<
     // If number of visible buttons changed, close emoji picker
     if (prevProps.buttons !== this.props.buttons) {
       this.setState({ emojiPickerOpen: false });
+    }
+
+    if (this.state.isOpenedByKeyboard) {
+      const downArrowEvent = new KeyboardEvent('keydown', {
+        bubbles: true,
+        key: 'ArrowDown',
+      });
+      this.dropdownButtonRef?.dispatchEvent(downArrowEvent);
+      this.setState({ ...this.state, isOpenedByKeyboard: false });
     }
   }
 
@@ -138,13 +147,18 @@ class ToolbarInsertBlock extends React.PureComponent<
     });
   };
 
-  private togglePlusMenuVisibility = () => {
+  private togglePlusMenuVisibility = (event?: KeyboardEvent) => {
     const { isPlusMenuOpen } = this.state;
     this.onOpenChange({ isPlusMenuOpen: !isPlusMenuOpen });
+    if (event?.key === 'Escape') {
+      (this.plusButtonRef || this.dropdownButtonRef)?.focus();
+    }
   };
 
   private toggleEmojiPicker = (
-    inputMethod: TOOLBAR_MENU_TYPE = INPUT_METHOD.TOOLBAR,
+    inputMethod:
+      | TOOLBAR_MENU_TYPE
+      | INPUT_METHOD.KEYBOARD = INPUT_METHOD.TOOLBAR,
   ) => {
     this.setState(
       (prevState) => ({ emojiPickerOpen: !prevState.emojiPickerOpen }),
@@ -163,6 +177,21 @@ class ToolbarInsertBlock extends React.PureComponent<
         }
       },
     );
+  };
+
+  private handleEmojiPressEscape = () => {
+    this.toggleEmojiPicker(INPUT_METHOD.KEYBOARD);
+    this.emojiButtonRef?.focus();
+  };
+
+  private handleEmojiClickOutside = (e: MouseEvent) => {
+    // Ignore click events for detached elements.
+    // Workaround for FS-1322 - where two onClicks fire - one when the upload button is
+    // still in the document, and one once it's detached. Does not always occur, and
+    // may be a side effect of a react render optimisation
+    if (e.target && !isDetachedElement(e.target as HTMLElement)) {
+      this.toggleEmojiPicker(INPUT_METHOD.TOOLBAR);
+    }
   };
 
   private renderPopup() {
@@ -195,11 +224,14 @@ class ToolbarInsertBlock extends React.PureComponent<
         mountTo={popupsMountPoint}
         boundariesElement={popupsBoundariesElement}
         scrollableElement={popupsScrollableElement}
+        focusTrap
+        zIndex={akEditorMenuZIndex}
       >
-        <AkEmojiPicker
+        <EmojiPickerWithListeners
           emojiProvider={emojiProvider}
           onSelection={this.handleSelectedEmoji}
-          onPickerRef={this.onPickerRef}
+          handleClickOutside={this.handleEmojiClickOutside}
+          handleEscapeKeydown={this.handleEmojiPressEscape}
         />
       </Popup>
     );
@@ -226,33 +258,8 @@ class ToolbarInsertBlock extends React.PureComponent<
     }
   };
 
-  private onPickerRef = (ref: any) => {
-    if (ref) {
-      document.addEventListener('click', this.handleClickOutside);
-    } else {
-      document.removeEventListener('click', this.handleClickOutside);
-    }
-    this.pickerRef = ref;
-  };
-
-  private handleClickOutside = (e: MouseEvent) => {
-    const picker = this.pickerRef && ReactDOM.findDOMNode(this.pickerRef);
-    // Ignore click events for detached elements.
-    // Workaround for FS-1322 - where two onClicks fire - one when the upload button is
-    // still in the document, and one once it's detached. Does not always occur, and
-    // may be a side effect of a react render optimisation
-    if (
-      !picker ||
-      (e.target &&
-        !isDetachedElement(e.target as HTMLElement) &&
-        !picker.contains(e.target as HTMLElement))
-    ) {
-      this.toggleEmojiPicker();
-    }
-  };
-
   render() {
-    const { buttons, dropdownItems } = this.state;
+    const { buttons, dropdownItems, emojiPickerOpen } = this.state;
     const { isDisabled, isReducedSpacing } = this.props;
 
     if (buttons.length === 0 && dropdownItems.length === 0) {
@@ -260,21 +267,27 @@ class ToolbarInsertBlock extends React.PureComponent<
     }
 
     return (
-      <ButtonGroup width={isReducedSpacing ? 'small' : 'large'}>
+      <span css={buttonGroupStyle}>
         {buttons.map((btn) => (
           <ToolbarButton
             item={btn}
+            testId={String(btn.content)}
             ref={btn.value.name === 'emoji' ? this.handleEmojiButtonRef : noop}
             key={btn.value.name}
             spacing={isReducedSpacing ? 'none' : 'default'}
             disabled={isDisabled || btn.isDisabled}
             iconBefore={btn.elemBefore}
-            selected={btn.isActive}
+            selected={
+              (btn.value.name === 'emoji' && emojiPickerOpen) || btn.isActive
+            }
             title={btn.title}
+            aria-label={btn['aria-label']}
+            aria-haspopup={btn['aria-haspopup']}
+            aria-keyshortcuts={btn['aria-keyshortcuts']}
             onItemClick={this.insertToolbarMenuItem}
           />
         ))}
-        <Wrapper>
+        <span css={wrapperStyle}>
           {this.renderPopup()}
           <BlockInsertMenu
             popupsMountPoint={this.props.popupsMountPoint}
@@ -289,7 +302,8 @@ class ToolbarInsertBlock extends React.PureComponent<
             items={this.state.dropdownItems}
             onRef={this.handleDropDownButtonRef}
             onPlusButtonRef={this.handlePlusButtonRef}
-            onClick={this.togglePlusMenuVisibility}
+            onClick={this.handleClick}
+            onKeyDown={this.handleOpenByKeyboard}
             onItemActivated={this.insertInsertMenuItem}
             onInsert={this.insertInsertMenuItem as OnInsert}
             onOpenChange={this.onOpenChange}
@@ -297,56 +311,90 @@ class ToolbarInsertBlock extends React.PureComponent<
             replacePlusMenuWithElementBrowser={
               this.props.replacePlusMenuWithElementBrowser ?? false
             }
+            showElementBrowserLink={this.props.showElementBrowserLink || false}
+            pluginInjectionApi={this.props.pluginInjectionApi}
           />
-        </Wrapper>
-        {this.props.showSeparator && <Separator />}
-      </ButtonGroup>
+        </span>
+        {this.props.showSeparator && <span css={separatorStyles} />}
+      </span>
     );
   }
 
+  private handleClick = () => {
+    this.togglePlusMenuVisibility();
+  };
+
+  private handleOpenByKeyboard = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      this.setState({ ...this.state, isOpenedByKeyboard: true });
+      event.preventDefault();
+      this.togglePlusMenuVisibility();
+    }
+  };
+
   private toggleLinkPanel = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
-    showLinkToolbar(inputMethod)(editorView.state, editorView.dispatch);
-    return true;
+    const { pluginInjectionApi } = this.props;
+
+    return (
+      pluginInjectionApi?.core.actions.execute(
+        pluginInjectionApi?.hyperlink?.commands.showLinkToolbar(inputMethod),
+      ) ?? false
+    );
   };
 
   private insertMention = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
-    insertMentionQuery(inputMethod)(editorView.state, editorView.dispatch);
-    return true;
+    const { editorView, pluginInjectionApi } = this.props;
+    if (!editorView) {
+      return true;
+    }
+    const pluginState = pluginInjectionApi?.mention?.sharedState.currentState();
+    if (pluginState && pluginState.canInsertMention === false) {
+      return false;
+    }
+    return Boolean(
+      pluginInjectionApi?.mention?.actions?.openTypeAhead(inputMethod),
+    );
   };
 
   private insertTable = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView, allowLocalIdGenerationOnTables } = this.props;
+    const { pluginInjectionApi, editorView } = this.props;
 
-    return commandWithAnalytics({
-      action: ACTION.INSERTED,
-      actionSubject: ACTION_SUBJECT.DOCUMENT,
-      actionSubjectId: ACTION_SUBJECT_ID.TABLE,
-      attributes: { inputMethod },
-      eventType: EVENT_TYPE.TRACK,
-    })(createTable(allowLocalIdGenerationOnTables))(
-      editorView.state,
-      editorView.dispatch,
+    const { state, dispatch } = editorView;
+
+    return (
+      pluginInjectionApi?.table?.actions.insertTable?.({
+        action: ACTION.INSERTED,
+        actionSubject: ACTION_SUBJECT.DOCUMENT,
+        actionSubjectId: ACTION_SUBJECT_ID.TABLE,
+        attributes: { inputMethod },
+        eventType: EVENT_TYPE.TRACK,
+      })(state, dispatch) ?? false
     );
   };
 
   private createDate = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
-    insertDate(undefined, inputMethod)(editorView.state, editorView.dispatch);
-    openDatePicker()(editorView.state, editorView.dispatch);
+    const { pluginInjectionApi } = this.props;
+    pluginInjectionApi?.core.actions.execute(
+      pluginInjectionApi?.date?.commands?.insertDate({
+        inputMethod,
+      }),
+    );
+
     return true;
   };
 
   private createPlaceholderText = (): boolean => {
-    const { editorView } = this.props;
-    showPlaceholderFloatingToolbar(editorView.state, editorView.dispatch);
+    const { editorView, pluginInjectionApi } = this.props;
+    pluginInjectionApi?.placeholderText?.actions.showPlaceholderFloatingToolbar(
+      editorView.state,
+      editorView.dispatch,
+    );
     return true;
   };
 
   private insertLayoutColumns = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
-    insertLayoutColumnsWithAnalytics(inputMethod)(
+    const { editorView, pluginInjectionApi } = this.props;
+    pluginInjectionApi?.layout?.actions.insertLayoutColumns(inputMethod)(
       editorView.state,
       editorView.dispatch,
     );
@@ -354,12 +402,13 @@ class ToolbarInsertBlock extends React.PureComponent<
   };
 
   private createStatus = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
-    updateStatusWithAnalytics(inputMethod)(
-      editorView.state,
-      editorView.dispatch,
+    const { pluginInjectionApi, editorView } = this.props;
+    return (
+      pluginInjectionApi?.status?.actions?.updateStatus(inputMethod)(
+        editorView.state,
+        editorView.dispatch,
+      ) ?? false
     );
-    return true;
   };
 
   private openMediaPicker = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
@@ -379,44 +428,45 @@ class ToolbarInsertBlock extends React.PureComponent<
     return true;
   };
 
-  private insertTaskDecision = (
-    name: 'action' | 'decision',
-    inputMethod: TOOLBAR_MENU_TYPE,
-  ) => (): boolean => {
-    const { editorView } = this.props;
-    if (!editorView) {
-      return false;
-    }
-    const listType = name === 'action' ? 'taskList' : 'decisionList';
-    insertTaskDecision(
-      editorView,
-      listType,
-      inputMethod,
-    )(editorView.state, editorView.dispatch);
-    return true;
-  };
+  private insertTaskDecision =
+    (name: 'action' | 'decision', inputMethod: TOOLBAR_MENU_TYPE) =>
+    (): boolean => {
+      const {
+        editorView: { state, dispatch },
+        pluginInjectionApi,
+      } = this.props;
+      const listType = name === 'action' ? 'taskList' : 'decisionList';
+
+      return (
+        pluginInjectionApi?.taskDecision?.actions.insertTaskDecision(
+          listType,
+          inputMethod,
+        )(state, dispatch) ?? false
+      );
+    };
 
   private insertHorizontalRule = (inputMethod: TOOLBAR_MENU_TYPE): boolean => {
-    const { editorView } = this.props;
+    const {
+      editorView: { state, dispatch },
+      pluginInjectionApi,
+    } = this.props;
 
-    const tr = createHorizontalRule(
-      editorView.state,
-      editorView.state.selection.from,
-      editorView.state.selection.to,
-      inputMethod,
+    return (
+      pluginInjectionApi?.rule?.actions.insertHorizontalRule(inputMethod)(
+        state,
+        dispatch,
+      ) ?? false
     );
-
-    if (tr) {
-      editorView.dispatch(tr);
-      return true;
-    }
-
-    return false;
   };
 
   private insertExpand = (): boolean => {
-    const { state, dispatch } = this.props.editorView;
-    return insertExpand(state, dispatch);
+    const {
+      editorView: { state, dispatch },
+      pluginInjectionApi,
+    } = this.props;
+    return (
+      pluginInjectionApi?.expand?.actions.insertExpand(state, dispatch) ?? false
+    );
   };
 
   private insertBlockType = (itemName: string) => () => {
@@ -428,19 +478,23 @@ class ToolbarInsertBlock extends React.PureComponent<
   };
 
   private handleSelectedEmoji = (emojiId: EmojiId): boolean => {
+    const { pluginInjectionApi } = this.props;
     this.props.editorView.focus();
-    insertEmoji(emojiId, INPUT_METHOD.PICKER)(
-      this.props.editorView.state,
-      this.props.editorView.dispatch,
+    pluginInjectionApi?.core.actions.execute(
+      pluginInjectionApi.emoji?.commands.insertEmoji(
+        emojiId,
+        INPUT_METHOD.PICKER,
+      ),
     );
     this.toggleEmojiPicker();
     return true;
   };
 
   private openElementBrowser = () => {
-    openElementBrowserModal()(
-      this.props.editorView.state,
-      this.props.editorView.dispatch,
+    const { pluginInjectionApi } = this.props;
+
+    pluginInjectionApi?.core.actions.execute(
+      pluginInjectionApi?.quickInsert?.commands.openElementBrowserModal,
     );
   };
 
@@ -451,12 +505,8 @@ class ToolbarInsertBlock extends React.PureComponent<
     item: any;
     inputMethod: TOOLBAR_MENU_TYPE;
   }): void => {
-    const {
-      editorView,
-      editorActions,
-      handleImageUpload,
-      expandEnabled,
-    } = this.props;
+    const { editorView, editorActions, handleImageUpload, expandEnabled } =
+      this.props;
 
     // need to do this before inserting nodes so scrollIntoView works properly
     if (!editorView.hasFocus()) {

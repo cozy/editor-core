@@ -1,8 +1,15 @@
-import { DecorationSet } from 'prosemirror-view';
-import { EditorState, SelectionBookmark } from 'prosemirror-state';
-import { PortalProviderAPI } from '../../../ui/PortalProvider';
-import { Dispatch, EventDispatcher } from '../../../event-dispatcher';
-import { InlineCommentAnnotationProvider, AnnotationInfo } from '../types';
+import type { DecorationSet } from '@atlaskit/editor-prosemirror/view';
+import type {
+  EditorState,
+  SelectionBookmark,
+} from '@atlaskit/editor-prosemirror/state';
+import type { PortalProviderAPI } from '@atlaskit/editor-common/portal-provider';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
+import type {
+  Dispatch,
+  EventDispatcher,
+} from '@atlaskit/editor-common/event-dispatcher';
+import type { InlineCommentAnnotationProvider, AnnotationInfo } from '../types';
 
 export enum ACTIONS {
   UPDATE_INLINE_COMMENT_STATE,
@@ -12,6 +19,7 @@ export enum ACTIONS {
   ADD_INLINE_COMMENT,
   INLINE_COMMENT_SET_VISIBLE,
   CLOSE_COMPONENT,
+  SET_SELECTED_ANNOTATION,
 }
 
 export interface InlineCommentPluginOptions {
@@ -19,6 +27,7 @@ export interface InlineCommentPluginOptions {
   eventDispatcher: EventDispatcher;
   portalProviderAPI: PortalProviderAPI;
   provider: InlineCommentAnnotationProvider;
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined;
 }
 export interface InlineCommentMouseData {
   isSelecting: boolean;
@@ -54,7 +63,11 @@ export type InlineCommentAction =
         selectedAnnotations: AnnotationInfo[];
       };
     }
-  | { type: ACTIONS.INLINE_COMMENT_SET_VISIBLE; data: { isVisible: boolean } };
+  | { type: ACTIONS.INLINE_COMMENT_SET_VISIBLE; data: { isVisible: boolean } }
+  | {
+      type: ACTIONS.SET_SELECTED_ANNOTATION;
+      data: { selectedAnnotations: AnnotationInfo[] };
+    };
 
 export type InlineCommentPluginState = {
   annotations: InlineCommentMap;
@@ -62,11 +75,12 @@ export type InlineCommentPluginState = {
   dirtyAnnotations?: boolean;
   mouseData: InlineCommentMouseData;
   draftDecorationSet?: DecorationSet;
-  bookmark?: SelectionBookmark<any>;
+  bookmark?: SelectionBookmark;
 
   // Denotes if annotations are allowed to be create on empty nodes or nodes of whitespace (Confluence spec)
   disallowOnWhitespace: boolean;
 
   // Allow users to hide inline comments during editing
   isVisible: boolean;
+  skipSelectionHandling: boolean;
 };

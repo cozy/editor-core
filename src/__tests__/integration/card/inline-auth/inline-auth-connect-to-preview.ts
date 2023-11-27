@@ -1,8 +1,9 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 import * as inlineCardAdf from '../_fixtures_/inline-card.adf.unauth.json';
 import {
   waitForResolvedInlineCard,
@@ -11,9 +12,11 @@ import {
 
 type ClientType = Parameters<typeof goToEditorTestingWDExample>[0];
 
+// FIXME: safari test is inconsistent
+// https://automate.browserstack.com/dashboard/v2/builds/c1745da2a13b05d3767df8571454442f9a822903?overallStatus=error
 BrowserTestCase(
   'inline: should open a new window to authenticate with a provider',
-  { skip: ['safari', 'edge'] },
+  { skip: ['safari'] },
   async (client: ClientType) => {
     const page = await goToEditorTestingWDExample(client);
     const authorizationWindow = new AuthorizationWindow(client, page);

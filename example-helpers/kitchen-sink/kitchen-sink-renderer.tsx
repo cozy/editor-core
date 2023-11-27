@@ -1,12 +1,13 @@
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
+
 import React from 'react';
-import {
-  Provider as SmartCardProvider,
-  Client as SmartCardClient,
-} from '@atlaskit/smart-card';
+import { SmartCardProvider, CardClient } from '@atlaskit/link-provider';
 import { ReactRenderer } from '@atlaskit/renderer';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
-import { RendererPadding } from './kitchen-sink-styles';
-import { EditorAppearance } from '../../src/types';
+import { rendererPadding } from './kitchen-sink-styles';
+import type { EditorAppearance } from '../../src/types';
 import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers/exampleMediaFeatureFlags';
 
 export interface KitchenSinkRendererProps {
@@ -18,12 +19,12 @@ export interface KitchenSinkRendererProps {
   featureFlags: Record<string, boolean>;
 }
 
-export const KitchenSinkRenderer: React.StatelessComponent<KitchenSinkRendererProps> = React.memo(
-  (props) => {
-    const smartCardClient = React.useMemo(() => new SmartCardClient('stg'), []);
+export const KitchenSinkRenderer: React.StatelessComponent<KitchenSinkRendererProps> =
+  React.memo((props) => {
+    const smartCardClient = React.useMemo(() => new CardClient('stg'), []);
 
     return (
-      <RendererPadding hasPadding={props.isFullPage}>
+      <div css={rendererPadding(props.isFullPage)}>
         <SmartCardProvider client={smartCardClient}>
           <ReactRenderer
             allowHeadingAnchorLinks={{
@@ -38,16 +39,19 @@ export const KitchenSinkRenderer: React.StatelessComponent<KitchenSinkRendererPr
             allowAltTextOnImages={true}
             extensionHandlers={extensionHandlers}
             media={{
-              featureFlags: { ...exampleMediaFeatureFlags, captions: true },
+              featureFlags: { ...exampleMediaFeatureFlags },
               allowLinking: true,
+              allowCaptions: true,
+              enableDownloadButton: true,
             }}
             allowCopyToClipboard={true}
+            allowWrapCodeBlock={true}
             useSpecBasedValidator={true}
             allowSelectAllTrap
             featureFlags={props.featureFlags}
+            allowCustomPanels={true}
           />
         </SmartCardProvider>
-      </RendererPadding>
+      </div>
     );
-  },
-);
+  });

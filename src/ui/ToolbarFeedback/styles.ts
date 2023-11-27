@@ -1,26 +1,28 @@
-import styled from 'styled-components';
-import { HTMLAttributes, ImgHTMLAttributes, ComponentClass } from 'react';
-import { gridSize, borderRadius } from '@atlaskit/theme/constants';
+import { css } from '@emotion/react';
+import { borderRadius } from '@atlaskit/theme/constants';
 import { N60A, N400, P400 } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 
-export const ButtonContent: ComponentClass<HTMLAttributes<{}>> = styled.span`
+export const buttonContent = css`
   display: flex;
   height: 24px;
   line-height: 24px;
   min-width: 70px;
 `;
 
-export const Wrapper: ComponentClass<HTMLAttributes<{}>> = styled.span`
+export const wrapper = css`
   display: flex;
-  margin-right: ${({ width }: { width?: 'small' | 'large' }) =>
-    !width || width === 'large' ? 0 : gridSize()}px;
+  margin-right: 0;
 `;
 
-export const ConfirmationPopup: ComponentClass<HTMLAttributes<{}>> = styled.div`
-  background: #fff;
+export const confirmationPopup = css`
+  background: ${token('elevation.surface.overlay', '#fff')};
   border-radius: ${borderRadius()}px;
-  box-shadow: 0 4px 8px -2px ${N60A}, 0 0 1px ${N60A};
+  box-shadow: ${token(
+    'elevation.shadow.overlay',
+    `0 4px 8px -2px ${N60A}, 0 0 1px ${N60A}`,
+  )};
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -30,11 +32,11 @@ export const ConfirmationPopup: ComponentClass<HTMLAttributes<{}>> = styled.div`
   width: 280px;
 `;
 
-export const ConfirmationText: ComponentClass<HTMLAttributes<{}>> = styled.div`
+export const confirmationText = css`
   font-size: ${relativeFontSizeToBase16(14)};
   word-spacing: 4px;
   line-height: 22px;
-  color: ${N400};
+  color: ${token('color.text.subtle', N400)};
   margin-top: 30px;
   padding: 20px;
   & > div {
@@ -48,14 +50,14 @@ export const ConfirmationText: ComponentClass<HTMLAttributes<{}>> = styled.div`
   }
 `;
 
-export const ConfirmationHeader: ComponentClass<HTMLAttributes<{}>> = styled.div`
-  background-color: ${P400};
+export const confirmationHeader = css`
+  background-color: ${token('color.background.discovery.bold', P400)};
   height: 100px;
   width: 100%;
   display: inline-block;
 `;
 
-export const ConfirmationImg: ComponentClass<ImgHTMLAttributes<{}>> = styled.img`
+export const confirmationImg = css`
   width: 100px;
   display: block;
   margin: 25px auto 0 auto;

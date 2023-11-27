@@ -1,4 +1,6 @@
-import { PluginKey } from 'prosemirror-state';
+import type { PluginKey } from '@atlaskit/editor-prosemirror/state';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -11,39 +13,56 @@ import {
   tr,
   ul,
   li,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { pluginKey as alignmentPluginKey } from '../../pm-plugins/main';
 import { changeAlignment } from '../../commands';
-import { insertBlockType } from '../../../block-type/commands';
-import { toggleBulletList } from '../../../list/commands';
+import { wrapSelectionIn } from '@atlaskit/editor-common/utils';
 
 import alignmentPlugin from '../../';
-import tablePlugin from '../../../table';
+import { tablesPlugin } from '@atlaskit/editor-plugin-table';
+import { INPUT_METHOD } from '@atlaskit/editor-common/analytics';
 
-import panelPlugin from '../../../panel';
-import listPlugin from '../../../list';
-import codeBlockPlugin from '../../../code-block';
-import blockTypePlugin from '../../../block-type';
-import { AlignmentPluginState } from '../../pm-plugins/types';
+import { panelPlugin } from '@atlaskit/editor-plugin-panel';
+import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { codeBlockPlugin } from '@atlaskit/editor-plugin-code-block';
+import { compositionPlugin } from '@atlaskit/editor-plugin-composition';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+import type { AlignmentPluginState } from '../../pm-plugins/types';
+import { selectionPlugin } from '@atlaskit/editor-plugin-selection';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { decorationsPlugin } from '@atlaskit/editor-plugin-decorations';
+import { widthPlugin } from '@atlaskit/editor-plugin-width';
+import { guidelinePlugin } from '@atlaskit/editor-plugin-guideline';
 
 const alignmentPreset = new Preset<LightEditorPlugin>()
+  .add([featureFlagsPlugin, {}])
+  .add([analyticsPlugin, {}])
+  .add(contentInsertionPlugin)
+  .add(decorationsPlugin)
   .add(alignmentPlugin)
-  .add(tablePlugin)
+  .add(widthPlugin)
+  .add(guidelinePlugin)
+  .add(selectionPlugin)
+  .add(tablesPlugin)
   .add(listPlugin)
-  .add(codeBlockPlugin)
+  .add(compositionPlugin)
+  .add([codeBlockPlugin, { appearance: 'full-page' }])
   .add(blockTypePlugin)
   .add(panelPlugin);
 
 describe('alignment', () => {
   const createEditor = createProsemirrorEditorFactory();
   const editor = (doc: DocBuilder) =>
-    createEditor<AlignmentPluginState, PluginKey>({
+    createEditor<AlignmentPluginState, PluginKey, typeof alignmentPreset>({
       doc,
       pluginKey: alignmentPluginKey,
       preset: alignmentPreset,
@@ -117,32 +136,40 @@ describe('alignment', () => {
         doc(alignmentMark({ align: 'end' })(p('hello{<>}'))),
       );
       const { dispatch, state } = editorView;
-      insertBlockType('panel')(state, dispatch);
+      wrapSelectionIn(state.schema.nodes.panel)(state, dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(panel()(p('hello{<>}'))),
       );
     });
 
     it('Removes alignment when the text is toggled to a list', () => {
-      const { editorView } = editor(
+      const { editorView, editorAPI } = editor(
         doc(alignmentMark({ align: 'end' })(p('{<>}hello'))),
       );
-      toggleBulletList(editorView);
+      editorAPI.core.actions.execute(
+        editorAPI.list.commands.toggleBulletList(INPUT_METHOD.TOOLBAR),
+      );
       expect(editorView.state.doc).toEqualDocument(doc(ul(li(p('hello')))));
     });
   });
 
   describe('Adds alignment to top level paragraphs inside tables', () => {
+    const TABLE_LOCAL_ID = 'test-table-local-id';
     it('Does not apply to paragraph inside a table', () => {
       const { editorView } = editor(
-        doc(p('text'), table()(tr(td({})(p('hello')), td({})(p('world{<>}'))))),
+        doc(
+          p('text'),
+          table({ localId: TABLE_LOCAL_ID })(
+            tr(td({})(p('hello')), td({})(p('world{<>}'))),
+          ),
+        ),
       );
       const { dispatch, state } = editorView;
       changeAlignment('end')(state, dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           p('text'),
-          table()(
+          table({ localId: TABLE_LOCAL_ID })(
             tr(
               td({})(p('hello')),
               td({})(alignmentMark({ align: 'end' })(p('world{<>}'))),

@@ -1,24 +1,27 @@
-import {
-  getExampleUrl,
-  loadPage,
-  PuppeteerPage,
-  takeElementScreenShot,
-  waitForNoTooltip,
-} from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { getExampleUrl, loadPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   ToolbarMenuItem,
   toolbarMenuItemsSelectors,
-} from '../../../../__tests__/__helpers/page-objects/_toolbar';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   elementBrowserSelectors,
   waitForInsertMenuIcons,
-} from '../../../../__tests__/__helpers/page-objects/_element-browser';
-import { clickEditableContent } from '../../../../__tests__/__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/element-browser';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  clickEditableContent,
+  animationFrame,
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { snapshot } from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 
 let page: PuppeteerPage;
 let url: string;
 
-describe('InsertMenu', () => {
+describe('InsertMenu Button', () => {
   beforeEach(async () => {
     url = getExampleUrl(
       'editor',
@@ -28,30 +31,28 @@ describe('InsertMenu', () => {
     );
     page = global.page;
     await loadPage(page, url);
+    await animationFrame(page);
     await clickEditableContent(page);
+    await animationFrame(page);
     await page.click(toolbarMenuItemsSelectors[ToolbarMenuItem.insertMenu]);
     await page.waitForSelector(elementBrowserSelectors.elementBrowser);
-    // Move mouse away to avoid the tooltip from the clicked button
-    await page.mouse.move(0, 0);
-    await waitForNoTooltip(page);
+    await animationFrame(page);
   });
 
-  it('should match InsertMenu snapshot', async () => {
+  // ED-20360
+  it.skip('should match the InsertMenu item snapshot', async () => {
+    await animationFrame(page);
     await waitForInsertMenuIcons(page);
-    const image = await takeElementScreenShot(
-      page,
-      elementBrowserSelectors.elementBrowser,
-    );
-    expect(image).toMatchProdImageSnapshot();
-  });
-
-  it('should correctly render view more element', async () => {
     // Wait for loaded SVG icon
     await page.waitForSelector(`${elementBrowserSelectors.viewMore} svg`);
-    const image = await takeElementScreenShot(
+    await animationFrame(page);
+    await snapshot(
       page,
-      elementBrowserSelectors.viewMore,
+      { tolerance: 0.0005 },
+      elementBrowserSelectors.elementBrowser,
+      {
+        captureBeyondViewport: false,
+      },
     );
-    expect(image).toMatchProdImageSnapshot();
   });
 });

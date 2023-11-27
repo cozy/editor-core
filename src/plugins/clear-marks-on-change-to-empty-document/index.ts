@@ -1,16 +1,21 @@
-import { Plugin, PluginKey, EditorState, Transaction } from 'prosemirror-state';
-import { EditorPlugin } from '../../types';
-import { isEmptyDocument } from '../../utils';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type {
+  EditorState,
+  Transaction,
+} from '@atlaskit/editor-prosemirror/state';
+import { PluginKey } from '@atlaskit/editor-prosemirror/state';
+import type { NextEditorPlugin } from '@atlaskit/editor-common/types';
+import { isEmptyDocument } from '@atlaskit/editor-common/utils';
 
 export const pluginKey = new PluginKey(
   'clearMarksOnChangeToEmptyDocumentPlugin',
 );
 
-export function createPlugin(): Plugin {
-  return new Plugin({
+export function createPlugin(): SafePlugin {
+  return new SafePlugin({
     key: pluginKey,
     appendTransaction: (
-      _transactions: Transaction[],
+      _transactions: readonly Transaction[],
       oldState: EditorState,
       newState: EditorState,
     ) => {
@@ -23,7 +28,9 @@ export function createPlugin(): Plugin {
   });
 }
 
-const clearMarksOnChangeToEmptyDocumentPlugin = (): EditorPlugin => ({
+const clearMarksOnChangeToEmptyDocumentPlugin: NextEditorPlugin<
+  'clearMarksOnEmptyDoc'
+> = () => ({
   name: 'clearMarksOnEmptyDoc',
 
   pmPlugins() {

@@ -1,10 +1,11 @@
 import React from 'react';
-import { IntlProvider } from 'react-intl';
+import { IntlProvider } from 'react-intl-next';
 import { mount } from 'enzyme';
 import { act } from '@testing-library/react-hooks';
-import { FieldDefinition } from '@atlaskit/editor-common/extensions';
+import type { FieldDefinition } from '@atlaskit/editor-common/extensions';
 import { FormErrorBoundaryImpl } from '../../FormErrorBoundary';
-import { flushPromises } from '../../../../__tests__/__helpers/utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 const BadComponent = () => {
   throw new Error('This should fail');

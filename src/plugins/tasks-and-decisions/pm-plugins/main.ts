@@ -1,62 +1,102 @@
-import { Node as PMNode } from 'prosemirror-model';
-import { NodeSelection, Plugin } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import { NodeSelection } from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type {
+  Transaction,
+  ReadonlyTransaction,
+} from '@atlaskit/editor-prosemirror/state';
 
 import { uuid } from '@atlaskit/adf-schema';
-import {
-  ContextIdentifierProvider,
+import type {
   ProviderFactory,
-} from '@atlaskit/editor-common';
+  ContextIdentifierProvider,
+} from '@atlaskit/editor-common/provider-factory';
+import type {
+  ExtractInjectionAPI,
+  Command,
+} from '@atlaskit/editor-common/types';
 
-import { Dispatch, EventDispatcher } from '../../../event-dispatcher';
-import { Command } from '../../../types';
-import { PortalProviderAPI } from '../../../ui/PortalProvider';
-import { nodesBetweenChanged } from '../../../utils';
-import { createSelectionClickHandler } from '../../selection/utils';
+import type { TaskAndDecisionsPlugin } from '../types';
+import type {
+  Dispatch,
+  EventDispatcher,
+} from '@atlaskit/editor-common/event-dispatcher';
+import type { PortalProviderAPI } from '@atlaskit/editor-common/portal-provider';
+import { getStepRange } from '@atlaskit/editor-common/utils';
+import { SetAttrsStep } from '@atlaskit/adf-schema/steps';
+import {
+  createSelectionClickHandler,
+  GapCursorSelection,
+} from '@atlaskit/editor-common/selection';
 import { decisionItemNodeView } from '../nodeviews/decisionItem';
 import { taskItemNodeViewFactory } from '../nodeviews/taskItem';
 
 import { stateKey } from './plugin-key';
 
-enum ACTIONS {
-  SET_CONTEXT_PROVIDER,
-}
+import {
+  getTaskItemDataToFocus,
+  getTaskItemDataAtPos,
+  focusCheckboxAndUpdateSelection,
+  removeCheckboxFocus,
+} from './helpers';
+import { ACTIONS } from './types';
 
-export interface TaskDecisionPluginState {
-  currentTaskDecisionItem: PMNode | undefined;
-  contextIdentifierProvider?: ContextIdentifierProvider;
-}
-
-const setContextIdentifierProvider = (
-  provider: ContextIdentifierProvider | undefined,
-): Command => (state, dispatch) => {
-  if (dispatch) {
-    dispatch(
-      state.tr.setMeta(stateKey, {
-        action: ACTIONS.SET_CONTEXT_PROVIDER,
-        data: provider,
-      }),
-    );
+type ChangedFn = (
+  node: PMNode,
+  pos: number,
+  parent: PMNode | null,
+  index: number,
+) => boolean | void;
+function nodesBetweenChanged(
+  tr: Transaction | ReadonlyTransaction,
+  f: ChangedFn,
+  startPos?: number,
+) {
+  const stepRange = getStepRange(tr);
+  if (!stepRange) {
+    return;
   }
-  return true;
-};
+
+  tr.doc.nodesBetween(stepRange.from, stepRange.to, f, startPos);
+}
+
+const setContextIdentifierProvider =
+  (provider: ContextIdentifierProvider | undefined): Command =>
+  (state, dispatch) => {
+    if (dispatch) {
+      dispatch(
+        state.tr.setMeta(stateKey, {
+          action: ACTIONS.SET_CONTEXT_PROVIDER,
+          data: provider,
+        }),
+      );
+    }
+    return true;
+  };
 
 export function createPlugin(
   portalProviderAPI: PortalProviderAPI,
   eventDispatcher: EventDispatcher,
   providerFactory: ProviderFactory,
   dispatch: Dispatch,
+  api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined,
   useLongPressSelection: boolean = false,
 ) {
-  return new Plugin({
+  return new SafePlugin({
     props: {
       nodeViews: {
         taskItem: taskItemNodeViewFactory(
           portalProviderAPI,
           eventDispatcher,
           providerFactory,
+          api,
         ),
-        decisionItem: decisionItemNodeView(portalProviderAPI, eventDispatcher),
+        decisionItem: decisionItemNodeView(
+          portalProviderAPI,
+          eventDispatcher,
+          api,
+        ),
       },
       handleTextInput(
         view: EditorView,
@@ -94,6 +134,121 @@ export function createPlugin(
           target.getAttribute('aria-label') === 'Decision',
         { useLongPressSelection },
       ),
+      handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+        const { state, dispatch } = view;
+        const { selection, schema } = state;
+        const { $from, $to } = selection;
+        const parentOffset = $from.parentOffset;
+        const isInTaskItem = $from.node().type === schema.nodes.taskItem;
+
+        const focusedTaskItemLocalId =
+          stateKey.getState(state).focusedTaskItemLocalId;
+
+        const currentTaskItemData = getTaskItemDataAtPos(view);
+
+        const currentTaskItemFocused =
+          focusedTaskItemLocalId === currentTaskItemData?.localId;
+
+        // if task item checkbox not focused and arrow key is not pressed
+        //  then we don't want to handle event.
+        if (
+          !['ArrowUp', 'ArrowDown', 'ArrowRight', 'ArrowLeft'].includes(
+            event.key,
+          )
+        ) {
+          return false;
+        }
+
+        // We want to handle arrow up, down and left key only
+        //  when selection is inside task item and no text is selected.
+        if (
+          ['ArrowUp', 'ArrowDown', 'ArrowLeft'].includes(event.key) &&
+          (!isInTaskItem || $from.pos !== $to.pos)
+        ) {
+          return false;
+        }
+
+        // Arrow keys are pressed and shift, ctrl or meta is pressed as well.
+        //  along with arrow keys and task item checkbox is focused
+        //  then first move focus to view and proceed with default event handling.
+        if (event.shiftKey || event.ctrlKey || event.metaKey) {
+          currentTaskItemFocused && removeCheckboxFocus(view);
+          return false;
+        }
+
+        // task item checkbox is already focused
+        if (focusedTaskItemLocalId) {
+          if (event.key === 'ArrowLeft') {
+            // Move focus to view and proceed with default keyboard handler.
+            // Which will move cursor to previous position.
+            removeCheckboxFocus(view);
+            return false;
+          }
+          if (event.key === 'ArrowRight') {
+            // Move focus to view and DON'T proceed with default handler.
+            // We have assumed that selection is already before first character of task item.
+            removeCheckboxFocus(view);
+            return true;
+          }
+          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            const taskItemData = getTaskItemDataToFocus(
+              view,
+              event.key === 'ArrowUp' ? 'previous' : 'next',
+            );
+            if (taskItemData) {
+              focusCheckboxAndUpdateSelection(view, taskItemData);
+              return true;
+            } else {
+              // If any how checkbox input not found, then move focus to view
+              //  and proceed with default keyboard handler.
+              removeCheckboxFocus(view);
+              return false;
+            }
+          }
+        }
+
+        // If left arrow key is pressed and cursor is at first position in task-item
+        //  then focus checkbox and DON'T proceed with default keyboard handler
+        if (event.key === 'ArrowLeft' && parentOffset === 0) {
+          // here we are not using focusCheckboxAndUpdateSelection() method
+          // because it is working incorretly when we are placing is inside the nested items
+          dispatch(
+            state.tr.setMeta(stateKey, {
+              action: ACTIONS.FOCUS_BY_LOCALID,
+              data: currentTaskItemData?.localId,
+            }),
+          );
+          return true;
+        }
+
+        if (event.key === 'ArrowRight') {
+          // If gap cursor is just before task list then focus first task item in list.
+          if (
+            selection instanceof GapCursorSelection &&
+            selection.side === 'left' &&
+            $from.nodeAfter?.type === schema.nodes.taskList
+          ) {
+            const taskList = $from.nodeAfter;
+            const firstTaskItemNode = taskList.child(0);
+            const taskItemPos = $from.pos + 1;
+            focusCheckboxAndUpdateSelection(view, {
+              pos: taskItemPos,
+              localId: firstTaskItemNode.attrs.localId,
+            });
+            return true;
+          }
+          // if cursor is at then end of task item text then focus next task item checkbox
+          else if (isInTaskItem && $from.node().content.size === parentOffset) {
+            const nextTaskItemData = getTaskItemDataToFocus(view, 'next');
+            if (nextTaskItemData) {
+              focusCheckboxAndUpdateSelection(view, nextTaskItemData);
+              return true;
+            }
+          } else {
+            return false;
+          }
+        }
+      },
     },
     state: {
       init() {
@@ -111,6 +266,12 @@ export function createPlugin(
             newPluginState = {
               ...pluginState,
               contextIdentifierProvider: data,
+            };
+            break;
+          case ACTIONS.FOCUS_BY_LOCALID:
+            newPluginState = {
+              ...pluginState,
+              focusedTaskItemLocalId: data,
             };
             break;
         }
@@ -165,12 +326,8 @@ export function createPlugin(
 
         // Adds a unique id to a node
         nodesBetweenChanged(transaction, (node, pos) => {
-          const {
-            decisionList,
-            decisionItem,
-            taskList,
-            taskItem,
-          } = newState.schema.nodes;
+          const { decisionList, decisionItem, taskList, taskItem } =
+            newState.schema.nodes;
           if (
             !!node.type &&
             (node.type === decisionList ||
@@ -180,10 +337,13 @@ export function createPlugin(
           ) {
             const { localId, ...rest } = node.attrs;
             if (localId === undefined || localId === null || localId === '') {
-              tr.setNodeMarkup(pos, undefined, {
-                localId: uuid.generate(),
-                ...rest,
-              });
+              tr.step(
+                new SetAttrsStep(pos, {
+                  localId: uuid.generate(),
+                  ...rest,
+                }),
+              );
+
               modified = true;
             }
           }

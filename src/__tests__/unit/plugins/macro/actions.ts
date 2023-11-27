@@ -1,15 +1,18 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
   bodiedExtension,
   extension,
 } from '@atlaskit/editor-test-helpers/doc-builder';
-import { insertMacroFromMacroBrowser } from '../../../../plugins/macro';
-import {
+import { insertMacroFromMacroBrowser } from '../../../../plugins/extension/pm-plugins/macro/actions';
+import type {
   MacroAttributes,
   MacroProvider,
 } from '@atlaskit/editor-common/provider-factory';
+import { uuid } from '@atlaskit/adf-schema';
 
 jest.mock('@atlaskit/adf-schema', () => ({
   ...jest.requireActual<Object>('@atlaskit/adf-schema'),
@@ -39,6 +42,13 @@ describe('macro plugin -> commands -> insert macro from provider', () => {
   const createEditor = createEditorFactory();
 
   it('should normalise a nodes layout if nested inside another node', async () => {
+    const firstGen = 'mochiId-first-gen';
+    const secondGen = 'mochiId-second-gen';
+    jest
+      .spyOn(uuid, 'generate')
+      .mockReturnValueOnce(firstGen)
+      .mockReturnValueOnce(secondGen);
+
     const { editorView } = createEditor({
       doc: doc(
         bodiedExtension({
@@ -52,29 +62,32 @@ describe('macro plugin -> commands -> insert macro from provider', () => {
       },
     });
 
-    const macroNode = editorView.state.schema.nodes.bodiedExtension.createChecked(
-      {
-        layout: 'full-width',
-        extensionKey: 'com.fake',
-        extensionType: 'com.fake',
-      },
-      editorView.state.schema.nodes.paragraph.createChecked(),
-    );
+    const macroNode =
+      editorView.state.schema.nodes.bodiedExtension.createChecked(
+        {
+          layout: 'full-width',
+          extensionKey: 'com.fake',
+          extensionType: 'com.fake',
+        },
+        editorView.state.schema.nodes.paragraph.createChecked(),
+      );
 
-    await insertMacroFromMacroBrowser(macroProvider, macroNode)(editorView);
+    await insertMacroFromMacroBrowser(undefined)(macroProvider, macroNode)(
+      editorView,
+    );
 
     expect(editorView.state.doc).toEqualDocument(
       doc(
         bodiedExtension({
           extensionKey: 'fake.extension',
           extensionType: 'atlassian.com.editor',
-          localId: 'testId',
+          localId: firstGen,
         })(
           extension({
             extensionKey: 'com.fake',
             extensionType: 'com.fake',
             layout: 'default',
-            localId: 'testId',
+            localId: secondGen,
           })(),
         ),
       ),

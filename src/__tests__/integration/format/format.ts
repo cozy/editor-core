@@ -1,12 +1,26 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { fullpage, getDocFromElement } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  fullpage,
+  getDocFromElement,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   mountEditor,
   goToEditorTestingWDExample,
-} from '../../__helpers/testing-example-helpers';
-import Page from '@atlaskit/webdriver-runner/wd-wrapper';
-import { KEY } from '../../__helpers/page-objects/_keyboard';
-import { selectors } from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+import type Page from '@atlaskit/webdriver-runner/wd-wrapper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { KEY } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { runEscapeKeydownSuite } from '@atlaskit/editor-test-helpers/integration/escape-keydown';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  clickToolbarMenu,
+  ToolbarMenuItem,
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
 
 const editorSelector = selectors.editor;
 
@@ -23,7 +37,7 @@ const insertHeadings = async (page: Page, modifierKeys: string[]) => {
 
 BrowserTestCase(
   'format.ts: user should be able to create link using markdown',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, { appearance: 'full-page' });
@@ -38,7 +52,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'format.ts: user should be able to format bold, italics and strikethrough with markdown',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, { appearance: 'full-page' });
@@ -61,7 +75,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'format.ts: user should be able to write inline code',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, { appearance: 'full-page' });
@@ -77,7 +91,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'format.ts: should be able to use keyboard shortcuts to set headings (Windows)',
-  { skip: ['safari', 'edge'] },
+  { skip: ['safari'] },
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, { appearance: 'full-page' });
@@ -90,7 +104,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'format.ts: should be able to use keyboard shortcuts to set headings (Mac)',
-  { skip: ['chrome', 'firefox', 'edge'] },
+  { skip: ['chrome', 'firefox'] },
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, { appearance: 'full-page' });
@@ -100,3 +114,9 @@ BrowserTestCase(
     expect(doc).toMatchCustomDocSnapshot(testName);
   },
 );
+
+runEscapeKeydownSuite({
+  openMenu: async (page) => {
+    await clickToolbarMenu(page, ToolbarMenuItem.moreFormatting);
+  },
+});

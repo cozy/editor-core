@@ -1,7 +1,9 @@
-import { EditorView, Decoration } from 'prosemirror-view';
+import type { EditorView, Decoration } from '@atlaskit/editor-prosemirror/view';
 import createStub from 'raf-stub';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import {
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
@@ -15,14 +17,16 @@ import {
   setSelection,
 } from '../_utils';
 import { getPluginState } from '../../../plugin';
-import { TRIGGER_METHOD } from '../../../../analytics/types';
-import { flushPromises } from '../../../../../__tests__/__helpers/utils';
+import { TRIGGER_METHOD } from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 const containerElement = getContainerElement();
 const createAnalyticsEvent: CreateUIAnalyticsEvent = jest.fn(
   () => ({ fire: () => {} } as UIAnalyticsEvent),
 );
 let editorView: EditorView;
+let editorAPI: any;
 let refs: { [name: string]: number };
 let rafStub: {
   add: (cb: Function) => number;
@@ -51,7 +55,7 @@ const findCommand = async (keyword?: string) => {
 };
 
 const initEditor = async (doc: DocBuilder, query = 'document') => {
-  ({ editorView, refs } = editor(doc, createAnalyticsEvent));
+  ({ editorView, refs, editorAPI } = editor(doc, createAnalyticsEvent));
   dispatchSpy = jest.spyOn(editorView, 'dispatch');
 
   // findNext is only called when a search is already active, so we do a
@@ -85,6 +89,7 @@ describe('find/replace commands: findPrevious', () => {
       // DecorationSet will change so we manually check the individual Decorations
       const pluginStatePostFind = { ...getPluginState(editorView.state) };
       const decorationsPostFind = pluginStatePostFind.decorationSet.find();
+      // @ts-ignore
       delete pluginStatePostFind.decorationSet;
 
       findPrevious()(editorView.state, editorView.dispatch);
@@ -269,7 +274,7 @@ describe('find/replace commands: findPrevious', () => {
 describe('find/replace commands: findPrevWithAnalytics', () => {
   it('should fire analytics event from button click', () => {
     initEditor(doc(p('this is a {matchStart}document{matchEnd}{<>}')));
-    findPrevWithAnalytics({
+    findPrevWithAnalytics(editorAPI?.analytics?.actions)({
       triggerMethod: TRIGGER_METHOD.BUTTON,
     })(editorView.state, editorView.dispatch);
     expect(createAnalyticsEvent).toBeCalledWith({
@@ -284,7 +289,7 @@ describe('find/replace commands: findPrevWithAnalytics', () => {
 
   it('should fire analytics event from pressing Shift+Enter', () => {
     initEditor(doc(p('this is a {matchStart}document{matchEnd}{<>}')));
-    findPrevWithAnalytics({
+    findPrevWithAnalytics(editorAPI?.analytics?.actions)({
       triggerMethod: TRIGGER_METHOD.KEYBOARD,
     })(editorView.state, editorView.dispatch);
     expect(createAnalyticsEvent).toBeCalledWith({

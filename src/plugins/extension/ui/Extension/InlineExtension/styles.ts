@@ -1,14 +1,15 @@
-import styled from 'styled-components';
-import { HTMLAttributes, ComponentClass } from 'react';
+import { css } from '@emotion/react';
 import { borderRadius } from '@atlaskit/theme/constants';
-import { Wrapper as WrapperDefault } from '../styles';
+import { wrapperDefault } from '../styles';
+import { ThemeProps } from '@atlaskit/theme/types';
+import { token } from '@atlaskit/tokens';
 
-export const Wrapper: ComponentClass<HTMLAttributes<{}>> = styled(
-  WrapperDefault,
-)`
+export const wrapperStyle = (theme: ThemeProps) => css`
+  ${wrapperDefault(theme)}
+
   cursor: pointer;
   display: inline-flex;
-  margin: 1px;
+  margin: 1px 1px 4px;
 
   > img {
     border-radius: ${borderRadius()}px;
@@ -24,6 +25,6 @@ export const Wrapper: ComponentClass<HTMLAttributes<{}>> = styled(
 
   &.with-children {
     padding: 0;
-    background: white;
+    background: ${token('color.background.neutral.subtle', 'white')};
   }
 `;

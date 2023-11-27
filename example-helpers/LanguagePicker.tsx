@@ -1,7 +1,8 @@
-import React from 'react';
+/** @jsx jsx */
 import { Component } from 'react';
-import styled from 'styled-components';
-import { gridSize } from '@atlaskit/theme/constants';
+import { css, jsx } from '@emotion/react';
+import { token } from '@atlaskit/tokens';
+import Button from '@atlaskit/button/standard-button';
 import DropdownMenu, {
   DropdownItemGroup,
   DropdownItem,
@@ -9,8 +10,8 @@ import DropdownMenu, {
 import WorldIcon from '@atlaskit/icon/glyph/world';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 
-const DropdownContainer = styled.div`
-  margin-right: ${gridSize()}px;
+const dropdownContainer = css`
+  margin-right: ${token('space.100', '8px')};
   min-width: 200px;
 `;
 
@@ -24,17 +25,19 @@ export default class LanguagePicker extends Component<Props> {
   render() {
     const { languages, locale } = this.props;
     return (
-      <DropdownContainer>
+      <div css={dropdownContainer}>
         <DropdownMenu
-          trigger={languages[locale]}
-          triggerType="button"
-          boundariesElement="scrollParent"
-          triggerButtonProps={{
-            iconBefore: <WorldIcon label="Language Picker" />,
-            iconAfter: <ChevronDownIcon label="" />,
-            shouldFitContainer: true,
-          }}
-          shouldFitContainer
+          trigger={({ triggerRef, ...providedProps }) => (
+            <Button
+              {...providedProps}
+              ref={triggerRef}
+              iconBefore={<WorldIcon label="" />}
+              iconAfter={<ChevronDownIcon label="" />}
+              shouldFitContainer
+            >
+              {languages[locale]}
+            </Button>
+          )}
         >
           <DropdownItemGroup>
             {Object.keys(languages).map((l) => (
@@ -44,7 +47,7 @@ export default class LanguagePicker extends Component<Props> {
             ))}
           </DropdownItemGroup>
         </DropdownMenu>
-      </DropdownContainer>
+      </div>
     );
   }
 

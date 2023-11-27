@@ -1,12 +1,17 @@
-import { Slice } from 'prosemirror-model';
-import { TextSelection, Transaction } from 'prosemirror-state';
+import type { Slice, Schema } from '@atlaskit/editor-prosemirror/model';
+import type {
+  TextSelection,
+  Transaction,
+} from '@atlaskit/editor-prosemirror/state';
+import { findParentNodeOfType } from '@atlaskit/editor-prosemirror/utils';
 import {
   insertSliceIntoRangeSelectionInsideList,
   insertSliceInsideOfPanelNodeSelected,
   insertSliceAtNodeEdge,
   insertSliceIntoEmptyNode,
 } from './lists';
-import { isListNode } from '../../list/utils/node';
+import { isListNode } from '@atlaskit/editor-common/utils';
+
 import {
   isSelectionInsidePanel,
   isEmptyNode,
@@ -16,9 +21,11 @@ import {
 export function insertSliceForLists({
   tr,
   slice,
+  schema,
 }: {
   tr: Transaction;
   slice: Slice;
+  schema: Schema;
 }) {
   const {
     selection,
@@ -45,7 +52,25 @@ export function insertSliceForLists({
     return insertSliceIntoEmptyNode({ tr, slice });
   }
 
-  if (isCursorSelectionAtTextStartOrEnd(selection)) {
+  // When pasting a single list item into an action or decision, we skip the special "insert at node edge"
+  // logic so that prosemirror pastes the list's content into the action/decision, rather than
+  // pasting a whole list node directly after the action/decision item. (But we still preserve the
+  // existing "insert at" node edge" behaviour if dealing with a list with more than one item, so that
+  // it still inserts whole list node after the action/decision item).
+  const pastingIntoActionOrDecision = Boolean(
+    findParentNodeOfType([schema.nodes.taskList, schema.nodes.decisionList])(
+      selection,
+    ),
+  );
+  const oneListItem =
+    slice.content.childCount === 1 &&
+    isListNode(slice.content.firstChild) &&
+    slice.content.firstChild?.childCount === 1;
+
+  if (
+    !(pastingIntoActionOrDecision && oneListItem) &&
+    isCursorSelectionAtTextStartOrEnd(selection)
+  ) {
     return insertSliceAtNodeEdge({ tr, slice });
   }
 

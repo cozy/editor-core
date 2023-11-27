@@ -1,93 +1,126 @@
 import React from 'react';
+import { injectIntl } from 'react-intl-next';
 import PropTypes from 'prop-types';
-import { EditorState, Selection, Transaction } from 'prosemirror-state';
-import { DirectEditorProps, EditorView } from 'prosemirror-view';
-import { Node as PMNode } from 'prosemirror-model';
-import { intlShape } from 'react-intl';
-import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
+import type { Transaction, Plugin } from '@atlaskit/editor-prosemirror/state';
+import {
+  EditorState,
+  Selection,
+  TextSelection,
+} from '@atlaskit/editor-prosemirror/state';
+import type { DirectEditorProps } from '@atlaskit/editor-prosemirror/view';
+import { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
+import type { WrappedComponentProps } from 'react-intl-next';
+import type { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
+import type {
+  ContextIdentifierProvider,
+  ProviderFactory,
+} from '@atlaskit/editor-common/provider-factory';
+import { editorMessages } from './messages';
+
+import type { ErrorReporter, SEVERITY } from '@atlaskit/editor-common/utils';
 import {
   browser,
-  ErrorReporter,
   getAnalyticsEventSeverity,
   getResponseEndTime,
   measureRender,
-  ProviderFactory,
-  Transformer,
   startMeasure,
   stopMeasure,
   shouldForceTracking,
-} from '@atlaskit/editor-common';
+  processRawValue,
+  analyticsEventKey,
+} from '@atlaskit/editor-common/utils';
 
-import { createDispatch, Dispatch, EventDispatcher } from '../event-dispatcher';
-import { processRawValue } from '../utils';
-import { RenderTracking } from '../utils/react-hooks/use-component-renderer-tracking';
+import {
+  ExperienceStore,
+  EditorExperience,
+  RELIABILITY_INTERVAL,
+} from '@atlaskit/editor-common/ufo';
+import type {
+  Transformer,
+  AllEditorPresetPluginTypes,
+} from '@atlaskit/editor-common/types';
+
+import type { Dispatch } from '../event-dispatcher';
+import { createDispatch, EventDispatcher } from '../event-dispatcher';
+import { freezeUnsafeTransactionProperties } from '../utils/performance/safer-transactions';
+import { RenderTracking } from '../utils/performance/components/RenderTracking';
 import {
   findChangedNodesFromTransaction,
   validateNodes,
   validNode,
 } from '../utils/nodes';
-import createPluginList from './create-plugins-list';
 import {
   ACTION,
   ACTION_SUBJECT,
-  AnalyticsDispatch,
-  AnalyticsEventPayload,
-  DispatchAnalyticsEvent,
   EVENT_TYPE,
   fireAnalyticsEvent,
   FULL_WIDTH_MODE,
-  getAnalyticsEventsFromTransaction,
   PLATFORMS,
-} from '../plugins/analytics';
-import { createFeatureFlagsFromProps } from '../plugins/feature-flags-context/feature-flags-from-props';
-import { getEnabledFeatureFlagKeys } from '../plugins/feature-flags-context/get-enabled-feature-flag-keys';
-import {
+  getAnalyticsEventsFromTransaction,
+} from '@atlaskit/editor-common/analytics';
+import { createFeatureFlagsFromProps } from './feature-flags-from-props';
+import { getEnabledFeatureFlagKeys } from '@atlaskit/editor-common/normalize-feature-flags';
+import type {
   EditorAppearance,
   EditorConfig,
   EditorReactContext,
   EditorPlugin,
   EditorProps,
 } from '../types';
-import { FeatureFlags } from '../types/feature-flags';
-import { PortalProviderAPI } from '../ui/PortalProvider';
+import type { EditorNextProps } from '../types/editor-props';
+import type { FeatureFlags } from '../types/feature-flags';
+import type { PortalProviderAPI } from '@atlaskit/editor-common/portal-provider';
+import type { SetEditorAPI } from '../presets/context';
 import {
   createErrorReporter,
   createPMPlugins,
   processPluginsList,
 } from './create-editor';
-import { getDocStructure, SimplifiedNode } from '../utils/document-logger';
+import type { SimplifiedNode } from '../utils/document-logger';
+import { getDocStructure } from '../utils/document-logger';
 import { isFullPage } from '../utils/is-full-page';
 import measurements from '../utils/performance/measure-enum';
 import { getNodesCount } from '../utils/document';
-import { analyticsEventKey, SEVERITY } from '@atlaskit/editor-common';
 import { createSchema } from './create-schema';
 import { PluginPerformanceObserver } from '../utils/performance/plugin-performance-observer';
-import { PluginPerformanceReportData } from '../utils/performance/plugin-performance-report';
 import { getParticipantsCount } from '../plugins/collab-edit/get-participants-count';
-import { countNodes } from '../utils/count-nodes';
-import { TransactionTracker } from '../utils/performance/track-transactions';
 import {
   EVENT_NAME_DISPATCH_TRANSACTION,
   EVENT_NAME_STATE_APPLY,
   EVENT_NAME_UPDATE_STATE,
   EVENT_NAME_VIEW_STATE_UPDATED,
   EVENT_NAME_ON_CHANGE,
+  TransactionTracker,
 } from '../utils/performance/track-transactions';
+import { countNodes } from '@atlaskit/editor-common/utils';
+import createPluginsList from './create-plugins-list';
 import {
   PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
   PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
   DEFAULT_SAMPLING_RATE_VALID_TRANSACTIONS,
 } from './consts';
-import { getContextIdentifier } from '../plugins/base/pm-plugins/context-identifier';
-import { FireAnalyticsCallback } from '../plugins/analytics/fire-analytics-event';
+import type {
+  UfoSessionCompletePayloadAEP,
+  FireAnalyticsCallback,
+  AnalyticsDispatch,
+  AnalyticsEventPayload,
+  DispatchAnalyticsEvent,
+  PluginPerformanceReportData,
+} from '@atlaskit/editor-common/analytics';
+import ReactEditorViewContext from './ReactEditorViewContext';
+import type { EditorPresetBuilder } from '@atlaskit/editor-common/preset';
+import { EditorPluginInjectionAPI } from '@atlaskit/editor-common/preset';
+import { EDIT_AREA_ID } from '@atlaskit/editor-common/ui';
 
 export interface EditorViewProps {
-  editorProps: EditorProps;
+  editorProps: EditorProps | EditorNextProps;
   createAnalyticsEvent?: CreateUIAnalyticsEvent;
   providerFactory: ProviderFactory;
   portalProviderAPI: PortalProviderAPI;
-  allowAnalyticsGASV3?: boolean;
   disabled?: boolean;
+  experienceStore?: ExperienceStore;
+  setEditorApi?: SetEditorAPI;
   render?: (props: {
     editor: JSX.Element;
     view?: EditorView;
@@ -95,6 +128,7 @@ export interface EditorViewProps {
     eventDispatcher: EventDispatcher;
     transformer?: Transformer<string>;
     dispatchAnalyticsEvent: DispatchAnalyticsEvent;
+    editorRef: React.RefObject<HTMLDivElement>;
   }) => JSX.Element;
   onEditorCreated: (instance: {
     view: EditorView;
@@ -108,6 +142,7 @@ export interface EditorViewProps {
     eventDispatcher: EventDispatcher;
     transformer?: Transformer<string>;
   }) => void;
+  preset: EditorPresetBuilder<string[], AllEditorPresetPluginTypes[]>;
 }
 
 function handleEditorFocus(view: EditorView): number | undefined {
@@ -116,47 +151,49 @@ function handleEditorFocus(view: EditorView): number | undefined {
   }
 
   return window.setTimeout(() => {
+    if (view.hasFocus()) {
+      return;
+    }
+    if (!window.getSelection) {
+      view.focus();
+      return;
+    }
+    const domSelection = window.getSelection();
+    if (!domSelection || domSelection.rangeCount === 0) {
+      view.focus();
+      return;
+    }
+    const range = domSelection.getRangeAt(0);
+    // if selection is outside editor focus and exit
+    if (range.startContainer.contains(view.dom)) {
+      view.focus();
+      return;
+    }
+    // set cursor/selection and focus
+    const anchor = view.posAtDOM(range.startContainer, range.startOffset);
+    const head = view.posAtDOM(range.endContainer, range.endOffset);
+    // if anchor or head < 0 focus and exit
+    if (anchor < 0 || head < 0) {
+      view.focus();
+      return;
+    }
+    const selection = TextSelection.create(view.state.doc, anchor, head);
+    const tr = view.state.tr.setSelection(selection);
+    view.dispatch(tr);
     view.focus();
   }, 0);
 }
 
-const EMPTY: EditorPlugin[] = [];
-
-export function shouldReconfigureState(
-  props: EditorProps,
-  nextProps: EditorProps,
-) {
-  const prevPlugins = props.dangerouslyAppendPlugins?.__plugins ?? EMPTY;
-  const nextPlugins = nextProps.dangerouslyAppendPlugins?.__plugins ?? EMPTY;
-
-  if (
-    nextPlugins.length !== prevPlugins.length ||
-    prevPlugins.some((p) =>
-      nextPlugins.some((n) => n.name === p.name && n !== p),
-    )
-  ) {
-    return true;
-  }
-
-  const mobileProperties: Array<keyof EditorProps> =
-    props.appearance === 'mobile' ? ['featureFlags', 'quickInsert'] : [];
-
-  const properties: Array<keyof EditorProps> = [
-    'appearance',
-    'persistScrollGutter',
-    'UNSAFE_allowUndoRedoButtons',
-    'placeholder',
-    ...mobileProperties,
-  ];
-
-  return properties.reduce(
-    (acc, curr) => acc || props[curr] !== nextProps[curr],
-    false,
-  );
+interface CreateEditorStateOptions {
+  props: EditorViewProps;
+  context: EditorReactContext;
+  doc?: string | Object | PMNode;
+  resetting?: boolean;
+  selectionAtStart?: boolean;
 }
 
-export default class ReactEditorView<T = {}> extends React.Component<
-  EditorViewProps & T,
+export class ReactEditorView<T = {}> extends React.Component<
+  EditorViewProps & WrappedComponentProps & T,
   {},
   EditorReactContext
 > {
@@ -170,21 +207,26 @@ export default class ReactEditorView<T = {}> extends React.Component<
   proseMirrorRenderedSeverity?: SEVERITY;
   transactionTracker: TransactionTracker;
   validTransactionCount: number;
+  experienceStore?: ExperienceStore;
+
+  editorRef = React.createRef<HTMLDivElement>();
 
   static contextTypes = {
     getAtlaskitAnalyticsEventHandlers: PropTypes.func,
-    intl: intlShape,
   };
 
   // ProseMirror is instantiated prior to the initial React render cycle,
   // so we allow transactions by default, to avoid discarding the initial one.
   private canDispatchTransactions = true;
 
-  private focusTimeoutId: number | undefined;
+  private focusTimeoutId?: number;
+  private reliabilityInterval?: number;
 
   private pluginPerformanceObserver: PluginPerformanceObserver;
 
   private featureFlags: FeatureFlags;
+
+  private pluginInjectionAPI: EditorPluginInjectionAPI;
 
   private onPluginObservation = (
     report: PluginPerformanceReportData,
@@ -217,8 +259,28 @@ export default class ReactEditorView<T = {}> extends React.Component<
     return countNodes(this.editorState);
   }
 
-  constructor(props: EditorViewProps & T, context: EditorReactContext) {
+  private isTransactionTrackingExplicitlyDisabled() {
+    // ED-16320: Check for explicit disable so that by default
+    // it will still be enabled as it currently is. Then we can
+    // progressively opt out synthetic tenants.
+    return (
+      this.props.editorProps?.performanceTracking?.transactionTracking
+        ?.enabled === false
+    );
+  }
+
+  constructor(
+    props: EditorViewProps & WrappedComponentProps & T,
+    context: EditorReactContext,
+  ) {
     super(props, context);
+
+    this.pluginInjectionAPI = new EditorPluginInjectionAPI({
+      getEditorState: this.getEditorState,
+      getEditorView: this.getEditorView,
+    });
+
+    props.setEditorApi?.(this.pluginInjectionAPI.api());
 
     this.eventDispatcher = new EventDispatcher();
 
@@ -245,8 +307,8 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
     // START TEMPORARY CODE ED-10584
     if (this.props.createAnalyticsEvent) {
-      (this.props
-        .createAnalyticsEvent as any).__queueAnalytics = this.featureFlags.queueAnalytics;
+      (this.props.createAnalyticsEvent as any).__queueAnalytics =
+        this.featureFlags.queueAnalytics;
     }
     // END TEMPORARY CODE ED-10584
 
@@ -254,22 +316,38 @@ export default class ReactEditorView<T = {}> extends React.Component<
     // we dispatch analytics events in plugin initialisation
     this.eventDispatcher.on(analyticsEventKey, this.handleAnalyticsEvent);
 
+    this.eventDispatcher.on('resetEditorState', this.resetEditorState);
+
     this.editorState = this.createEditorState({
       props,
       context,
-      replaceDoc: true,
+      doc: props.editorProps.defaultValue,
+      // ED-4759: Don't set selection at end for full-page editor - should be at start.
+      selectionAtStart: isFullPage(props.editorProps.appearance),
     });
 
-    this.dispatchAnalyticsEvent({
-      action: ACTION.STARTED,
-      actionSubject: ACTION_SUBJECT.EDITOR,
-      attributes: {
-        platform: PLATFORMS.WEB,
-        featureFlags: featureFlagsEnabled,
-      },
-      eventType: EVENT_TYPE.UI,
-    });
+    // ED-16320: Check for explicit disable so that by default
+    // it will still be enabled as it currently is. Then we can
+    // progressively opt out synthetic tenants.
+    const isEditorStartedExplicitlyDisabled =
+      props.editorProps?.performanceTracking?.startedTracking?.enabled ===
+      false;
+
+    if (!isEditorStartedExplicitlyDisabled) {
+      this.dispatchAnalyticsEvent({
+        action: ACTION.STARTED,
+        actionSubject: ACTION_SUBJECT.EDITOR,
+        attributes: {
+          platform: PLATFORMS.WEB,
+          featureFlags: featureFlagsEnabled,
+        },
+        eventType: EVENT_TYPE.UI,
+      });
+    }
   }
+
+  getEditorState = () => this.view?.state;
+  getEditorView = () => this.view;
 
   UNSAFE_componentWillReceiveProps(nextProps: EditorViewProps) {
     // START TEMPORARY CODE ED-10584
@@ -303,7 +381,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
     const { appearance } = this.props.editorProps;
     const { appearance: nextAppearance } = nextProps.editorProps;
 
-    if (shouldReconfigureState(this.props.editorProps, nextProps.editorProps)) {
+    if (this.props.preset !== nextProps.preset) {
       this.reconfigureState(nextProps);
     }
 
@@ -324,6 +402,13 @@ export default class ReactEditorView<T = {}> extends React.Component<
     if (!this.transactionTracking.enabled) {
       this.pluginPerformanceObserver.disconnect();
     }
+
+    if (
+      nextProps.editorProps.assistiveLabel !==
+      this.props.editorProps.assistiveLabel
+    ) {
+      this.editor = this.createEditor(nextProps.editorProps.assistiveLabel);
+    }
   }
 
   formatFullWidthAppearance = (
@@ -335,7 +420,13 @@ export default class ReactEditorView<T = {}> extends React.Component<
     return FULL_WIDTH_MODE.FIXED_WIDTH;
   };
 
-  reconfigureState = (props: EditorViewProps) => {
+  resetEditorState = ({
+    doc,
+    shouldScrollToBottom,
+  }: {
+    doc: string;
+    shouldScrollToBottom: boolean;
+  }) => {
     if (!this.view) {
       return;
     }
@@ -343,19 +434,56 @@ export default class ReactEditorView<T = {}> extends React.Component<
     // We cannot currently guarentee when all the portals will have re-rendered during a reconfigure
     // so we blur here to stop ProseMirror from trying to apply selection to detached nodes or
     // nodes that haven't been re-rendered to the document yet.
+    this.blur();
+
+    this.featureFlags = createFeatureFlagsFromProps(this.props.editorProps);
+
+    this.editorState = this.createEditorState({
+      props: this.props,
+      context: this.context,
+      doc: doc,
+      resetting: true,
+      selectionAtStart: !shouldScrollToBottom,
+    });
+
+    this.view.updateState(this.editorState);
+    this.props.editorProps.onChange?.(this.view, { source: 'local' });
+  };
+
+  blur = () => {
+    if (!this.view) {
+      return;
+    }
+
     if (this.view.dom instanceof HTMLElement && this.view.hasFocus()) {
       this.view.dom.blur();
     }
 
-    this.config = processPluginsList(
-      this.getPlugins(
-        props.editorProps,
-        this.props.editorProps,
-        this.props.createAnalyticsEvent,
-      ),
-    );
+    // The selectionToDOM method uses the document selection to determine currently selected node
+    // We need to mimic blurring this as it seems doing the above is not enough.
+    // @ts-expect-error
+    const sel = (this.view.root as DocumentOrShadowRoot).getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+    }
+  };
+
+  reconfigureState(props: EditorViewProps) {
+    if (!this.view) {
+      return;
+    }
+
+    // We cannot currently guarentee when all the portals will have re-rendered during a reconfigure
+    // so we blur here to stop ProseMirror from trying to apply selection to detached nodes or
+    // nodes that haven't been re-rendered to the document yet.
+    this.blur();
+
+    const editorPlugins = this.getPlugins(props.preset);
+
+    this.config = processPluginsList(editorPlugins);
 
     const state = this.editorState;
+
     const plugins = createPMPlugins({
       schema: state.schema,
       dispatch: this.dispatch,
@@ -369,21 +497,19 @@ export default class ReactEditorView<T = {}> extends React.Component<
       performanceTracking: props.editorProps.performanceTracking,
       transactionTracker: this.transactionTracker,
       featureFlags: createFeatureFlagsFromProps(props.editorProps),
+      getIntl: () => this.props.intl,
     });
 
-    const newState = state.reconfigure({ plugins });
+    const newState = state.reconfigure({ plugins: plugins as Plugin[] });
 
     // need to update the state first so when the view builds the nodeviews it is
     // using the latest plugins
     this.view.updateState(newState);
 
     return this.view.update({ ...this.view.props, state: newState });
-  };
+  }
 
   handleAnalyticsEvent: FireAnalyticsCallback = (payload) => {
-    if (!this.props.allowAnalyticsGASV3) {
-      return;
-    }
     fireAnalyticsEvent(this.props.createAnalyticsEvent)(payload);
   };
 
@@ -411,9 +537,10 @@ export default class ReactEditorView<T = {}> extends React.Component<
     // from an async dispatched transaction after it's unmounted.
     this.canDispatchTransactions = false;
 
-    this.eventDispatcher.destroy();
-
     clearTimeout(this.focusTimeoutId);
+    if (this.reliabilityInterval) {
+      clearInterval(this.reliabilityInterval);
+    }
 
     this.pluginPerformanceObserver.disconnect();
 
@@ -427,64 +554,58 @@ export default class ReactEditorView<T = {}> extends React.Component<
         }
       });
     }
-    // this.view will be destroyed when React unmounts in handleEditorViewRef
 
-    this.eventDispatcher.off(analyticsEventKey, this.handleAnalyticsEvent);
+    this.eventDispatcher.destroy();
+    // this.view will be destroyed when React unmounts in handleEditorViewRef
   }
+
+  private editorPlugins: EditorPlugin[] = [];
 
   // Helper to allow tests to inject plugins directly
   getPlugins(
-    editorProps: EditorProps,
-    prevEditorProps?: EditorProps,
-    createAnalyticsEvent?: CreateUIAnalyticsEvent,
+    preset: EditorPresetBuilder<string[], AllEditorPresetPluginTypes[]>,
   ): EditorPlugin[] {
-    const editorPlugins = editorProps.dangerouslyAppendPlugins?.__plugins ?? [];
-    const builtinPlugins = createPluginList(
-      editorProps,
-      prevEditorProps,
-      createAnalyticsEvent,
+    const plugins = createPluginsList(
+      preset,
+      this.props.editorProps,
+      this.pluginInjectionAPI,
     );
 
-    if (editorPlugins && editorPlugins.length > 0) {
-      builtinPlugins.push(...editorPlugins);
-    }
+    this.editorPlugins = plugins;
 
-    return builtinPlugins;
+    return this.editorPlugins;
   }
 
-  createEditorState = (options: {
-    props: EditorViewProps;
-    context: EditorReactContext;
-    replaceDoc?: boolean;
-  }) => {
+  createEditorState = (options: CreateEditorStateOptions) => {
+    let schema;
     if (this.view) {
-      /**
-       * There's presently a number of issues with changing the schema of a
-       * editor inflight. A significant issue is that we lose the ability
-       * to keep track of a user's history as the internal plugin state
-       * keeps a list of Steps to undo/redo (which are tied to the schema).
-       * Without a good way to do work around this, we prevent this for now.
-       */
-      // eslint-disable-next-line no-console
-      console.warn(
-        'The editor does not support changing the schema dynamically.',
-      );
-      return this.editorState;
+      if (options.resetting) {
+        /**
+         * ReactEditorView currently does NOT handle dynamic schema,
+         * We are reusing the existing schema, and rely on #reconfigureState
+         * to update `this.config`
+         */
+        schema = this.view.state.schema;
+      } else {
+        /**
+         * There's presently a number of issues with changing the schema of a
+         * editor inflight. A significant issue is that we lose the ability
+         * to keep track of a user's history as the internal plugin state
+         * keeps a list of Steps to undo/redo (which are tied to the schema).
+         * Without a good way to do work around this, we prevent this for now.
+         */
+        // eslint-disable-next-line no-console
+        console.warn(
+          'The editor does not support changing the schema dynamically.',
+        );
+        return this.editorState;
+      }
+    } else {
+      this.config = processPluginsList(this.getPlugins(options.props.preset));
+      schema = createSchema(this.config);
     }
 
-    this.config = processPluginsList(
-      this.getPlugins(
-        options.props.editorProps,
-        undefined,
-        options.props.createAnalyticsEvent,
-      ),
-    );
-    const schema = createSchema(this.config);
-
-    const {
-      contentTransformerProvider,
-      defaultValue,
-    } = options.props.editorProps;
+    const { contentTransformerProvider } = options.props.editorProps;
 
     const plugins = createPMPlugins({
       schema,
@@ -499,6 +620,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
       performanceTracking: this.props.editorProps.performanceTracking,
       transactionTracker: this.transactionTracker,
       featureFlags: this.featureFlags,
+      getIntl: () => this.props.intl,
     });
 
     this.contentTransformer = contentTransformerProvider
@@ -507,20 +629,20 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
     let doc;
 
-    if (options.replaceDoc) {
+    if (options.doc) {
       doc = processRawValue(
         schema,
-        defaultValue,
+        options.doc,
         options.props.providerFactory,
         options.props.editorProps.sanitizePrivateContent,
         this.contentTransformer,
         this.dispatchAnalyticsEvent,
       );
     }
+
     let selection: Selection | undefined;
     if (doc) {
-      // ED-4759: Don't set selection at end for full-page editor - should be at start.
-      selection = isFullPage(options.props.editorProps.appearance)
+      selection = options.selectionAtStart
         ? Selection.atStart(doc)
         : Selection.atEnd(doc);
     }
@@ -531,7 +653,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
     return EditorState.create({
       schema,
-      plugins,
+      plugins: plugins as Plugin[],
       doc,
       selection: patchedSelection,
     });
@@ -544,7 +666,7 @@ export default class ReactEditorView<T = {}> extends React.Component<
     newEditorState,
   }: {
     originalTransaction: Transaction;
-    transactions: Transaction[];
+    transactions: ReadonlyArray<Transaction>;
     oldEditorState: EditorState;
     newEditorState: EditorState;
   }) => {
@@ -566,7 +688,11 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
   private trackValidTransactions = () => {
     const { editorProps } = this.props;
-    if (editorProps?.trackValidTransactions) {
+
+    if (
+      !this.isTransactionTrackingExplicitlyDisabled() &&
+      editorProps?.trackValidTransactions
+    ) {
       this.validTransactionCount++;
       const samplingRate =
         (typeof editorProps.trackValidTransactions === 'object' &&
@@ -583,31 +709,46 @@ export default class ReactEditorView<T = {}> extends React.Component<
     }
   };
 
-  private dispatchTransaction = (transaction: Transaction) => {
+  private dispatchTransaction = (unsafeTransaction: Transaction) => {
     if (!this.view) {
       return;
     }
 
     this.transactionTracker.bumpDispatchCounter(this.transactionTracking);
-    const {
-      startMeasure,
-      stopMeasure,
-    } = this.transactionTracker.getMeasureHelpers(this.transactionTracking);
+    const { startMeasure, stopMeasure } =
+      this.transactionTracker.getMeasureHelpers(this.transactionTracking);
     startMeasure(EVENT_NAME_DISPATCH_TRANSACTION);
 
-    const nodes: PMNode[] = findChangedNodesFromTransaction(transaction);
+    if (
+      this.transactionTracker.shouldTrackTransaction(this.transactionTracking)
+    ) {
+      this.experienceStore?.start(EditorExperience.interaction);
+    }
+
+    const nodes: PMNode[] = findChangedNodesFromTransaction(unsafeTransaction);
     const changedNodesValid = validateNodes(nodes);
+    const transaction = new Proxy(
+      unsafeTransaction,
+      freezeUnsafeTransactionProperties<Transaction>({
+        dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
+        pluginKey: 'unknown-reacteditorview',
+      }),
+    );
 
     if (changedNodesValid) {
       const oldEditorState = this.view.state;
 
       // go ahead and update the state now we know the transaction is good
       startMeasure(EVENT_NAME_STATE_APPLY);
-      const {
-        state: editorState,
-        transactions,
-      } = this.view.state.applyTransaction(transaction);
-      stopMeasure(EVENT_NAME_STATE_APPLY);
+      const { state: editorState, transactions } =
+        this.view.state.applyTransaction(transaction);
+      stopMeasure(EVENT_NAME_STATE_APPLY, (duration, startTime) => {
+        this.experienceStore?.mark(
+          EditorExperience.interaction,
+          'stateApply',
+          startTime + duration,
+        );
+      });
 
       this.trackValidTransactions();
 
@@ -617,7 +758,18 @@ export default class ReactEditorView<T = {}> extends React.Component<
 
       startMeasure(EVENT_NAME_UPDATE_STATE);
       this.view.updateState(editorState);
-      stopMeasure(EVENT_NAME_UPDATE_STATE);
+      stopMeasure(EVENT_NAME_UPDATE_STATE, (duration, startTime) => {
+        this.experienceStore?.mark(
+          EditorExperience.interaction,
+          'viewUpdateState',
+          startTime + duration,
+        );
+      });
+
+      this.pluginInjectionAPI.onEditorViewUpdated({
+        newEditorState: editorState,
+        oldEditorState,
+      });
 
       startMeasure(EVENT_NAME_VIEW_STATE_UPDATED);
       this.onEditorViewStateUpdated({
@@ -626,7 +778,13 @@ export default class ReactEditorView<T = {}> extends React.Component<
         oldEditorState,
         newEditorState: editorState,
       });
-      stopMeasure(EVENT_NAME_VIEW_STATE_UPDATED);
+      stopMeasure(EVENT_NAME_VIEW_STATE_UPDATED, (duration, startTime) => {
+        this.experienceStore?.mark(
+          EditorExperience.interaction,
+          'onEditorViewStateUpdated',
+          startTime + duration,
+        );
+      });
 
       if (this.props.editorProps.onChange && transaction.docChanged) {
         const source = transaction.getMeta('isRemote') ? 'remote' : 'local';
@@ -636,6 +794,12 @@ export default class ReactEditorView<T = {}> extends React.Component<
         stopMeasure(
           EVENT_NAME_ON_CHANGE,
           (duration: number, startTime: number) => {
+            this.experienceStore?.mark(
+              EditorExperience.interaction,
+              'onChange',
+              startTime + duration,
+            );
+
             if (
               this.props.editorProps.performanceTracking
                 ?.onChangeCallbackTracking?.enabled !== true
@@ -655,6 +819,15 @@ export default class ReactEditorView<T = {}> extends React.Component<
         );
       }
       this.editorState = editorState;
+
+      stopMeasure(EVENT_NAME_DISPATCH_TRANSACTION, (duration, startTime) => {
+        this.experienceStore?.mark(
+          EditorExperience.interaction,
+          'dispatchTransaction',
+          startTime + duration,
+        );
+        this.experienceStore?.success(EditorExperience.interaction);
+      });
     } else {
       const invalidNodes = nodes
         .filter((node) => !validNode(node))
@@ -662,20 +835,24 @@ export default class ReactEditorView<T = {}> extends React.Component<
           getDocStructure(node, { compact: true }),
         );
 
-      this.dispatchAnalyticsEvent({
-        action: ACTION.DISPATCHED_INVALID_TRANSACTION,
-        actionSubject: ACTION_SUBJECT.EDITOR,
-        eventType: EVENT_TYPE.OPERATIONAL,
-        attributes: {
-          analyticsEventPayloads: getAnalyticsEventsFromTransaction(
-            transaction,
-          ),
-          invalidNodes,
-        },
+      if (!this.isTransactionTrackingExplicitlyDisabled()) {
+        this.dispatchAnalyticsEvent({
+          action: ACTION.DISPATCHED_INVALID_TRANSACTION,
+          actionSubject: ACTION_SUBJECT.EDITOR,
+          eventType: EVENT_TYPE.OPERATIONAL,
+          attributes: {
+            analyticsEventPayloads:
+              getAnalyticsEventsFromTransaction(transaction),
+            invalidNodes,
+          },
+        });
+      }
+
+      this.experienceStore?.fail(EditorExperience.interaction, {
+        reason: 'invalid transaction',
+        invalidNodes: invalidNodes.toString(),
       });
     }
-
-    stopMeasure(EVENT_NAME_DISPATCH_TRANSACTION);
   };
 
   getDirectEditorProps = (state?: EditorState): DirectEditorProps => {
@@ -695,46 +872,77 @@ export default class ReactEditorView<T = {}> extends React.Component<
     };
   };
 
-  createEditorView = (node: HTMLDivElement) => {
-    measureRender(measurements.PROSEMIRROR_RENDERED, (duration, startTime) => {
-      const proseMirrorRenderedTracking = this.props.editorProps
-        ?.performanceTracking?.proseMirrorRenderedTracking;
+  private createEditorView = (node: HTMLDivElement) => {
+    measureRender(
+      measurements.PROSEMIRROR_RENDERED,
+      ({ duration, startTime, distortedDuration }) => {
+        const proseMirrorRenderedTracking =
+          this.props.editorProps?.performanceTracking
+            ?.proseMirrorRenderedTracking;
 
-      const forceSeverityTracking =
-        typeof proseMirrorRenderedTracking === 'undefined' &&
-        shouldForceTracking();
+        const forceSeverityTracking =
+          typeof proseMirrorRenderedTracking === 'undefined' &&
+          shouldForceTracking();
 
-      this.proseMirrorRenderedSeverity =
-        !!forceSeverityTracking || proseMirrorRenderedTracking?.trackSeverity
-          ? getAnalyticsEventSeverity(
+        this.proseMirrorRenderedSeverity =
+          !!forceSeverityTracking || proseMirrorRenderedTracking?.trackSeverity
+            ? getAnalyticsEventSeverity(
+                duration,
+                proseMirrorRenderedTracking?.severityNormalThreshold ??
+                  PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
+                proseMirrorRenderedTracking?.severityDegradedThreshold ??
+                  PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
+              )
+            : undefined;
+
+        if (this.view) {
+          const nodes = getNodesCount(this.view.state.doc);
+          const ttfb = getResponseEndTime();
+
+          const contextIdentifier = this.pluginInjectionAPI
+            .api()
+            .base?.sharedState.currentState() as
+            | ContextIdentifierProvider
+            | undefined;
+
+          this.dispatchAnalyticsEvent({
+            action: ACTION.PROSEMIRROR_RENDERED,
+            actionSubject: ACTION_SUBJECT.EDITOR,
+            attributes: {
               duration,
-              proseMirrorRenderedTracking?.severityNormalThreshold ??
-                PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
-              proseMirrorRenderedTracking?.severityDegradedThreshold ??
-                PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
-            )
-          : undefined;
+              startTime,
+              nodes,
+              ttfb,
+              severity: this.proseMirrorRenderedSeverity,
+              objectId: contextIdentifier?.objectId,
+              distortedDuration,
+            },
+            eventType: EVENT_TYPE.OPERATIONAL,
+          });
 
-      if (this.view) {
-        this.dispatchAnalyticsEvent({
-          action: ACTION.PROSEMIRROR_RENDERED,
-          actionSubject: ACTION_SUBJECT.EDITOR,
-          attributes: {
-            duration,
-            startTime,
-            nodes: getNodesCount(this.view.state.doc),
-            ttfb: getResponseEndTime(),
-            severity: this.proseMirrorRenderedSeverity,
-            objectId: getContextIdentifier(this.editorState)?.objectId,
-          },
-          eventType: EVENT_TYPE.OPERATIONAL,
-        });
-      }
-    });
+          if (!distortedDuration) {
+            this.experienceStore?.mark(
+              EditorExperience.loadEditor,
+              ACTION.PROSEMIRROR_RENDERED,
+              startTime + duration,
+            );
+          }
+
+          this.experienceStore?.addMetadata(EditorExperience.loadEditor, {
+            nodes,
+            ttfb,
+          });
+        }
+      },
+    );
 
     // Creates the editor-view from this.editorState. If an editor has been mounted
     // previously, this will contain the previous state of the editor.
     this.view = new EditorView({ mount: node }, this.getDirectEditorProps());
+    this.pluginInjectionAPI.onEditorViewUpdated({
+      newEditorState: this.view.state,
+      oldEditorState: undefined,
+    });
   };
 
   handleEditorViewRef = (node: HTMLDivElement) => {
@@ -756,6 +964,33 @@ export default class ReactEditorView<T = {}> extends React.Component<
         this.focusTimeoutId = handleEditorFocus(view);
       }
 
+      if (this.featureFlags.ufo) {
+        this.experienceStore = ExperienceStore.getInstance(view);
+        this.experienceStore.start(EditorExperience.editSession);
+        this.experienceStore.addMetadata(EditorExperience.editSession, {
+          reliabilityInterval: RELIABILITY_INTERVAL,
+        });
+
+        this.reliabilityInterval = window.setInterval(() => {
+          this.experienceStore
+            ?.success(EditorExperience.editSession)
+            ?.finally(() => {
+              this.experienceStore?.start(EditorExperience.editSession);
+              this.experienceStore?.addMetadata(EditorExperience.editSession, {
+                reliabilityInterval: RELIABILITY_INTERVAL,
+              });
+            });
+
+          const reliabilityEvent: UfoSessionCompletePayloadAEP = {
+            action: ACTION.UFO_SESSION_COMPLETE,
+            actionSubject: ACTION_SUBJECT.EDITOR,
+            attributes: { interval: RELIABILITY_INTERVAL },
+            eventType: EVENT_TYPE.OPERATIONAL,
+          };
+          this.dispatchAnalyticsEvent(reliabilityEvent);
+        }, RELIABILITY_INTERVAL);
+      }
+
       // Force React to re-render so consumers get a reference to the editor view
       this.forceUpdate();
     } else if (this.view && !node) {
@@ -768,13 +1003,28 @@ export default class ReactEditorView<T = {}> extends React.Component<
         eventDispatcher: this.eventDispatcher,
         transformer: this.contentTransformer,
       });
+
+      // Allows us to dispatch analytics within the plugin view.destory methods
+      const analyticsConnected = this.eventDispatcher.has(
+        analyticsEventKey,
+        this.handleAnalyticsEvent,
+      );
+      if (!analyticsConnected) {
+        this.eventDispatcher.on(analyticsEventKey, this.handleAnalyticsEvent);
+      }
+
       this.view.destroy(); // Destroys the dom node & all node views
+
+      if (!analyticsConnected) {
+        this.eventDispatcher.off(analyticsEventKey, this.handleAnalyticsEvent);
+      }
+
       this.view = undefined;
     }
   };
 
   dispatchAnalyticsEvent = (payload: AnalyticsEventPayload): void => {
-    if (this.props.allowAnalyticsGASV3 && this.eventDispatcher) {
+    if (this.eventDispatcher) {
       const dispatch: AnalyticsDispatch = createDispatch(this.eventDispatcher);
       dispatch(analyticsEventKey, {
         payload,
@@ -782,24 +1032,45 @@ export default class ReactEditorView<T = {}> extends React.Component<
     }
   };
 
-  private editor = (
-    <div
-      className={getUAPrefix()}
-      key="ProseMirror"
-      ref={this.handleEditorViewRef}
-      aria-label="Main content area"
-      role="textbox"
-    />
-  );
+  private createEditor = (assistiveLabel?: string) => {
+    return (
+      <div
+        className={getUAPrefix()}
+        key="ProseMirror"
+        ref={this.handleEditorViewRef}
+        aria-label={
+          assistiveLabel ||
+          this.props.intl.formatMessage(editorMessages.editorAssistiveLabel)
+        }
+        // setting aria-multiline to true when not mobile appearance.
+        //  because somehow mobile tests are failing when it set.
+        //  don't know why that is happening.
+        // Created https://product-fabric.atlassian.net/jira/servicedesk/projects/DTR/queues/issue/DTR-1675
+        //  to investigate further.
+        aria-multiline={
+          this.props.editorProps.appearance !== 'mobile' ? true : false
+        }
+        role="textbox"
+        id={EDIT_AREA_ID}
+      />
+    );
+  };
+  private editor = this.createEditor(this.props.editorProps.assistiveLabel);
 
   render() {
-    const renderTracking = this.props.editorProps.performanceTracking
-      ?.renderTracking?.reactEditorView;
+    const renderTracking =
+      this.props.editorProps.performanceTracking?.renderTracking
+        ?.reactEditorView;
     const renderTrackingEnabled = renderTracking?.enabled;
     const useShallow = renderTracking?.useShallow;
 
     return (
-      <React.Fragment>
+      <ReactEditorViewContext.Provider
+        value={{
+          editorRef: this.editorRef,
+          editorView: this.view,
+        }}
+      >
         {renderTrackingEnabled && (
           <RenderTracking
             componentProps={this.props}
@@ -817,9 +1088,10 @@ export default class ReactEditorView<T = {}> extends React.Component<
               eventDispatcher: this.eventDispatcher,
               transformer: this.contentTransformer,
               dispatchAnalyticsEvent: this.dispatchAnalyticsEvent,
+              editorRef: this.editorRef,
             })
           : this.editor}
-      </React.Fragment>
+      </ReactEditorViewContext.Provider>
     );
   }
 }
@@ -831,7 +1103,10 @@ function getUAPrefix() {
     return 'ua-ie';
   } else if (browser.gecko) {
     return 'ua-firefox';
+  } else if (browser.safari) {
+    return 'ua-safari';
   }
-
   return '';
 }
+
+export default injectIntl(ReactEditorView);

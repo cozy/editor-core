@@ -1,47 +1,61 @@
-import React from 'react';
-
-import { Node as PMNode } from 'prosemirror-model';
-import { EditorState, Transaction } from 'prosemirror-state';
-import styled from 'styled-components';
-
+/** @jsx jsx */
+import { css, jsx } from '@emotion/react';
 import {
   decisionItem,
   decisionList,
   taskItem,
   taskList,
 } from '@atlaskit/adf-schema';
+import type {
+  Node as PMNode,
+  Schema,
+} from '@atlaskit/editor-prosemirror/model';
+import type { Transaction } from '@atlaskit/editor-prosemirror/state';
+import { INPUT_METHOD } from '@atlaskit/editor-common/analytics';
+import { toolbarInsertBlockMessages as insertBlockMessages } from '@atlaskit/editor-common/messages';
+import { IconAction, IconDecision } from '@atlaskit/editor-common/quick-insert';
 
-import { EditorPlugin } from '../../types';
-import { INPUT_METHOD } from '../analytics';
-import { messages as insertBlockMessages } from '../insert-block/ui/ToolbarInsertBlock/messages';
-import { IconAction, IconDecision } from '../quick-insert/assets';
-
-import { getListTypes, insertTaskDecisionWithAnalytics } from './commands';
+import { stateKey as taskPluginKey } from './pm-plugins/plugin-key';
+import {
+  insertTaskDecisionAction,
+  getListTypes,
+  insertTaskDecisionCommand,
+} from './commands';
 import inputRulePlugin from './pm-plugins/input-rules';
-import keymap from './pm-plugins/keymaps';
+import keymap, {
+  getIndentCommand,
+  getUnindentCommand,
+} from './pm-plugins/keymaps';
 import { createPlugin } from './pm-plugins/main';
-import { TaskDecisionListType, TaskDecisionPluginOptions } from './types';
+import type { TaskAndDecisionsPlugin, TaskDecisionListType } from './types';
 import ToolbarDecision from './ui/ToolbarDecision';
 import ToolbarTask from './ui/ToolbarTask';
+import {
+  getCurrentIndentLevel,
+  getTaskItemIndex,
+  isInsideTask,
+} from './pm-plugins/helpers';
+import { MAX_INDENTATION_LEVEL } from '@atlaskit/editor-common/indentation';
 
-const TaskDecisionToolbarGroup = styled.div`
+const taskDecisionToolbarGroup = css`
   display: flex;
 `;
 
-const quickInsertItem = (
-  insert: (node: PMNode) => Transaction,
-  state: EditorState,
-  listType: TaskDecisionListType,
-): Transaction => {
-  const { list, item } = getListTypes(listType, state.schema);
-  const addItem = ({
+const addItem =
+  (
+    insert: (node: PMNode) => Transaction,
+    listType: TaskDecisionListType,
+    schema: Schema,
+  ) =>
+  ({
     listLocalId,
     itemLocalId,
   }: {
     listLocalId?: string;
     itemLocalId?: string;
-  }) =>
-    insert(
+  }) => {
+    const { list, item } = getListTypes(listType, schema);
+    return insert(
       list.createChecked(
         { localId: listLocalId },
         item.createChecked({
@@ -49,19 +63,12 @@ const quickInsertItem = (
         }),
       ),
     );
-  return insertTaskDecisionWithAnalytics(
-    state,
-    listType,
-    INPUT_METHOD.QUICK_INSERT,
-    addItem,
-  ) as Transaction;
-};
+  };
 
-const tasksAndDecisionsPlugin = ({
-  allowNestedTasks,
-  consumeTabs,
-  useLongPressSelection,
-}: TaskDecisionPluginOptions = {}): EditorPlugin => ({
+const tasksAndDecisionsPlugin: TaskAndDecisionsPlugin = ({
+  config: { allowNestedTasks, consumeTabs, useLongPressSelection } = {},
+  api,
+}) => ({
   name: 'taskDecision',
   nodes() {
     return [
@@ -73,6 +80,29 @@ const tasksAndDecisionsPlugin = ({
       },
       { name: 'taskItem', node: taskItem },
     ];
+  },
+
+  getSharedState(editorState) {
+    if (!editorState) {
+      return undefined;
+    }
+
+    const pluginState = taskPluginKey.getState(editorState);
+    const indentLevel = getCurrentIndentLevel(editorState.selection) || 0;
+    const itemIndex = getTaskItemIndex(editorState);
+
+    return {
+      focusedTaskItemLocalId: pluginState?.focusedTaskItemLocalId || null,
+      isInsideTask: isInsideTask(editorState),
+      indentDisabled: itemIndex === 0 || indentLevel >= MAX_INDENTATION_LEVEL,
+      outdentDisabled: indentLevel <= 1,
+    };
+  },
+
+  actions: {
+    insertTaskDecision: insertTaskDecisionCommand(api?.analytics?.actions),
+    indentTaskList: getIndentCommand(api?.analytics?.actions),
+    outdentTaskList: getUnindentCommand(api?.analytics?.actions),
   },
 
   pmPlugins() {
@@ -90,6 +120,7 @@ const tasksAndDecisionsPlugin = ({
             eventDispatcher,
             providerFactory,
             dispatch,
+            api,
             useLongPressSelection,
           );
         },
@@ -97,29 +128,32 @@ const tasksAndDecisionsPlugin = ({
       {
         name: 'tasksAndDecisionsInputRule',
         plugin: ({ schema, featureFlags }) =>
-          inputRulePlugin(schema, featureFlags),
+          inputRulePlugin(api?.analytics?.actions)(schema, featureFlags),
       },
       {
         name: 'tasksAndDecisionsKeyMap',
-        plugin: ({ schema }) => keymap(schema, allowNestedTasks, consumeTabs),
+        plugin: ({ schema }) =>
+          keymap(schema, api, allowNestedTasks, consumeTabs),
       }, // Needs to be after "save-on-enter"
     ];
   },
 
   secondaryToolbarComponent({ editorView, disabled }) {
     return (
-      <TaskDecisionToolbarGroup>
+      <div css={taskDecisionToolbarGroup}>
         <ToolbarDecision
           editorView={editorView}
           isDisabled={disabled}
           isReducedSpacing={true}
+          editorAPI={api}
         />
         <ToolbarTask
           editorView={editorView}
           isDisabled={disabled}
           isReducedSpacing={true}
+          editorAPI={api}
         />
-      </TaskDecisionToolbarGroup>
+      </div>
     );
   },
 
@@ -134,7 +168,12 @@ const tasksAndDecisionsPlugin = ({
         keyshortcut: '[]',
         icon: () => <IconAction />,
         action(insert, state) {
-          return quickInsertItem(insert, state, 'taskList');
+          return insertTaskDecisionAction(api?.analytics?.actions)(
+            state,
+            'taskList',
+            INPUT_METHOD.QUICK_INSERT,
+            addItem(insert, 'taskList', state.schema),
+          );
         },
       },
       {
@@ -145,7 +184,12 @@ const tasksAndDecisionsPlugin = ({
         keyshortcut: '<>',
         icon: () => <IconDecision />,
         action(insert, state) {
-          return quickInsertItem(insert, state, 'decisionList');
+          return insertTaskDecisionAction(api?.analytics?.actions)(
+            state,
+            'decisionList',
+            INPUT_METHOD.QUICK_INSERT,
+            addItem(insert, 'decisionList', state.schema),
+          );
         },
       },
     ],

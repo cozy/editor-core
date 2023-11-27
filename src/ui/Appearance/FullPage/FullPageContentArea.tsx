@@ -1,11 +1,19 @@
-import { WidthConsumer, ProviderFactory } from '@atlaskit/editor-common';
-import { ContextPanelConsumer } from '../../ContextPanel/context';
-import { EditorView } from 'prosemirror-view';
-import React, { ReactElement } from 'react';
-
-import EditorActions from '../../../actions';
-import { EventDispatcher } from '../../../event-dispatcher';
+/** @jsx jsx */
+import { jsx, useTheme } from '@emotion/react';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import {
+  WidthConsumer,
+  ContextPanelConsumer,
+} from '@atlaskit/editor-common/ui';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { ReactElement } from 'react';
+import React, { useImperativeHandle, useRef } from 'react';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
+
+import type EditorActions from '../../../actions';
+import type { EventDispatcher } from '../../../event-dispatcher';
+import type {
   ReactComponents,
   EditorAppearance,
   UIComponentFactory,
@@ -13,21 +21,24 @@ import {
 import { ClickAreaBlock } from '../../Addon';
 import ContextPanel from '../../ContextPanel';
 import PluginSlot from '../../PluginSlot';
-import WidthEmitter from '../../WidthEmitter';
 import {
-  ContentArea,
-  EditorContentArea,
-  SidebarArea,
+  contentArea,
+  editorContentAreaStyle,
+  sidebarArea,
   ScrollContainer,
-  EditorContentGutter,
+  editorContentGutterStyle,
+  positionedOverEditorStyle,
 } from './StyledComponents';
-import { DispatchAnalyticsEvent } from '../../../plugins/analytics';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+import { fullPageMessages as messages } from '@atlaskit/editor-common/messages';
+import type { ThemeProps } from '@atlaskit/theme/types';
+import type { ReactHookFactory } from '@atlaskit/editor-common/types';
+import type { FeatureFlags } from '../../../types/feature-flags';
 
 interface FullPageEditorContentAreaProps {
-  allowAnnotation: boolean | undefined;
   appearance: EditorAppearance | undefined;
-  contentArea: HTMLElement | undefined;
   contentComponents: UIComponentFactory[] | undefined;
+  pluginHooks: ReactHookFactory[] | undefined;
   contextPanel: ReactComponents | undefined;
   customContentComponents: ReactComponents | undefined;
   disabled: boolean | undefined;
@@ -40,77 +51,112 @@ interface FullPageEditorContentAreaProps {
   popupsBoundariesElement: HTMLElement | undefined;
   popupsScrollableElement: HTMLElement | undefined;
   providerFactory: ProviderFactory;
-  scrollContainer: HTMLElement | null;
-  contentAreaRef(ref: HTMLElement | null): void;
-  scrollContainerRef(ref: HTMLElement | null): void;
+  wrapperElement: HTMLElement | null;
+  featureFlags?: FeatureFlags;
 }
 
 export const CONTENT_AREA_TEST_ID = 'ak-editor-fp-content-area';
 
-export const FullPageContentArea: React.FunctionComponent<FullPageEditorContentAreaProps> = React.memo(
-  (props) => {
-    return (
-      <WidthConsumer>
-        {({ width }) => (
-          <ContextPanelConsumer>
-            {({ positionedOverEditor }) => (
-              <ContentArea
-                data-testid={CONTENT_AREA_TEST_ID}
-                positionedOverEditor={positionedOverEditor}
+type ScrollContainerRefs = {
+  scrollContainer: HTMLDivElement | null;
+  contentArea: HTMLDivElement | null;
+};
+
+const Content = React.forwardRef<
+  ScrollContainerRefs,
+  FullPageEditorContentAreaProps & WrappedComponentProps
+>((props, ref) => {
+  const theme: ThemeProps = useTheme();
+  const fullWidthMode = props.appearance === 'full-width';
+  const scrollContainerRef = useRef(null);
+  const contentAreaRef = useRef(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      get scrollContainer() {
+        return scrollContainerRef.current;
+      },
+      get contentArea() {
+        return contentAreaRef.current;
+      },
+    }),
+    [],
+  );
+
+  return (
+    <WidthConsumer>
+      {({ width }) => (
+        <ContextPanelConsumer>
+          {({ positionedOverEditor }) => (
+            <div
+              css={[
+                contentArea,
+                positionedOverEditor && positionedOverEditorStyle,
+              ]}
+              data-testid={CONTENT_AREA_TEST_ID}
+            >
+              <ScrollContainer
+                className="fabric-editor-popup-scroll-parent"
+                featureFlags={props.featureFlags}
+                ref={scrollContainerRef}
               >
-                <ScrollContainer
-                  innerRef={props.scrollContainerRef}
-                  allowAnnotation={props.allowAnnotation}
-                  className="fabric-editor-popup-scroll-parent"
+                <ClickAreaBlock
+                  editorView={props.editorView}
+                  editorDisabled={props.disabled}
                 >
-                  <ClickAreaBlock editorView={props.editorView}>
-                    <EditorContentArea
-                      fullWidthMode={props.appearance === 'full-width'}
-                      innerRef={props.contentAreaRef}
-                      containerWidth={width}
+                  <div
+                    css={editorContentAreaStyle({
+                      fullWidthMode,
+                      layoutMaxWidth: theme.layoutMaxWidth,
+                      containerWidth: width,
+                    })}
+                    role="region"
+                    aria-label={props.intl.formatMessage(
+                      messages.editableContentLabel,
+                    )}
+                    ref={contentAreaRef}
+                  >
+                    <div
+                      css={editorContentGutterStyle}
+                      className={[
+                        'ak-editor-content-area',
+                        fullWidthMode ? 'fabric-editor--full-width-mode' : '',
+                      ].join(' ')}
+                      ref={contentAreaRef}
                     >
-                      <EditorContentGutter
-                        className={[
-                          'ak-editor-content-area',
-                          props.appearance === 'full-width'
-                            ? 'fabric-editor--full-width-mode'
-                            : '',
-                        ].join(' ')}
-                      >
-                        {props.customContentComponents}
-                        <PluginSlot
-                          editorView={props.editorView}
-                          editorActions={props.editorActions}
-                          eventDispatcher={props.eventDispatcher}
-                          providerFactory={props.providerFactory}
-                          appearance={props.appearance}
-                          items={props.contentComponents}
-                          contentArea={props.contentArea}
-                          popupsMountPoint={props.popupsMountPoint}
-                          popupsBoundariesElement={
-                            props.popupsBoundariesElement
-                          }
-                          popupsScrollableElement={
-                            props.popupsScrollableElement
-                          }
-                          disabled={!!props.disabled}
-                          containerElement={props.scrollContainer}
-                          dispatchAnalyticsEvent={props.dispatchAnalyticsEvent}
-                        />
-                        {props.editorDOMElement}
-                      </EditorContentGutter>
-                    </EditorContentArea>
-                  </ClickAreaBlock>
-                </ScrollContainer>
-                <SidebarArea>
-                  {props.contextPanel || <ContextPanel visible={false} />}
-                </SidebarArea>
-                <WidthEmitter editorView={props.editorView} />
-              </ContentArea>
-            )}
-          </ContextPanelConsumer>
-        )}
-      </WidthConsumer>
-    );
-  },
-);
+                      {props.customContentComponents}
+                      <PluginSlot
+                        editorView={props.editorView}
+                        editorActions={props.editorActions}
+                        eventDispatcher={props.eventDispatcher}
+                        providerFactory={props.providerFactory}
+                        appearance={props.appearance}
+                        items={props.contentComponents}
+                        pluginHooks={props.pluginHooks}
+                        contentArea={contentAreaRef.current ?? undefined}
+                        popupsMountPoint={props.popupsMountPoint}
+                        popupsBoundariesElement={props.popupsBoundariesElement}
+                        popupsScrollableElement={props.popupsScrollableElement}
+                        disabled={!!props.disabled}
+                        containerElement={scrollContainerRef.current}
+                        dispatchAnalyticsEvent={props.dispatchAnalyticsEvent}
+                        wrapperElement={props.wrapperElement}
+                      />
+                      {props.editorDOMElement}
+                    </div>
+                  </div>
+                </ClickAreaBlock>
+              </ScrollContainer>
+              <div css={sidebarArea}>
+                {props.contextPanel || <ContextPanel visible={false} />}
+              </div>
+            </div>
+          )}
+        </ContextPanelConsumer>
+      )}
+    </WidthConsumer>
+  );
+});
+
+export const FullPageContentArea = injectIntl(Content, { forwardRef: true });

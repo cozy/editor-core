@@ -1,7 +1,9 @@
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import createStub from 'raf-stub';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import {
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
@@ -14,8 +16,9 @@ import {
   getContainerElement,
 } from '../_utils';
 import { getPluginState } from '../../../plugin';
-import { TRIGGER_METHOD } from '../../../../analytics/types';
-import { flushPromises } from '../../../../../__tests__/__helpers/utils';
+import { TRIGGER_METHOD } from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 const containerElement = getContainerElement();
 const createAnalyticsEvent: CreateUIAnalyticsEvent = jest.fn(
@@ -29,9 +32,10 @@ let rafStub: {
   flush: () => void;
 };
 let rafSpy: jest.SpyInstance;
+let editorAPI: any;
 
 const initEditor = (doc: DocBuilder) => {
-  ({ editorView, refs } = editor(doc, createAnalyticsEvent));
+  ({ editorView, refs, editorAPI } = editor(doc, createAnalyticsEvent));
 };
 
 describe('find/replace commands: activate', () => {
@@ -229,10 +233,9 @@ describe('find/replace commands: activate', () => {
 describe('find/replace commands: activateWithAnalytics', () => {
   it('should fire analytics event when text is not prefilled', () => {
     initEditor(doc(p('{<>}this is a document')));
-    activateWithAnalytics({ triggerMethod: TRIGGER_METHOD.SHORTCUT })(
-      editorView.state,
-      editorView.dispatch,
-    );
+    activateWithAnalytics(editorAPI?.analytics?.actions)({
+      triggerMethod: TRIGGER_METHOD.SHORTCUT,
+    })(editorView.state, editorView.dispatch);
     expect(createAnalyticsEvent).toBeCalledWith({
       eventType: 'ui',
       action: 'activated',
@@ -246,10 +249,9 @@ describe('find/replace commands: activateWithAnalytics', () => {
 
   it('should fire analytics event when text is prefilled', () => {
     initEditor(doc(p('{<}this{>} is a document')));
-    activateWithAnalytics({ triggerMethod: TRIGGER_METHOD.SHORTCUT })(
-      editorView.state,
-      editorView.dispatch,
-    );
+    activateWithAnalytics(editorAPI?.analytics?.actions)({
+      triggerMethod: TRIGGER_METHOD.SHORTCUT,
+    })(editorView.state, editorView.dispatch);
     expect(createAnalyticsEvent).toBeCalledWith({
       eventType: 'ui',
       action: 'activated',

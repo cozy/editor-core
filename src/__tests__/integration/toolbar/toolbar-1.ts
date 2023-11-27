@@ -1,23 +1,31 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { getDocFromElement, comment, fullpage, editable } from '../_helpers';
-import { toolbarMessages as textFormattingMessages } from '../../../plugins/text-formatting/ui/Toolbar/toolbar-messages';
-import { toolbarMessages as blockTypeToolbarMessages } from '../../../plugins/block-type/ui/ToolbarBlockType/toolbar-messages';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  getDocFromElement,
+  comment,
+  fullpage,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+import {
+  toolbarMessages as textFormattingMessages,
+  blockTypeMessages,
+} from '@atlaskit/editor-common/messages';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
-import { messages as blockTypeMessages } from '../../../plugins/block-type/messages';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 
 const input = 'helloworld ';
 // https://product-fabric.atlassian.net/browse/ED-4531
 [comment, fullpage].forEach((editor) => {
   BrowserTestCase(
     `toolbar-1.ts: should be able to select normal text, bold, italics, underline style for ${editor.name} editor`,
-    { skip: ['safari', 'edge'] },
+    { skip: [] },
     async (client: any, testName: string) => {
-      const bold = `[aria-label="${textFormattingMessages.bold.defaultMessage}"]`;
-      const italic = `[aria-label="${textFormattingMessages.italic.defaultMessage}"]`;
-      const changeFormatting = `[aria-label="${blockTypeToolbarMessages.textStyles.defaultMessage}"]`;
+      const bold = `[aria-label*="${textFormattingMessages.bold.defaultMessage}"]`;
+      const italic = `[aria-label*="${textFormattingMessages.italic.defaultMessage}"]`;
+      const changeFormatting = `[aria-label="${textFormattingMessages.textStyles.defaultMessage}"]`;
       const normalText = `span=${blockTypeMessages.normal.defaultMessage}`;
       const more = `[aria-label="${textFormattingMessages.moreFormatting.defaultMessage}"]`;
       const underline = `span=${textFormattingMessages.underline.defaultMessage}`;

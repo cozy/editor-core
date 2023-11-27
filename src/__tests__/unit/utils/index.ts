@@ -1,5 +1,8 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   code_block,
@@ -19,23 +22,19 @@ import {
   media,
   mediaGroup,
   mediaSingle,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 
 import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
-import { toggleMark } from 'prosemirror-commands';
+import { toggleMark } from '@atlaskit/editor-prosemirror/commands';
 
 import {
   isMarkTypeAllowedInCurrentSelection,
-  areBlockTypesDisabled,
   isEmptyNode,
-  dedupe,
-  compose,
-  pipe,
   isSelectionInsideLastNodeInDocument,
-  shallowEqual,
 } from '../../../utils';
-import { Node, Schema } from 'prosemirror-model';
+import { shallowEqual, dedupe } from '@atlaskit/editor-common/utils';
+
+import type { Node, Schema } from '@atlaskit/editor-prosemirror/model';
 import { closestElement } from '../../../utils/dom';
 
 describe('@atlaskit/editore-core/utils', () => {
@@ -206,48 +205,6 @@ describe('@atlaskit/editore-core/utils', () => {
     });
   });
 
-  describe('#areBlockTypesDisabled', () => {
-    it('should return true is selection has a blockquote', () => {
-      const { editorView } = editor(
-        doc(blockquote(p('te{<}xt')), panel()(p('te{>}xt'))),
-      );
-      const result = areBlockTypesDisabled(editorView.state);
-      expect(result).toBe(true);
-    });
-
-    it('should return false is selection has no blockquote', () => {
-      const { editorView } = editor(doc(p('te{<}xt'), panel()(p('te{>}xt'))));
-      const result = areBlockTypesDisabled(editorView.state);
-      expect(result).toBe(false);
-    });
-
-    it('should return true if selection has action item', () => {
-      const { editorView } = editor(
-        doc(
-          taskList({ localId: 'local-uuid' })(
-            taskItem({ localId: 'local-uuid', state: 'TODO' })('Action {<>}'),
-          ),
-        ),
-      );
-      const result = areBlockTypesDisabled(editorView.state);
-      expect(result).toBe(true);
-    });
-
-    it('should return true if selection has decision', () => {
-      const { editorView } = editor(
-        doc(
-          decisionList({ localId: 'local-uuid' })(
-            decisionItem({ localId: 'local-uuid', state: 'TODO' })(
-              'Decision {<>}',
-            ),
-          ),
-        ),
-      );
-      const result = areBlockTypesDisabled(editorView.state);
-      expect(result).toBe(true);
-    });
-  });
-
   describe('#isEmptyNode', () => {
     const { editorView } = editor(doc(p('')));
     const checkEmptyNode = (node: (schema: Schema<any>) => Node) =>
@@ -299,10 +256,10 @@ describe('@atlaskit/editore-core/utils', () => {
     });
 
     it('should return true for empty ordered list', () => {
-      expect(checkEmptyNode(ol(li(p())))).toBeTruthy();
+      expect(checkEmptyNode(ol()(li(p())))).toBeTruthy();
     });
     it('should return false for non-empty ordered', () => {
-      expect(checkEmptyNode(ol(li(p('1'))))).toBeFalsy();
+      expect(checkEmptyNode(ol()(li(p('1'))))).toBeFalsy();
     });
 
     it('should return true for empty task list', () => {
@@ -470,46 +427,6 @@ describe('@atlaskit/editore-core/utils', () => {
       ];
 
       expect(dedupe(l, (item) => item.item)).toEqual(deduped);
-    });
-  });
-
-  describe('#pipe', () => {
-    it('pipes functions', () => {
-      const fn1 = (val: string) => `fn1(${val})`;
-      const fn2 = (val: string) => `fn2(${val})`;
-      const fn3 = (val: string) => `fn3(${val})`;
-
-      const pipedFunction = pipe(fn1, fn2, fn3);
-
-      expect(pipedFunction('inner')).toBe('fn3(fn2(fn1(inner)))');
-    });
-
-    it('pipes functions with different initial type', () => {
-      const fn1 = (val: string, num: number) => `fn1(${val}-${num})`;
-      const fn2 = (val: string) => `fn2(${val})`;
-      const fn3 = (val: string) => `fn3(${val})`;
-      const pipedFunction = pipe(fn1, fn2, fn3);
-
-      expect(pipedFunction('inner', 2)).toBe('fn3(fn2(fn1(inner-2)))');
-    });
-
-    it('pipes functions with different return value', () => {
-      const fn1 = (val: string) => Number.parseInt(val, 10);
-      const fn2 = (val: number) => ({ number: val, string: val.toString() });
-      const fn3 = (val: object) => `fn3(${JSON.stringify(val)})`;
-
-      const pipedFunction = pipe(fn1, fn2, fn3);
-
-      expect(pipedFunction('2')).toBe('fn3({"number":2,"string":"2"})');
-    });
-  });
-
-  describe('#compose', () => {
-    it('should compose functions right to left', () => {
-      const f1 = (a: string) => `#${a}`;
-      const f2 = (b: string) => `!${b}`;
-
-      expect(compose(f1, f2)('test')).toEqual('#!test');
     });
   });
 

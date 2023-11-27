@@ -3,13 +3,13 @@ import prettier from 'prettier/standalone';
 import parser from 'prettier/parser-babel';
 
 import TextArea from '@atlaskit/textarea';
-import { defaultSchema as schema } from '@atlaskit/adf-schema';
+import { defaultSchema as schema } from '@atlaskit/adf-schema/schema-default';
 
 import EditorContext from '../src/ui/EditorContext';
 import { DevTools } from '../example-helpers/DevTools';
 import { evaluateDocBuilderExpression } from '../example-helpers/evaluate-doc-builder-expression';
 import WithEditorActions from '../src/ui/WithEditorActions';
-import { EditorActions } from '../src';
+import type { EditorActions } from '../src';
 import { ExampleEditor as FullPageEditor } from './5-full-page';
 
 interface DocBuilderState {
@@ -90,6 +90,25 @@ const nodeTypes: Record<string, NodeMapping> = {
       'url',
     ],
   },
+  mediaInline: {
+    name: 'mediaInline',
+    attrs: [
+      '__contextId',
+      '__displayType',
+      '__external',
+      '__fileMimeType',
+      '__fileName',
+      '__fileSize',
+      '__mediaTraceId',
+      'alt',
+      'height',
+      'id',
+      'occurrenceKey',
+      'type',
+      'url',
+      'width',
+    ],
+  },
   applicationCard: {
     name: 'applicationCard',
     attrs: [
@@ -113,7 +132,7 @@ const nodeTypes: Record<string, NodeMapping> = {
   inlineCard: { name: 'inlineCard', attrs: ['url', 'data'] },
   blockCard: { name: 'blockCard', attrs: ['url', 'data'] },
 
-  // TODO: The attributes of unsupported content is type `any`
+  // TODO - The attributes of unsupported content is type `any`
   // unsupportedInline: { name: 'unsupportedInline', attrs: [''] },
   // unsupportedBlock: { name: 'unsupportedBlock', attrs: [''] },
 
@@ -184,7 +203,8 @@ const buildMarks = (marks: Array<any>, leaf: string): string | undefined => {
 
 const nodeToDocBuilder = (node: any): string => {
   if (node.type === 'text') {
-    const leaf = `'${node.text.replace(/'/g, `\\'`)}'`;
+    const text = node.text.replace(/'/g, `\\'`);
+    const leaf = `'${text}'`;
     if (node.marks) {
       const marks = node.marks.slice();
       return buildMarks(marks, leaf) || leaf;
@@ -234,7 +254,7 @@ const toDocBuilder = (adf: any) => {
   });
 };
 
-export default class Example extends React.Component<any, DocBuilderState> {
+export default class Example extends React.Component {
   private editorActions?: EditorActions;
   private adfTextArea?: HTMLTextAreaElement;
   private docBuilderTextArea?: HTMLTextAreaElement;
@@ -266,7 +286,11 @@ export default class Example extends React.Component<any, DocBuilderState> {
               render={(actions) => {
                 this.editorActions = actions;
                 return (
-                  <FullPageEditor onChange={(e) => this.handleEditorChange()} />
+                  <FullPageEditor
+                    editorProps={{
+                      onChange: (e) => this.handleEditorChange(),
+                    }}
+                  />
                 );
               }}
             />
@@ -275,7 +299,7 @@ export default class Example extends React.Component<any, DocBuilderState> {
             <h2>ADF</h2>
             <TextArea
               onChange={(e) => this.handleAdfChange(e.target.value)}
-              isInvalid={!this.state.adfValid}
+              isInvalid={!(this.state as DocBuilderState).adfValid}
               ref={(ref: any) => (this.adfTextArea = ref)}
               placeholder='{"version": 1...'
               isMonospaced={true}
@@ -286,7 +310,7 @@ export default class Example extends React.Component<any, DocBuilderState> {
             <h2>Doc Builder</h2>
             <TextArea
               onChange={(e) => this.handleDocBuilderChange(e.target.value)}
-              isInvalid={!this.state.docBuilderValid}
+              isInvalid={!(this.state as DocBuilderState).docBuilderValid}
               ref={(ref: any) => (this.docBuilderTextArea = ref)}
               placeholder="doc(..."
               isMonospaced={true}
@@ -316,7 +340,10 @@ export default class Example extends React.Component<any, DocBuilderState> {
       this.setState({ adfValid: true });
     } catch (error) {
       this.setState({ adfValid: false });
-      throw new Error(error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(String(error));
     }
   };
 

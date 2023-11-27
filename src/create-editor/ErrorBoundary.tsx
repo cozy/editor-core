@@ -1,26 +1,29 @@
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import React from 'react';
 import uuid from 'uuid';
-import { EditorView } from 'prosemirror-view';
-import memoizeOne from 'memoize-one';
 
-import {
-  ContextIdentifierProvider,
-  sniffUserBrowserExtensions,
-  UserBrowserExtensionResults,
-} from '@atlaskit/editor-common';
-import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
-
+import type { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
+import type { ContextIdentifierProvider } from '@atlaskit/editor-common/provider-factory';
+import { ExperienceStore } from '@atlaskit/editor-common/ufo';
+import { IntlErrorBoundary } from '@atlaskit/editor-common/ui';
+import type { UserBrowserExtensionResults } from '@atlaskit/editor-common/utils';
+import { sniffUserBrowserExtensions } from '@atlaskit/editor-common/utils';
+import type { CustomData } from '@atlaskit/ufo/types';
+import type {
+  ErrorEventAttributes,
+  ErrorEventPayload,
+} from '@atlaskit/editor-common/analytics';
 import {
   ACTION,
   ACTION_SUBJECT,
-  ErrorEventPayload,
   EVENT_TYPE,
-} from '../plugins/analytics';
-import { editorAnalyticsChannel } from '../plugins/analytics/consts';
-import { getFeatureFlags } from '../plugins/feature-flags-context';
-import { FeatureFlags } from '../types/feature-flags';
+  editorAnalyticsChannel,
+} from '@atlaskit/editor-common/analytics';
+import type { FeatureFlags } from '../types/feature-flags';
 import { getDocStructure } from '../utils/document-logger';
 import { WithEditorView } from './WithEditorView';
+import { isOutdatedBrowser } from '@atlaskit/editor-common/utils';
+import { logException } from '@atlaskit/editor-common/monitoring';
 
 export type ErrorBoundaryProps = {
   createAnalyticsEvent?: CreateUIAnalyticsEvent;
@@ -28,6 +31,8 @@ export type ErrorBoundaryProps = {
   editorView?: EditorView;
   rethrow?: boolean;
   children: React.ReactNode;
+  featureFlags: FeatureFlags;
+  errorTracking?: boolean;
 };
 
 export type ErrorBoundaryState = {
@@ -39,7 +44,7 @@ type AnalyticsErrorBoundaryErrorInfo = {
 };
 
 type AnalyticsErrorBoundaryAttributes = {
-  error: string;
+  error: Error;
   info?: AnalyticsErrorBoundaryErrorInfo;
   [key: string]: any;
 };
@@ -48,95 +53,80 @@ export class ErrorBoundaryWithEditorView extends React.Component<
   ErrorBoundaryProps,
   ErrorBoundaryState
 > {
+  featureFlags: FeatureFlags;
   browserExtensions?: UserBrowserExtensionResults = undefined;
+  experienceStore?: ExperienceStore;
 
   static defaultProps = {
     rethrow: true,
+    errorTracking: true,
   };
 
   state = {
     error: undefined,
   };
 
-  // Memoizing this as react alternative suggestion of https://reactjs.org/docs/react-component.html#unsafe_componentwillreceiveprops
-  private getFeatureFlags = memoizeOne(
-    (editorView: EditorView | undefined): FeatureFlags => {
-      if (!editorView) {
-        return {};
-      }
-      return getFeatureFlags(editorView.state);
-    },
-  );
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
 
-  get featureFlags() {
-    return this.getFeatureFlags(this.props.editorView);
+    this.featureFlags = props.featureFlags;
+
+    if (props.editorView) {
+      this.experienceStore = ExperienceStore.getInstance(props.editorView);
+    }
   }
 
-  fireAnalytics = (analyticsErrorPayload: AnalyticsErrorBoundaryAttributes) => {
-    const { createAnalyticsEvent } = this.props;
-    this.getProductName()
-      .then((product) => {
-        if (createAnalyticsEvent) {
-          const { error, errorInfo, errorStack } = analyticsErrorPayload;
-          const sharedId = uuid();
+  private sendErrorData = async (
+    analyticsErrorPayload: AnalyticsErrorBoundaryAttributes,
+  ) => {
+    const product = await this.getProductName();
+    const { error, errorInfo, errorStack } = analyticsErrorPayload;
+    const sharedId = uuid();
+    const browserInfo = window?.navigator?.userAgent || 'unknown';
 
-          const event: ErrorEventPayload = {
-            action: ACTION.EDITOR_CRASHED,
-            actionSubject: ACTION_SUBJECT.EDITOR,
-            eventType: EVENT_TYPE.OPERATIONAL,
-            attributes: {
-              product,
-              browserInfo:
-                window && window.navigator && window.navigator.userAgent
-                  ? window.navigator.userAgent
-                  : 'unknown',
-              error: (error as any) as Error,
-              errorInfo,
-              errorId: sharedId,
-              browserExtensions: this.browserExtensions,
-            },
-          };
+    const attributes: ErrorEventAttributes = {
+      product,
+      browserInfo,
+      error: error.toString() as any as Error,
+      errorInfo,
+      errorId: sharedId,
+      browserExtensions: this.browserExtensions,
+      docStructure:
+        this.featureFlags.errorBoundaryDocStructure && this.props.editorView
+          ? getDocStructure(this.props.editorView.state.doc, { compact: true })
+          : undefined,
+      outdatedBrowser: isOutdatedBrowser(browserInfo),
+    };
 
-          // Add doc structure if the feature flag is on
-          if (
-            this.featureFlags.errorBoundaryDocStructure &&
-            this.props.editorView
-          ) {
-            event.attributes!.docStructure = getDocStructure(
-              this.props.editorView.state.doc,
-              { compact: true },
-            );
-          }
-          createAnalyticsEvent(event).fire(editorAnalyticsChannel);
+    this.fireAnalyticsEvent({
+      action: ACTION.EDITOR_CRASHED,
+      actionSubject: ACTION_SUBJECT.EDITOR,
+      eventType: EVENT_TYPE.OPERATIONAL,
+      attributes,
+    });
+    this.fireAnalyticsEvent({
+      action: ACTION.EDITOR_CRASHED_ADDITIONAL_INFORMATION,
+      actionSubject: ACTION_SUBJECT.EDITOR,
+      eventType: EVENT_TYPE.OPERATIONAL,
+      attributes: {
+        errorId: sharedId,
+      },
+      nonPrivacySafeAttributes: {
+        errorStack,
+      },
+    });
 
-          createAnalyticsEvent({
-            action: ACTION.EDITOR_CRASHED_ADDITIONAL_INFORMATION,
-            actionSubject: ACTION_SUBJECT.EDITOR,
-            eventType: EVENT_TYPE.OPERATIONAL,
-            attributes: {
-              errorStack,
-              errorId: sharedId,
-            },
-          }).fire(editorAnalyticsChannel);
-        } else {
-          // eslint-disable-next-line no-console
-          console.error(
-            'Editor Error Boundary: Missing `createAnalyticsEvent` prop.',
-            {
-              channel: editorAnalyticsChannel,
-              product,
-              error: analyticsErrorPayload,
-            },
-          );
-        }
-      })
-      .catch((e) => {
-        // eslint-disable-next-line no-console
-        console.error(
-          'Failed to resolve product name from contextIdentifierProvider.',
-          e,
-        );
+    if (this.featureFlags.ufo && this.props.editorView) {
+      this.experienceStore?.failAll({
+        ...this.getExperienceMetadata(attributes),
+        errorStack,
       });
+    }
+
+    logException(error, {
+      location: 'editor-core/create-editor',
+      product,
+    });
   };
 
   private getProductName = async () => {
@@ -150,14 +140,32 @@ export class ErrorBoundaryWithEditorView extends React.Component<
     return 'atlaskit';
   };
 
+  private fireAnalyticsEvent = (event: ErrorEventPayload) => {
+    this.props.createAnalyticsEvent?.(event).fire(editorAnalyticsChannel);
+  };
+
+  private getExperienceMetadata = (
+    attributes: ErrorEventAttributes,
+  ): CustomData => ({
+    browserInfo: attributes.browserInfo,
+    error: attributes.error.toString(),
+    errorInfo: {
+      componentStack: attributes.errorInfo.componentStack,
+    },
+    errorId: attributes.errorId,
+    browserExtensions: attributes.browserExtensions?.toString(),
+    docStructure: attributes.docStructure as string,
+  });
+
   componentDidCatch(error: Error, errorInfo: AnalyticsErrorBoundaryErrorInfo) {
-    // Log the error
-    this.fireAnalytics({
-      error: error.toString(),
-      errorInfo,
-      errorStack: error.stack,
-    });
-    //
+    if (this.props.errorTracking) {
+      this.sendErrorData({
+        error,
+        errorInfo,
+        errorStack: error.stack,
+      });
+    }
+
     // // Update state to allow a re-render to attempt graceful recovery (in the event that
     // // the error was caused by a race condition or is intermittent)
     this.setState({ error }, () => {
@@ -182,7 +190,7 @@ export class ErrorBoundaryWithEditorView extends React.Component<
   }
 
   render() {
-    return this.props.children;
+    return <IntlErrorBoundary>{this.props.children}</IntlErrorBoundary>;
   }
 }
 

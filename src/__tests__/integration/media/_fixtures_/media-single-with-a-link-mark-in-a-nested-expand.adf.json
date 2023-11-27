@@ -16,7 +16,8 @@
           "type": "table",
           "attrs": {
             "isNumberColumnEnabled": false,
-            "layout": "default"
+            "layout": "default",
+            "localId": "abc-123"
           },
           "content": [
             {
@@ -46,15 +47,15 @@
                                 "collection": "MediaServicesSample",
                                 "width": 500,
                                 "height": 500
-                              }
-                            }
-                          ],
-                          "marks": [
-                            {
-                              "type": "link",
-                              "attrs": {
-                                "href": "https://gnu.org"
-                              }
+                              },
+                              "marks": [
+                                {
+                                  "type": "link",
+                                  "attrs": {
+                                    "href": "https://gnu.org"
+                                  }
+                                }
+                              ]
                             }
                           ]
                         }

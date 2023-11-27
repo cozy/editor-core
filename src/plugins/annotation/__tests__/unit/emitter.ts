@@ -1,39 +1,42 @@
-import { RESOLVE_METHOD } from './../../../analytics/types/inline-comment-events';
-import { EditorView } from 'prosemirror-view';
-import {
-  doc,
-  p,
-  annotation,
-  DocBuilder,
-} from '@atlaskit/editor-test-helpers/doc-builder';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p, annotation } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
 import { inlineCommentPluginKey, getPluginState } from '../../utils';
 import { inlineCommentProvider } from '../_utils';
 import annotationPlugin, { AnnotationUpdateEmitter } from '../..';
-import { flushPromises } from '../../../../__tests__/__helpers/utils';
-import analyticsPlugin from '../../../analytics/plugin';
-import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+
+import type { UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
-} from '../../../analytics/types/enums';
+  RESOLVE_METHOD,
+} from '@atlaskit/editor-common/analytics';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
 
 describe('annotation emitter', () => {
   let createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
   const updateSubscriber = new AnnotationUpdateEmitter();
   const annotationPreset = new Preset<LightEditorPlugin>()
+    .add([featureFlagsPlugin, {}])
     .add([
       annotationPlugin,
       { inlineComment: { ...inlineCommentProvider, updateSubscriber } },
     ])
-    .add([analyticsPlugin, { createAnalyticsEvent: createAnalyticsEvent }]);
+    .add([analyticsPlugin, { createAnalyticsEvent }]);
 
   const createEditor = createProsemirrorEditorFactory();
   let editorView: EditorView;
@@ -85,7 +88,7 @@ describe('annotation emitter', () => {
       updateSubscriber.emit('resolve', 'id-0');
 
       const pluginState = getPluginState(editorView.state);
-      expect(pluginState.annotations).toStrictEqual({
+      expect(pluginState?.annotations).toStrictEqual({
         'id-0': true,
         'id-1': false,
       });
@@ -95,7 +98,7 @@ describe('annotation emitter', () => {
       updateSubscriber.emit('resolve', 'id-3');
 
       const pluginState = getPluginState(editorView.state);
-      expect(pluginState.annotations).toStrictEqual({
+      expect(pluginState?.annotations).toStrictEqual({
         'id-0': false,
         'id-1': false,
         'id-3': true,
@@ -110,7 +113,7 @@ describe('annotation emitter', () => {
       updateSubscriber.emit('unresolve', 'id-0');
 
       const pluginState = getPluginState(editorView.state);
-      expect(pluginState.annotations).toStrictEqual({
+      expect(pluginState?.annotations).toStrictEqual({
         'id-0': false,
         'id-1': true,
       });
@@ -120,7 +123,7 @@ describe('annotation emitter', () => {
       updateSubscriber.emit('unresolve', 'id-3');
 
       const pluginState = getPluginState(editorView.state);
-      expect(pluginState.annotations).toStrictEqual({
+      expect(pluginState?.annotations).toStrictEqual({
         'id-0': false,
         'id-1': false,
         'id-3': false,
@@ -132,7 +135,7 @@ describe('annotation emitter', () => {
     updateSubscriber.emit('create', 'id-3');
 
     const pluginState = getPluginState(editorView.state);
-    expect(pluginState.annotations).toStrictEqual({
+    expect(pluginState?.annotations).toStrictEqual({
       'id-0': false,
       'id-1': false,
       'id-3': false,
@@ -143,9 +146,28 @@ describe('annotation emitter', () => {
     updateSubscriber.emit('delete', 'id-0');
 
     const pluginState = getPluginState(editorView.state);
-    expect(pluginState.annotations).toStrictEqual({
+    expect(pluginState?.annotations).toStrictEqual({
       'id-0': true,
       'id-1': false,
     });
+  });
+
+  it('sets annotation', () => {
+    updateSubscriber.emit('setselectedannotation', 'id-0');
+
+    const pluginState = getPluginState(editorView.state);
+    expect(pluginState?.selectedAnnotations).toStrictEqual([
+      {
+        id: 'id-0',
+        type: AnnotationTypes.INLINE_COMMENT,
+      },
+    ]);
+  });
+
+  it('deselects annotation', () => {
+    updateSubscriber.emit('setselectedannotation', undefined);
+
+    const pluginState = getPluginState(editorView.state);
+    expect(pluginState?.selectedAnnotations).toStrictEqual([]);
   });
 });

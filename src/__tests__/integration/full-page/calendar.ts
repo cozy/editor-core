@@ -1,10 +1,13 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   mountEditor,
   goToEditorTestingWDExample,
-} from '../../__helpers/testing-example-helpers';
-import { insertBlockMenuItem } from '../_helpers';
-import { selectors } from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { insertBlockMenuItem } from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
 
 const editorSelector = selectors.editor;
 const calendar = '[aria-label="calendar"]';
@@ -13,10 +16,10 @@ const dateView = `span.dateView-content-wrap`;
 // https://product-fabric.atlassian.net/browse/ED-4531
 BrowserTestCase(
   'calendar.ts: user should be able to open calendar',
-  { skip: ['edge', 'safari'] },
+  { skip: [] },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
-    page.teardownMockDate();
+    await page.teardownMockDate();
     await mountEditor(page, { appearance: 'full-page', allowDate: true });
     await page.click(editorSelector);
     await insertBlockMenuItem(page, 'Date');
@@ -27,13 +30,12 @@ BrowserTestCase(
   },
 );
 
-// https://product-fabric.atlassian.net/browse/ED-5033
 BrowserTestCase(
   'calendar.ts: clicking date when calendar is open should close it',
-  { skip: ['edge', 'safari'] },
+  { skip: [] },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
-    page.teardownMockDate();
+    await page.teardownMockDate();
     await mountEditor(page, { appearance: 'full-page', allowDate: true });
     await page.click(editorSelector);
     await insertBlockMenuItem(page, 'Date');
@@ -49,10 +51,10 @@ BrowserTestCase(
 
 BrowserTestCase(
   'calendar.ts: clicking on another date should open its date picker',
-  { skip: ['edge', 'safari'] },
+  { skip: [] },
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
-    page.teardownMockDate();
+    await page.teardownMockDate();
     await mountEditor(page, { appearance: 'full-page', allowDate: true });
     await page.click(editorSelector);
     await insertBlockMenuItem(page, 'Date');

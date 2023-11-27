@@ -1,14 +1,19 @@
+/** @jsx jsx */
 import React from 'react';
-import { defineMessages, InjectedIntlProps, injectIntl } from 'react-intl';
+import { jsx } from '@emotion/react';
+
+import Button from '@atlaskit/button/standard-button';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { defineMessages, injectIntl } from 'react-intl-next';
 import Textfield from '@atlaskit/textfield';
-import { SectionWrapper, ReplaceSectionButton } from './styles';
+import { sectionWrapperStyles, replaceSectionButtonStyles } from './styles';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
 import {
   EVENT_TYPE,
   ACTION,
   ACTION_SUBJECT,
   TRIGGER_METHOD,
-  DispatchAnalyticsEvent,
-} from '../../analytics/types';
+} from '@atlaskit/editor-common/analytics';
 
 export type ReplaceProps = {
   canReplace: boolean;
@@ -53,7 +58,7 @@ const messages = defineMessages({
 });
 
 class Replace extends React.PureComponent<
-  ReplaceProps & InjectedIntlProps,
+  ReplaceProps & WrappedComponentProps,
   ReplaceState
 > {
   state: ReplaceState;
@@ -63,7 +68,7 @@ class Replace extends React.PureComponent<
   private replace: string;
   private replaceAll: string;
 
-  constructor(props: ReplaceProps & InjectedIntlProps) {
+  constructor(props: ReplaceProps & WrappedComponentProps) {
     super(props);
 
     const {
@@ -84,7 +89,7 @@ class Replace extends React.PureComponent<
 
   componentDidUpdate({
     replaceText: prevReplaceText,
-  }: ReplaceProps & InjectedIntlProps) {
+  }: ReplaceProps & WrappedComponentProps) {
     const { replaceText } = this.props;
     if (replaceText && replaceText !== prevReplaceText) {
       this.setState({ replaceText, isComposing: false });
@@ -156,7 +161,7 @@ class Replace extends React.PureComponent<
     const { canReplace } = this.props;
 
     return (
-      <SectionWrapper>
+      <div css={sectionWrapperStyles}>
         <Textfield
           name="replace"
           appearance="none"
@@ -169,21 +174,23 @@ class Replace extends React.PureComponent<
           onCompositionStart={this.handleCompositionStart}
           onCompositionEnd={this.handleCompositionEnd}
         />
-        <ReplaceSectionButton
+        <Button
+          css={replaceSectionButtonStyles}
           testId={this.replace}
           onClick={this.handleReplaceClick}
           isDisabled={!canReplace}
         >
           {this.replace}
-        </ReplaceSectionButton>
-        <ReplaceSectionButton
+        </Button>
+        <Button
+          css={replaceSectionButtonStyles}
           testId={this.replaceAll}
           onClick={this.handleReplaceAllClick}
           isDisabled={!canReplace}
         >
           {this.replaceAll}
-        </ReplaceSectionButton>
-      </SectionWrapper>
+        </Button>
+      </div>
     );
   }
 }

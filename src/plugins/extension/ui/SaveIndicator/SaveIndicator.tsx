@@ -1,25 +1,28 @@
-import React, {
+/** @jsx jsx */
+import {
+  Fragment,
   FunctionComponent,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react';
-import styled from 'styled-components';
+import { css, jsx } from '@emotion/react';
 import { G300, N0 } from '@atlaskit/theme/colors';
 import CheckCircleIcon from '@atlaskit/icon/glyph/check-circle';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage } from 'react-intl-next';
 import { SaveIndicatorProps } from './types';
 import { messages } from './messages';
+import { token } from '@atlaskit/tokens';
 
 const noop = () => {};
 
-const SaveIndicatorWrapper = styled.div`
+const saveIndicatorWrapper = css`
   display: flex;
   justify-content: center;
 `;
 
-const SaveIndicatorContent = styled.div`
+const saveIndicatorContent = css`
   position: fixed;
   width: 256px;
   bottom: 20px;
@@ -28,15 +31,17 @@ const SaveIndicatorContent = styled.div`
   align-items: center;
   padding: 6px 12px;
 
-  background: ${N0};
+  background: ${token('elevation.surface.overlay', N0)};
 
   /* E300 */
-  box-shadow: 0px 8px 12px rgba(9, 30, 66, 0.15),
-    0px 0px 1px rgba(9, 30, 66, 0.31);
+  box-shadow: ${token(
+    'elevation.shadow.overlay',
+    `0px 8px 12px rgba(9, 30, 66, 0.15), 0px 0px 1px rgba(9, 30, 66, 0.31)`,
+  )};
   border-radius: 16px;
 `;
 
-const SaveIndicatorText = styled.span`
+const saveIndicatorText = css`
   padding-left: 6px;
 `;
 
@@ -66,18 +71,22 @@ export const SaveIndicator: FunctionComponent<SaveIndicatorProps> = ({
   }, [saving, duration]);
 
   return (
-    <>
+    <Fragment>
       <div>{children({ onSaveStarted, onSaveEnded: noop })}</div>
       {visible && saving && (
-        <SaveIndicatorWrapper>
-          <SaveIndicatorContent data-testid="save-indicator-content">
-            <CheckCircleIcon label="Saving" primaryColor={G300} size="small" />
-            <SaveIndicatorText>
+        <div css={saveIndicatorWrapper}>
+          <div css={saveIndicatorContent} data-testid="save-indicator-content">
+            <CheckCircleIcon
+              label="Saving"
+              primaryColor={token('color.icon.success', G300)}
+              size="small"
+            />
+            <span css={saveIndicatorText}>
               <FormattedMessage {...messages.saveIndicator} />
-            </SaveIndicatorText>
-          </SaveIndicatorContent>
-        </SaveIndicatorWrapper>
+            </span>
+          </div>
+        </div>
       )}
-    </>
+    </Fragment>
   );
 };

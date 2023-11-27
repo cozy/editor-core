@@ -1,13 +1,11 @@
 import React from 'react';
 import { mount, ReactWrapper } from 'enzyme';
-import { IntlProvider } from 'react-intl';
+import { IntlProvider } from 'react-intl-next';
 import retry from 'async-retry';
 import merge from 'lodash/merge';
 
-import { setSmartUserPickerEnv } from '@atlaskit/user-picker';
 import ConfigPanel from '../../../ui/ConfigPanel';
-import {
-  DefaultExtensionProvider,
+import type {
   ExtensionManifest,
   ExtensionModule,
   ExtensionModuleNodes,
@@ -15,8 +13,15 @@ import {
   Option,
   Parameters,
   UserFieldContext,
+  UpdateExtension,
+} from '@atlaskit/editor-common/extensions';
+import {
+  DefaultExtensionProvider,
   combineExtensionProviders,
 } from '@atlaskit/editor-common/extensions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
+import ReactEditorViewContext from '../../../create-editor/ReactEditorViewContext';
 
 export function asOption(label: string): Option {
   return { label, value: label };
@@ -70,17 +75,16 @@ function getSelect(wrapper: any) {
 }
 
 export async function resolveOption(wrapper: any, label: string) {
-  getSelect(wrapper).simulate('focus');
-  getSelect(wrapper)
-    .instance()
-    .handleInputChange({
-      currentTarget: {
-        value: label,
-      },
-    });
+  const selectWrapper = getSelect(wrapper);
+  selectWrapper.simulate('focus');
+  selectWrapper.instance().handleInputChange({
+    currentTarget: {
+      value: label,
+    },
+  });
 
-  wrapper.update();
-  return await selectOption(wrapper, label);
+  selectWrapper.update();
+  return await selectOption(selectWrapper, label);
 }
 
 export async function selectLoaded(wrapper: any) {
@@ -149,9 +153,6 @@ export function createOptionResolver(
 }
 
 export async function mockJiraSmartUserProvider() {
-  // WARNING: this is required by the SmartUserPicker for testing environments
-  setSmartUserPickerEnv('local');
-
   return {
     siteId: '49d8b9d6-ee7d-4931-a0ca-7fcae7d1c3b5',
     principalId: 'Context',
@@ -163,6 +164,7 @@ export async function mockJiraSmartUserProvider() {
 export function createProvider(
   getFieldsDefinition: (() => Promise<FieldDefinition[]>) | FieldDefinition[],
   mergeManifest?: Partial<ExtensionManifest>,
+  extensionUpdater?: UpdateExtension<object>,
 ) {
   const key = 'test-item';
   const quickInsert: ExtensionModule[] = [
@@ -189,6 +191,7 @@ export function createProvider(
 
         return await getFieldsDefinition();
       },
+      update: extensionUpdater,
     },
   };
 
@@ -236,14 +239,28 @@ export type MountResult<T> = {
 };
 
 export async function mountWithProviders(
-  props: Props,
+  props: Props & {
+    hasEditorRefProvider?: boolean;
+  },
 ): Promise<MountResult<Props>> {
-  const { onChange } = props;
-  const wrapper = mount(
-    <IntlProvider locale="en">
-      <ConfigPanel {...props} />
-    </IntlProvider>,
-  );
+  const { onChange, hasEditorRefProvider } = props;
+  const editorRef = {
+    current: document.createElement('div'),
+  };
+
+  const wrapper = hasEditorRefProvider
+    ? mount(
+        <IntlProvider locale="en">
+          <ReactEditorViewContext.Provider value={{ editorRef }}>
+            <ConfigPanel {...props} />
+          </ReactEditorViewContext.Provider>
+        </IntlProvider>,
+      )
+    : mount(
+        <IntlProvider locale="en">
+          <ConfigPanel {...props} />
+        </IntlProvider>,
+      );
 
   const form = await eventuallyFind(wrapper, 'form');
   wrapper.update();
@@ -255,6 +272,7 @@ export async function mountWithProviders(
       form.simulate('submit');
       form.update();
       form.simulate('blur');
+      await flushPromises();
     },
   };
 }

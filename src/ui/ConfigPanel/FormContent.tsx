@@ -1,13 +1,9 @@
 import React from 'react';
-import {
-  ExtensionManifest,
-  ContextIdentifierProvider,
-} from '@atlaskit/editor-common';
 
 import {
   FieldDefinition,
   isFieldset,
-  Parameters,
+  TabGroupField,
   TabField,
 } from '@atlaskit/editor-common/extensions';
 import ColorPicker from './Fields/ColorPicker';
@@ -16,7 +12,6 @@ import CustomSelect from './Fields/CustomSelect';
 import Date from './Fields/Date';
 import DateRange from './Fields/DateRange';
 import Enum from './Fields/Enum';
-// eslint-disable-next-line import/no-cycle
 import Fieldset from './Fields/Fieldset';
 import Number from './Fields/Number';
 import String from './Fields/String';
@@ -26,18 +21,9 @@ import Expand from './Fields/Expand';
 import TabGroup from './Fields/TabGroup';
 
 import RemovableField from './NestedForms/RemovableField';
-import { OnFieldChange } from './types';
+import { FieldComponentProps, FormContentProps } from './types';
 import { getSafeParentedName } from './utils';
 import { FormErrorBoundary } from './FormErrorBoundary';
-
-export interface FieldComponentProps {
-  field: FieldDefinition;
-  parameters: Parameters;
-  parentName?: string;
-  extensionManifest: ExtensionManifest;
-  firstVisibleFieldName?: string;
-  onFieldChange: OnFieldChange;
-}
 
 export function FieldComponent({
   field,
@@ -46,6 +32,7 @@ export function FieldComponent({
   extensionManifest,
   firstVisibleFieldName,
   onFieldChange,
+  featureFlags,
 }: FieldComponentProps) {
   const { name, type } = field;
   const autoFocus = name === firstVisibleFieldName;
@@ -96,6 +83,7 @@ export function FieldComponent({
           name={parentedName}
           field={field}
           onFieldChange={onFieldChange}
+          featureFlags={featureFlags}
         />
       );
 
@@ -153,6 +141,7 @@ export function FieldComponent({
           extensionManifest={extensionManifest}
           parameters={defaultValue || {}}
           error={error}
+          formComponent={FormContent}
         />
       );
 
@@ -167,39 +156,62 @@ export function FieldComponent({
         />
       );
 
-    case 'expand':
-      // if expand is under a tab.
-      const resolvedParentName = parentName
-        ? `${parentName}.${field.name}`
-        : field.name;
+    case 'expand': {
+      // if expand is under a tab with hasGroupedValues=true
+      const resolvedParentName =
+        [parentName, field.hasGroupedValues ? field.name : undefined]
+          .filter((val) => !!val)
+          .join('.') || undefined;
+      const resolvedParameters = !field.hasGroupedValues
+        ? parameters
+        : parameters[field.name] || {};
+
       return (
         <Expand field={field} isExpanded={field.isExpanded}>
           <FormContent
             parentName={resolvedParentName}
             fields={field.fields}
-            parameters={parameters[field.name] || {}}
+            parameters={resolvedParameters}
             onFieldChange={onFieldChange}
             extensionManifest={extensionManifest}
+            featureFlags={featureFlags}
           />
         </Expand>
       );
+    }
 
-    case 'tab-group':
+    case 'tab-group': {
+      const tabGroupField = field as TabGroupField;
+      const tabGroupParams = tabGroupField.hasGroupedValues
+        ? parameters[tabGroupField.name] || {}
+        : parameters;
+
       const renderPanel = (tabField: TabField) => {
-        const tabParameters = parameters[field.name] || {};
+        const parentName =
+          [
+            tabGroupField.hasGroupedValues ? tabGroupField.name : undefined,
+            tabField.hasGroupedValues ? tabField.name : undefined,
+          ]
+            .filter((val) => !!val)
+            .join('.') || undefined;
+        const tabParameters = tabField.hasGroupedValues
+          ? tabGroupParams[tabField.name] || {}
+          : tabGroupParams;
+
         return (
           <FormContent
-            parentName={`${field.name}.${tabField.name}`}
+            parentName={parentName}
             fields={tabField.fields}
-            parameters={tabParameters[tabField.name] || {}}
+            parameters={tabParameters}
             onFieldChange={onFieldChange}
             extensionManifest={extensionManifest}
+            featureFlags={featureFlags}
           />
         );
       };
 
-      return <TabGroup field={field} renderPanel={renderPanel} />;
-
+      return <TabGroup field={tabGroupField} renderPanel={renderPanel} />;
+    }
     default:
       return (
         <UnhandledType
@@ -224,17 +236,8 @@ export default function FormContent({
   onFieldChange,
   firstVisibleFieldName,
   contextIdentifierProvider,
-}: {
-  fields: FieldDefinition[];
-  parentName?: string;
-  parameters?: Parameters;
-  extensionManifest: ExtensionManifest;
-  canRemoveFields?: boolean;
-  onClickRemove?: (fieldName: string) => void;
-  onFieldChange: OnFieldChange;
-  firstVisibleFieldName?: string;
-  contextIdentifierProvider?: ContextIdentifierProvider;
-}) {
+  featureFlags,
+}: FormContentProps) {
   return (
     <FormErrorBoundary
       contextIdentifierProvider={contextIdentifierProvider}
@@ -250,6 +253,7 @@ export default function FormContent({
             extensionManifest={extensionManifest}
             firstVisibleFieldName={firstVisibleFieldName}
             onFieldChange={onFieldChange}
+            featureFlags={featureFlags}
           />
         );
 

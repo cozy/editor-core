@@ -1,19 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import type { AnalyticsDispatch } from '@atlaskit/editor-common/analytics';
 import {
-  AnalyticsDispatch,
   ACTION,
   ACTION_SUBJECT,
   INPUT_METHOD,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
-} from '../../plugins/analytics';
+} from '@atlaskit/editor-common/analytics';
 import { createDispatch } from '../../event-dispatcher';
-import { openHelpCommand } from '../../plugins/help-dialog/commands';
-import { analyticsEventKey } from '../../plugins/analytics/consts';
+import { analyticsEventKey } from '@atlaskit/editor-common/utils';
+import { deprecatedOpenHelpCommand } from '@atlaskit/editor-plugin-help-dialog';
+
+interface WithHelpTriggerProps {
+  render: (openHelp: () => void) => React.ReactNode;
+}
 
 export default class WithHelpTrigger extends React.Component<
-  { render: (openHelp: () => void) => React.ReactNode },
+  WithHelpTriggerProps,
   any
 > {
   static contextTypes = {
@@ -38,7 +42,7 @@ export default class WithHelpTrigger extends React.Component<
 
     const editorView = editorActions._privateGetEditorView();
     if (editorView) {
-      openHelpCommand(editorView.state.tr, editorView.dispatch);
+      deprecatedOpenHelpCommand(editorView.state.tr, editorView.dispatch);
     }
   };
 

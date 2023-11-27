@@ -1,8 +1,5 @@
-import {
-  PuppeteerPage,
-  evaluateTeardownMockDate,
-  waitForTooltip,
-} from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { evaluateTeardownMockDate } from '@atlaskit/visual-regression/helper';
 import {
   waitForResolvedInlineCard,
   waitForResolvedBlockCard,
@@ -12,8 +9,13 @@ import {
   waitForInlineCardSelection,
 } from '@atlaskit/media-integration-test-helpers';
 import cardSelectionAdf from './__fixtures__/card-selection-adf.json';
-import { initFullPageEditorWithAdf, snapshot } from '../_utils';
-import { waitForFloatingControl } from '../../__helpers/page-objects/_toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  initFullPageEditorWithAdf,
+  snapshot,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
 
 describe('Card danger states', () => {
   let page: PuppeteerPage;
@@ -49,7 +51,6 @@ describe('Card danger states', () => {
     await waitForBlockCardSelection(page);
     await waitForFloatingControl(page, 'Card options');
     await page.hover('button[aria-label="Remove"]');
-    await waitForTooltip(page);
     await page.waitForSelector('.blockCardView-content-wrap.danger');
     await snapshot(page);
 
@@ -57,7 +58,6 @@ describe('Card danger states', () => {
     await waitForEmbedCardSelection(page);
     await waitForFloatingControl(page, 'Card options');
     await page.hover('button[aria-label="Remove"]');
-    await waitForTooltip(page);
     await page.waitForSelector('.embedCardView-content-wrap.danger');
     await snapshot(page);
 
@@ -65,7 +65,6 @@ describe('Card danger states', () => {
     await waitForInlineCardSelection(page);
     await waitForFloatingControl(page, 'Card options');
     await page.hover('button[aria-label="Remove"]');
-    await waitForTooltip(page);
     await page.waitForSelector('.inlineCardView-content-wrap.danger');
     await snapshot(page);
   });

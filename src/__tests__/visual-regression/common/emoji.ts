@@ -1,11 +1,14 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import emojiAdf from './__fixtures__/emoji-adf.json';
-import { emojiSelectors } from '../../__helpers/page-objects/_emoji';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  waitForNoTooltip,
-  waitForLoadedBackgroundImages,
-} from '@atlaskit/visual-regression/helper';
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import emojiAdf from './__fixtures__/emoji-adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { emojiSelectors } from '@atlaskit/editor-test-helpers/page-objects/emoji';
+import { waitForLoadedBackgroundImages } from '@atlaskit/visual-regression/helper';
 
 describe('Emoji', () => {
   let page: PuppeteerPage;
@@ -28,7 +31,6 @@ describe('Emoji', () => {
     afterEach(async () => {
       // move mouse as the cursor overlay covers emoji so makes it hard to see selection
       await page.mouse.move(0, 0);
-      await waitForNoTooltip(page);
       // FIXME These tests were flakey in the Puppeteer v10 Upgrade
       await snapshot(page, { useUnsafeThreshold: true, tolerance: 0.05 });
     });

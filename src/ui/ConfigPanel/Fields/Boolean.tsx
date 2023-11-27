@@ -1,5 +1,6 @@
+/** @jsx jsx */
 import React, { Fragment } from 'react';
-import styled from 'styled-components';
+import { css, jsx } from '@emotion/react';
 
 import { Checkbox as AKCheckbox } from '@atlaskit/checkbox';
 import { Field } from '@atlaskit/form';
@@ -8,12 +9,13 @@ import AKToggle from '@atlaskit/toggle';
 
 import { ValidationError, OnFieldChange } from '../types';
 import FieldMessages from '../FieldMessages';
-import { RequiredIndicator } from './common/RequiredIndicator';
+import { requiredIndicator } from './common/RequiredIndicator';
 
-const ToggleFieldWrapper = styled.div`
+const toggleFieldWrapper = css`
   display: flex;
 `;
-const ToggleLabel = styled.label`
+
+const toggleLabel = css`
   display: flex;
   padding: 3px 3px 3px 0px;
   flex-grow: 1;
@@ -31,7 +33,13 @@ function handleOnChange(
   event: React.ChangeEvent<HTMLInputElement>,
 ) {
   onChange(event?.target?.checked || false);
-  onFieldChange(name, true);
+  // Note: prior to bumping typescript to version 2.4.2 onFieldChange
+  // was being called with a global variable (which had a value of '')
+  // While this was not intended, the code still worked as expected.
+  // In typescript 2.4.2 accessing the global variable name has been
+  // deprecated, so this has been replaced with the value it was
+  // previously passing.
+  onFieldChange('', true);
 }
 
 function Checkbox({
@@ -104,13 +112,15 @@ function Toggle({
         const { id, value: isChecked, ...restFieldProps } = fieldProps;
         return (
           <Fragment>
-            <ToggleFieldWrapper>
-              <ToggleLabel id={id} htmlFor={id}>
+            <div css={toggleFieldWrapper}>
+              <label css={toggleLabel} id={id} htmlFor={id}>
                 {label}
                 {isRequired ? (
-                  <RequiredIndicator aria-hidden="true">*</RequiredIndicator>
+                  <span css={requiredIndicator} aria-hidden="true">
+                    *
+                  </span>
                 ) : null}
-              </ToggleLabel>
+              </label>
               <AKToggle
                 {...restFieldProps}
                 onChange={(event) =>
@@ -118,7 +128,7 @@ function Toggle({
                 }
                 isChecked={isChecked}
               />
-            </ToggleFieldWrapper>
+            </div>
             <FieldMessages error={error} description={description} />
           </Fragment>
         );

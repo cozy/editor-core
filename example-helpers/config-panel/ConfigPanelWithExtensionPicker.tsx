@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { IntlProvider } from 'react-intl';
-import styled from 'styled-components';
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
+/** @jsx jsx */
+import { useEffect, useState } from 'react';
+import { IntlProvider } from 'react-intl-next';
+import { css, jsx } from '@emotion/react';
 
-import { gridSize } from '@atlaskit/theme/constants';
-import { multiply } from '@atlaskit/theme/math';
 import * as colors from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 import TextArea from '@atlaskit/textarea';
 import { CodeBlock } from '@atlaskit/code';
 
@@ -19,27 +20,27 @@ import ConfigPanelWithProviders from './ConfigPanelWithProviders';
 import ExtensionNodePicker, { CallbackParams } from './ExtensionNodePicker';
 import { useStateFromPromise } from '../../src/utils/react-hooks/use-state-from-promise';
 
-const Wrapper = styled.div`
+const wrapper = css`
   margin: 16px;
 `;
 
-const ExampleWrapper = styled.div`
+const exampleWrapper = css`
   display: flex;
   flex-direction: row;
 `;
 
-const Column = styled.div<{ width: number | string }>`
-  width: ${(props) => props.width}px;
-  margin: ${multiply(gridSize, 2)}px;
+const column = (width: number | string) => css`
+  width: ${width}px;
+  margin: ${token('space.200', '16px')};
 
   h3 {
     border-bottom: 1px solid ${colors.N50};
-    margin-bottom: ${multiply(gridSize, 2)}px;
+    margin-bottom: ${token('space.200', '16px')};
   }
 `;
 
-const CodeWrapper = styled.div`
-  margin-top: ${multiply(gridSize, 2)}px;
+const codeWrapper = css`
+  margin-top: ${token('space.200', '16px')};
 `;
 
 function ExtensionConfigPanel({
@@ -77,7 +78,10 @@ function ExtensionConfigPanel({
         ...JSON.parse(parametersJson),
       });
     } catch (e) {
-      console.error('Invalid JSON Parameters', e.message);
+      console.error(
+        'Invalid JSON Parameters',
+        e instanceof Error ? e.message : String(e),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parametersJson]);
@@ -87,8 +91,8 @@ function ExtensionConfigPanel({
   }
 
   return (
-    <ExampleWrapper>
-      <Column width="400" key="config-panel">
+    <div css={exampleWrapper}>
+      <div css={column(400)} key="config-panel">
         <h3>Config panel:</h3>
         <ConfigPanelWithProviders
           extensionType={extension.type}
@@ -98,19 +102,19 @@ function ExtensionConfigPanel({
           parameters={parameters}
           onChange={setParameters}
         />
-      </Column>
-      <Column width="500" key="parameters">
+      </div>
+      <div css={column(500)} key="parameters">
         <h3>Initial Parameters:</h3>
-        <CodeWrapper>
+        <div css={codeWrapper}>
           {parameters && (
             <TextArea
               onChange={onChangeParametersJson}
               value={parametersJson}
             />
           )}
-        </CodeWrapper>
+        </div>
         <h3>State:</h3>
-        <CodeWrapper>
+        <div css={codeWrapper}>
           {parameters && (
             <CodeBlock
               language="json"
@@ -118,28 +122,31 @@ function ExtensionConfigPanel({
               showLineNumbers={false}
             />
           )}
-        </CodeWrapper>
-      </Column>
-      <Column width="500" key="fields-definition">
+        </div>
+      </div>
+      <div css={column(500)} key="fields-definition">
         <h3>Fields definition:</h3>
-        <CodeWrapper>
+        <div css={codeWrapper}>
           <CodeBlock
             language="json"
             text={JSON.stringify(fields, null, 4)}
             showLineNumbers={false}
           />
-        </CodeWrapper>
-      </Column>
-    </ExampleWrapper>
+        </div>
+      </div>
+    </div>
   );
 }
 
 const addHashToTheUrl = (extensionPath: string): void => {
+  // @ts-expect-error
   window.top.location.hash = extensionPath;
 };
 
 const getHashFromUrl = (): string =>
+  // @ts-expect-error
   window.top.location.hash &&
+  // @ts-expect-error
   decodeURIComponent(window.top.location.hash.slice(1));
 
 export default function ConfigPanelWithExtensionPicker({
@@ -168,7 +175,7 @@ export default function ConfigPanelWithExtensionPicker({
 
   return (
     <IntlProvider locale="en-AU">
-      <Wrapper>
+      <div css={wrapper}>
         <div style={{ float: 'left' }} key="panel">
           {extensionNode?.node && item && (
             <ExtensionConfigPanel
@@ -199,7 +206,7 @@ export default function ConfigPanelWithExtensionPicker({
             }}
           />
         </div>
-      </Wrapper>
+      </div>
     </IntlProvider>
   );
 }

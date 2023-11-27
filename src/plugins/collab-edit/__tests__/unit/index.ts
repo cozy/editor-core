@@ -1,9 +1,14 @@
+import type { Plugin } from '@atlaskit/editor-prosemirror/state';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import collabEditPlugin from '../../';
 
-import { EditorState } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
-import { PMPlugin, PMPluginFactoryParams } from '../../../../types/pm-plugin';
+import { EditorState } from '@atlaskit/editor-prosemirror/state';
+import { Schema } from '@atlaskit/editor-prosemirror/model';
+import type {
+  PMPlugin,
+  PMPluginFactoryParams,
+} from '../../../../types/pm-plugin';
+import { EditorView } from '@atlaskit/editor-prosemirror/view';
 
 describe('collab-edit: index.ts', () => {
   const schema = new Schema({
@@ -19,6 +24,7 @@ describe('collab-edit: index.ts', () => {
       paragraph: {
         content: 'inline*',
         group: 'block',
+        toDOM: () => ['p', 0],
       },
     },
   });
@@ -37,7 +43,7 @@ describe('collab-edit: index.ts', () => {
 
   describe('when onEditorViewStateUpdated is called', () => {
     it('should call collab send function', (done) => {
-      const editorPlugin = collabEditPlugin({});
+      const editorPlugin = collabEditPlugin({ config: {} });
       const collabFactoryPlugin: PMPlugin = editorPlugin.pmPlugins!()[0];
       const props: PMPluginFactoryParams = {
         dispatch,
@@ -48,13 +54,17 @@ describe('collab-edit: index.ts', () => {
 
       const oldEditorState = EditorState.create({
         schema,
-        plugins: [pmPlugin!],
+        plugins: [pmPlugin! as Plugin],
+      });
+      const editorView = new EditorView(document.createElement('div'), {
+        state: oldEditorState,
       });
 
       const transaction = oldEditorState.tr
         .insertText('123')
         .setMeta('collabInitialised', true);
-      const newEditorState = oldEditorState.apply(transaction);
+      const newEditorState = editorView.state.apply(transaction);
+      editorView.updateState(newEditorState);
 
       sendMock.mockReset();
 

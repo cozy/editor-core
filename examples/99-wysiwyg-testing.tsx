@@ -1,21 +1,20 @@
 import React from 'react';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
-import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
+import { SmartCardProvider } from '@atlaskit/link-provider';
 import { cardClient } from '@atlaskit/media-integration-test-helpers/card-client';
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import { ReactRenderer, RendererProps } from '@atlaskit/renderer';
 import { MentionProvider } from '@atlaskit/mention/types';
-import Editor, { EditorProps } from '../src/editor';
+import { Editor } from '../src';
+import { EditorProps } from '../src/editor';
 
 function useRendererProviderFactory() {
   return React.useMemo(() => {
-    const mediaProvider = storyMediaProviderFactory({
-      useMediaPickerAuthProvider: false,
-    });
+    const mediaProvider = storyMediaProviderFactory();
     const emojiProvider = getEmojiProvider();
     const contextIdentifierProvider = storyContextIdentifierProviderFactory();
     const mentionProvider = Promise.resolve({
@@ -88,14 +87,11 @@ const WysiwygRenderer = React.forwardRef<
 });
 
 export default function WysiwygTesting() {
-  const [{ ref: editorRef, props: editorProps }, __mountEditor] = useProps<
-    EditorProps
-  >();
+  const [{ ref: editorRef, props: editorProps }, __mountEditor] =
+    useProps<EditorProps>();
 
-  const [
-    { ref: rendererRef, props: rendererProps },
-    __mountRenderer,
-  ] = useProps<RendererProps>();
+  const [{ ref: rendererRef, props: rendererProps }, __mountRenderer] =
+    useProps<RendererProps>();
 
   const __mount = React.useCallback(
     (

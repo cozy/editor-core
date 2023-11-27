@@ -1,19 +1,18 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   snapshot,
   initEditorWithAdf,
   Appearance,
   editorSelector,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/noData-adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickToolbarMenu,
   ToolbarMenuItem,
   toolbarMenuItemsSelectors as selectors,
-} from '../../__helpers/page-objects/_toolbar';
-import {
-  PuppeteerPage,
-  waitForNoTooltip,
-} from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 
 describe('Placeholder', () => {
   let page: PuppeteerPage;
@@ -36,7 +35,6 @@ describe('Placeholder', () => {
     await page.waitForSelector(selectors[ToolbarMenuItem.toolbarDropList]);
     await clickToolbarMenu(page, ToolbarMenuItem.alignmentRight);
 
-    await waitForNoTooltip(page);
     await snapshot(
       page,
       { useUnsafeThreshold: true, tolerance: 0.01 },
@@ -49,7 +47,6 @@ describe('Placeholder', () => {
     await page.waitForSelector(selectors[ToolbarMenuItem.toolbarDropList]);
     await clickToolbarMenu(page, ToolbarMenuItem.alignmentCenter);
 
-    await waitForNoTooltip(page);
     await snapshot(
       page,
       { useUnsafeThreshold: true, tolerance: 0.01 },

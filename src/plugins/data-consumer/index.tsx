@@ -1,29 +1,16 @@
 import { dataConsumer } from '@atlaskit/adf-schema';
-import { Plugin } from 'prosemirror-state';
-import { pluginKey } from './plugin-key';
-import { EditorPlugin } from '../../types';
-import { DataConsumerPluginOptions } from './types';
+import { NextEditorPlugin } from '@atlaskit/editor-common/types';
 
-export function createPlugin(): Plugin | undefined {
-  return new Plugin({
-    key: pluginKey,
-  });
-}
-
-const dataConsumerMarkPlugin = (
-  options: DataConsumerPluginOptions = {},
-): EditorPlugin => ({
+const dataConsumerMarkPlugin: NextEditorPlugin<'dataConsumerPlugin'> = () => ({
   name: 'dataConsumerPlugin',
 
   marks() {
-    return options.allowDataConsumerMarks
-      ? [
-          {
-            name: 'dataConsumer',
-            mark: dataConsumer,
-          },
-        ]
-      : [];
+    return [
+      {
+        name: 'dataConsumer',
+        mark: dataConsumer,
+      },
+    ];
   },
 });
 

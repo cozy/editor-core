@@ -1,15 +1,24 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import * as tableWithBackgroundColorsADF from './__fixtures__/table-with-background-colors.adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickFirstCell,
   getSelectorForTableCell,
   selectRow,
-} from '../../__helpers/page-objects/_table';
-import { tableSelectors } from '../../__helpers/page-objects/_table';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { pressKeyCombo } from '../../__helpers/page-objects/_keyboard';
-import { animationFrame } from '../../__helpers/page-objects/_editor';
-import { retryUntilStablePosition } from '../../__helpers/page-objects/_toolbar';
+  tableSelectors,
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { pressKeyCombo } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { animationFrame } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { retryUntilStablePosition } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
 
 let page: PuppeteerPage;
 const initEditor = async (adf: Object) => {
@@ -26,6 +35,16 @@ const initEditor = async (adf: Object) => {
     },
   });
   await clickFirstCell(page, true);
+};
+
+const hideFloatingToolbar = async (page: PuppeteerPage) => {
+  await page.evaluate(
+    (floatingToolbarSelector) => {
+      const elem = document.querySelector(floatingToolbarSelector);
+      elem && (elem.style.display = 'none');
+    },
+    [tableSelectors.floatingToolbar],
+  );
 };
 
 describe('Snapshot Test: table insert row', () => {
@@ -50,6 +69,10 @@ describe('Snapshot Test: table insert row', () => {
   afterEach(async () => {
     await animationFrame(page);
     await animationFrame(page);
+    // we omit floating toolbar from the snapshot
+    // as its not part of the test focus and appears to flake into/out of appearance.
+    // TODO: remove hideFloatingToolbar() logic and fix flakiness ED-15254
+    await hideFloatingToolbar(page);
     await snapshot(page, {}, tableSelectors.tableWrapper);
   });
 
@@ -59,6 +82,8 @@ describe('Snapshot Test: table insert row', () => {
       cell: 1,
     });
     await click(page, lastCell);
+    await animationFrame(page);
+    await animationFrame(page);
     await pressKeyCombo(page, ['Control', 'Alt', 'ArrowUp']);
   });
 
@@ -68,6 +93,8 @@ describe('Snapshot Test: table insert row', () => {
       cell: 1,
     });
     await click(page, lastCell);
+    await animationFrame(page);
+    await animationFrame(page);
     await pressKeyCombo(page, ['Control', 'Alt', 'ArrowDown']);
   });
 

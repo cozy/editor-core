@@ -1,9 +1,13 @@
 import React from 'react';
-import { create, act, ReactTestRenderer } from 'react-test-renderer';
-import {
-  ControllablePromiseResult,
-  createControllablePromise,
-} from '@atlaskit/editor-test-helpers/controllable-promise';
+import type {
+  ReactTestRenderer,
+  ReactTestRendererJSON,
+} from 'react-test-renderer';
+import { create, act } from 'react-test-renderer';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import type { ControllablePromiseResult } from '@atlaskit/editor-test-helpers/controllable-promise';
+import { createControllablePromise } from '@atlaskit/editor-test-helpers/controllable-promise';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 import { useStateFromPromise } from '../index';
 
@@ -39,7 +43,9 @@ describe('useStateFromPromise', () => {
   });
 
   it('should set the state when the promise resolves', async () => {
-    expect(testRenderer!.toJSON()!.children).toEqual(['waiting']);
+    expect((testRenderer!.toJSON() as ReactTestRendererJSON)!.children).toEqual(
+      ['waiting'],
+    );
 
     asyncOperation.invokeResolve('hey');
 
@@ -49,7 +55,9 @@ describe('useStateFromPromise', () => {
       jest.runAllTimers();
     });
 
-    expect(testRenderer!.toJSON()!.children).toEqual(['hey']);
+    expect((testRenderer!.toJSON() as ReactTestRendererJSON)!.children).toEqual(
+      ['hey'],
+    );
 
     testRenderer!.unmount();
   });

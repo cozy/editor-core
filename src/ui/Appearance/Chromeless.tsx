@@ -1,31 +1,27 @@
-import React from 'react';
-import styled from 'styled-components';
+/** @jsx jsx */
+import React, { Fragment } from 'react';
+import { css, jsx } from '@emotion/react';
 import PluginSlot from '../PluginSlot';
-import WithPluginState from '../WithPluginState';
-import ContentStyles from '../ContentStyles';
-import { EditorAppearanceComponentProps, EditorAppearance } from '../../types';
-import {
-  pluginKey as maxContentSizePluginKey,
-  MaxContentSizePluginState,
-} from '../../plugins/max-content-size';
+import { createEditorContentStyle } from '../ContentStyles';
+import type { MaxContentSizePluginState } from '@atlaskit/editor-plugin-max-content-size';
+import type {
+  EditorAppearanceComponentProps,
+  EditorAppearance,
+} from '../../types';
 import { scrollbarStyles } from '../styles';
 import WithFlash from '../WithFlash';
+import { usePresetContext } from '../../presets/context';
 
-export interface ChromelessEditorProps {
-  isMaxContentSizeReached?: boolean;
-  maxHeight?: number;
-}
+import { useSharedPluginState } from '@atlaskit/editor-common/hooks';
 
-const ChromelessEditor: any = styled.div`
+const chromelessEditor = css`
   line-height: 20px;
   height: auto;
-  min-height: 30px;
-  ${(props: ChromelessEditorProps) =>
-    props.maxHeight
-      ? 'max-height: ' + props.maxHeight + 'px;'
-      : ''} overflow-x: hidden;
+
+  overflow-x: hidden;
   overflow-y: auto;
-  ${scrollbarStyles} max-width: inherit;
+  ${scrollbarStyles};
+  max-width: inherit;
   box-sizing: border-box;
   word-wrap: break-word;
 
@@ -34,11 +30,14 @@ const ChromelessEditor: any = styled.div`
     white-space: pre-wrap;
     padding: 0;
     margin: 0;
+
+    & > :last-child {
+      padding-bottom: 0.5em;
+    }
   }
 `;
-ChromelessEditor.displayName = 'ChromelessEditor';
 
-const ContentArea = styled(ContentStyles)``;
+const ContentArea = createEditorContentStyle();
 ContentArea.displayName = 'ContentArea';
 
 export default class Editor extends React.Component<
@@ -64,11 +63,14 @@ export default class Editor extends React.Component<
       contentComponents,
       customContentComponents,
       maxHeight,
+      minHeight = 30,
       popupsMountPoint,
       popupsBoundariesElement,
       popupsScrollableElement,
       disabled,
       dispatchAnalyticsEvent,
+      pluginHooks,
+      featureFlags,
     } = this.props;
     const maxContentSizeReached = Boolean(
       maxContentSize?.maxContentSizeReached,
@@ -76,11 +78,24 @@ export default class Editor extends React.Component<
 
     return (
       <WithFlash animate={maxContentSizeReached}>
-        <ChromelessEditor
-          maxHeight={maxHeight}
-          innerRef={(ref: HTMLElement | null) => (this.containerElement = ref)}
+        <div
+          css={[
+            chromelessEditor,
+            maxHeight &&
+              css`
+                max-height: ${maxHeight}px;
+              `,
+            css`
+              min-height: ${minHeight}px;
+            `,
+          ]}
+          data-testid="chromeless-editor"
+          ref={(ref: HTMLElement | null) => (this.containerElement = ref)}
         >
-          <ContentArea>
+          <ContentArea
+            className="ak-editor-content-area"
+            featureFlags={featureFlags}
+          >
             {customContentComponents}
             <PluginSlot
               editorView={editorView}
@@ -95,20 +110,33 @@ export default class Editor extends React.Component<
               containerElement={this.containerElement}
               disabled={!!disabled}
               dispatchAnalyticsEvent={dispatchAnalyticsEvent}
+              wrapperElement={this.containerElement}
+              pluginHooks={pluginHooks}
             />
             {editorDOMElement}
           </ContentArea>
-        </ChromelessEditor>
+        </div>
       </WithFlash>
     );
   };
 
   render() {
-    return (
-      <WithPluginState
-        plugins={{ maxContentSize: maxContentSizePluginKey }}
-        render={this.renderChrome}
-      />
-    );
+    return <RenderWithPluginState renderChrome={this.renderChrome} />;
   }
+}
+
+interface PluginStates {
+  maxContentSize?: MaxContentSizePluginState;
+}
+interface RenderChromeProps {
+  renderChrome: (props: PluginStates) => React.ReactNode;
+}
+
+function RenderWithPluginState({ renderChrome }: RenderChromeProps) {
+  const api = usePresetContext();
+  const { maxContentSizeState } = useSharedPluginState(api, ['maxContentSize']);
+
+  return (
+    <Fragment>{renderChrome({ maxContentSize: maxContentSizeState })}</Fragment>
+  );
 }

@@ -1,18 +1,27 @@
-import { Plugin } from 'prosemirror-state';
-import * as keymaps from '../../../keymaps';
-import { keymap } from '../../../utils/keymap';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import {
+  undo,
+  redo,
+  bindKeymapWithCommand,
+  findKeyMapForBrowser,
+  isCapsLockOnAndModifyKeyboardEvent,
+} from '@atlaskit/editor-common/keymaps';
 import { redoFromKeyboard, undoFromKeyboard } from '../commands';
+import { keydownHandler } from '@atlaskit/editor-prosemirror/keymap';
 
-export function keymapPlugin(): Plugin {
+export function keymapPlugin(): SafePlugin {
   const list = {};
 
-  keymaps.bindKeymapWithCommand(
-    keymaps.findKeyMapForBrowser(keymaps.redo)!,
-    redoFromKeyboard,
-    list,
-  );
+  bindKeymapWithCommand(findKeyMapForBrowser(redo)!, redoFromKeyboard, list);
 
-  keymaps.bindKeymapWithCommand(keymaps.undo.common!, undoFromKeyboard, list);
+  bindKeymapWithCommand(undo.common!, undoFromKeyboard, list);
 
-  return keymap(list);
+  return new SafePlugin({
+    props: {
+      handleKeyDown(view, event) {
+        let keyboardEvent = isCapsLockOnAndModifyKeyboardEvent(event);
+        return keydownHandler(list)(view, keyboardEvent);
+      },
+    },
+  });
 }

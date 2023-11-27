@@ -1,16 +1,21 @@
-import { getBoundingRect } from '../../__helpers/page-objects/_editor';
-import { retryUntilStablePosition } from '../../__helpers/page-objects/_toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { getBoundingRect } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { retryUntilStablePosition } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickFirstCell,
   tableSelectors,
-} from '../../__helpers/page-objects/_table';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   initFullPageEditorWithAdf,
   initCommentEditorWithAdf,
   snapshot,
-  Device,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/table-with-merged-cells-on-first-column.adf.json';
 import defaultTableAdf from './__fixtures__/default-table.adf.json';
 
@@ -48,7 +53,9 @@ describe('Snapshot Test: hover rows controlls', () => {
         const y = bounds.top + 5;
 
         await moveMouse(page, x, y);
-        await snapshot(page);
+        await snapshot(page, undefined, undefined, {
+          captureBeyondViewport: false,
+        });
       },
     );
 
@@ -67,7 +74,9 @@ describe('Snapshot Test: hover rows controlls', () => {
         const y = bounds.top + bounds.height - 5;
 
         await moveMouse(page, x, y);
-        await snapshot(page);
+        await snapshot(page, undefined, undefined, {
+          captureBeyondViewport: false,
+        });
       },
     );
   });
@@ -84,7 +93,9 @@ describe('Snapshot Test: hover rows controlls', () => {
       const y = bounds.top + bounds.height - 5;
 
       await moveMouse(page, x, y);
-      await snapshot(page);
+      await snapshot(page, undefined, undefined, {
+        captureBeyondViewport: false,
+      });
     });
   });
 });

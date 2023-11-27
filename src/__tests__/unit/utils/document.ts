@@ -1,6 +1,7 @@
 import { PanelType } from '@atlaskit/adf-schema';
-import { name } from '../../../version.json';
+import { name } from '../../../version-wrapper';
 
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -17,14 +18,22 @@ import {
   panel,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import schema from '@atlaskit/editor-test-helpers/schema';
+import { processRawFragmentValue } from '../../../utils/document';
 import {
   isNodeEmpty,
+  hasVisibleContent,
   isEmptyParagraph,
   isEmptyDocument,
   processRawValue,
-  hasVisibleContent,
-} from '../../../utils/document';
+} from '@atlaskit/editor-common/utils';
+import type { UIAnalyticsEvent } from '@atlaskit/analytics-next';
+import {
+  ACTION,
+  ACTION_SUBJECT,
+  EVENT_TYPE,
+} from '@atlaskit/editor-common/analytics';
 
 describe(name, () => {
   describe('Utils -> Document', () => {
@@ -126,6 +135,70 @@ describe(name, () => {
     });
   });
 
+  describe('processRawFragmentValue', () => {
+    it('should accept an array of nodes in json or stringified format and insert them as a fragment', () => {
+      const nodes = [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Hello World',
+            },
+          ],
+        },
+        JSON.stringify({
+          type: 'panel',
+          attrs: {
+            panelType: 'info',
+          },
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Hello World',
+                },
+              ],
+            },
+          ],
+        }),
+      ];
+
+      const result = processRawFragmentValue(schema, nodes);
+
+      expect(result).toBeDefined();
+      expect(result!.childCount).toBe(2);
+      expect(result!.child(0)).toEqualDocument(p('Hello World'));
+      expect(result!.child(1)).toEqualDocument(
+        panel({ panelType: PanelType.INFO })(p('Hello World')),
+      );
+    });
+
+    it('should filter out invalid items', () => {
+      const nodes = [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Hello World',
+            },
+          ],
+        },
+        [1, 2, 3],
+        ' { invalid } ',
+      ];
+
+      const result = processRawFragmentValue(schema, nodes);
+
+      expect(result).toBeDefined();
+      expect(result!.childCount).toBe(1);
+      expect(result!.child(0)).toEqualDocument(p('Hello World'));
+    });
+  });
+
   describe('processRawValue', () => {
     const successCases = [
       { name: 'doc', node: doc(p('some new content'))(schema) as any },
@@ -160,6 +233,10 @@ describe(name, () => {
       const oldConsole = console.error;
       // eslint-disable-next-line no-console
       console.error = jest.fn();
+      let createAnalyticsEvent = jest.fn(
+        () => ({ fire() {} } as UIAnalyticsEvent),
+      );
+
       afterAll(() => {
         // eslint-disable-next-line no-console
         console.error = oldConsole;
@@ -179,11 +256,29 @@ describe(name, () => {
 
       it('should return undefined if json represents not valid PM Node', () => {
         expect(
-          processRawValue(schema, {
-            type: 'blockqoute',
-            content: [{ type: 'text', text: 'text' }],
-          }),
+          processRawValue(
+            schema,
+            {
+              type: 'blockqoute',
+              content: [{ type: 'text', text: 'text' }],
+            },
+            undefined,
+            undefined,
+            undefined,
+            createAnalyticsEvent,
+          ),
         ).toBeUndefined();
+        expect(createAnalyticsEvent).toHaveBeenCalled();
+        expect(createAnalyticsEvent).toHaveBeenCalledWith({
+          action: ACTION.DOCUMENT_PROCESSING_ERROR,
+          actionSubject: ACTION_SUBJECT.EDITOR,
+          eventType: EVENT_TYPE.OPERATIONAL,
+          nonPrivacySafeAttributes: expect.objectContaining({
+            errorStack: expect.stringContaining(
+              'RangeError: Unknown node type: blockqoute',
+            ),
+          }),
+        });
       });
     });
 
@@ -305,6 +400,242 @@ describe(name, () => {
         expect(result!.toJSON()).toEqual(expected);
       });
 
+      it('should wrap in unsupportedBlock for nestedExpand node', () => {
+        const expected = {
+          type: 'doc',
+          content: [
+            {
+              type: 'table',
+              attrs: {
+                __autoSize: false,
+                isNumberColumnEnabled: false,
+                layout: 'default',
+                localId: 'a4ffec03-04b5-4243-aebc-0f6dc934c96e',
+                width: null,
+              },
+              content: [
+                {
+                  type: 'tableRow',
+                  content: [
+                    {
+                      type: 'tableHeader',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'paragraph',
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableHeader',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'paragraph',
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableHeader',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'paragraph',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: 'tableRow',
+                  content: [
+                    {
+                      type: 'tableCell',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'nestedExpand',
+                          attrs: {
+                            __expanded: true,
+                            title: '',
+                          },
+                          content: [
+                            {
+                              type: 'unsupportedBlock',
+                              attrs: {
+                                originalValue: {
+                                  type: 'invalidChildComponent',
+                                  content: [
+                                    {
+                                      type: 'text',
+                                      text: 'This is an item',
+                                    },
+                                  ],
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableCell',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'paragraph',
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableCell',
+                      attrs: {
+                        background: null,
+                        colspan: 1,
+                        colwidth: null,
+                        rowspan: 1,
+                      },
+                      content: [
+                        {
+                          type: 'paragraph',
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        const result = processRawValue(schema, {
+          type: 'doc',
+          content: [
+            {
+              type: 'table',
+              attrs: {
+                isNumberColumnEnabled: false,
+                layout: 'default',
+                localId: 'a4ffec03-04b5-4243-aebc-0f6dc934c96e',
+              },
+              content: [
+                {
+                  type: 'tableRow',
+                  content: [
+                    {
+                      type: 'tableHeader',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [],
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableHeader',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [],
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableHeader',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  type: 'tableRow',
+                  content: [
+                    {
+                      type: 'tableCell',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'nestedExpand',
+                          attrs: {
+                            title: '',
+                          },
+                          content: [
+                            {
+                              type: 'invalidChildComponent',
+                              content: [
+                                {
+                                  type: 'text',
+                                  text: 'This is an item',
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableCell',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [],
+                        },
+                      ],
+                    },
+                    {
+                      type: 'tableCell',
+                      attrs: {},
+                      content: [
+                        {
+                          type: 'paragraph',
+                          content: [],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+        expect(result!.toJSON()).toEqual(expected);
+      });
+
       it('should wrap in unsupportedBlock for blockquote node', () => {
         const expected = {
           type: 'doc',
@@ -358,6 +689,10 @@ describe(name, () => {
               type: 'panel',
               attrs: {
                 panelType: 'info',
+                panelColor: null,
+                panelIcon: null,
+                panelIconId: null,
+                panelIconText: null,
               },
               content: [
                 {
@@ -1035,6 +1370,70 @@ describe(name, () => {
           ],
         });
         expect(result!.toJSON()).toEqual(expected);
+      });
+
+      ['bulletList', 'orderedList'].forEach((listType) => {
+        it(`should wrap in unsupportedBlock node for listItem node inside ${listType}`, () => {
+          const orderedListAttributes =
+            listType === 'orderedList' ? { attrs: { order: 1 } } : {};
+          const expected = {
+            type: 'doc',
+            content: [
+              {
+                type: listType,
+                ...orderedListAttributes,
+                content: [
+                  {
+                    type: 'listItem',
+                    content: [
+                      {
+                        type: 'unsupportedBlock',
+                        attrs: {
+                          originalValue: {
+                            type: 'invalidChildComponent',
+                            content: [
+                              {
+                                type: 'text',
+                                text: 'This is the first item',
+                              },
+                            ],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          };
+
+          const result = processRawValue(schema, {
+            version: 1,
+            type: 'doc',
+            content: [
+              {
+                type: listType,
+                content: [
+                  {
+                    type: 'listItem',
+                    content: [
+                      {
+                        type: 'invalidChildComponent',
+                        content: [
+                          {
+                            type: 'text',
+                            text: 'This is the first item',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          });
+          expect(result!.toJSON()).toEqual(expected);
+        });
       });
 
       it('should wrap in unsupportedInline node for decisionItem node', () => {
@@ -1739,6 +2138,10 @@ describe(name, () => {
                   type: 'panel',
                   attrs: {
                     panelType: PanelType.INFO,
+                    panelColor: null,
+                    panelIcon: null,
+                    panelIconId: null,
+                    panelIconText: null,
                   },
                   content: [
                     {
@@ -1807,6 +2210,10 @@ describe(name, () => {
                   type: 'panel',
                   attrs: {
                     panelType: PanelType.INFO,
+                    panelColor: null,
+                    panelIcon: null,
+                    panelIconId: null,
+                    panelIconText: null,
                   },
                   content: [
                     {
@@ -1882,6 +2289,10 @@ describe(name, () => {
                   type: 'panel',
                   attrs: {
                     panelType: PanelType.INFO,
+                    panelColor: null,
+                    panelIcon: null,
+                    panelIconId: null,
+                    panelIconText: null,
                   },
                   content: [
                     {

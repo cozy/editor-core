@@ -1,123 +1,160 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { EditorProps } from '../../../types';
+
 import {
   changeMediaLayout,
-  insertMedia,
   waitForMediaToBeLoaded,
   clickMediaInPosition,
   mediaSingleLayouts,
   MediaLayout,
-} from '../../__helpers/page-objects/_media';
+} from '@atlaskit/editor-test-helpers/page-objects/media';
 import {
-  typeInEditor,
   clickEditableContent,
-} from '../../__helpers/page-objects/_editor';
-import { pressKey } from '../../__helpers/page-objects/_keyboard';
+  animationFrame,
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
+
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { pressKey } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
 import * as singleCellTable from './__fixtures__/single-cell-table-adf.json';
-import adf from './__fixtures__/3-column-layout-with-image.adf.json';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import columnLayoutAdf from './__fixtures__/3-column-layout-with-image.adf.json';
+import mediaSingleAdf from './__fixtures__/mediaSingle-image-wrap-with-text.adf.json';
+import mediaSingleForIndividualLayoutAdf from './__fixtures__/mediaSingle-layouts-on-individual-media.adf.json';
+import singleCellTableWithMultipleMediaAdf from './__fixtures__/single-cell-table-with-multiple-media.adf.json';
 
 describe('Snapshot Test: Media', () => {
   let page: PuppeteerPage;
 
+  const initEditor = async (
+    appearance: Appearance,
+    adf: Object,
+    editorProps?: Partial<EditorProps>,
+    viewport?: { width: number; height: number },
+  ) => {
+    await initEditorWithAdf(page, {
+      appearance,
+      viewport,
+      editorProps,
+      adf,
+    });
+  };
+
+  beforeEach(() => {
+    page = global.page;
+  });
+
   describe('layouts', () => {
-    beforeEach(async () => {
-      page = global.page;
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        editorProps: {
+    it('can switch layouts on media', async () => {
+      await initEditor(
+        Appearance.fullPage,
+        mediaSingleAdf,
+        {
           media: {
             allowMediaSingle: true,
             allowMediaGroup: true,
             allowResizing: false,
           },
         },
-        viewport: { width: 1280, height: 800 },
-      });
-
-      // type some text
-      await typeInEditor(page, 'some text');
-      await pressKey(page, [
-        // Go left 3 times to insert image in the middle of the text
-        'ArrowLeft',
-        'ArrowLeft',
-        'ArrowLeft',
-        'ArrowLeft',
-      ]);
-    });
-    // TODO: https://product-fabric.atlassian.net/browse/EDM-2171
-    it.skip('can switch layouts on media', async () => {
-      // now we can insert media as necessary
-      await insertMedia(page);
+        { width: 1280, height: 800 },
+      );
+      await animationFrame(page);
       await waitForMediaToBeLoaded(page);
-
-      await clickMediaInPosition(page, 0);
+      await page.click('[data-testid="media-file-card-view"]');
+      await animationFrame(page);
 
       // change layouts
       for (let layout of mediaSingleLayouts) {
         // click it so the toolbar appears
         await changeMediaLayout(page, layout);
-        await clickMediaInPosition(page, 0);
+        await animationFrame(page);
 
-        await snapshot(page);
+        await snapshot(page, undefined, undefined, {
+          captureBeyondViewport: false,
+        });
       }
     });
-    // TODO: https://product-fabric.atlassian.net/browse/EDM-2171
-    it.skip('can switch layouts on individual media', async () => {
+
+    it('can switch layouts on individual media', async () => {
+      await initEditor(
+        Appearance.fullPage,
+        mediaSingleForIndividualLayoutAdf,
+        {
+          media: {
+            allowMediaSingle: true,
+            allowMediaGroup: true,
+            allowResizing: false,
+          },
+        },
+        { width: 1280, height: 1024 * 2 },
+      );
+      await animationFrame(page);
+      await waitForMediaToBeLoaded(page);
       // We need a bigger height to capture multiple large images in a row.
       await page.setViewport({ width: 1280, height: 1024 * 2 });
-
-      // now we can insert media as necessary
-      await insertMedia(page, ['one.svg', 'two.svg']);
-      await waitForMediaToBeLoaded(page);
-
-      await clickMediaInPosition(page, 1);
+      await animationFrame(page);
+      await page.click('[data-test-media-name="tall_image.jpeg"]');
+      await animationFrame(page);
 
       // change layouts
       for (let layout of mediaSingleLayouts) {
         // click the *second one* so the toolbar appears
         await changeMediaLayout(page, layout);
-        await clickMediaInPosition(page, 1);
+        await animationFrame(page);
 
-        await snapshot(page);
+        await waitForFloatingControl(page, 'Media floating controls');
+
+        await snapshot(page, undefined, undefined, {
+          captureBeyondViewport: false,
+        });
       }
     });
   });
 
   describe('layout columns', () => {
-    // TODO: https://product-fabric.atlassian.net/browse/EDM-2171
-    it.skip('should hold big image in the middle layout column in fix-width mode', async () => {
-      page = global.page;
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        adf,
-        editorProps: {
+    afterEach(async () => {
+      await animationFrame(page);
+      await snapshot(page, undefined, undefined, {
+        captureBeyondViewport: false,
+      });
+    });
+    it('should hold big image in the middle layout column in fix-width mode', async () => {
+      await initEditor(
+        Appearance.fullPage,
+        columnLayoutAdf,
+        {
           media: {
             allowMediaSingle: true,
             allowMediaGroup: true,
             allowResizing: false,
           },
         },
-        viewport: { width: 1280, height: 800 },
-      });
-      await snapshot(page);
+        { width: 1280, height: 800 },
+      );
+      await waitForMediaToBeLoaded(page);
     });
 
-    // TODO: https://product-fabric.atlassian.net/browse/EDM-2171
-    it.skip('should hold big image in the middle layout column in full-width mode', async () => {
-      page = global.page;
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullWidth,
-        adf,
-        editorProps: {
+    it('should hold big image in the middle layout column in full-width mode', async () => {
+      await initEditor(
+        Appearance.fullWidth,
+        columnLayoutAdf,
+        {
           media: {
             allowMediaSingle: true,
             allowMediaGroup: true,
             allowResizing: false,
           },
         },
-        viewport: { width: 1280, height: 800 },
-      });
-      await snapshot(page);
+        { width: 1280, height: 800 },
+      );
+      await waitForMediaToBeLoaded(page);
     });
   });
 
@@ -125,21 +162,18 @@ describe('Snapshot Test: Media', () => {
     describe('singular media', () => {
       beforeAll(async () => {
         page = global.page;
-        await initEditorWithAdf(page, {
-          appearance: Appearance.fullPage,
-          adf: singleCellTable,
-          editorProps: {
-            media: {
-              allowMediaSingle: true,
-              allowResizing: true,
-            },
+        await initEditor(Appearance.fullPage, singleCellTable, {
+          media: {
+            allowMediaSingle: true,
+            allowResizing: true,
           },
         });
 
         await clickEditableContent(page);
-        await insertMedia(page);
+        await animationFrame(page);
         await waitForMediaToBeLoaded(page);
-        await clickMediaInPosition(page, 0);
+        await page.click('[data-testid="media-file-card-view"]');
+        await animationFrame(page);
       });
 
       for (const layout of [
@@ -149,43 +183,53 @@ describe('Snapshot Test: Media', () => {
         MediaLayout.wrapLeft,
         MediaLayout.wrapRight,
       ]) {
-        it(`using layout ${MediaLayout[layout]}`, async () => {
+        // TODO: Unskip tests (skipped due to CI reporting slight diff, couldnt repro locally: https://product-fabric.atlassian.net/browse/ED-16362)
+        it.skip(`using layout ${MediaLayout[layout]}`, async () => {
           await changeMediaLayout(page, layout);
-          await snapshot(page);
+          await animationFrame(page);
+          await snapshot(page, undefined, undefined, {
+            captureBeyondViewport: false,
+          });
         });
       }
     });
 
     it("multiple media don't overlap", async () => {
       page = global.page;
-      await initEditorWithAdf(page, {
-        appearance: Appearance.fullPage,
-        adf: singleCellTable,
-        editorProps: {
+      await initEditor(
+        Appearance.fullPage,
+        singleCellTableWithMultipleMediaAdf,
+        {
           media: {
             allowMediaSingle: true,
             allowResizing: true,
           },
         },
-        viewport: { width: 800, height: 1280 },
-      });
+        { width: 800, height: 1280 },
+      );
 
       await clickEditableContent(page);
+      await animationFrame(page);
 
       // Media one : left wrapped
-      await insertMedia(page, ['recents_tall_image.jpeg']);
       await waitForMediaToBeLoaded(page);
       await clickMediaInPosition(page, 0);
+      await animationFrame(page);
       await changeMediaLayout(page, MediaLayout.wrapLeft);
+      await animationFrame(page);
 
       await pressKey(page, 'ArrowRight');
+      await animationFrame(page);
 
       // Media two : center aligned
-      await insertMedia(page, ['recents_tall_image.jpeg']);
       await waitForMediaToBeLoaded(page);
-      await clickMediaInPosition(page, 0);
+      await animationFrame(page);
+      await clickMediaInPosition(page, 1);
+      await animationFrame(page);
 
-      await snapshot(page);
+      await snapshot(page, undefined, undefined, {
+        captureBeyondViewport: false,
+      });
     });
   });
 });

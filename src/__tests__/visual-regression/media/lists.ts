@@ -1,17 +1,20 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  clickEditableContent,
-  typeInEditor,
-} from '../../__helpers/page-objects/_editor';
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { clickEditableContent } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  insertMedia,
   waitForMediaToBeLoaded,
   resizeMediaInPosition,
-  scrollToMedia,
-  clickMediaInPosition,
-} from '../../__helpers/page-objects/_media';
+} from '@atlaskit/editor-test-helpers/page-objects/media';
 import * as panelList from './__fixtures__/panel-list-adf.json';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import bulletListAdf from './__fixtures__/mediaSingle-in-buttetList.adf.json';
+import numberListAdf from './__fixtures__/mediaSingle-in-numberList.adf.json';
 
 let page: PuppeteerPage;
 
@@ -30,26 +33,18 @@ describe('Snapshot Test: Media', () => {
   });
 
   describe('Lists', () => {
-    beforeEach(async () => {
-      await initEditor();
-    });
-
-    afterEach(async () => {
-      await insertMedia(page);
-      await scrollToMedia(page);
+    it('can insert a media single inside a bullet list', async () => {
+      await initEditor(bulletListAdf);
       await waitForMediaToBeLoaded(page);
-      await clickMediaInPosition(page, 0); // want to see resize handles
 
       await snapshot(page);
     });
 
-    it('can insert a media single inside a bullet list', async () => {
-      await typeInEditor(page, '* ');
-    });
-
     it('can insert a media single inside a numbered list', async () => {
-      // type some text
-      await typeInEditor(page, '1. ');
+      await initEditor(numberListAdf);
+      await waitForMediaToBeLoaded(page);
+
+      await snapshot(page);
     });
   });
 

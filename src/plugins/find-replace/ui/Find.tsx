@@ -1,14 +1,29 @@
+/** @jsx jsx */
 import React from 'react';
-import { defineMessages, InjectedIntlProps, injectIntl } from 'react-intl';
+import { jsx } from '@emotion/react';
+
+import type { WrappedComponentProps } from 'react-intl-next';
+import { defineMessages, injectIntl } from 'react-intl-next';
+
+import debounce from 'lodash/debounce';
+
 import EditorCloseIcon from '@atlaskit/icon/glyph/editor/close';
 import ChevronDownIcon from '@atlaskit/icon/glyph/hipchat/chevron-down';
 import ChevronUpIcon from '@atlaskit/icon/glyph/hipchat/chevron-up';
 import MatchCaseIcon from '@atlaskit/icon/glyph/emoji/keyboard';
 import Textfield from '@atlaskit/textfield';
-import { SectionWrapper, Count } from './styles';
-import { TRIGGER_METHOD } from '../../analytics/types';
+import {
+  countStyles,
+  countWrapperStyles,
+  sectionWrapperStyles,
+} from './styles';
+import { TRIGGER_METHOD } from '@atlaskit/editor-common/analytics';
 import { FindReplaceTooltipButton } from './FindReplaceTooltipButton';
-import { MatchCaseProps } from '../types';
+import type { MatchCaseProps } from '../types';
+import rafSchd from 'raf-schd';
+import { getBooleanFF } from '@atlaskit/platform-feature-flags';
+
+export const FIND_DEBOUNCE_MS = 100;
 
 export type FindProps = {
   findText?: string;
@@ -81,7 +96,11 @@ const messages = defineMessages({
   },
 });
 
-class Find extends React.Component<FindProps & InjectedIntlProps> {
+type State = {
+  localFindText: string;
+};
+
+class Find extends React.Component<FindProps & WrappedComponentProps, State> {
   private findTextfieldRef = React.createRef<HTMLInputElement>();
   private isComposing = false;
 
@@ -96,7 +115,7 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
   private findPrevIcon: JSX.Element;
   private closeIcon: JSX.Element;
 
-  constructor(props: FindProps & InjectedIntlProps) {
+  constructor(props: FindProps & WrappedComponentProps) {
     super(props);
 
     const {
@@ -116,22 +135,62 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
     this.findNextIcon = <ChevronDownIcon label={this.findNext} />;
     this.findPrevIcon = <ChevronUpIcon label={this.findPrevious} />;
     this.closeIcon = <EditorCloseIcon label={this.closeFindReplaceDialog} />;
+
+    // We locally manage the value of the input inside this component in order to support compositions.
+    // This requires some additional work inside componentDidUpdate to ensure we support changes that
+    // occur to this value which do not originate from this component.
+    this.state = { localFindText: '' };
   }
 
   componentDidMount() {
     this.props.onFindTextfieldRefSet(this.findTextfieldRef);
-    this.focusFindTextfield();
-  }
 
-  componentDidUpdate() {
-    this.focusFindTextfield();
-  }
-
-  skipWhileComposing = (fn: Function) => {
-    if (this.isComposing) {
-      return;
+    // focus initially on dialog mount if there is no find text provided
+    if (!this.props.findText) {
+      this.focusFindTextfield();
     }
-    fn();
+    this.syncFindText(() => {
+      // focus after input is synced if find text provided
+      if (this.props.findText) {
+        this.focusFindTextfield();
+      }
+    });
+  }
+
+  componentDidUpdate(prevProps: FindProps) {
+    // focus on update if find text did not change
+    if (!getBooleanFF('platform.editor.a11y-find-replace')) {
+      if (this.props.findText === this.state?.localFindText) {
+        this.focusFindTextfield();
+      }
+      if (this.props.findText !== prevProps.findText) {
+        this.syncFindText(() => {
+          // focus after input is synced if find text provided
+          if (this.props.findText) {
+            this.focusFindTextfield();
+          }
+        });
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    this.debouncedFind.cancel();
+    this.handleFindKeyDownThrottled.cancel();
+  }
+
+  syncFindText = (onSynced?: Function) => {
+    // If the external prop findText changes and we aren't in a composition we should update to
+    // use the external prop value.
+    //
+    // An example of where this may happen is when a find occurs through the user selecting some text
+    // and pressing Mod-f.
+    if (
+      !this.isComposing &&
+      this.props.findText !== this.state?.localFindText
+    ) {
+      this.updateFindValue(this.props.findText || '', onSynced);
+    }
   };
 
   focusFindTextfield = () => {
@@ -141,17 +200,29 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
     }
   };
 
-  handleFindChange = (event: React.ChangeEvent<HTMLInputElement>) =>
-    this.skipWhileComposing(() => {
-      this.updateFindValue(event.target.value);
-    });
-
-  updateFindValue = (value: string) => {
-    this.props.onFind(value);
+  handleFindChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.updateFindValue(event.target.value);
   };
 
-  handleFindKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) =>
-    this.skipWhileComposing(() => {
+  // debounce (vs throttle) to not block typing inside find input while onFind runs
+  private debouncedFind = debounce((value) => {
+    this.props.onFind(value);
+  }, FIND_DEBOUNCE_MS);
+
+  updateFindValue = (value: string, onSynced?: Function) => {
+    this.setState({ localFindText: value }, () => {
+      if (this.isComposing) {
+        return;
+      }
+      onSynced && onSynced();
+      this.debouncedFind(value);
+    });
+  };
+
+  // throtlle between animation frames gives better experience on Enter compared to arbitrary value
+  // it adjusts based on performance (and document size)
+  private handleFindKeyDownThrottled = rafSchd(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
         if (event.shiftKey) {
           this.props.onFindPrev({ triggerMethod: TRIGGER_METHOD.KEYBOARD });
@@ -162,17 +233,34 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
         // we want to move focus between find & replace texfields when user hits up/down arrows
         this.props.onArrowDown();
       }
-    });
+    },
+  );
 
-  handleFindNextClick = (ref: React.RefObject<HTMLElement>) =>
-    this.skipWhileComposing(() => {
-      this.props.onFindNext({ triggerMethod: TRIGGER_METHOD.BUTTON });
-    });
+  handleFindKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (this.isComposing) {
+      return;
+    }
+    event.persist();
+    this.handleFindKeyDownThrottled(event);
+  };
 
-  handleFindPrevClick = (ref: React.RefObject<HTMLElement>) =>
-    this.skipWhileComposing(() => {
-      this.props.onFindPrev({ triggerMethod: TRIGGER_METHOD.BUTTON });
-    });
+  handleFindKeyUp = () => {
+    this.handleFindKeyDownThrottled.cancel();
+  };
+
+  handleFindNextClick = (ref: React.RefObject<HTMLElement>) => {
+    if (this.isComposing) {
+      return;
+    }
+    this.props.onFindNext({ triggerMethod: TRIGGER_METHOD.BUTTON });
+  };
+
+  handleFindPrevClick = (ref: React.RefObject<HTMLElement>) => {
+    if (this.isComposing) {
+      return;
+    }
+    this.props.onFindPrev({ triggerMethod: TRIGGER_METHOD.BUTTON });
+  };
 
   handleCompositionStart = () => {
     this.isComposing = true;
@@ -210,25 +298,28 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
     });
 
     return (
-      <SectionWrapper>
+      <div css={sectionWrapperStyles}>
         <Textfield
           name="find"
           appearance="none"
           placeholder={this.find}
-          value={findText}
+          value={this.state.localFindText}
           ref={this.findTextfieldRef}
           autoComplete="off"
           onChange={this.handleFindChange}
           onKeyDown={this.handleFindKeyDown}
+          onKeyUp={this.handleFindKeyUp}
           onBlur={this.props.onFindBlur}
           onCompositionStart={this.handleCompositionStart}
           onCompositionEnd={this.handleCompositionEnd}
         />
-        {findText && (
-          <Count>
-            {count.total === 0 ? this.noResultsFound : resultsCount}
-          </Count>
-        )}
+        <div css={countWrapperStyles} aria-live="polite">
+          {findText && (
+            <span data-testid="textfield-count" css={countStyles}>
+              {count.total === 0 ? this.noResultsFound : resultsCount}
+            </span>
+          )}
+        </div>
         {allowMatchCase && (
           <FindReplaceTooltipButton
             title={this.matchCase}
@@ -257,7 +348,7 @@ class Find extends React.Component<FindProps & InjectedIntlProps> {
           keymapDescription={'Escape'}
           onClick={this.clearSearch}
         />
-      </SectionWrapper>
+      </div>
     );
   }
 }

@@ -1,14 +1,17 @@
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
+// Quality Ticket: https://product-fabric.atlassian.net/browse/DSP-4249
+/** @jsx jsx */
 import React from 'react';
-import styled from 'styled-components';
-import { gridSize } from '@atlaskit/theme/constants';
+import { css, jsx } from '@emotion/react';
+import { token } from '@atlaskit/tokens';
 
-const ImageContainer = styled.div`
-  margin: 0 auto ${gridSize() * 3}px;
+const imageContainer = css`
+  margin: 0 auto ${token('space.300', '24px')};
   height: 80px;
 `;
 
 const ErrorImage: React.FunctionComponent = () => (
-  <ImageContainer>
+  <div css={imageContainer}>
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 163.28 218"
@@ -71,7 +74,7 @@ const ErrorImage: React.FunctionComponent = () => (
         </g>
       </g>
     </svg>
-  </ImageContainer>
+  </div>
 );
 
 export default ErrorImage;

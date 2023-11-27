@@ -1,6 +1,10 @@
 import React from 'react';
-import { DispatchAnalyticsEvent } from '../../plugins/analytics/types';
-import { ACTION, EVENT_TYPE, ErrorEventPayload } from '../../plugins/analytics';
+import { logException } from '@atlaskit/editor-common/monitoring';
+import type {
+  DispatchAnalyticsEvent,
+  ErrorEventPayload,
+} from '@atlaskit/editor-common/analytics';
+import { ACTION, EVENT_TYPE } from '@atlaskit/editor-common/analytics';
 
 type ErrorCrashPayload = Extract<
   ErrorEventPayload,
@@ -45,6 +49,7 @@ export class ErrorBoundary extends React.Component<
         },
       });
     }
+    logException(error, { location: 'editor-core/ui' });
 
     if (this.hasFallback()) {
       this.setState({ errorCaptured: true });

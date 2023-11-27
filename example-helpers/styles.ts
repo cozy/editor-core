@@ -1,13 +1,14 @@
-import styled from 'styled-components';
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
+import { css } from '@emotion/react';
 // @ts-ignore: unused variable
 // prettier-ignore
 import { HTMLAttributes, ClassAttributes, ComponentClass } from 'react';
 
-import { gridSize } from '@atlaskit/theme/constants';
 import { N800 } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
 
-export const Content: ComponentClass<HTMLAttributes<{}>> = styled.div`
+export const content = css`
   & div.toolsDrawer {
     margin-top: 16px;
     padding: 8px 16px;
@@ -34,10 +35,10 @@ export const Content: ComponentClass<HTMLAttributes<{}>> = styled.div`
   }
 `;
 
-export const ButtonGroup: ComponentClass<HTMLAttributes<{}>> = styled.span`
+export const buttonGroup = css`
   display: flex;
 
   & > button {
-    margin-left: ${gridSize() / 2}px;
+    margin-left: ${token('space.050', '4px')};
   }
 `;

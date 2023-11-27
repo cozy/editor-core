@@ -1,7 +1,8 @@
-import { MarkSpec } from 'prosemirror-model';
-import { Plugin } from 'prosemirror-state';
-import { ErrorReporter, ErrorReportingHandler } from '@atlaskit/editor-common';
-import {
+import type { MarkSpec } from '@atlaskit/editor-prosemirror/model';
+import type { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import { ErrorReporter } from '@atlaskit/editor-common/utils';
+import type { ErrorReportingHandler } from '@atlaskit/editor-common/utils';
+import type {
   EditorConfig,
   EditorPlugin,
   PluginsOptions,
@@ -14,9 +15,9 @@ export function sortByRank(a: { rank: number }, b: { rank: number }): number {
   return a.rank - b.rank;
 }
 
-export function fixExcludes(marks: {
+export function fixExcludes(marks: { [key: string]: MarkSpec }): {
   [key: string]: MarkSpec;
-}): { [key: string]: MarkSpec } {
+} {
   const markKeys = Object.keys(marks);
   const markGroups = new Set(markKeys.map((mark) => marks[mark].group));
 
@@ -74,6 +75,10 @@ export function processPluginsList(plugins: EditorPlugin[]): EditorConfig {
         acc.contentComponents.push(plugin.contentComponent);
       }
 
+      if (plugin.usePluginHook) {
+        acc.pluginHooks.push(plugin.usePluginHook);
+      }
+
       if (plugin.primaryToolbarComponent) {
         acc.primaryToolbarComponents.push(plugin.primaryToolbarComponent);
       }
@@ -96,6 +101,7 @@ export function processPluginsList(plugins: EditorPlugin[]): EditorConfig {
       marks: [],
       pmPlugins: [],
       contentComponents: [],
+      pluginHooks: [],
       primaryToolbarComponents: [],
       secondaryToolbarComponents: [],
       onEditorViewStateUpdatedCallbacks: [],
@@ -105,15 +111,21 @@ export function processPluginsList(plugins: EditorPlugin[]): EditorConfig {
 
 const TRACKING_DEFAULT = { enabled: false };
 
-export function createPMPlugins(config: PMPluginCreateConfig): Plugin[] {
-  const { editorConfig, performanceTracking = {}, transactionTracker } = config;
+export function createPMPlugins(config: PMPluginCreateConfig): SafePlugin[] {
+  const {
+    editorConfig,
+    performanceTracking = {},
+    transactionTracker,
+    dispatchAnalyticsEvent,
+  } = config;
   const {
     uiTracking = TRACKING_DEFAULT,
     transactionTracking = TRACKING_DEFAULT,
   } = performanceTracking;
 
+  // TO-DO need to question editor team about this condition true here
   const useInstrumentedPlugin =
-    uiTracking.enabled || transactionTracking.enabled;
+    uiTracking.enabled || transactionTracking.enabled || true;
 
   if (
     process.env.NODE_ENV === 'development' &&
@@ -127,16 +139,17 @@ export function createPMPlugins(config: PMPluginCreateConfig): Plugin[] {
   }
 
   const instrumentPlugin = useInstrumentedPlugin
-    ? (plugin: Plugin): Plugin =>
+    ? (plugin: SafePlugin): SafePlugin =>
         InstrumentedPlugin.fromPlugin(
           plugin,
           {
             uiTracking,
             transactionTracking,
+            dispatchAnalyticsEvent,
           },
           transactionTracker,
         )
-    : (plugin: Plugin): Plugin => plugin;
+    : (plugin: SafePlugin): SafePlugin => plugin;
 
   return editorConfig.pmPlugins
     .sort(sortByOrder('plugins'))
@@ -151,9 +164,10 @@ export function createPMPlugins(config: PMPluginCreateConfig): Plugin[] {
         reactContext: config.reactContext,
         dispatchAnalyticsEvent: config.dispatchAnalyticsEvent,
         featureFlags: config.featureFlags || {},
+        getIntl: config.getIntl,
       }),
     )
-    .filter((plugin): plugin is Plugin => typeof plugin !== 'undefined')
+    .filter((plugin): plugin is SafePlugin => typeof plugin !== 'undefined')
     .map(instrumentPlugin);
 }
 

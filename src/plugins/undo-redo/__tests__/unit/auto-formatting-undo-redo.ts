@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { BuilderContent } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   blockquote,
   code_block,
@@ -18,36 +21,42 @@ import {
   taskItem,
   decisionList,
   decisionItem,
-  DocBuilder,
-  BuilderContent,
   layoutSection,
   layoutColumn,
   alignment,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
 import { uuid } from '@atlaskit/adf-schema';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { insertText } from '@atlaskit/editor-test-helpers/transactions';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
-import blockTypePlugin from '../../../block-type';
-import typeAheadPlugin from '../../../type-ahead';
-import codeBlockPlugin from '../../../code-block';
-import hyperlinkPlugin from '../../../hyperlink';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
+import { codeBlockPlugin } from '@atlaskit/editor-plugin-code-block';
+import { compositionPlugin } from '@atlaskit/editor-plugin-composition';
+import { hyperlinkPlugin } from '@atlaskit/editor-plugin-hyperlink';
 import tasksAndDecisionsPlugin from '../../../tasks-and-decisions';
-import listPlugin from '../../../list';
-import textFormattingPlugin from '../../../text-formatting';
-import emojiPlugin from '../../../emoji';
-import basePlugin from '../../../base';
-import layoutPlugin from '../../../layout';
-import rulePlugin from '../../../rule';
-import featureFlagsPlugin from '../../../feature-flags-context';
+import { listPlugin } from '@atlaskit/editor-plugin-list';
+import { textFormattingPlugin } from '@atlaskit/editor-plugin-text-formatting';
+import { emojiPlugin } from '@atlaskit/editor-plugin-emoji';
+import { basePlugin } from '@atlaskit/editor-plugin-base';
+import { layoutPlugin } from '@atlaskit/editor-plugin-layout';
+import { rulePlugin } from '@atlaskit/editor-plugin-rule';
 import alignmentPlugin from '../../../alignment';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+import { decorationsPlugin } from '@atlaskit/editor-plugin-decorations';
 
 const emojiProvider = getTestEmojiResource();
 const providerFactory = ProviderFactory.create({
@@ -59,25 +68,19 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
   const createEditor = createProsemirrorEditorFactory();
   const editor = (doc: DocBuilder) => {
     const editorTemp = createEditor({
-      featureFlags: {
-        useUnpredictableInputRule: false,
-      },
       doc,
       preset: new Preset<LightEditorPlugin>()
-        .add([
-          emojiPlugin,
-          { useInlineWrapper: false, allowZeroWidthSpaceAfter: true },
-        ])
-        .add([
-          featureFlagsPlugin,
-          { newInsertionBehaviour: true, useUnpredictableInputRule: false },
-        ])
+        .add([featureFlagsPlugin, { newInsertionBehaviour: true }])
+        .add(basePlugin)
+        .add([analyticsPlugin, {}])
+        .add(decorationsPlugin)
         .add(typeAheadPlugin)
+        .add([emojiPlugin, {}])
         .add(blockTypePlugin)
-        .add(codeBlockPlugin)
+        .add(compositionPlugin)
+        .add([codeBlockPlugin, { appearance: 'full-page' }])
         .add(tasksAndDecisionsPlugin)
         .add(textFormattingPlugin)
-        .add(basePlugin)
         .add(hyperlinkPlugin)
         .add(layoutPlugin)
         .add(rulePlugin)
@@ -513,7 +516,7 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
         initialDocument: p('1.{<>}'),
         text: ' ',
         expectedDocument: {
-          afterAutoformatting: ol(li(p(''))),
+          afterAutoformatting: ol()(li(p(''))),
           afterFirstUndo: p('1. '),
           afterSecondUndo: p('1.'),
         },
@@ -523,7 +526,7 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
         initialDocument: [p('Hello '), p('1.{<>}')],
         text: ' ',
         expectedDocument: {
-          afterAutoformatting: [p('Hello '), ol(li(p('')))],
+          afterAutoformatting: [p('Hello '), ol()(li(p('')))],
           afterFirstUndo: [p('Hello '), p('1. ')],
           afterSecondUndo: [p('Hello '), p('1.')],
         },
@@ -533,7 +536,7 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
         initialDocument: p('1.{<>}'),
         text: ' ',
         expectedDocument: {
-          afterAutoformatting: ol(li(p(''))),
+          afterAutoformatting: ol()(li(p(''))),
           afterFirstUndo: p('1. '),
           afterSecondUndo: p('1.'),
         },
@@ -543,7 +546,7 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
         initialDocument: [p('Hello '), p('1.{<>}')],
         text: ' ',
         expectedDocument: {
-          afterAutoformatting: [p('Hello '), ol(li(p('')))],
+          afterAutoformatting: [p('Hello '), ol()(li(p('')))],
           afterFirstUndo: [p('Hello '), p('1. ')],
           afterSecondUndo: [p('Hello '), p('1.')],
         },
@@ -1075,6 +1078,28 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
     },
   ];
 
+  describe('test auto formatting undo for multiple "`"', () => {
+    it('should not turn back into code block after initial undo', () => {
+      const { editorView, validateCurrentDocument, insert, undo, sel } = editor(
+        doc(p('``{<>}')),
+      );
+
+      let currentDocumentPosition = sel;
+
+      insert('`');
+      currentDocumentPosition += 1;
+      undo();
+      validateCurrentDocument(doc(p('```')));
+
+      insertText(editorView, '`', currentDocumentPosition);
+      currentDocumentPosition += 1;
+      validateCurrentDocument(doc(p('````')));
+
+      insertText(editorView, '`', currentDocumentPosition);
+      validateCurrentDocument(doc(p('`````')));
+    });
+  });
+
   describe.each<TestCase>([
     case00,
     case01,
@@ -1138,9 +1163,8 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
         describe(`after ${scenario} auto formatting was applied`, () => {
           describe('when undo is called', () => {
             it(`should restore the document with the ${scenario} as plain text [match first undo]`, () => {
-              const { validateCurrentDocument, insert, undo } = editor(
-                initialDocument,
-              );
+              const { validateCurrentDocument, insert, undo } =
+                editor(initialDocument);
 
               insert(text);
               undo();
@@ -1150,9 +1174,8 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
 
             describe('when redo is called', () => {
               it(`should add the ${scenario} autoformatting back [match autoformat]`, () => {
-                const { validateCurrentDocument, insert, undo, redo } = editor(
-                  initialDocument,
-                );
+                const { validateCurrentDocument, insert, undo, redo } =
+                  editor(initialDocument);
                 insert(text);
                 undo();
                 redo();
@@ -1162,9 +1185,8 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
 
             describe('when undo is called one more time', () => {
               it(`should revert the document to its original format (before the ${scenario} was applied.[match second undo])`, () => {
-                const { validateCurrentDocument, insert, undo } = editor(
-                  initialDocument,
-                );
+                const { validateCurrentDocument, insert, undo } =
+                  editor(initialDocument);
                 insert(text);
                 undo();
                 undo();
@@ -1173,12 +1195,8 @@ describe('plugins/undo-redo/autoformatting: undo & redo', () => {
 
               describe('when redo is called after double undo', () => {
                 it(`should revert the document to the ${scenario} as plain text [match first undo]`, () => {
-                  const {
-                    validateCurrentDocument,
-                    insert,
-                    undo,
-                    redo,
-                  } = editor(initialDocument);
+                  const { validateCurrentDocument, insert, undo, redo } =
+                    editor(initialDocument);
                   insert(text);
                   undo();
                   undo();

@@ -1,5 +1,5 @@
-import {
-  DefaultExtensionProvider,
+import { DefaultExtensionProvider } from '@atlaskit/editor-common/extensions';
+import type {
   ExtensionManifest,
   ExtensionModule,
   FieldDefinition,
@@ -11,26 +11,31 @@ import {
   NestedFieldDefinition,
   Parameters,
 } from '@atlaskit/editor-common/extensions';
+import type {
+  PublicPluginAPI,
+  OptionalPlugin,
+} from '@atlaskit/editor-common/types';
+import type { ExtensionPlugin } from '@atlaskit/editor-plugin-extension';
 
 import { mockFieldResolver } from '../config-panel/confluence-fields-data-providers';
 
 import { cqlSerializer, cqlDeserializer } from '../config-panel/cql-helpers';
-import { setSmartUserPickerEnv } from '@atlaskit/user-picker';
 
-import { getIconComponent } from './IconImage';
-import EditorActions from '../../src/actions';
-import { editSelectedExtension } from '../../src/extensions';
+import type EditorActions from '../../src/actions';
 
 const isNativeFieldType = (fieldType: string) => {
-  return /^(enum|string|number|boolean|date)$/.test(fieldType);
+  return /^(enum|string|number|boolean|date|color)$/.test(fieldType);
 };
 
-const getMacrosManifestList = async (editorActions?: EditorActions) => {
+const getMacrosManifestList = async (
+  editorActions?: EditorActions,
+  api?: PublicPluginAPI<[OptionalPlugin<ExtensionPlugin>]>,
+) => {
   const response = await fetch('./editor-data/browse-macros.json');
   const data = await response.json();
 
   return data.macros.map((macro: LegacyMacroManifest) =>
-    transformLegacyMacrosToExtensionManifest(macro, editorActions),
+    transformLegacyMacrosToExtensionManifest(macro, editorActions, api),
   );
 };
 
@@ -99,7 +104,13 @@ const safeGetMacroName = (macro: LegacyMacroManifest) =>
 
 const getIcon = (macro: LegacyMacroManifest) => {
   if (macro.icon && macro.icon.location) {
-    return Promise.resolve(() => getIconComponent(macro.icon.location));
+    // IMPORTANT: See https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36347
+    // In a nutshell: VR tests use example pages, this means example pages should not have external source references.
+    // We don't want VR test to flake due to enetrnal sources going up/down. VR tests should be self contained and only load
+    // content from within localhost.
+    return import(
+      /* webpackChunkName: "@atlaskit-internal_editor-icon-code" */ '@atlaskit/icon/glyph/editor/warning'
+    ).then((mod) => mod.default);
   }
 
   return import(
@@ -132,6 +143,7 @@ const getExtensionBodyType = (macro: LegacyMacroManifest) => {
 const transformLegacyMacrosToExtensionManifest = (
   macro: LegacyMacroManifest,
   editorActions?: EditorActions,
+  api?: PublicPluginAPI<[OptionalPlugin<ExtensionPlugin>]>,
 ): ExtensionManifest => {
   const extensionKey = safeGetMacroName(macro);
 
@@ -169,7 +181,7 @@ const transformLegacyMacrosToExtensionManifest = (
     }
 
     editorActions.replaceSelection(node, true);
-    editSelectedExtension(editorActions);
+    api?.extension?.actions?.editSelectedExtension();
   };
 
   const asyncAction = () =>
@@ -268,8 +280,27 @@ const transformLegacyMacrosToExtensionManifest = (
       // the context panel for editing, and then wraps it back after saving.
       return new Promise(() => {
         actions!.editInContextPanel(
-          (parameters) => parameters.macroParams,
-          (parameters) => Promise.resolve({ macroParams: parameters }),
+          (parameters) =>
+            Object.keys(parameters.macroParams).reduce<Record<string, any>>(
+              (result, key) => {
+                if (key) {
+                  result[key] = parameters.macroParams[key].value;
+                }
+                return result;
+              },
+              {},
+            ),
+          (parameters) =>
+            Promise.resolve({
+              macroParams: Object.keys(parameters).reduce<
+                Record<string, { value: any }>
+              >((result, key) => {
+                if (key) {
+                  result[key] = { value: parameters[key] };
+                }
+                return result;
+              }, {}),
+            }),
         );
       });
     };
@@ -339,9 +370,6 @@ const transformLegacyMacrosToExtensionManifest = (
         user: {
           'user-jdog-provider': {
             provider: async () => {
-              // WARNING: this is required by the SmartUserPicker for testing environments
-              setSmartUserPickerEnv('local');
-
               return {
                 siteId: '49d8b9d6-ee7d-4931-a0ca-7fcae7d1c3b5',
                 principalId: 'Context',
@@ -611,8 +639,9 @@ const transformFieldType = (
 };
 
 export const getConfluenceMacrosExtensionProvider = async (
+  api: PublicPluginAPI<[OptionalPlugin<ExtensionPlugin>]> | undefined,
   editorActions?: EditorActions,
 ) => {
-  const manifests = await getMacrosManifestList(editorActions);
+  const manifests = await getMacrosManifestList(editorActions, api);
   return new DefaultExtensionProvider(manifests);
 };

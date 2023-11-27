@@ -1,22 +1,28 @@
 import React from 'react';
-import { InjectedIntlProps } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { ReactWrapper, mount } from 'enzyme';
-import { EditorView } from 'prosemirror-view';
+import { mountWithIntl } from '../../../../__helpers/enzyme';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 
-import Item from '@atlaskit/item';
 import { EmojiPicker as AkEmojiPicker } from '@atlaskit/emoji';
 import { getTestEmojiResource } from '@atlaskit/util-data-test/get-test-emoji-resource';
-import Button from '@atlaskit/button/standard-button';
-import {
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
-import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
+import type {
+  DocBuilder,
+  ExtractPublicEditorAPI,
+} from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -24,62 +30,76 @@ import {
   decisionItem,
   taskList,
   taskItem,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { uuid } from '@atlaskit/adf-schema';
-import layoutPlugin from '../../../../../plugins/layout';
-import featureFlagsPlugin from '../../../../../plugins/feature-flags-context';
-import blockTypePlugin from '../../../../../plugins/block-type';
-import panelPlugin from '../../../../../plugins/panel';
-import rulePlugin from '../../../../../plugins/rule';
-import tablePlugin from '../../../../../plugins/table';
-import statusPlugin from '../../../../../plugins/status';
-import expandPlugin from '../../../../../plugins/expand';
-import analyticsPlugin from '../../../../../plugins/analytics';
-import typeAheadPlugin from '../../../../../plugins/type-ahead';
-import quickInsertPlugin from '../../../../../plugins/quick-insert';
+import { layoutPlugin } from '@atlaskit/editor-plugin-layout';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+import { panelPlugin } from '@atlaskit/editor-plugin-panel';
+import { rulePlugin } from '@atlaskit/editor-plugin-rule';
+import { tablesPlugin } from '@atlaskit/editor-plugin-table';
+import { statusPlugin } from '@atlaskit/editor-plugin-status';
+import { expandPlugin } from '@atlaskit/editor-plugin-expand';
+import { INPUT_METHOD } from '@atlaskit/editor-common/analytics';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
+import { quickInsertPlugin } from '@atlaskit/editor-plugin-quick-insert';
 import taskDecisionPlugin from '../../../../../plugins/tasks-and-decisions';
+import { mentionsPlugin } from '@atlaskit/editor-plugin-mentions';
+import { selectionPlugin } from '@atlaskit/editor-plugin-selection';
+import { emojiPlugin } from '@atlaskit/editor-plugin-emoji';
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
+import { datePlugin } from '@atlaskit/editor-plugin-date';
+import { editorDisabledPlugin } from '@atlaskit/editor-plugin-editor-disabled';
+import { floatingToolbarPlugin } from '@atlaskit/editor-plugin-floating-toolbar';
+import { guidelinePlugin } from '@atlaskit/editor-plugin-guideline';
+import { imageUploadPlugin } from '@atlaskit/editor-plugin-image-upload';
+import { widthPlugin } from '@atlaskit/editor-plugin-width';
 
-import { pluginKey as blockTypePluginKey } from '../../../../../plugins/block-type/pm-plugins/main';
 import {
   CODE_BLOCK,
   PANEL,
   BLOCK_QUOTE,
-} from '../../../../../plugins/block-type/types';
-import ToolbarInsertBlock from '../../../../../plugins/insert-block/ui/ToolbarInsertBlock';
-import { MediaProvider } from '../../../../../plugins/media';
-import {
-  stateKey as hyperlinkPluginKey,
-  LinkAction,
-} from '../../../../../plugins/hyperlink/pm-plugins/main';
-import {
-  INPUT_METHOD,
-  DispatchAnalyticsEvent,
-} from '../../../../../plugins/analytics';
+} from '@atlaskit/editor-plugin-block-type/consts';
+import ToolbarInsertBlock, {
+  ToolbarInsertBlock as BaseToolbarInsertBlock,
+} from '../../../../../plugins/insert-block/ui/ToolbarInsertBlock';
+import type { MediaProvider } from '@atlaskit/editor-common/provider-factory';
+// eslint-disable-next-line @atlassian/tangerine/import/entry-points
+import { stateKey as hyperlinkPluginKey } from '@atlaskit/editor-plugin-hyperlink/src/pm-plugins/main';
+import { LinkAction } from '@atlaskit/editor-common/link';
+import { hyperlinkPlugin } from '@atlaskit/editor-plugin-hyperlink';
 
-import { TooltipShortcut } from '../../../../../keymaps';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+
 import { messages } from '../../../../../plugins/insert-block/ui/ToolbarInsertBlock/messages';
-import { messages as blockTypeMessages } from '../../../../../plugins/block-type/messages';
-import { Props as ToolbarInsertBlockProps } from '../../../../../plugins/insert-block/ui/ToolbarInsertBlock/types';
+import { blockTypeMessages } from '@atlaskit/editor-common/messages';
+import type { Props as ToolbarInsertBlockProps } from '../../../../../plugins/insert-block/ui/ToolbarInsertBlock/types';
 
-import { MenuItem } from '../../../../../ui/DropdownMenu/types';
-import DropdownMenu from '../../../../../ui/DropdownMenu';
+import type { MenuItem } from '@atlaskit/editor-common/ui-menu';
+import { DropdownMenuWithKeyboardNavigation as DropdownMenu } from '@atlaskit/editor-common/ui-menu';
 import ToolbarButton from '../../../../../ui/ToolbarButton';
+import InsertMenu from '../../../../../plugins/insert-block/ui/ElementBrowser/InsertMenu';
+import extensionPlugin from '../../../../../plugins/extension';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { contentInsertionPlugin } from '@atlaskit/editor-plugin-content-insertion';
+import { decorationsPlugin } from '@atlaskit/editor-plugin-decorations';
+import { compositionPlugin } from '@atlaskit/editor-plugin-composition';
+import { focusPlugin } from '@atlaskit/editor-plugin-focus';
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
+import { copyButtonPlugin } from '@atlaskit/editor-plugin-copy-button';
+import { placeholderTextPlugin } from '@atlaskit/editor-plugin-placeholder-text';
 
-import { openElementBrowserModal } from '../../../../../plugins/quick-insert/commands';
-import InsertMenu from '../../../../../ui/ElementBrowser/InsertMenu';
+import ReactEditorViewContext from '../../../../../create-editor/ReactEditorViewContext';
+import { codeBlockPlugin } from '@atlaskit/editor-plugin-code-block';
 
-jest.mock('../../../../../plugins/quick-insert/commands', () => ({
-  openElementBrowserModal: jest.fn(() => jest.fn()),
-}));
+jest.mock(
+  '../../../../../plugins/insert-block/ui/ElementBrowser/InsertMenu',
+  () => () => <div />,
+);
 
-jest.mock('../../../../../ui/ElementBrowser/InsertMenu', () => () => <div />);
-
-type ToolbarOptionWrapper = ReactWrapper<
-  ToolbarInsertBlockProps & InjectedIntlProps
->;
+type ToolbarOptionWrapper = ReactWrapper;
 
 const emojiProvider = getTestEmojiResource();
 
@@ -99,7 +119,7 @@ const getToolbarButton = (
   toolbarOption
     .find(ToolbarButton)
     .filterWhere((toolbarButton) => toolbarButton.find('Memo(Icon)').length > 0)
-    .find(Button);
+    .find('button');
 
 const getInsertMenuButton = (
   title: string,
@@ -107,7 +127,7 @@ const getInsertMenuButton = (
 ) => {
   openInsertMenu(toolbarOption);
   return toolbarOption
-    .find<any>(Item)
+    .find('span[role="menuitem"]')
     .filterWhere((n) => n.text().indexOf(title) > -1);
 };
 
@@ -144,8 +164,11 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
   const createEditor = createProsemirrorEditorFactory();
 
   let editorView: EditorView;
-  let pluginState: any;
   let toolbarOption: ToolbarOptionWrapper;
+  let baseToolbarOption: ReactWrapper<
+    ToolbarInsertBlockProps & WrappedComponentProps
+  >;
+
   let createAnalyticsEvent: CreateUIAnalyticsEvent;
   let dispatchAnalyticsSpy: jest.SpyInstance<DispatchAnalyticsEvent>;
   let dispatchSpy: jest.SpyInstance;
@@ -155,24 +178,48 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
     taskDecisionProvider: Promise.resolve(getMockTaskDecisionResource()),
   });
 
+  const createPreset = (createAnalyticsEvent: CreateUIAnalyticsEvent) =>
+    new Preset<LightEditorPlugin>()
+      .add([featureFlagsPlugin, { newInsertionBehaviour: true }])
+      .add(blockTypePlugin)
+      .add(editorDisabledPlugin)
+      .add([analyticsPlugin, { createAnalyticsEvent }])
+      .add(widthPlugin)
+      .add(guidelinePlugin)
+      .add(contentInsertionPlugin)
+      .add(decorationsPlugin)
+      .add(layoutPlugin)
+      .add(panelPlugin)
+      .add(rulePlugin)
+      .add(selectionPlugin)
+      .add(tablesPlugin)
+      .add(imageUploadPlugin)
+      .add([statusPlugin, { menuDisabled: true }])
+      .add(expandPlugin)
+      .add(taskDecisionPlugin)
+      .add([typeAheadPlugin, { createAnalyticsEvent }])
+      .add(mentionsPlugin)
+      .add(hyperlinkPlugin)
+      .add([quickInsertPlugin, { disableDefaultItems: true }])
+      .add(datePlugin)
+      .add(emojiPlugin)
+      .add(compositionPlugin)
+      .add(gridPlugin)
+      .add(copyButtonPlugin)
+      .add(focusPlugin)
+      .add([placeholderTextPlugin, {}])
+      .add(floatingToolbarPlugin)
+      .add([codeBlockPlugin, {}])
+      .add([mediaPlugin, { allowMediaSingle: true }])
+      .add(extensionPlugin);
+
+  let editorAPI: ExtractPublicEditorAPI<ReturnType<typeof createPreset>>;
+
   const editor = (doc: DocBuilder) => {
     createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
     return createEditor({
       doc,
-      pluginKey: blockTypePluginKey,
-      preset: new Preset<LightEditorPlugin>()
-        .add(blockTypePlugin)
-        .add([featureFlagsPlugin, { newInsertionBehaviour: true }])
-        .add([analyticsPlugin, { createAnalyticsEvent }])
-        .add(layoutPlugin)
-        .add(panelPlugin)
-        .add(rulePlugin)
-        .add(tablePlugin)
-        .add([statusPlugin, { menuDisabled: true }])
-        .add(expandPlugin)
-        .add(taskDecisionPlugin)
-        .add(typeAheadPlugin)
-        .add([quickInsertPlugin, { disableDefaultItems: true }]),
+      preset: createPreset(createAnalyticsEvent),
       providerFactory,
     });
   };
@@ -184,15 +231,25 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
       buttons: 0,
       dispatchAnalyticsEvent: dispatchAnalyticsSpy as any,
     };
-    toolbarOption = mountWithIntl<ToolbarInsertBlockProps, {}>(
-      <ToolbarInsertBlock {...defaultProps} {...props} />,
+    const editorRef = {
+      current: document.createElement('div'),
+    };
+    toolbarOption = mountWithIntl(
+      <ReactEditorViewContext.Provider value={{ editorRef }}>
+        <ToolbarInsertBlock
+          {...defaultProps}
+          {...props}
+          featureFlags={props.featureFlags || {}}
+        />
+      </ReactEditorViewContext.Provider>,
     );
+    baseToolbarOption = toolbarOption.find(BaseToolbarInsertBlock);
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     dispatchAnalyticsSpy = jest.fn();
-    ({ editorView, pluginState } = editor(doc(p('text'))));
+    ({ editorView, editorAPI } = editor(doc(p('text'))));
     dispatchSpy = jest.spyOn(editorView, 'dispatch');
   });
 
@@ -204,13 +261,14 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
   it('should render nothing if none of the plugins are present', () => {
     buildToolbar();
-    expect(toolbarOption.html()).toEqual(null);
+    expect(baseToolbarOption.html()).toEqual(null);
   });
 
   it('should disable toolbar buttons if isDisabled is true', () => {
+    const pluginState = editorAPI.blockType.sharedState.currentState();
     buildToolbar({
       isDisabled: true,
-      availableWrapperBlockTypes: pluginState.availableWrapperBlockTypes,
+      availableWrapperBlockTypes: pluginState!.availableWrapperBlockTypes,
     });
     expect(toolbarOption.find(ToolbarButton).prop('disabled')).toEqual(true);
   });
@@ -242,7 +300,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
         });
 
         it(`the shortcut ${result} is displayed with a background`, () => {
-          expect(tooltipContent.find(TooltipShortcut).text()).toEqual(result);
+          expect(
+            tooltipContent.find('[className$="-tooltip-shortcut"]').text(),
+          ).toEqual(result);
         });
       });
     });
@@ -296,7 +356,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map((item) => item.content)).toEqual(expected);
+          expect(
+            items.items.map((item: { content: any }) => item.content),
+          ).toEqual(expected);
         });
 
         it('should sort alphabetically with non-macro items at end', () => {
@@ -323,7 +385,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItemsWithMacros,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
+          expect(
+            items.items.map((item: { content: any }) => item.content),
+          ).toEqual(sortedItems);
         });
 
         it('macro browser should always be last item if there is no slash-onboarding', () => {
@@ -350,7 +414,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
+          expect(
+            items.items.map((item: { content: any }) => item.content),
+          ).toEqual(sortedItems);
         });
 
         it('slash onboarding should always be last item', () => {
@@ -377,7 +443,9 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             insertMenuItems: customItems,
           });
           const items = toolbarOption.find(DropdownMenu).prop('items')[0];
-          expect(items.items.map((item) => item.content)).toEqual(sortedItems);
+          expect(
+            items.items.map((item: { content: any }) => item.content),
+          ).toEqual(sortedItems);
         });
 
         it('should render a DropDown', () => {
@@ -405,8 +473,8 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             replacePlusMenuWithElementBrowser: false,
           });
 
-          toolbarOption.setState({ isPlusMenuOpen: true });
-          toolbarOption.update();
+          baseToolbarOption.setState({ isPlusMenuOpen: true });
+          baseToolbarOption.update();
 
           expect(toolbarOption.find(DropdownMenu).length).toEqual(1);
           expect(toolbarOption.find(InsertMenu).length).toEqual(0);
@@ -430,8 +498,8 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             popupsMountPoint: popupTarget,
           });
 
-          toolbarOption.setState({ isPlusMenuOpen: true });
-          toolbarOption.update();
+          baseToolbarOption.setState({ isPlusMenuOpen: true });
+          baseToolbarOption.update();
 
           expect(popupTarget.innerText).toContain(customItems[0].content);
         });
@@ -464,8 +532,8 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
           replacePlusMenuWithElementBrowser: true,
         });
 
-        toolbarOption.setState({ isPlusMenuOpen: true });
-        toolbarOption.update();
+        baseToolbarOption.setState({ isPlusMenuOpen: true });
+        baseToolbarOption.update();
 
         expect(toolbarOption.find(InsertMenu).length).toEqual(1);
         expect(toolbarOption.find(DropdownMenu).length).toEqual(0);
@@ -542,7 +610,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
         expandEnabled: false,
         insertMenuItems: customItems,
       });
-      const spy = jest.spyOn(toolbarOption.instance() as any, 'insertExpand');
+      const spy = jest.spyOn(
+        baseToolbarOption.instance() as any,
+        'insertExpand',
+      );
 
       const onItemActivated = toolbarOption
         .find(DropdownMenu)
@@ -570,7 +641,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
         expandEnabled: true,
         insertMenuItems: customItems,
       });
-      const spy = jest.spyOn(toolbarOption.instance() as any, 'insertExpand');
+      const spy = jest.spyOn(
+        baseToolbarOption.instance() as any,
+        'insertExpand',
+      );
 
       const onItemActivated = toolbarOption
         .find(DropdownMenu)
@@ -629,23 +703,6 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
         });
       });
 
-      describe('mentions option', () => {
-        it('should fire v3 analytics event when mention option clicked', () => {
-          buildToolbarForMenu({
-            mentionsSupported: true,
-            isTypeAheadAllowed: true,
-          });
-          menu.clickButton(messages.mention.defaultMessage, toolbarOption);
-          expect(createAnalyticsEvent).toHaveBeenCalledWith({
-            action: 'invoked',
-            actionSubject: 'typeAhead',
-            actionSubjectId: 'mentionTypeAhead',
-            attributes: expect.objectContaining({ inputMethod: menu.name }),
-            eventType: 'ui',
-          });
-        });
-      });
-
       describe('click media option', () => {
         let onShowMediaPickerSpy = jest.fn();
 
@@ -656,7 +713,7 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
             onShowMediaPicker: onShowMediaPickerSpy,
           });
           menu.clickButton(
-            messages.filesAndImages.defaultMessage,
+            messages.addMediaFiles.defaultMessage,
             toolbarOption,
           );
         });
@@ -678,14 +735,16 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
       describe('click link option', () => {
         beforeEach(() => {
-          buildToolbarForMenu({ linkSupported: true });
+          buildToolbarForMenu({
+            linkSupported: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(messages.link.defaultMessage, toolbarOption);
         });
 
         it('should insert link', () => {
-          const linkMeta = dispatchSpy.mock.calls[0][0].getMeta(
-            hyperlinkPluginKey,
-          );
+          const linkMeta =
+            dispatchSpy.mock.calls[0][0].getMeta(hyperlinkPluginKey);
           expect(linkMeta.type).toEqual(LinkAction.SHOW_INSERT_TOOLBAR);
           dispatchSpy.mockRestore();
         });
@@ -703,7 +762,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
       describe('click rule option', () => {
         it('should fire v3 analytics event', () => {
-          buildToolbarForMenu({ horizontalRuleEnabled: true });
+          buildToolbarForMenu({
+            horizontalRuleEnabled: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(
             messages.horizontalRule.defaultMessage,
             toolbarOption,
@@ -720,14 +782,23 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
       });
 
       describe('click table option', () => {
+        const insertTable = jest.fn().mockImplementation(() => () => {});
+        const pluginInjectionApi: any = {
+          table: {
+            actions: {
+              insertTable,
+            },
+          },
+        };
+
         beforeEach(() => {
           ({ editorView } = editor(doc(p('text'))));
-          buildToolbarForMenu({ tableSupported: true });
+          buildToolbarForMenu({ tableSupported: true, pluginInjectionApi });
           menu.clickButton(messages.table.defaultMessage, toolbarOption);
         });
 
         it('should fire v3 analytics event', () => {
-          expect(createAnalyticsEvent).toBeCalledWith({
+          expect(insertTable).toBeCalledWith({
             action: 'inserted',
             actionSubject: 'document',
             actionSubjectId: 'table',
@@ -740,7 +811,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
       describe('click action option', () => {
         beforeEach(() => {
           uuid.setStatic('local-highlight');
-          buildToolbarForMenu({ actionSupported: true });
+          buildToolbarForMenu({
+            actionSupported: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(messages.action.defaultMessage, toolbarOption);
         });
 
@@ -772,7 +846,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
       describe('click decision option', () => {
         beforeEach(() => {
           uuid.setStatic('local-highlight');
-          buildToolbarForMenu({ decisionSupported: true });
+          buildToolbarForMenu({
+            decisionSupported: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(messages.decision.defaultMessage, toolbarOption);
         });
 
@@ -801,18 +878,37 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
         });
       });
 
-      describe('click mview more (macro) option', () => {
+      describe('click view more (macro) option', () => {
         it('should open the element browser', () => {
+          const pluginInjectionApi: any = {
+            core: {
+              actions: {
+                execute: jest.fn(),
+              },
+            },
+            quickInsert: {
+              commands: {
+                openElementBrowserModal: jest.fn(),
+              },
+            },
+          };
+
           const insertMacroFromMacroBrowserSpy = jest.fn();
           buildToolbarForMenu({
             insertMenuItems: [],
             showElementBrowserLink: true,
             onInsertMacroFromMacroBrowser: () => insertMacroFromMacroBrowserSpy,
+            pluginInjectionApi,
           });
 
           menu.clickButton(messages.viewMore.defaultMessage, toolbarOption);
           expect(insertMacroFromMacroBrowserSpy).not.toHaveBeenCalled();
-          expect(openElementBrowserModal).toHaveBeenCalled();
+          expect(pluginInjectionApi.core.actions.execute).toHaveBeenCalledTimes(
+            1,
+          );
+          expect(pluginInjectionApi.core.actions.execute).toHaveBeenCalledWith(
+            pluginInjectionApi.quickInsert.commands.openElementBrowserModal,
+          );
         });
       });
 
@@ -828,7 +924,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
       describe('click columns option', () => {
         beforeEach(() => {
-          buildToolbarForMenu({ layoutSectionEnabled: true });
+          buildToolbarForMenu({
+            layoutSectionEnabled: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(messages.columns.defaultMessage, toolbarOption);
         });
 
@@ -845,7 +944,10 @@ describe('@atlaskit/editor-core/ui/ToolbarInsertBlock', () => {
 
       describe('click status option', () => {
         beforeEach(() => {
-          buildToolbarForMenu({ nativeStatusSupported: true });
+          buildToolbarForMenu({
+            nativeStatusSupported: true,
+            pluginInjectionApi: editorAPI,
+          });
           menu.clickButton(messages.status.defaultMessage, toolbarOption);
         });
 
