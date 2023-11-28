@@ -83,7 +83,6 @@ import { isFullPage } from '../utils/is-full-page';
 import measurements from '../utils/performance/measure-enum';
 import { getNodesCount } from '../utils/document';
 import { createSchema } from './create-schema';
-import { PluginPerformanceObserver } from '../utils/performance/plugin-performance-observer';
 import { getParticipantsCount } from '../plugins/collab-edit/get-participants-count';
 import {
   EVENT_NAME_DISPATCH_TRANSACTION,
@@ -222,7 +221,6 @@ export class ReactEditorView<T = {}> extends React.Component<
   private focusTimeoutId?: number;
   private reliabilityInterval?: number;
 
-  private pluginPerformanceObserver: PluginPerformanceObserver;
 
   private featureFlags: FeatureFlags;
 
@@ -290,13 +288,6 @@ export class ReactEditorView<T = {}> extends React.Component<
     );
 
     this.transactionTracker = new TransactionTracker();
-    this.pluginPerformanceObserver = new PluginPerformanceObserver((report) =>
-      this.onPluginObservation(report, this.editorState),
-    )
-      .withPlugins(() => this.getPluginNames())
-      .withNodeCounts(() => this.countNodes())
-      .withOptions(() => this.transactionTracking)
-      .withTransactionTracker(() => this.transactionTracker);
 
     this.validTransactionCount = 0;
 
@@ -399,9 +390,7 @@ export class ReactEditorView<T = {}> extends React.Component<
       }
     }
 
-    if (!this.transactionTracking.enabled) {
-      this.pluginPerformanceObserver.disconnect();
-    }
+    
 
     if (
       nextProps.editorProps.assistiveLabel !==
@@ -523,9 +512,7 @@ export class ReactEditorView<T = {}> extends React.Component<
     // ProseMirror transactions when a dismount is imminent.
     this.canDispatchTransactions = true;
 
-    if (this.transactionTracking.enabled) {
-      this.pluginPerformanceObserver.observe();
-    }
+    
   }
 
   /**
@@ -542,7 +529,7 @@ export class ReactEditorView<T = {}> extends React.Component<
       clearInterval(this.reliabilityInterval);
     }
 
-    this.pluginPerformanceObserver.disconnect();
+    
 
     if (this.view) {
       // Destroy the state if the Editor is being unmounted
