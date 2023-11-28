@@ -1,17 +1,23 @@
 import { createMockCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  LightEditorPlugin,
   Preset,
   createProsemirrorEditorFactory,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
-import { p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import { CollabEditProvider } from '@atlaskit/editor-common';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { CollabEditProvider } from '@atlaskit/editor-common/collab';
 import collabEditPlugin from '../../../index';
-import { Cleanup, subscribe } from '../../../events/handlers';
+import type { Cleanup } from '../../../events/handlers';
+import { subscribe } from '../../../events/handlers';
 import { applyRemoteData } from '../../../actions';
-import { PrivateCollabEditOptions } from '../../../types';
-import { MockCollabEditProvider } from '@atlaskit/synchrony-test-helpers/mock-collab-provider';
+import type { PrivateCollabEditOptions } from '../../../types';
+import type { MockCollabEditProvider } from '@atlaskit/synchrony-test-helpers/mock-collab-provider';
 import { EventEmitter } from 'events';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
 
 const mockSynchronyEntityAnalyticsMock = jest.fn();
 jest.mock('../../../analytics', () => ({
@@ -24,12 +30,15 @@ jest.mock('../../../actions');
 const collabProvider = createMockCollabEditProvider();
 
 describe('collab-edit: handlers.ts', () => {
-  const collabPreset = new Preset<LightEditorPlugin>().add([
-    collabEditPlugin,
-    {
-      provider: collabProvider,
-    },
-  ]);
+  const collabPreset = new Preset<LightEditorPlugin>()
+
+    .add([featureFlagsPlugin, {}])
+    .add([
+      collabEditPlugin,
+      {
+        provider: collabProvider,
+      },
+    ]);
 
   const createEditor = createProsemirrorEditorFactory();
   const editor = (doc: DocBuilder) =>
@@ -62,9 +71,14 @@ describe('collab-edit: handlers.ts', () => {
       const onSpy = jest.spyOn(entity, 'on');
       const offSpy = jest.spyOn(entity, 'off');
       const { editorView } = editor(p('Hello'));
-      const cleanup = subscribe(editorView, provider, {
-        ...collabOptions,
-      });
+      const cleanup = subscribe(
+        editorView,
+        provider,
+        {
+          ...collabOptions,
+        },
+        {},
+      );
 
       provider.sendMessage({
         type: 'entity',
@@ -109,9 +123,13 @@ describe('collab-edit: handlers.ts', () => {
 
       entity.emit('error', {});
       entity.emit('disconnected', {});
-      expect(mockSynchronyEntityAnalyticsMock).toHaveBeenCalledWith('error');
+      expect(mockSynchronyEntityAnalyticsMock).toHaveBeenCalledWith(
+        'error',
+        undefined,
+      );
       expect(mockSynchronyEntityAnalyticsMock).toHaveBeenCalledWith(
         'disconnected',
+        undefined,
       );
       cleanup();
     });
@@ -134,7 +152,7 @@ describe('collab-edit: handlers.ts', () => {
       provider = await collabProvider;
       spy = jest.spyOn(provider, 'off');
 
-      const cleanup = subscribe(editorView, provider, {});
+      const cleanup = subscribe(editorView, provider, {}, {});
 
       // Additional handlers for same events
       provider.on('connected', externalSpies.connected);
@@ -171,7 +189,7 @@ describe('collab-edit: handlers.ts', () => {
     };
     const data = {};
 
-    subscribe(editorView, provider, options);
+    subscribe(editorView, provider, options, {});
 
     (provider as MockCollabEditProvider).emit('data', data);
     expect(applyRemoteData).toHaveBeenCalledWith(data, editorView, options);

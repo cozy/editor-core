@@ -1,14 +1,16 @@
-import { EditorView } from 'prosemirror-view';
-import {
-  ProviderFactory,
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+
+import type {
   CollabEventInitData,
   CollabEventConnectionData,
   CollabEventPresenceData,
-  CollabEventTelepointerData,
+  CollabTelepointerPayload,
   CollabEventRemoteData,
   CollabEventLocalStepData,
   CollabEditProvider,
-} from '@atlaskit/editor-common';
+} from '@atlaskit/editor-common/collab';
+
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 
 import {
   handleInit,
@@ -21,7 +23,9 @@ import {
   addSynchronyEntityAnalytics,
   addSynchronyErrorAnalytics,
 } from '../analytics';
-import { PrivateCollabEditOptions } from '../types';
+import type { PrivateCollabEditOptions } from '../types';
+import type { FeatureFlags } from '@atlaskit/editor-common/types';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
 
 export type SynchronyEntity = {
   on: (evt: 'disconnected' | 'error', handler: (...args: any) => void) => void;
@@ -32,7 +36,7 @@ export interface CollabHandlers {
   connectedHandler: (data: CollabEventConnectionData) => void;
   dataHandler: (data: CollabEventRemoteData) => void;
   presenceHandler: (data: CollabEventPresenceData) => void;
-  telepointerHandler: (data: CollabEventTelepointerData) => void;
+  telepointerHandler: (data: CollabTelepointerPayload) => void;
   localStepsHandler: (data: CollabEventLocalStepData) => void;
   errorHandler: (error: any) => void;
   entityHandler: ({ entity }: { entity: SynchronyEntity }) => void;
@@ -58,16 +62,36 @@ const effect = <TArgs extends any[]>(fn: Setup<TArgs>, eq: Eq<TArgs>) => {
 };
 
 export const subscribe = effect<
-  [EditorView, CollabEditProvider, PrivateCollabEditOptions, ProviderFactory?]
+  [
+    EditorView,
+    CollabEditProvider,
+    PrivateCollabEditOptions,
+    FeatureFlags,
+    ProviderFactory?,
+    EditorAnalyticsAPI?,
+  ]
 >(
-  (view, provider, options, _providerFactory) => {
+  (
+    view,
+    provider,
+    options,
+    featureFlags,
+    _providerFactory,
+    editorAnalyticsApi,
+  ) => {
     let entityRef: SynchronyEntity;
     const entityHandlers = {
       disconnectedHandler: () => {
-        addSynchronyEntityAnalytics(view.state, view.state.tr)('disconnected');
+        addSynchronyEntityAnalytics(view.state, view.state.tr)(
+          'disconnected',
+          editorAnalyticsApi,
+        );
       },
       errorHandler: () => {
-        addSynchronyEntityAnalytics(view.state, view.state.tr)('error');
+        addSynchronyEntityAnalytics(view.state, view.state.tr)(
+          'error',
+          editorAnalyticsApi,
+        );
       },
     };
 
@@ -95,7 +119,12 @@ export const subscribe = effect<
         view.dispatch(tr);
       },
       errorHandler: (error) => {
-        addSynchronyErrorAnalytics(view.state, view.state.tr)(error);
+        addSynchronyErrorAnalytics(
+          view.state,
+          view.state.tr,
+          featureFlags,
+          editorAnalyticsApi,
+        )(error);
       },
       entityHandler: ({ entity }) => {
         unsubscribeSynchronyEntity();

@@ -1,14 +1,17 @@
-import { keymap } from 'prosemirror-keymap';
-import { Plugin } from 'prosemirror-state';
+import { keymap } from '@atlaskit/editor-prosemirror/keymap';
+import type { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
 import { getPluginState } from './main';
-import * as keymaps from '../../../keymaps';
+import { bindKeymapWithCommand, escape } from '@atlaskit/editor-common/keymaps';
 import { clearEditingContext } from '../commands';
+import type { ApplyChangeHandler } from '@atlaskit/editor-plugin-context-panel';
 
-export default function keymapPlugin(): Plugin {
+export default function keymapPlugin(
+  applyChange: ApplyChangeHandler | undefined,
+): SafePlugin {
   const list = {};
 
-  keymaps.bindKeymapWithCommand(
-    keymaps.escape.common!,
+  bindKeymapWithCommand(
+    escape.common!,
     (state, dispatch) => {
       const extensionState = getPluginState(state);
 
@@ -16,10 +19,10 @@ export default function keymapPlugin(): Plugin {
         return false;
       }
 
-      return clearEditingContext(state, dispatch);
+      return clearEditingContext(applyChange)(state, dispatch);
     },
     list,
   );
 
-  return keymap(list);
+  return keymap(list) as SafePlugin;
 }

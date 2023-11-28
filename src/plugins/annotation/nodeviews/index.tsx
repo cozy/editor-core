@@ -1,8 +1,7 @@
 import React from 'react';
-import { AnnotationSharedClassNames } from '@atlaskit/editor-common';
-import { ReactNodeView, ForwardRef } from '../../../nodeviews';
-import WithPluginState from '../../../ui/WithPluginState';
-import { inlineCommentPluginKey } from '../utils';
+import { AnnotationSharedClassNames } from '@atlaskit/editor-common/styles';
+import { ForwardRef } from '../../../nodeviews';
+import ReactNodeView from '@atlaskit/editor-common/react-node-view';
 
 export class AnnotationNodeView extends ReactNodeView {
   createDomRef() {
@@ -17,32 +16,8 @@ export class AnnotationNodeView extends ReactNodeView {
 
   render(_props: {}, forwardRef: ForwardRef) {
     return (
-      <WithPluginState
-        plugins={{
-          inlineCommentState: inlineCommentPluginKey,
-        }}
-        editorView={this.view}
-        render={({ inlineCommentState }) => {
-          if (!inlineCommentState?.isVisible) {
-            return <span ref={forwardRef} />;
-          }
-
-          // Check if selection includes current annotation ID
-          const { annotations, selectedAnnotations } = inlineCommentState;
-
-          const id = this.node.attrs.id;
-          const isUnresolved = annotations[id] === false;
-          const annotationHasFocus = selectedAnnotations.some(
-            (x) => x.id === id,
-          );
-          const className = getAnnotationViewClassname(
-            isUnresolved,
-            annotationHasFocus,
-          );
-
-          return <span className={className} ref={forwardRef} />;
-        }}
-      />
+      // all inline comment states are now set in decorations at ../pm-plugins/inline-comment.ts
+      <span data-mark-type="annotation" ref={forwardRef} />
     );
   }
 }

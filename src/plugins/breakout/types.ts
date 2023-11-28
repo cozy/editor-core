@@ -1,4 +1,4 @@
-import { Node as PMNode } from 'prosemirror-model';
+import type { ContentNodeWithPos } from '@atlaskit/editor-prosemirror/utils';
 export interface BreakoutPluginState {
-  breakoutNode: PMNode;
+  breakoutNode: ContentNodeWithPos | undefined;
 }

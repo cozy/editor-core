@@ -6,13 +6,14 @@
  * this is the page where it is used; https://developer.atlassian.com/cloud/jira/platform/apis/document/playground/
  *
  */
+/** @jsx jsx */
 import React from 'react';
 import TextArea from '@atlaskit/textarea';
 import EditorContext from '../src/ui/EditorContext';
 import WithEditorActions from '../src/ui/WithEditorActions';
 import { EditorActions } from '../src';
 import ToolbarHelp from '../src/ui/ToolbarHelp';
-import Editor from './../src/editor';
+import { Editor } from './../src';
 import {
   getEmojiProvider,
   currentUser,
@@ -21,13 +22,13 @@ import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { mediaProvider } from './5-full-page';
 import { EmojiProvider } from '@atlaskit/emoji/resource';
-import styled from 'styled-components';
+import { css, jsx } from '@emotion/react';
 
 interface AdfState {
   isValidAdf: boolean;
 }
 
-const Wrapper: any = styled.div`
+const wrapper: any = css`
   display: 'flex';
   padding: '10px';
   flex-direction: 'column';
@@ -52,7 +53,7 @@ export default class Example extends React.Component<{}, AdfState> {
   render() {
     return (
       <EditorContext>
-        <Wrapper>
+        <div css={wrapper}>
           <div>
             <WithEditorActions
               render={(actions) => {
@@ -93,7 +94,7 @@ export default class Example extends React.Component<{}, AdfState> {
               minimumRows={20}
             />
           </div>
-        </Wrapper>
+        </div>
       </EditorContext>
     );
   }
@@ -105,7 +106,10 @@ export default class Example extends React.Component<{}, AdfState> {
       }
     } catch (error) {
       this.setState({ isValidAdf: false });
-      throw new Error(error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(String(error));
     }
     this.setState({ isValidAdf: true });
   };

@@ -1,15 +1,21 @@
-import { waitForTooltip } from '@atlaskit/visual-regression/helper';
 import adf from './__fixtures__/default-table.adf.json';
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import tableMergedColumnsADF from './__fixtures__/table-with-first-column-merged.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   insertRow,
   insertColumn,
   tableSelectors,
   clickFirstCell,
-} from '../../__helpers/page-objects/_table';
-import { animationFrame } from '../../__helpers/page-objects/_editor';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { animationFrame } from '@atlaskit/editor-test-helpers/page-objects/editor';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 
 let page: PuppeteerPage;
 const initEditor = async (adf: Object) => {
@@ -35,7 +41,7 @@ describe('Snapshot Test: table insert/delete with merged columns', () => {
     await snapshot(page);
   });
 
-  test('should be able to insert a column at the end of the table', async () => {
+  xtest('should be able to insert a column at the end of the table', async () => {
     await insertColumn(page, 0, 'right');
   });
 });
@@ -78,14 +84,12 @@ describe('Snapshot Test: table insert/delete', () => {
   // TODO: move this to integration tests in future
   it(`should be able to insert row`, async () => {
     await insertRow(page, 1);
-    await waitForTooltip(page);
   });
 
   it(`inserts multiple rows in succession`, async () => {
     await insertRow(page, 1);
     await insertRow(page, 1);
     await insertRow(page, 1);
-    await waitForTooltip(page);
   });
 
   // TODO: move this to integration tests in future

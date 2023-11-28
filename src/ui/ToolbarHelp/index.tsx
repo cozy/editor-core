@@ -2,25 +2,39 @@ import React from 'react';
 import QuestionIcon from '@atlaskit/icon/glyph/question';
 import ToolbarButton from '../ToolbarButton';
 import WithHelpTrigger from '../WithHelpTrigger';
-import { PositionType } from '@atlaskit/tooltip/types';
+import type { PositionType } from '@atlaskit/tooltip/types';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
+import { messages } from './messages';
 
 interface Props {
   title?: string;
   titlePosition?: PositionType;
 }
 
-export default ({
+const TooltipHelpTrigger = ({
   title = 'Open help dialog',
   titlePosition = 'left',
-}: Props) => (
-  <WithHelpTrigger
-    render={(showHelp: () => void) => (
-      <ToolbarButton
-        onClick={showHelp}
-        title={title}
-        titlePosition={titlePosition}
-        iconBefore={<QuestionIcon label={title} />}
-      />
-    )}
-  />
-);
+  intl,
+}: Props & WrappedComponentProps) => {
+  // to have translation for the default tooltip helper
+  let displayTitle = title;
+  if (title === 'Open help dialog') {
+    displayTitle = intl.formatMessage(messages.toolbarHelpTitle);
+  }
+
+  return (
+    <WithHelpTrigger
+      render={(showHelp: () => void) => (
+        <ToolbarButton
+          onClick={showHelp}
+          title={displayTitle}
+          titlePosition={titlePosition}
+          iconBefore={<QuestionIcon label={displayTitle} />}
+        />
+      )}
+    />
+  );
+};
+
+export default injectIntl(TooltipHelpTrigger);

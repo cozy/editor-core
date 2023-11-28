@@ -1,6 +1,12 @@
-import { waitForTooltip } from '@atlaskit/visual-regression/helper';
-import { initEditorWithAdf, Appearance, snapshot, pmSelector } from '../_utils';
-import { helpDialogSelector } from '../../__helpers/page-objects/_help-dialog';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  initEditorWithAdf,
+  Appearance,
+  snapshot,
+  pmSelector,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { helpDialogSelector } from '@atlaskit/editor-test-helpers/page-objects/help-dialog';
 
 describe('Help Dialog', () => {
   it('displays help dialog', async () => {
@@ -13,7 +19,6 @@ describe('Help Dialog', () => {
     await page.keyboard.down('Control');
     await page.keyboard.down('/');
     await page.waitForSelector(helpDialogSelector);
-    await waitForTooltip(page);
     await snapshot(page, undefined, helpDialogSelector);
   });
 });

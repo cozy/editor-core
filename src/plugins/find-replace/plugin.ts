@@ -1,9 +1,12 @@
-import { Plugin, Transaction } from 'prosemirror-state';
-import { DecorationSet, Decoration } from 'prosemirror-view';
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type { ReadonlyTransaction } from '@atlaskit/editor-prosemirror/state';
+import type { Decoration } from '@atlaskit/editor-prosemirror/view';
+import { DecorationSet } from '@atlaskit/editor-prosemirror/view';
 import { pluginFactory } from '../../utils/plugin-state-factory';
 import reducer from './reducer';
-import { Dispatch } from '../../event-dispatcher';
-import { Match, FindReplacePluginState, findReplacePluginKey } from './types';
+import type { Dispatch } from '../../event-dispatcher';
+import type { Match, FindReplacePluginState } from './types';
+import { findReplacePluginKey } from './types';
 import {
   findMatches,
   createDecorations,
@@ -14,7 +17,7 @@ import {
   isMatchAffectedByStep,
 } from './utils';
 import { findUniqueItemsIn } from '../../utils/array';
-import { stepHasSlice } from '../../utils/step';
+import { stepHasSlice } from '@atlaskit/editor-common/utils';
 
 export const initialState: FindReplacePluginState = {
   isActive: false,
@@ -28,7 +31,7 @@ export const initialState: FindReplacePluginState = {
 };
 
 const handleDocChanged = (
-  tr: Transaction,
+  tr: ReadonlyTransaction,
   pluginState: FindReplacePluginState,
 ): FindReplacePluginState => {
   const { isActive, findText } = pluginState;
@@ -148,20 +151,17 @@ const handleDocChanged = (
   };
 };
 
-export const {
-  createCommand,
-  getPluginState,
-  createPluginState,
-} = pluginFactory(
-  findReplacePluginKey,
-  reducer(() => initialState),
-  {
-    onDocChanged: handleDocChanged,
-  },
-);
+export const { createCommand, getPluginState, createPluginState } =
+  pluginFactory(
+    findReplacePluginKey,
+    reducer(() => initialState),
+    {
+      onDocChanged: handleDocChanged,
+    },
+  );
 
 export const createPlugin = (dispatch: Dispatch) =>
-  new Plugin({
+  new SafePlugin({
     key: findReplacePluginKey,
     state: createPluginState(dispatch, () => initialState),
     props: {

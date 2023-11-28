@@ -1,12 +1,14 @@
 import React from 'react';
 import Loadable from 'react-loadable';
 import {
-  combineProviders,
-  ExtensionProvider,
   getQuickInsertItemsFromModule,
-  MenuItem,
   resolveImport,
-} from '@atlaskit/editor-common';
+} from '@atlaskit/editor-common/extensions';
+import type {
+  ExtensionProvider,
+  MenuItem,
+} from '@atlaskit/editor-common/extensions';
+import { combineProviders } from '@atlaskit/editor-common/provider-helpers';
 import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next/types';
 import {
   QuickInsertItem,
@@ -18,10 +20,10 @@ import {
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
   INPUT_METHOD,
-} from '../plugins/analytics/types/enums';
-import EditorActions from '../actions';
+  fireAnalyticsEvent,
+} from '@atlaskit/editor-common/analytics';
 
-import { fireAnalyticsEvent } from '../plugins/analytics';
+import EditorActions from '../actions';
 
 /**
  * Utils to send analytics event when a extension is inserted using quickInsert
@@ -101,9 +103,8 @@ export async function combineQuickInsertProviders(
     QuickInsertProvider | Promise<QuickInsertProvider>
   >,
 ): Promise<QuickInsertProvider> {
-  const { invokeList } = combineProviders<QuickInsertProvider>(
-    quickInsertProviders,
-  );
+  const { invokeList } =
+    combineProviders<QuickInsertProvider>(quickInsertProviders);
 
   return {
     getItems() {

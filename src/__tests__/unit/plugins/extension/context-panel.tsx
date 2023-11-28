@@ -1,35 +1,17 @@
-import React from 'react';
-import { IntlProvider } from 'react-intl';
-import { mount } from 'enzyme';
-import { ADNode } from '@atlaskit/editor-common/validator';
-import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import type { ADNode } from '@atlaskit/editor-common/validator';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import type { BuilderContent } from '@atlaskit/editor-test-helpers/doc-builder';
 import {
-  doc,
   bodiedExtension,
   extension,
   inlineExtension,
   p as paragraph,
-  BuilderContent,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
-import { createFakeExtensionProvider } from '@atlaskit/editor-test-helpers/extensions';
 
-import {
-  combineExtensionProviders,
-  TransformBefore,
-  TransformAfter,
-  UpdateExtension,
-} from '@atlaskit/editor-common/extensions';
-import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
-
-import EditorContext from '../../../../ui/EditorContext';
 import { pluginKey } from '../../../../plugins/extension/plugin-key';
-import { EditorProps } from '../../../../types';
-import { waitForProvider, flushPromises } from '../../../__helpers/utils';
-import { getContextPanel } from '../../../../plugins/extension/context-panel';
-import { setEditingContextToContextPanel } from '../../../../plugins/extension/commands';
-import EditorActions from '../../../../actions';
-import { PublicProps } from '../../../../ui/ConfigPanel/ConfigPanelFieldsLoader';
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { setupConfigPanel } from '../../_setup-config-panel';
 
 // there are many warnings due to hooks usage and async code that will be solved with the next react update.
 // this function will keep then silent so we can still read the tests.
@@ -46,103 +28,6 @@ const silenceActErrors = () => {
 };
 
 describe('extension context panel', () => {
-  const createEditor = createEditorFactory();
-
-  const editor = (
-    doc: DocBuilder,
-    props: Partial<EditorProps> = {},
-    providerFactory?: ProviderFactory,
-  ) => {
-    return createEditor({
-      doc,
-      editorProps: {
-        appearance: 'full-page',
-        allowBreakout: true,
-        allowExtension: {
-          allowBreakout: true,
-          allowAutoSave: true,
-        },
-        ...props,
-      },
-      pluginKey,
-      providerFactory,
-    });
-  };
-
-  const ExtensionHandlerComponent = () => <div>Awesome Extension</div>;
-
-  const transformBefore: TransformBefore = (parameters) =>
-    parameters && parameters.macroParams;
-  const transformAfter: TransformAfter = (parameters) =>
-    Promise.resolve({
-      macroParams: parameters,
-    });
-
-  const extensionUpdater: UpdateExtension = (data, actions) =>
-    new Promise((resolve) => {
-      actions!.editInContextPanel(transformBefore, transformAfter);
-    });
-
-  const extensionProvider = createFakeExtensionProvider(
-    'fake.confluence',
-    'expand',
-    ExtensionHandlerComponent,
-    extensionUpdater,
-  );
-
-  const providerFactory = ProviderFactory.create({
-    extensionProvider: Promise.resolve(
-      combineExtensionProviders([extensionProvider]),
-    ),
-  });
-
-  const setupConfigPanel = async (
-    content: BuilderContent[],
-    autoSave = true,
-  ) => {
-    const { editorView, eventDispatcher } = editor(
-      doc(...content),
-      {},
-      providerFactory,
-    );
-
-    await waitForProvider(providerFactory)('extensionProvider');
-
-    setEditingContextToContextPanel(transformBefore, transformAfter)(
-      editorView.state,
-      editorView.dispatch,
-    );
-
-    const contextPanel = getContextPanel(autoSave)(editorView.state);
-
-    expect(contextPanel).toBeTruthy();
-    const editorActions = new EditorActions();
-    const dispatchMock = jest.spyOn(editorView, 'dispatch');
-    const emitMock = jest.spyOn(eventDispatcher, 'emit');
-
-    editorActions._privateRegisterEditor(editorView, {} as any);
-    const wrapper = mount(
-      <IntlProvider locale="en">
-        <EditorContext editorActions={editorActions}>
-          {contextPanel!}
-        </EditorContext>
-      </IntlProvider>,
-    );
-
-    await flushPromises();
-
-    wrapper.update();
-
-    const props = wrapper.find('FieldsLoader').props() as PublicProps;
-
-    return {
-      props,
-      dispatchMock,
-      editorView,
-      emitMock,
-    };
-  };
-
   const findExtension = (content: ADNode): ADNode => {
     const isExtension = [
       'bodiedExtension',
@@ -157,7 +42,7 @@ describe('extension context panel', () => {
   };
 
   it('should not call emit on every document change', async () => {
-    const { editorView, emitMock } = await setupConfigPanel([
+    const content = [
       '{<node>}',
       extension({
         extensionType: 'fake.confluence',
@@ -169,7 +54,8 @@ describe('extension context panel', () => {
           },
         },
       })(),
-    ]);
+    ];
+    const { editorView, emitMock } = await setupConfigPanel({ content });
 
     emitMock.mockClear();
 
@@ -178,19 +64,21 @@ describe('extension context panel', () => {
     editorView.dispatch(editorView.state.tr.insertText('!'));
 
     expect(
-      emitMock.mock.calls.filter(([e, _]) => e === 'contextPanelPluginKey$')
-        .length,
+      emitMock.mock.calls.filter(
+        ([e, _]: [string, any]) => e === 'contextPanelPluginKey$',
+      ).length,
     ).toEqual(1);
   });
 
   it('should allow an extension with no parameters to be updated', async () => {
-    const { props, dispatchMock } = await setupConfigPanel([
+    const content = [
       '{<node>}',
       extension({
         extensionType: 'fake.confluence',
         extensionKey: 'expand',
       })(),
-    ]);
+    ];
+    const { props, dispatchMock } = await setupConfigPanel({ content });
 
     props.onChange({
       title: 'changed',
@@ -213,13 +101,14 @@ describe('extension context panel', () => {
   });
 
   it('should not close the config panel after save if autosave is on', async () => {
-    const { props, editorView } = await setupConfigPanel([
+    const content = [
       '{<node>}',
       extension({
         extensionType: 'fake.confluence',
         extensionKey: 'expand',
       })(),
-    ]);
+    ];
+    const { props, editorView } = await setupConfigPanel({ content });
 
     props.onChange({
       title: 'changed',
@@ -228,20 +117,21 @@ describe('extension context panel', () => {
 
     await flushPromises();
     const pluginState = pluginKey.getState(editorView.state);
-    expect(pluginState.showContextPanel).toBeTruthy();
+    expect(pluginState?.showContextPanel).toBeTruthy();
   });
 
   it('should close the config panel after save if autosave is off', async () => {
-    const { props, editorView } = await setupConfigPanel(
-      [
-        '{<node>}',
-        extension({
-          extensionType: 'fake.confluence',
-          extensionKey: 'expand',
-        })(),
-      ],
-      false,
-    );
+    const content = [
+      '{<node>}',
+      extension({
+        extensionType: 'fake.confluence',
+        extensionKey: 'expand',
+      })(),
+    ];
+    const { props, editorView } = await setupConfigPanel({
+      content,
+      autoSave: false,
+    });
 
     props.onChange({
       title: 'changed',
@@ -250,7 +140,7 @@ describe('extension context panel', () => {
 
     await flushPromises();
     const pluginState = pluginKey.getState(editorView.state);
-    expect(pluginState.showContextPanel).toBeFalsy();
+    expect(pluginState?.showContextPanel).toBeFalsy();
   });
 
   const testSaving = (type: string, content: BuilderContent[]) => {
@@ -258,7 +148,7 @@ describe('extension context panel', () => {
       silenceActErrors();
 
       it('should unwrap parameters when injecting into the component', async () => {
-        const { props } = await setupConfigPanel(content);
+        const { props } = await setupConfigPanel({ content });
 
         expect(props.parameters).toEqual({
           title: 'click to see something cool',
@@ -267,7 +157,7 @@ describe('extension context panel', () => {
       });
 
       it('should wrap parameters back when saving and not scroll into view', async () => {
-        const { props, dispatchMock } = await setupConfigPanel(content);
+        const { props, dispatchMock } = await setupConfigPanel({ content });
 
         props.onChange({
           title: 'changed',
@@ -292,7 +182,7 @@ describe('extension context panel', () => {
       });
 
       it('should preserve selection', async () => {
-        const { props, editorView } = await setupConfigPanel(content);
+        const { props, editorView } = await setupConfigPanel({ content });
         const { selection: prevSelection } = editorView.state;
 
         props.onChange({
@@ -310,7 +200,7 @@ describe('extension context panel', () => {
       });
 
       it("shouldn't update the document if parameters are the same", async () => {
-        const { props, dispatchMock } = await setupConfigPanel(content);
+        const { props, dispatchMock } = await setupConfigPanel({ content });
 
         dispatchMock.mockClear();
         props.onChange({

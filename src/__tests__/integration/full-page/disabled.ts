@@ -1,12 +1,13 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import Page from '@atlaskit/webdriver-runner/wd-wrapper';
 
-import { fullpageDisabled } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { fullpageDisabled } from '@atlaskit/editor-test-helpers/integration/helpers';
 
 // TODO: fix expect condition or find a way to fetch error from api
 BrowserTestCase(
   "disabled.ts: Shouldn't be able to type in the disabled editor",
-  { skip: ['edge', 'firefox', 'safari', 'chrome'] },
+  { skip: ['firefox', 'safari', 'chrome'] },
   async (client: any) => {
     const browser = new Page(client);
     await browser.goto(fullpageDisabled.path);
@@ -19,7 +20,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   "disabled.ts: Shouldn't be able to type in a panel",
-  { skip: ['edge', 'firefox', 'safari', 'chrome'] },
+  { skip: ['firefox', 'safari', 'chrome'] },
   async (client: any) => {
     const browser = new Page(client);
     await browser.goto(fullpageDisabled.path);
@@ -34,7 +35,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   "disabled.ts: Shouldn't be able to type in a table",
-  { skip: ['edge', 'firefox', 'safari', 'chrome'] },
+  { skip: ['firefox', 'safari', 'chrome'] },
   async (client: any) => {
     const browser = new Page(client);
     await browser.goto(fullpageDisabled.path);

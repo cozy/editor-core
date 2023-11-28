@@ -2,9 +2,9 @@ import {
   isPerformanceAPIAvailable,
   startMeasure,
   stopMeasure,
-} from '@atlaskit/editor-common';
-import { TransactionTracking } from '../../types/performance-tracking';
-import { getTimeSince } from './get-performance-timing';
+  getTimeSince,
+} from '@atlaskit/editor-common/utils';
+import type { TransactionTracking } from '../../types/performance-tracking';
 
 export const EVENT_NAME_STATE_APPLY = `🦉 EditorView::state::apply`;
 export const EVENT_NAME_UPDATE_STATE = `🦉 EditorView::updateState`;
@@ -54,18 +54,14 @@ export class TransactionTracker {
   }
 
   public shouldTrackTransaction(options: TransactionTracking): boolean {
-    const {
-      enabled: trackingEnabled,
-      samplingRate = DEFAULT_SAMPLING_RATE,
-    } = options;
+    const { enabled: trackingEnabled, samplingRate = DEFAULT_SAMPLING_RATE } =
+      options;
     return trackingEnabled && this.dispatchCallCounter === samplingRate;
   }
 
   public bumpDispatchCounter = (options: TransactionTracking) => {
-    const {
-      enabled: trackingEnabled,
-      samplingRate = DEFAULT_SAMPLING_RATE,
-    } = options;
+    const { enabled: trackingEnabled, samplingRate = DEFAULT_SAMPLING_RATE } =
+      options;
 
     if (trackingEnabled) {
       if (this.dispatchCallCounter >= samplingRate) {

@@ -1,10 +1,16 @@
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
 import React from 'react';
 import Button from '@atlaskit/button/custom-theme-button';
 import Select from '@atlaskit/select';
 
 import { EditorAppearance } from '../../src/types';
 import FullWidthToggle from '../full-width-toggle';
-import { Controls, Container, Column } from './kitchen-sink-styles';
+import {
+  appearanceControl,
+  controls,
+  kitchenSinkControl,
+} from './kitchen-sink-styles';
 import { formatAppearanceOption } from './format-appearance-options';
 import { selectStyles } from './select-styles';
 
@@ -34,6 +40,7 @@ export interface KitchenSinkControlsProps {
   validating: boolean;
   vertical: boolean;
   scrubContent: boolean;
+  sanitizePrivateContent: boolean;
   onAppearanceChange(appearance: EditorAppearance): void;
   onLoadDocument(opt: any): void;
   onCopyLink(): void;
@@ -44,20 +51,25 @@ export interface KitchenSinkControlsProps {
   onErrorToggle(enabled: boolean): void;
   onAdfToggle(enabled: boolean): void;
   onScrubToggle(enabled: boolean): void;
+  onSanitizePrivateContent(enabled: boolean): void;
 }
 
-export const KitchenSinkControls: React.FunctionComponent<KitchenSinkControlsProps> = React.memo(
-  (props) => {
+export const KitchenSinkControls: React.FunctionComponent<KitchenSinkControlsProps> =
+  React.memo((props) => {
     const {
       adfEnabled,
       editorEnabled,
       errorsEnabled,
+      sanitizePrivateContent,
+      theme,
       onAdfToggle,
       onEditorToggle,
       onErrorToggle,
       onLoadDocument,
       onOrientationChange,
       onScrubToggle,
+      onSanitizePrivateContent,
+      onThemeChange,
       scrubContent,
       vertical,
     } = props;
@@ -82,13 +94,22 @@ export const KitchenSinkControls: React.FunctionComponent<KitchenSinkControlsPro
       [errorsEnabled, onErrorToggle],
     );
 
-    const onAdfToggleCb = React.useCallback(() => onAdfToggle(!adfEnabled), [
-      adfEnabled,
-      onAdfToggle,
-    ]);
+    const onAdfToggleCb = React.useCallback(
+      () => onAdfToggle(!adfEnabled),
+      [adfEnabled, onAdfToggle],
+    );
+    const onLegacyDarkThemeChange = React.useCallback(
+      () => onThemeChange(theme !== 'dark' ? 'dark' : 'light'),
+      [theme, onThemeChange],
+    );
+
+    const onSanitizePrivateContentCb = React.useCallback(
+      () => onSanitizePrivateContent(!sanitizePrivateContent),
+      [sanitizePrivateContent, onSanitizePrivateContent],
+    );
 
     return (
-      <Controls>
+      <div css={controls}>
         <Select
           formatOptionLabel={formatAppearanceOption}
           options={props.appearanceOptions}
@@ -98,74 +119,78 @@ export const KitchenSinkControls: React.FunctionComponent<KitchenSinkControlsPro
           onChange={({ value }: any) => props.onAppearanceChange(value)}
           styles={selectStyles}
         />
-        <Container>
-          <Column>
-            <Select
-              formatOptionLabel={formatAppearanceOption}
-              options={props.docOptions}
-              onChange={onLoadDocument}
-              placeholder="Load an example document..."
-              styles={selectStyles}
-            />
-          </Column>
-          <Column
-            style={{
-              flex: 0,
-              alignItems: 'center',
-              display: 'flex',
-            }}
-          >
+        <div>
+          <Select
+            formatOptionLabel={formatAppearanceOption}
+            options={props.docOptions}
+            onChange={onLoadDocument}
+            placeholder="Load an example document..."
+            styles={selectStyles}
+            css={[kitchenSinkControl, appearanceControl]}
+          />
+          <div css={kitchenSinkControl}>
             <FullWidthToggle
               appearance={props.appearance}
               onFullWidthChange={props.onFullWidthChange}
             />
-
-            <Select
-              formatOptionLabel={formatAppearanceOption}
-              options={props.themeOptions}
-              onChange={(opt: any) => props.onThemeChange(opt.value)}
-              spacing="compact"
-              defaultValue={props.themeOptions.find(
-                (opt) => opt.value === props.theme,
-              )}
-              className="theme-select"
-              styles={selectStyles}
-            />
-            <Button onClick={onOrientationChangeCb}>
-              Display {!props.vertical ? 'Vertical' : 'Horizontal'}
-            </Button>
-
-            <Button
-              appearance={!editorEnabled ? 'primary' : 'default'}
-              onClick={onEditorToggleCb}
-            >
-              {editorEnabled ? 'Disable' : 'Enable'} editor
-            </Button>
-            <Button
-              appearance={scrubContent ? 'primary' : 'default'}
-              onClick={onScrubToggleCb}
-            >
-              {scrubContent ? 'Plain' : 'Scrub'} content
-            </Button>
-            <Button onClick={props.onCopyLink}>Copy Link</Button>
-            <Button
-              appearance={props.errors.length ? 'danger' : 'subtle'}
-              isSelected={props.errorsEnabled}
-              onClick={onErrorToggleCb}
-              isLoading={props.validating}
-            >
-              {props.errors.length} errors
-            </Button>
-            <Button
-              appearance="primary"
-              isSelected={props.adfEnabled}
-              onClick={onAdfToggleCb}
-            >
-              {!props.adfEnabled ? 'Show' : 'Hide'} current ADF
-            </Button>
-          </Column>
-        </Container>
-      </Controls>
+          </div>
+          <Button
+            appearance="primary"
+            isSelected={theme === 'dark'}
+            onClick={onLegacyDarkThemeChange}
+            css={kitchenSinkControl}
+            className="legacy-theme-changer"
+          >
+            Mobile dark mode
+            {theme === 'dark' ? ' activated' : ' deactivated'}
+          </Button>
+          <Button onClick={onOrientationChangeCb} css={kitchenSinkControl}>
+            Display {!props.vertical ? 'Vertical' : 'Horizontal'}
+          </Button>
+          <Button
+            appearance={!editorEnabled ? 'primary' : 'default'}
+            onClick={onEditorToggleCb}
+            css={kitchenSinkControl}
+          >
+            {editorEnabled ? 'Disable' : 'Enable'} editor
+          </Button>
+          <Button
+            appearance={scrubContent ? 'primary' : 'default'}
+            onClick={onScrubToggleCb}
+            css={kitchenSinkControl}
+          >
+            {scrubContent ? 'Plain' : 'Scrub'} content
+          </Button>
+          <Button onClick={props.onCopyLink} css={kitchenSinkControl}>
+            Copy Link
+          </Button>
+          <Button
+            appearance={props.errors.length ? 'danger' : 'subtle'}
+            isSelected={props.errorsEnabled}
+            onClick={onErrorToggleCb}
+            isLoading={props.validating}
+            css={kitchenSinkControl}
+          >
+            {props.errors.length} errors
+          </Button>
+          <Button
+            appearance="primary"
+            isSelected={props.adfEnabled}
+            onClick={onAdfToggleCb}
+            css={kitchenSinkControl}
+          >
+            {!props.adfEnabled ? 'Show' : 'Hide'} current ADF
+          </Button>
+          <Button
+            appearance="primary"
+            isSelected={props.sanitizePrivateContent}
+            onClick={onSanitizePrivateContentCb}
+            css={kitchenSinkControl}
+          >
+            {!props.sanitizePrivateContent ? 'Sanitize ' : 'Do not sanitize '}
+            private content
+          </Button>
+        </div>
+      </div>
     );
-  },
-);
+  });

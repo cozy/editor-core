@@ -1,8 +1,9 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
 import Page from '@atlaskit/webdriver-runner/wd-wrapper';
 import { getExampleUrl } from '@atlaskit/webdriver-runner/utils/example';
-import { messages as insertBlockMessages } from '../../../plugins/insert-block/ui/ToolbarInsertBlock/messages';
-import { selectors } from '../../__helpers/page-objects/_editor';
+import { toolbarInsertBlockMessages as insertBlockMessages } from '@atlaskit/editor-common/messages';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
 
 const fullPageEditor = getExampleUrl('editor', 'editor-core', 'full-page');
 const editorSelector = selectors.editor;
@@ -15,7 +16,7 @@ for (let i = 0; i < 80; i++) {
 
 BrowserTestCase(
   'table.ts: Table floating toolbar should be visible even after table scrolls',
-  { skip: ['edge', 'safari', 'firefox'] },
+  { skip: ['safari', 'firefox'] },
   async (client: any) => {
     const insertTableMenu = `[aria-label="${insertBlockMessages.table.defaultMessage}"]`;
     const tableControls = '[aria-label="Table floating controls"]';

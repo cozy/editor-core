@@ -1,65 +1,64 @@
+/** @jsx jsx */
 import React, { useState } from 'react';
-import { InjectedIntlProps, injectIntl } from 'react-intl';
+import { css, jsx } from '@emotion/react';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
 
-import styled from 'styled-components';
 import { N40 } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import ChevronRightIcon from '@atlaskit/icon/glyph/chevron-right';
 import Button from '@atlaskit/button';
-import { gridSize } from '@atlaskit/theme/constants';
-import { FieldDefinition } from '@atlaskit/editor-common/extensions';
+import type { FieldDefinition } from '@atlaskit/editor-common/extensions';
 import { messages } from '../messages';
-import { multiply } from '@atlaskit/theme/math';
 
-export const ExpandContainer = styled.div`
-  border-bottom: 1px solid ${N40};
+export const expandContainer = css`
+  border-bottom: 1px solid ${token('color.border', N40)};
 `;
 
-export const ExpandControl = styled.div`
+export const expandControl = css`
   display: flex;
-  height: ${multiply(gridSize, 6)}px;
+  height: ${token('space.600', '48px')};
   justify-content: center;
-  padding-right: ${gridSize()}px;
+  padding-right: ${token('space.100', '8px')};
 `;
 
-const ChevronContainer = styled.div`
+const chevronContainer = css`
   display: flex;
   align-items: center;
 
   & > button {
-    width: ${multiply(gridSize, 3)}px;
-    height: ${multiply(gridSize, 3)}px;
+    width: ${token('space.300', '24px')};
+    height: ${token('space.300', '24px')};
   }
 `;
 
-const LabelContainer = styled.div`
+const labelContainer = css`
   width: 100%;
   align-items: center;
   display: flex;
   font-weight: 500;
 `;
 
-const ExpandContentContainer = styled.div<{ isHidden: boolean }>`
-  display: ${({ isHidden }) => (isHidden ? 'none' : 'block')};
-  margin-top: -${gridSize}px;
+const expandContentContainer = (isHidden: boolean) => css`
+  display: ${isHidden ? 'none' : 'block'};
+  margin-top: ${token('space.negative.100', '-8px')};
 `;
-
-ExpandContentContainer.displayName = 'ExpandContentContainer';
 
 type Props = {
   field: FieldDefinition;
   children: React.ReactNode;
   isExpanded?: boolean;
-} & InjectedIntlProps;
+} & WrappedComponentProps;
 
 function Expand({ field, children, isExpanded = false, intl }: Props) {
   const [expanded, setExpanded] = useState(isExpanded);
 
   return (
-    <ExpandContainer>
-      <ExpandControl>
-        <LabelContainer>{field.label}</LabelContainer>
-        <ChevronContainer>
+    <div data-testid="expand-config-field" css={expandContainer}>
+      <div css={expandControl}>
+        <div css={labelContainer}>{field.label}</div>
+        <div css={chevronContainer}>
           <Button
             onClick={() => {
               setExpanded(!expanded);
@@ -75,12 +74,15 @@ function Expand({ field, children, isExpanded = false, intl }: Props) {
               )
             }
           />
-        </ChevronContainer>
-      </ExpandControl>
-      <ExpandContentContainer isHidden={!expanded}>
+        </div>
+      </div>
+      <div
+        data-testid="expand-content-container"
+        css={expandContentContainer(!expanded)}
+      >
         {children}
-      </ExpandContentContainer>
-    </ExpandContainer>
+      </div>
+    </div>
   );
 }
 

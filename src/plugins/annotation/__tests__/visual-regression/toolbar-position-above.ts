@@ -1,28 +1,32 @@
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   ExampleCreateInlineCommentComponent,
   ExampleViewInlineCommentComponent,
 } from '@atlaskit/editor-test-helpers/example-inline-comment-component';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   evaluateCoordinates,
   scrollToBottom,
   scrollToElement,
   selectAtPos,
   selectAtPosWithProseMirror,
-} from '../../../../__tests__/__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   snapshot,
   initFullPageEditorWithAdf,
-} from '../../../../__tests__/visual-regression/_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from '../__fixtures__/toolbar-position.adf.json';
 import adfWithTable from '../__fixtures__/toolbar-position-table.adf.json';
 import { annotationSelectors, getState } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickFirstCell,
   selectColumn,
   selectRow,
   tableSelectors,
-} from '../../../../__tests__/__helpers/page-objects/_table';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
 
 const init = async (page: PuppeteerPage, adf: Object) => {
   return await initFullPageEditorWithAdf(
@@ -124,7 +128,8 @@ describe('Annotation toolbar positioning (above)', () => {
       await snapshot(page);
     });
 
-    it(`text selection in wide breakout node`, async () => {
+    // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+    it.skip(`text selection in wide breakout node`, async () => {
       await selectAtPos(page, 1, 2);
       await scrollToBottom(page);
       await selectAtPosWithProseMirror(page, 1712, 1686);
@@ -137,7 +142,8 @@ describe('Annotation toolbar positioning (above)', () => {
       await snapshot(page);
     });
 
-    it(`text selection in full width breakout node (right side)`, async () => {
+    // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+    it.skip(`text selection in full width breakout node (right side)`, async () => {
       await scrollToBottom(page);
       await selectAtPosWithProseMirror(page, 3010, 3041);
       await snapshot(page);

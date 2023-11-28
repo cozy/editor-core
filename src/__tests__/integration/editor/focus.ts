@@ -1,13 +1,19 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { fullpage, editable, updateEditorProps } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  fullpage,
+  editable,
+  updateEditorProps,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 
 BrowserTestCase(
   'Should focus the editor when shouldFocus is true',
-  { skip: ['edge'] },
+  {},
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {
@@ -21,7 +27,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'Should focus the editor when shouldFocus is true and disabled changes to false',
-  { skip: ['edge'] },
+  {},
   async (client: any) => {
     const page = await goToEditorTestingWDExample(client);
     await mountEditor(page, {

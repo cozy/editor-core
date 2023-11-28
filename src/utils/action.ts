@@ -1,13 +1,27 @@
-import { EditorState, Transaction, Selection } from 'prosemirror-state';
-import type { EditorView } from 'prosemirror-view';
+import type {
+  EditorState,
+  Transaction,
+  PluginKey,
+} from '@atlaskit/editor-prosemirror/state';
+import { Selection } from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 
 import { pluginKey as extensionPluginKey } from '../plugins/extension/plugin-key';
 import type { ExtensionState } from '../plugins/extension/types';
 import { forceAutoSave } from '../plugins/extension/commands';
 
 import type { Command, CommandDispatch } from '../types/command';
-import { stateKey as mediaPluginKey } from '../plugins/media/pm-plugins/plugin-key';
-import type { MediaPluginState } from '../plugins/media/pm-plugins/types';
+import type { MediaPluginState } from '@atlaskit/editor-plugin-media/types';
+
+// TODO: ED-15663
+// Please, do not copy or use this kind of code below
+// @ts-ignore
+const mediaPluginKey = {
+  key: 'mediaPlugin$',
+  getState: (state: EditorState) => {
+    return (state as any)['mediaPlugin$'];
+  },
+} as PluginKey;
 
 export async function __temporaryFixForConfigPanel(editorView: EditorView) {
   const extensionPluginState =
@@ -15,8 +29,11 @@ export async function __temporaryFixForConfigPanel(editorView: EditorView) {
     (extensionPluginKey.getState(editorView.state) as ExtensionState);
 
   if (extensionPluginState && extensionPluginState.showContextPanel) {
-    await new Promise((resolve) => {
-      forceAutoSave(resolve)(editorView.state, editorView.dispatch);
+    await new Promise<void>((resolve) => {
+      forceAutoSave(extensionPluginState.applyChangeToContextPanel)(resolve)(
+        editorView.state,
+        editorView.dispatch,
+      );
     });
   }
 }

@@ -1,41 +1,46 @@
-import React from 'react';
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
 import ReactDOM from 'react-dom';
 import { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Spinner from '@atlaskit/spinner';
-import { Popup } from '@atlaskit/editor-common';
+import { Popup } from '@atlaskit/editor-common/ui';
 import ButtonGroup from '@atlaskit/button/button-group';
 import Button from '@atlaskit/button/custom-theme-button';
 
-import ToolbarButton, { ToolbarButtonRef } from '../ToolbarButton';
+import type { ToolbarButtonRef } from '../ToolbarButton';
+import ToolbarButton from '../ToolbarButton';
 import withOuterListeners from '../with-outer-listeners';
+import type { OptionalPlugin } from '@atlaskit/editor-common/types';
 
 import {
-  Wrapper,
-  ButtonContent,
-  ConfirmationPopup,
-  ConfirmationText,
-  ConfirmationHeader,
-  ConfirmationImg,
+  wrapper,
+  buttonContent,
+  confirmationPopup,
+  confirmationText,
+  confirmationHeader,
+  confirmationImg,
 } from './styles';
+import type { AnalyticsDispatch } from '@atlaskit/editor-common/analytics';
 import {
-  AnalyticsDispatch,
   ACTION,
   ACTION_SUBJECT,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
-} from '../../plugins/analytics';
+} from '@atlaskit/editor-common/analytics';
 import { createDispatch } from '../../event-dispatcher';
 import { openFeedbackDialog } from '../../plugins/feedback-dialog';
-import { FeedbackInfo } from '../../types';
-import deprecationWarnings, {
-  DeprecationWarning,
-} from '../../utils/deprecation-warnings';
+import type { FeedbackInfo } from '../../types';
+import type { DeprecationWarning } from '../../utils/deprecation-warnings';
+import deprecationWarnings from '../../utils/deprecation-warnings';
 import pickBy from '../../utils/pick-by';
-import { analyticsEventKey } from '../../plugins/analytics/consts';
-import { getContextIdentifier } from '../../plugins/base/pm-plugins/context-identifier';
+import { analyticsEventKey } from '@atlaskit/editor-common/utils';
 
-const PopupWithOutsideListeners: any = withOuterListeners(Popup);
+import { usePresetContext } from '../../presets/context';
+import type { PublicPluginAPI } from '@atlaskit/editor-common/types';
+import type { BasePlugin } from '@atlaskit/editor-plugin-base';
+
+const PopupWithOutsideListeners = withOuterListeners(Popup);
 const POPUP_HEIGHT = 388;
 const POPUP_WIDTH = 280;
 
@@ -98,7 +103,14 @@ declare global {
 
 const isNullOrUndefined = (attr: string) => attr === null || attr === undefined;
 
-export default class ToolbarFeedback extends PureComponent<Props, State> {
+type ToolbarFeedbackInternalProps = Props & {
+  api: PublicPluginAPI<[OptionalPlugin<BasePlugin>]> | undefined;
+};
+
+class ToolbarFeedbackInternal extends PureComponent<
+  ToolbarFeedbackInternalProps,
+  State
+> {
   static contextTypes = {
     editorActions: PropTypes.object.isRequired,
   };
@@ -108,7 +120,7 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
     showOptOutOption: false,
   };
 
-  constructor(props: Props) {
+  constructor(props: ToolbarFeedbackInternalProps) {
     super(props);
     deprecationWarnings(ToolbarFeedback.name, props, deprecations);
   }
@@ -147,7 +159,7 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
 
     // JIRA issue collector script is using jQuery internally
     return this.hasJquery() ? (
-      <Wrapper>
+      <div css={wrapper}>
         <ToolbarButton
           ref={this.handleRef}
           iconBefore={iconBefore}
@@ -155,7 +167,7 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
           selected={false}
           spacing="compact"
         >
-          <ButtonContent>Feedback</ButtonContent>
+          <span css={buttonContent}>Feedback</span>
         </ToolbarButton>
         {this.state.showOptOutOption && (
           <PopupWithOutsideListeners
@@ -168,11 +180,11 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
             handleClickOutside={this.toggleShowOptOutOption}
             handleEscapeKeydown={this.toggleShowOptOutOption}
           >
-            <ConfirmationPopup>
-              <ConfirmationHeader>
-                <ConfirmationImg src={EDITOR_IMAGE_URL} />
-              </ConfirmationHeader>
-              <ConfirmationText>
+            <div css={confirmationPopup}>
+              <div css={confirmationHeader}>
+                <img css={confirmationImg} src={EDITOR_IMAGE_URL} />
+              </div>
+              <div css={confirmationText}>
                 <div>
                   We are rolling out a new editing experience across Atlassian
                   products. Help us improve by providing feedback.
@@ -189,11 +201,11 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
                     Learn more
                   </Button>
                 </ButtonGroup>
-              </ConfirmationText>
-            </ConfirmationPopup>
+              </div>
+            </div>
           </PopupWithOutsideListeners>
         )}
-      </Wrapper>
+      </div>
     ) : null;
   }
 
@@ -214,9 +226,9 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
       jiraIssueCollectorScriptLoading: true,
       showOptOutOption: false,
     });
-    const { editorView } = this.context.editorActions;
+    const basePluginState = this.props.api?.base?.sharedState.currentState();
     const sessionId = window.localStorage.getItem('awc.session.id')?.toString();
-    const contentId = getContextIdentifier(editorView?.state)?.objectId;
+    const contentId = basePluginState?.contextIdentifier?.objectId;
     const tabId = window.sessionStorage['awc.tab.id'];
     await openFeedbackDialog({
       ...this.getFeedbackInfo(),
@@ -253,4 +265,9 @@ export default class ToolbarFeedback extends PureComponent<Props, State> {
   private hasJquery = (): boolean => {
     return typeof window.jQuery !== 'undefined';
   };
+}
+
+export default function ToolbarFeedback(props: Props) {
+  const api = usePresetContext<[OptionalPlugin<BasePlugin>]>();
+  return <ToolbarFeedbackInternal api={api} {...props} />;
 }

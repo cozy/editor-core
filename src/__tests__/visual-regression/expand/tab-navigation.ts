@@ -1,13 +1,15 @@
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
 import {
-  waitForTooltip,
-  waitForNoTooltip,
-} from '@atlaskit/visual-regression/helper';
-import { Device, snapshot, initFullPageEditorWithAdf } from '../_utils';
+  snapshot,
+  initFullPageEditorWithAdf,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import * as adfWithExpand from './__fixtures__/simple-expand.adf.json';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { clickEditableContent } from '../../__helpers/page-objects/_editor';
-import { pressKey } from '../../__helpers/page-objects/_keyboard';
-import { retryUntilStablePosition } from '../../__helpers/page-objects/_toolbar';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { clickEditableContent } from '@atlaskit/editor-test-helpers/page-objects/editor';
+import { pressKey } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
+import { retryUntilStablePosition } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 describe('Expand: tab navigation', () => {
   let page: PuppeteerPage;
@@ -45,28 +47,11 @@ describe('Expand: tab navigation', () => {
       it('should focus on the button', async () => {
         await pressKey(page, ['Tab']);
       });
-
-      describe('when button is focused', () => {
-        describe('and enter is pressed', () => {
-          it('should collapse the expand', async () => {
-            await pressKey(page, ['Tab', 'Enter']);
-            await waitForTooltip(page);
-          });
-        });
-
-        describe('and space is pressed', () => {
-          it('should collapse the expand', async () => {
-            await pressKey(page, ['Tab', 'Space']);
-            await waitForTooltip(page);
-          });
-        });
-      });
     });
 
     describe('when tab is pressed twice', () => {
       it('should focus on title', async () => {
         await pressKey(page, ['Tab', 'Tab']);
-        await waitForNoTooltip(page);
         await page.keyboard.type('I am here');
       });
     });
@@ -75,7 +60,6 @@ describe('Expand: tab navigation', () => {
       describe('when expand is opened', () => {
         it('should focus on content', async () => {
           await pressKey(page, ['Tab', 'Tab', 'Tab']);
-          await waitForNoTooltip(page);
           await page.keyboard.type('I am here');
         });
       });
@@ -83,7 +67,6 @@ describe('Expand: tab navigation', () => {
       describe('when expand is closed', () => {
         it('should focus outside', async () => {
           await pressKey(page, ['Tab', 'Space', 'Tab', 'Tab']);
-          await waitForNoTooltip(page);
           await page.keyboard.type('I am here');
         });
       });

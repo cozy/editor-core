@@ -1,17 +1,18 @@
-import React from 'react';
+/** @jsx jsx */
+import { css, jsx } from '@emotion/react';
+import { token } from '@atlaskit/tokens';
 import Spinner from '@atlaskit/spinner';
-import styled from 'styled-components';
 
-const SpinnerWrapper = styled.div`
+const spinnerWrapper = css`
   display: flex;
   justify-content: center;
-  margin-top: 64px;
+  margin-top: ${token('space.800', '64px')};
 `;
 
 const LoadingState = () => (
-  <SpinnerWrapper>
+  <div css={spinnerWrapper} data-testid="ConfigPanelLoading">
     <Spinner size="small" />
-  </SpinnerWrapper>
+  </div>
 );
 
 export default LoadingState;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import ButtonGroup from '@atlaskit/button/button-group';
 import Button from '@atlaskit/button/standard-button';
 import { JSONTransformer } from '@atlaskit/editor-json-transformer';
@@ -9,7 +9,7 @@ import {
   LOCALSTORAGE_defaultDocKey,
   LOCALSTORAGE_defaultTitleKey,
 } from './5-full-page';
-import { EditorActions } from '../src';
+import type { EditorActions } from '../src';
 
 export const SaveAndCancelButtons = (props: {
   editorActions: EditorActions;
@@ -46,21 +46,27 @@ export default class ExampleEditor extends React.Component<Props> {
     super(props);
 
     // opens an iframe
-    if (window.top !== window.self) {
+    if (window.top && window.top !== window.self) {
       window.top.location.replace(location.href);
     }
   }
 
   render() {
-    return FullPageExample({
-      onChange: this.handleOnChange,
-      primaryToolbarComponents: (
-        <WithEditorActions
-          render={(actions) => <SaveAndCancelButtons editorActions={actions} />}
-        />
-      ),
-      onTitleChange: this.handleTitleChange,
-    });
+    return (
+      <FullPageExample
+        editorProps={{
+          onChange: this.handleOnChange,
+          primaryToolbarComponents: (
+            <WithEditorActions
+              render={(actions) => (
+                <SaveAndCancelButtons editorActions={actions} />
+              )}
+            />
+          ),
+        }}
+        onTitleChange={this.handleTitleChange}
+      />
+    );
   }
 
   private handleOnChange = (editorView: EditorView) => {

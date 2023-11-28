@@ -1,6 +1,7 @@
+/** @jsx jsx */
 import React from 'react';
-import styled from 'styled-components';
-import { EditorView } from 'prosemirror-view';
+import { css, jsx } from '@emotion/react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import { clickAreaClickHandler } from '../click-area-helper';
 
 /**
@@ -8,21 +9,24 @@ import { clickAreaClickHandler } from '../click-area-helper';
  * clicks/taps within or below the content (e.g. if the content
  * doesn't exceed the viewport, or whether it overflows it).
  */
-const ClickWrapper = styled.div<{
+const clickWrapper = ({
+  isExpanded,
+  minHeight,
+}: {
+  isExpanded?: boolean;
   minHeight: number;
-  persistScrollGutter?: boolean;
-}>`
+}) => css`
   height: 100%;
-  ${(props) =>
-    props.persistScrollGutter !== true && `min-height: ${props.minHeight}vh`}
+  ${isExpanded && minHeight ? `min-height: ${minHeight}px` : ''};
 `;
-ClickWrapper.displayName = 'ClickWrapper';
 
 export interface Props {
   editorView?: EditorView;
   minHeight: number;
   children?: any;
   persistScrollGutter?: boolean;
+  isExpanded?: boolean;
+  editorDisabled?: boolean;
 }
 
 /**
@@ -40,14 +44,17 @@ export interface Props {
  * whitespace at the end of the document when it overflows the viewport.
  */
 export default class ClickAreaMobile extends React.Component<Props> {
-  private clickElementRef = React.createRef<HTMLElement>();
+  private clickElementRef = React.createRef<HTMLDivElement>();
 
   private handleClick = (event: React.MouseEvent<any>) => {
-    const { editorView: view } = this.props;
+    const { editorView: view, editorDisabled } = this.props;
     if (!view) {
       return;
     }
-    clickAreaClickHandler(view, event);
+    if (!editorDisabled) {
+      // if the editor is disabled -- we don't want to intercept any click events
+      clickAreaClickHandler(view, event);
+    }
     const scrollGutterClicked =
       event.clientY > view.dom.getBoundingClientRect().bottom;
     // Reset the default prosemirror scrollIntoView logic by
@@ -62,15 +69,17 @@ export default class ClickAreaMobile extends React.Component<Props> {
 
   render() {
     return (
-      <ClickWrapper
+      <div
+        css={clickWrapper({
+          isExpanded: this.props.isExpanded,
+          minHeight: this.props.minHeight,
+        })}
         className="editor-click-wrapper"
-        minHeight={this.props.minHeight}
-        persistScrollGutter={this.props.persistScrollGutter}
         onClick={this.handleClick}
-        innerRef={this.clickElementRef}
+        ref={this.clickElementRef}
       >
         {this.props.children}
-      </ClickWrapper>
+      </div>
     );
   }
 }

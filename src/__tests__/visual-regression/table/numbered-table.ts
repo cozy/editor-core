@@ -1,23 +1,38 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickFirstCell,
   tableSelectors,
-} from '../../__helpers/page-objects/_table';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  Device,
   editorCommentContentSelector,
   initCommentEditorWithAdf,
   initFullPageEditorWithAdf,
   snapshot,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/numbered-table.adf.json';
 import tableWithContentAdf from './__fixtures__/numbered-table-with-content.adf.json';
 import multipleTablesAdf from './__fixtures__/numbered-table-multiple.adf.json';
-import { waitForFloatingControl } from '../../__helpers/page-objects/_toolbar';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import { THEME_MODES } from '@atlaskit/theme/constants';
+import { isElementBySelectorInDocument } from '../../../test-utils';
+
+const numberedColumnSelector = '.pm-table-numbered-column';
+const undefinedThreshold = {};
 
 describe('Snapshot Test: numbered table', () => {
   let page: PuppeteerPage;
+
+  const checkIsInsertRowButtonInDocument = async () => {
+    return await page.evaluate(
+      isElementBySelectorInDocument,
+      tableSelectors.insertRowButton,
+    );
+  };
 
   beforeAll(async () => {
     page = global.page;
@@ -61,11 +76,15 @@ describe('Snapshot Test: numbered table', () => {
         undefined,
         mode,
       );
+
+      await expect(checkIsInsertRowButtonInDocument()).resolves.toBeFalsy();
+
       await clickFirstCell(page, true);
       await waitForFloatingControl(page, 'Table floating controls');
       await page.hover(tableSelectors.nthRowControl(2));
       await page.waitForSelector(tableSelectors.insertRowButton);
-      await snapshot(page);
+
+      await expect(checkIsInsertRowButtonInDocument()).resolves.toBeTruthy();
     });
 
     it('should show numbered column correctly', async () => {
@@ -77,7 +96,8 @@ describe('Snapshot Test: numbered table', () => {
         undefined,
         mode,
       );
-      await snapshot(page);
+
+      await snapshot(page, undefinedThreshold, numberedColumnSelector);
     });
   });
 });

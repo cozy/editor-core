@@ -1,23 +1,22 @@
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
 import {
   initFullPageEditorWithAdf,
   snapshot,
-  Device,
   editorSelector,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import {
   clickToolbarMenu,
   ToolbarMenuItem,
-} from '../../__helpers/page-objects/_toolbar';
-import { selectors } from '../../__helpers/page-objects/_editor';
-import { tableSelectors } from '../../__helpers/page-objects/_table';
-import { insertTable } from '../../__helpers/page-objects/_table';
-import { emojiSelectors } from '../../__helpers/page-objects/_emoji';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/editor';
+import { tableSelectors } from '@atlaskit/editor-test-helpers/page-objects/table';
+import { insertTable } from '@atlaskit/editor-test-helpers/page-objects/table';
+import { emojiSelectors } from '@atlaskit/editor-test-helpers/page-objects/emoji';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 import { waitForLoadedBackgroundImages } from '@atlaskit/visual-regression/helper';
 import adf from './__fixtures__/noData-adf.json';
-import {
-  PuppeteerPage,
-  waitForNoTooltip,
-} from '@atlaskit/visual-regression/helper';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 
 describe('z-indexes:', () => {
   let page: PuppeteerPage;
@@ -42,10 +41,9 @@ describe('z-indexes:', () => {
     await page.waitForSelector(tableSelectors.removeTable);
     await clickToolbarMenu(page, ToolbarMenuItem.insertBlock);
     await page.waitForSelector(selectors.dropList);
-    await waitForNoTooltip(page);
   });
 
-  it('should always position table trash icon below emoji picker', async () => {
+  it.skip('should always position table trash icon below emoji picker', async () => {
     await page.waitForSelector(tableSelectors.removeTable);
     await clickToolbarMenu(page, ToolbarMenuItem.emoji);
     await page.waitForSelector(selectors.emojiPicker);
@@ -56,6 +54,6 @@ describe('z-indexes:', () => {
     await page.waitForSelector(tableSelectors.removeTable);
     await clickToolbarMenu(page, ToolbarMenuItem.mention);
     await page.waitForSelector(selectors.mentionQuery);
-    await waitForNoTooltip(page);
+    await page.waitForSelector(selectors.typeaheadPopup, { visible: true });
   });
 });

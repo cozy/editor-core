@@ -1,16 +1,19 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   snapshot,
   initEditorWithAdf,
   Appearance,
-  getBoundingClientRect,
-} from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { layoutSelectors } from '../../__helpers/page-objects/_layouts';
-import { decisionSelectors } from '../../__helpers/page-objects/_decision';
-import {
-  waitForFloatingControl,
-  retryUntilStablePosition,
-} from '../../__helpers/page-objects/_toolbar';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { getBoundingClientRect } from '@atlaskit/editor-test-helpers/vr-utils/bounding-client-rect';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { layoutSelectors } from '@atlaskit/editor-test-helpers/page-objects/layouts';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { decisionSelectors } from '@atlaskit/editor-test-helpers/page-objects/decision';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import * as col1 from './__fixtures__/column1-adf.json';
 import * as col2 from './__fixtures__/column2-adf.json';
 import * as col3 from './__fixtures__/column3-adf.json';
 import * as layoutWithAction from './__fixtures__/layout-with-action-adf.json';
@@ -19,17 +22,20 @@ import * as layoutWithDecisions from './__fixtures__/layout-with-decisions-adf.j
 import * as colLeftSidebar from './__fixtures__/columnLeftSidebar-adf.json';
 import * as colRightSidebar from './__fixtures__/columnRightSidebar-adf.json';
 import * as col3WithSidebars from './__fixtures__/column3WithSidebars-adf.json';
-import { layoutToolbarTitle } from '../../../plugins/layout/toolbar';
+
+// Copied from 'packages/editor/editor-plugin-layout/src/toolbar.ts`
+const layoutToolbarTitle = 'Layout floating controls';
 
 describe('Layouts:', () => {
   let page: PuppeteerPage;
 
   const layouts = [
-    { name: '2 columns', adf: col2 },
-    { name: '3 columns', adf: col3 },
-    { name: 'left sidebar', adf: colLeftSidebar },
-    { name: 'right sidebar', adf: colRightSidebar },
-    { name: '3 columns with sidebars', adf: col3WithSidebars },
+    ['1 column', col1],
+    ['2 columns', col2],
+    ['3 columns', col3],
+    ['left sidebar', colLeftSidebar],
+    ['right sidebar', colRightSidebar],
+    ['3 columns with sidebars', col3WithSidebars],
   ];
 
   const smallViewport = { width: 768, height: 400 };
@@ -44,45 +50,47 @@ describe('Layouts:', () => {
       adf,
       viewport,
       editorProps: {
-        allowLayouts: { allowBreakout: true, UNSAFE_addSidebarLayouts: true },
+        allowLayouts: {
+          allowBreakout: true,
+          UNSAFE_addSidebarLayouts: true,
+          UNSAFE_allowSingleColumnLayout: true,
+        },
       },
     });
 
-  beforeAll(async () => {
+  beforeAll(() => {
     page = global.page;
   });
 
   afterEach(async () => {
     await waitForFloatingControl(page, layoutToolbarTitle);
     await snapshot(page);
+
     // Click away to remove floating control so it gets reset between
     // viewport resizes.
     // This avoids test flakiness from misaligned toolbar anchorage.
-    await page.mouse.move(0, 0);
+    await page.mouse.click(0, 0);
+    // As part if the page reset we need to ensure nothing is selected before the next test runs.
+    await page.evaluate(() => document.getSelection()?.removeAllRanges());
   });
 
-  layouts.forEach((layout) => {
-    describe(layout.name, () => {
-      it('should correctly render layout on laptop', async () => {
-        await initEditor(layout.adf, largeViewport);
-        await retryUntilStablePosition(
-          page,
-          () => page.click(layoutSelectors.column),
-          `[aria-label*="${layoutToolbarTitle}"]`,
-          1000,
-          true,
-        );
-      });
+  describe.each(layouts)(`%s`, (_name, adf) => {
+    it('should correctly render layout on laptop', async () => {
+      await initEditor(adf, largeViewport);
+      await page.waitForSelector(layoutSelectors.column);
+      await page.click(layoutSelectors.column);
+    });
 
-      it('should stack layout on smaller screen', async () => {
-        await initEditor(layout.adf, smallViewport);
-        await page.click(layoutSelectors.column);
-      });
+    it('should stack layout on smaller screen', async () => {
+      await initEditor(adf, smallViewport);
+      await page.waitForSelector(layoutSelectors.column);
+      await page.click(layoutSelectors.column);
     });
   });
 
   it('should actions placeholder not overflow the layout', async () => {
     await initEditor(layoutWithAction, largeViewport);
+    await page.waitForSelector(layoutSelectors.column);
     await page.click(layoutSelectors.column);
   });
 
@@ -92,7 +100,14 @@ describe('Layouts:', () => {
       page,
       layoutSelectors.section,
     );
-    await page.mouse.click(contentBoundingRect.left, contentBoundingRect.top);
+    // prosemirror-bump-fix
+    // The posAtCoords after prosemirror-view@1.30.2 has a slight adjust
+    // to figure out if the user is clicking at the node or on its side.
+    // Hence, this small offset guarantees a click inside the node then the selection created will be a node one
+    await page.mouse.click(
+      contentBoundingRect.left + 1,
+      contentBoundingRect.top + 1,
+    );
   });
 
   describe('decisions', () => {

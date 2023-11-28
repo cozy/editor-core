@@ -1,27 +1,28 @@
 import { uuid } from '@atlaskit/adf-schema';
-import {
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   emoji,
   p,
   taskItem,
   taskList,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { compareSelection } from '@atlaskit/editor-test-helpers/selection';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import sendKeyToPm, {
   testKeymap,
 } from '@atlaskit/editor-test-helpers/send-key-to-pm';
-
 import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 import { grinEmoji } from '@atlaskit/util-data-test/emoji-samples';
-
-import { emojiPluginKey } from '../../../../../plugins/emoji';
-import { isEmptyTaskDecision } from '../../../../../plugins/tasks-and-decisions/pm-plugins/helpers';
+import { isEmptyTaskDecision } from '../../../pm-plugins/helpers';
 
 import { ListTypes } from './_helpers';
 
@@ -50,7 +51,6 @@ describe('tasks and decisions - keymaps', () => {
         allowNestedTasks: true,
         emojiProvider: new Promise(() => {}),
       },
-      pluginKey: emojiPluginKey,
       createAnalyticsEvent,
     });
   };

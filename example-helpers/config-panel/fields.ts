@@ -155,7 +155,7 @@ export const nativeFields: FieldDefinition[] = [
     type: 'enum',
     label: 'Select with icons (multiple)',
     description: 'Pick many',
-    defaultValue: ['a', 'b'],
+    defaultValue: ['a', 'b', 'long'],
     style: 'select',
     placeholder: 'Selected options go here',
     isMultiple: true,
@@ -169,6 +169,12 @@ export const nativeFields: FieldDefinition[] = [
       {
         label: 'Option B',
         value: 'b',
+        description: 'Many people like this one',
+        icon: 'https://i.picsum.photos/id/240/24/24.jpg',
+      },
+      {
+        label: 'Option Long, a really long label (longer than we expected)',
+        value: 'long',
         description: 'Many people like this one',
         icon: 'https://i.picsum.photos/id/240/24/24.jpg',
       },
@@ -455,7 +461,7 @@ export const nativeFields: FieldDefinition[] = [
     label: 'awesome expand field',
     fields: [
       {
-        name: 'enum-select',
+        name: 'enum-select-expand',
         type: 'enum',
         label: 'Select one',
         isRequired: true,
@@ -469,7 +475,7 @@ export const nativeFields: FieldDefinition[] = [
         ],
       },
       {
-        name: 'enum-select-icon',
+        name: 'enum-select-icon-expand',
         type: 'enum',
         label: 'Select with icons',
         description: 'Pick one',

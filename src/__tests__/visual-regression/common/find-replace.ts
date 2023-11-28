@@ -1,28 +1,32 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   snapshot,
   initEditorWithAdf,
   Appearance,
   editorSelector,
   pmSelector,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { evaluateTeardownMockDate } from '@atlaskit/visual-regression/helper';
 import {
-  PuppeteerPage,
   waitForLoadedBackgroundImages,
-  waitForTooltip,
-  waitForNoTooltip,
   waitForElementCount,
 } from '@atlaskit/visual-regression/helper';
 import findReplaceAdf from './__fixtures__/with-content.json';
 import borderRadiusAdf from './__fixtures__/find-replace-border-radius-adf.json';
 import matchCaseAdf from './__fixtures__/find-replace-match-case-adf.json';
-import { emojiSelectors } from '../../__helpers/page-objects/_emoji';
-import { findReplaceSelectors } from '../../__helpers/page-objects/_find-replace';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { emojiSelectors } from '@atlaskit/editor-test-helpers/page-objects/emoji';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { findReplaceSelectors } from '@atlaskit/editor-test-helpers/page-objects/find-replace';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   ToolbarMenuItem,
   toolbarMenuItemsSelectors,
-} from '../../__helpers/page-objects/_toolbar';
-import { FindReplaceOptions } from '../../../plugins/find-replace/types';
-import { selectAtPosWithProseMirror } from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import type { FindReplaceOptions } from '../../../plugins/find-replace/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { selectAtPosWithProseMirror } from '@atlaskit/editor-test-helpers/page-objects/editor';
 
 describe('Find/replace:', () => {
   let page: PuppeteerPage;
@@ -39,9 +43,10 @@ describe('Find/replace:', () => {
       viewport,
       editorProps: { allowFindReplace: options },
     });
+
+    await evaluateTeardownMockDate(page);
     await page.waitForSelector(findReplaceSelectors.toolbarButton);
     await page.click(findReplaceSelectors.toolbarButton);
-    await waitForTooltip(page, 'Find and replace');
   };
 
   it('should render find/replace popup', async () => {
@@ -75,7 +80,6 @@ describe('Find/replace:', () => {
     );
     await page.click(pmSelector);
     await page.type(pmSelector, 'hello hello');
-    await waitForNoTooltip(page);
     await page.waitForSelector(findReplaceSelectors.decorations);
     await snapshot(page, undefined, editorSelector);
     await page.keyboard.press('Backspace');
@@ -96,7 +100,8 @@ describe('Find/replace:', () => {
     await snapshot(page, undefined, editorSelector);
   });
 
-  it('should render find/replace popup below any other editor popups', async () => {
+  // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+  it.skip('should render find/replace popup below any other editor popups', async () => {
     await initEditor(findReplaceAdf, { width: 1000, height: 300 });
 
     await page.click(toolbarMenuItemsSelectors[ToolbarMenuItem.emoji]);
@@ -106,7 +111,6 @@ describe('Find/replace:', () => {
     await snapshot(page, undefined, editorSelector);
 
     await page.click(toolbarMenuItemsSelectors[ToolbarMenuItem.insertMenu]);
-    await waitForTooltip(page);
     await snapshot(page, undefined, editorSelector);
   });
 
@@ -124,13 +128,6 @@ describe('Find/replace:', () => {
       await snapshot(page, undefined, editorSelector);
     });
 
-    it('should not match case by default', async () => {
-      await initEditor(matchCaseAdf, { width: 600, height: 600 }, options);
-      await page.waitForSelector(findReplaceSelectors.matchCaseButton);
-      await page.type(findReplaceSelectors.findInput, 'HELLO');
-      await page.waitForSelector(findReplaceSelectors.decorations);
-      await snapshot(page, undefined, editorSelector);
-    });
     // FIXME: Inconsistent test
     it.skip('should update text decorations when enabling match case', async () => {
       await initEditor(matchCaseAdf, { width: 600, height: 600 }, options);

@@ -1,13 +1,12 @@
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+import { getBoundingClientRect } from '@atlaskit/editor-test-helpers/vr-utils/bounding-client-rect';
 import {
-  Device,
-  getBoundingClientRect,
   initFullPageEditorWithAdf,
   snapshot,
-} from '../_utils';
-import {
-  PuppeteerPage,
-  waitForLoadedBackgroundImages,
-} from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { waitForLoadedBackgroundImages } from '@atlaskit/visual-regression/helper';
 import {
   expandADF,
   mediaInExpandADF,
@@ -17,38 +16,35 @@ import {
   wrappingMediaADF,
 } from './__fixtures__/expand-adf';
 import * as simpleExpandAdf from './__fixtures__/simple-expand.adf.json';
-import { selectors } from '../../__helpers/page-objects/_expand';
-import { emojiSelectors } from '../../__helpers/page-objects/_emoji';
+import { selectors } from '@atlaskit/editor-test-helpers/page-objects/expand';
+import {
+  emojiSelectors,
+  waitForEmojisToLoad,
+} from '@atlaskit/editor-test-helpers/page-objects/emoji';
 import {
   clickFirstCell,
   tableSelectors,
-} from '../../__helpers/page-objects/_table';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
 import {
   resizeMediaInPositionWithSnapshot,
   waitForMediaToBeLoaded,
-} from '../../__helpers/page-objects/_media';
-import { getBoundingRect } from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/media';
+import {
+  getBoundingRect,
+  animationFrame,
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
 import expandBreakoutAdf from './__fixtures__/expand-breakout.adf.json';
 import nestedExpandAdf from './__fixtures__/nested-expand.adf.json';
-import { waitForFloatingControl } from '../../__helpers/page-objects/_toolbar';
-import { toggleBreakout } from '../../__helpers/page-objects/_layouts';
-import { selectionSelectors } from '../../__helpers/page-objects/_selection';
+import { waitForFloatingControl } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+import { toggleBreakout } from '@atlaskit/editor-test-helpers/page-objects/layouts';
+import { selectionSelectors } from '@atlaskit/editor-test-helpers/page-objects/selection';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 const themes = ['light', 'dark'];
 
 function getTheme(theme: any) {
   return theme === 'dark' ? 'dark' : 'light';
 }
-
-const hideTooltip = async (page: PuppeteerPage) => {
-  // Hide the tooltip
-  const css = `
- .Tooltip {
-   opacity: 0 !important;
- }
-`;
-  await page.addStyleTag({ content: css });
-};
 
 describe('Expand: full-page', () => {
   let page: PuppeteerPage;
@@ -58,7 +54,9 @@ describe('Expand: full-page', () => {
   });
 
   afterEach(async () => {
-    await snapshot(page, undefined, selectors.expand);
+    await snapshot(page, undefined, selectors.expand, {
+      captureBeyondViewport: false,
+    });
   });
 
   /**
@@ -66,8 +64,7 @@ describe('Expand: full-page', () => {
    */
   describe.each(themes)('Theme: %s', (theme) => {
     describe.each(['default', 'wide', 'full-width'])('Breakout: %s', (mode) => {
-      // FIXME These tests were flakey in the Puppeteer v10 Upgrade
-      it.skip(`should render a ${mode} collapsed top level expand`, async () => {
+      it(`should render a ${mode} collapsed top level expand`, async () => {
         await initFullPageEditorWithAdf(
           page,
           expandADF(mode),
@@ -77,11 +74,7 @@ describe('Expand: full-page', () => {
           getTheme(theme),
         );
         await page.waitForSelector(selectors.expand);
-        await waitForLoadedBackgroundImages(
-          page,
-          emojiSelectors.standard,
-          10000,
-        );
+        await waitForEmojisToLoad(page);
       });
     });
 
@@ -95,7 +88,6 @@ describe('Expand: full-page', () => {
         getTheme(theme),
       );
       await page.waitForSelector(selectors.expand);
-      await hideTooltip(page);
       await page.click(selectors.expandToggle);
       await page.hover(selectors.expandTitleInput);
       await waitForLoadedBackgroundImages(page, emojiSelectors.standard);
@@ -129,7 +121,8 @@ describe('Expand: full-page', () => {
       await waitForLoadedBackgroundImages(page, emojiSelectors.standard);
     });
 
-    it('should display expand as selected when click on padding', async () => {
+    // TODO: Unskip flaky tests (ED-15254)
+    it.skip('should display expand as selected when click on padding', async () => {
       await initFullPageEditorWithAdf(
         page,
         simpleExpandAdf,
@@ -154,7 +147,6 @@ describe('Expand: full-page', () => {
   it('should collapse the top level expand on click', async () => {
     await initFullPageEditorWithAdf(page, expandADF(), Device.LaptopMDPI);
     await page.waitForSelector(selectors.expand);
-    await hideTooltip(page);
     await page.click(selectors.expandToggle);
     await waitForLoadedBackgroundImages(page, emojiSelectors.standard);
   });
@@ -194,7 +186,9 @@ describe('Expand: Selection', () => {
     });
 
     afterEach(async () => {
-      await snapshot(page);
+      await snapshot(page, undefined, undefined, {
+        captureBeyondViewport: false,
+      });
     });
 
     it('shows the breakout button when selected', async () => {
@@ -217,20 +211,23 @@ describe('Expand: Selection', () => {
       await page.hover(selectors.removeButton);
     });
 
-    it.skip('keeps node selection when breakout changed', async () => {
+    it('keeps node selection when breakout changed', async () => {
       await page.waitForSelector(selectors.expand);
 
       const bounds = await getBoundingRect(page, selectors.expand);
       const middleTopX = bounds.left + bounds.width / 2;
       await page.mouse.click(middleTopX, bounds.top);
+      await animationFrame(page);
       await page.waitForSelector(selectors.removeButton);
 
       await waitForFloatingControl(page, 'Go wide', undefined, false);
       await toggleBreakout(page, 1);
+      await animationFrame(page);
       await page.waitForSelector('div[aria-label="Go full width"]');
     });
 
-    it('displays nested expand as selected when clicked', async () => {
+    // FIXME: This test was automatically skipped due to failure on 02/10/2023: https://product-fabric.atlassian.net/browse/ED-20262
+    it.skip('displays nested expand as selected when clicked', async () => {
       await initFullPageEditorWithAdf(page, nestedExpandAdf, Device.LaptopMDPI);
       await page.waitForSelector(selectors.nestedExpand);
       const contentBoundingRect = await getBoundingClientRect(
@@ -242,6 +239,7 @@ describe('Expand: Selection', () => {
         contentBoundingRect.top + 5,
       );
       await page.waitForSelector(selectionSelectors.selectedNode);
+      await waitForFloatingControl(page, 'Expand toolbar');
     });
   });
 });
@@ -263,17 +261,15 @@ describe('Expand: Media', () => {
     await snapshot(page);
   });
 
-  // FIXME These tests were flakey in the Puppeteer v10 Upgrade
-  it.skip('should not show grid lines when re-sizing inside an expand', async () => {
+  it('should not show grid lines when re-sizing inside an expand', async () => {
     await initFullPageEditorWithAdf(page, mediaInExpandADF, Device.LaptopMDPI);
     await page.waitForSelector(selectors.expand);
     await waitForMediaToBeLoaded(page);
-    await page.click('[data-testid="media-file-card-view"] .img-wrapper');
+    await page.click('[data-testid="media-file-card-view"]');
     await resizeMediaInPositionWithSnapshot(page, 0, 50);
   });
 
-  // FIXME These tests were flakey in the Puppeteer v10 Upgrade
-  it.skip('should not show grid lines when re-sizing inside a nested expand', async () => {
+  it('should not show grid lines when re-sizing inside a nested expand', async () => {
     await initFullPageEditorWithAdf(
       page,
       mediaInNestedExpandADF,
@@ -281,7 +277,7 @@ describe('Expand: Media', () => {
     );
     await page.waitForSelector(selectors.nestedExpand);
     await waitForMediaToBeLoaded(page);
-    await page.click('[data-testid="media-file-card-view"] .img-wrapper');
+    await page.click('[data-testid="media-file-card-view"]');
     await resizeMediaInPositionWithSnapshot(page, 0, 50);
   });
 });

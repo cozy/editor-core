@@ -1,12 +1,16 @@
-import React from 'react';
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
 import { PureComponent } from 'react';
-import { injectIntl, InjectedIntlProps } from 'react-intl';
-import { MessageDescriptor } from '../../types/i18n';
-import { AlignmentState } from '../../plugins/alignment/pm-plugins/types';
-import { iconMap } from '../../plugins/alignment/ui/ToolbarAlignment/icon-map';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
+import type { MessageDescriptor } from '../../types/i18n';
+import type { AlignmentState } from '../../plugins/alignment/pm-plugins/types';
+import { IconMap } from '../../plugins/alignment/ui/ToolbarAlignment/icon-map';
 import AlignmentButton from './AlignmentButton';
-import { alignmentMessages } from './messages';
-import { AlignmentWrapper } from './styles';
+import { alignmentMessages } from '@atlaskit/editor-common/messages';
+import { alignmentWrapper } from './styles';
+import type { Keymap } from '../../keymaps';
+import { alignLeft } from '../../keymaps';
 
 export interface Props {
   selectedAlignment?: string;
@@ -16,34 +20,39 @@ export interface Props {
 
 const alignmentOptions: Array<{
   title: MessageDescriptor;
+  shortcut?: Keymap;
   value: AlignmentState;
 }> = [
-  { title: alignmentMessages.alignLeft, value: 'start' },
-  { title: alignmentMessages.alignCenter, value: 'center' },
+  { title: alignmentMessages.alignLeft, shortcut: alignLeft, value: 'start' },
+  {
+    title: alignmentMessages.alignCenter,
+    value: 'center',
+  },
   { title: alignmentMessages.alignRight, value: 'end' },
 ];
 
-class Alignment extends PureComponent<Props & InjectedIntlProps> {
+class Alignment extends PureComponent<Props & WrappedComponentProps> {
   render() {
     const { onClick, selectedAlignment, className, intl } = this.props;
 
     return (
-      <AlignmentWrapper className={className} style={{ maxWidth: 3 * 32 }}>
+      <div css={alignmentWrapper} className={className}>
         {alignmentOptions.map((alignment) => {
-          const { value, title } = alignment;
+          const { value, title, shortcut } = alignment;
           const message = intl.formatMessage(title);
           return (
             <AlignmentButton
-              content={iconMap[value]}
+              content={<IconMap alignment={value} />}
               key={value}
               value={value}
               label={message}
+              shortcut={shortcut}
               onClick={onClick}
               isSelected={value === selectedAlignment}
             />
           );
         })}
-      </AlignmentWrapper>
+      </div>
     );
   }
 }

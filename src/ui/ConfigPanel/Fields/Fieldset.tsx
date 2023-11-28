@@ -1,13 +1,14 @@
-import React from 'react';
-import styled from 'styled-components';
-import { injectIntl, InjectedIntlProps } from 'react-intl';
+/** @jsx jsx */
+import React, { Fragment } from 'react';
+import { css, jsx } from '@emotion/react';
+import { injectIntl, WrappedComponentProps } from 'react-intl-next';
 
 import SectionMessage from '@atlaskit/section-message';
 import Button from '@atlaskit/button/custom-theme-button';
 import Select from '@atlaskit/select';
 import AddCircleIcon from '@atlaskit/icon/glyph/add-circle';
 
-import { ExtensionManifest } from '@atlaskit/editor-common';
+import type { ExtensionManifest } from '@atlaskit/editor-common/extensions';
 
 import {
   Fieldset,
@@ -16,9 +17,7 @@ import {
 } from '@atlaskit/editor-common/extensions';
 
 import { messages } from '../messages';
-// eslint-disable-next-line import/no-cycle
-import FormContent from '../FormContent';
-import { OnFieldChange } from '../types';
+import { FormContentProps, OnFieldChange } from '../types';
 import { getNameFromDuplicateField, isDuplicateField } from '../utils';
 
 type OptionType = {
@@ -26,14 +25,13 @@ type OptionType = {
   value: string;
 };
 
-import { gridSize } from '@atlaskit/theme/constants';
-import { multiply } from '@atlaskit/theme/math';
 import { N40A } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 
-const ActionsWrapper = styled.div`
-  border-top: 1px solid ${N40A};
-  margin-top: ${multiply(gridSize, 2)}px;
-  padding-top: ${multiply(gridSize, 2)}px;
+const actionsWrapper = css`
+  border-top: 1px solid ${token('color.border', N40A)};
+  margin-top: ${token('space.200', '16px')};
+  padding-top: ${token('space.200', '16px')};
 `;
 
 const populateFromParameters = (
@@ -96,7 +94,8 @@ type Props = {
   onFieldChange: OnFieldChange;
   firstVisibleFieldName?: string;
   error?: string;
-} & InjectedIntlProps;
+  formComponent: (props: FormContentProps) => JSX.Element;
+} & WrappedComponentProps;
 
 type State = {
   isAdding: boolean;
@@ -275,6 +274,7 @@ class FieldsetField extends React.Component<Props, State> {
       onFieldChange,
       firstVisibleFieldName,
       error,
+      formComponent: FormComponent,
     } = this.props;
 
     const { label, options } = field;
@@ -282,12 +282,12 @@ class FieldsetField extends React.Component<Props, State> {
     const children = this.renderActions();
 
     return (
-      <>
+      <Fragment>
         {error && <FieldsetError message={error} />}
         <div>
           {options.showTitle && <h5>{label}</h5>}
 
-          <FormContent
+          <FormComponent
             fields={selectedFields}
             parentName={name}
             extensionManifest={extensionManifest}
@@ -299,27 +299,27 @@ class FieldsetField extends React.Component<Props, State> {
           />
 
           {children && (
-            <ActionsWrapper testId="fieldset-actions">
+            <div css={actionsWrapper} data-testId="fieldset-actions">
               {children}
-            </ActionsWrapper>
+            </div>
           )}
         </div>
-      </>
+      </Fragment>
     );
   }
 }
 
 function FieldsetError({ message }: { message: string }) {
   return (
-    <SectionMessageWrapper>
+    <div css={sectionMessageWrapper}>
       <SectionMessage appearance="error">
         <p>{message}</p>
       </SectionMessage>
-    </SectionMessageWrapper>
+    </div>
   );
 }
 
-const SectionMessageWrapper = styled.div`
+const sectionMessageWrapper = css`
   margin-bottom: 24px;
 `;
 

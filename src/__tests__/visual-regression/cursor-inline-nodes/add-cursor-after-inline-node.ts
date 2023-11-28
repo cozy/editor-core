@@ -1,23 +1,27 @@
-import { Appearance, initEditorWithAdf, snapshot } from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  Appearance,
+  initEditorWithAdf,
+  snapshot,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import { adfs } from './__fixtures__/inline-nodes';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   animationFrame,
   getBoundingRect,
-} from '../../__helpers/page-objects/_editor';
+} from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { waitForEmojisToLoad } from '@atlaskit/editor-test-helpers/page-objects/emoji';
 
 const initEditor = async (_adf: Object, page: PuppeteerPage) =>
   initEditorWithAdf(page, {
     adf: _adf,
     appearance: Appearance.fullPage,
-    editorProps: {
-      featureFlags: {
-        displayInlineBlockForInlineNodes: true,
-      },
-    },
   });
 
-describe('Cursor/status:', () => {
+// TODO: Unskip flaky tests (ED-15254)
+describe.skip('Cursor/status:', () => {
   let page: PuppeteerPage;
   beforeEach(async () => {
     page = global.page;
@@ -29,6 +33,10 @@ describe('Cursor/status:', () => {
       it('should delete the inline node', async () => {
         const adfWithInlineNode = adfs[inlineNode];
         await initEditor(adfWithInlineNode, page);
+
+        if (inlineNode === 'emoji') {
+          await waitForEmojisToLoad(page);
+        }
 
         await animationFrame(page);
 

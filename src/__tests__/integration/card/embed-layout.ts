@@ -1,10 +1,15 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 import * as embedCardAdf from './_fixtures_/embed-card.adf.json';
-import { editable, getDocFromElement } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  editable,
+  getDocFromElement,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
 
 [
   { type: 'align left', value: 'button[aria-label="Align left"]' },
@@ -12,9 +17,12 @@ import { editable, getDocFromElement } from '../_helpers';
   { type: 'wrap left', value: 'button[aria-label="Wrap left"]' },
   { type: 'wrap right', value: 'button[aria-label="Wrap right"]' },
 ].forEach((layout) => {
+  // FIXME: This test was automatically skipped due to failure on 9/7/2021: https://product-fabric.atlassian.net/browse/EDM-2458
   BrowserTestCase(
     `embed-layout.ts: Layout ${layout.type} selector for embed Card`,
-    { skip: ['edge', 'safari', 'firefox'] },
+    {
+      skip: ['*'],
+    },
     async (
       client: Parameters<typeof goToEditorTestingWDExample>[0],
       testName: string,

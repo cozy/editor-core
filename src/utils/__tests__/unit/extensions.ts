@@ -1,15 +1,16 @@
-import { EditorState } from 'prosemirror-state';
-import {
-  DefaultExtensionProvider,
+import type { EditorState } from '@atlaskit/editor-prosemirror/state';
+import { DefaultExtensionProvider } from '@atlaskit/editor-common/extensions';
+import type {
   ExtensionManifest,
   ExtensionModule,
   ExtensionProvider,
-} from '@atlaskit/editor-common';
-import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next/types';
+} from '@atlaskit/editor-common/extensions';
+import type { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createFakeExtensionManifest } from '@atlaskit/editor-test-helpers/extensions';
 
 import { extensionProviderToQuickInsertProvider } from '../../extensions';
-import EditorActions from '../../../actions';
+import type EditorActions from '../../../actions';
 
 function replaceCustomQuickInsertModules(
   manifest: ExtensionManifest,
@@ -64,7 +65,7 @@ describe('#extensionProviderToQuickInsertProvider', () => {
     const quickInsertProvider = await extensionProviderToQuickInsertProvider(
       dummyExtensionProvider,
       {} as EditorActions,
-      (createAnalyticsEvent as unknown) as CreateUIAnalyticsEvent,
+      createAnalyticsEvent as unknown as CreateUIAnalyticsEvent,
     );
 
     const items = await quickInsertProvider.getItems();
@@ -111,8 +112,8 @@ describe('#extensionProviderToQuickInsertProvider', () => {
       const createAnalyticsEvent = jest.fn(() => ({ fire() {} }));
       const quickInsertProvider = await extensionProviderToQuickInsertProvider(
         dummyExtensionProvider,
-        ({ replaceSelection: () => {} } as unknown) as EditorActions,
-        (createAnalyticsEvent as unknown) as CreateUIAnalyticsEvent,
+        { replaceSelection: () => {} } as unknown as EditorActions,
+        createAnalyticsEvent as unknown as CreateUIAnalyticsEvent,
       );
 
       const items = await quickInsertProvider.getItems();

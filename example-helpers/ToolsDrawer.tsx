@@ -1,5 +1,7 @@
+/** @jsx jsx */
+import { jsx } from '@emotion/react';
 import React from 'react';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import {
   currentUser,
   getEmojiProvider,
@@ -10,17 +12,20 @@ import Button from '@atlaskit/button/custom-theme-button';
 import Tooltip from '@atlaskit/tooltip';
 
 import { MockActivityResource } from './activity-provider';
-import { Content, ButtonGroup } from './styles';
+import { content, buttonGroup } from './styles';
 import imageUploadHandler from './imageUpload';
 
-import { TeamMentionResource, MentionResource, EmojiResource } from '../src';
+import { TeamMentionResource, MentionResource } from '../src';
+import { EmojiResource } from '@atlaskit/emoji/resource';
 import { toJSON } from '../src/utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorMediaMock } from '@atlaskit/editor-test-helpers/media-mock';
 
 import { AnalyticsListener } from '@atlaskit/analytics-next';
-import { SmartMentionResource, SmartMentionConfig } from '@atlaskit/mention';
 
 const mediaMock = createEditorMediaMock();
 const rejectedPromise = Promise.reject(
@@ -43,26 +48,14 @@ const userMentionConfig = {
   productId: 'micros-group/confluence',
 };
 
-const smartMentionConfig: SmartMentionConfig = {
-  env: 'local',
-  productKey: 'confluence',
-  siteId: 'DUMMY-a5a01d21-1cc3-4f29-9565-f2bb8cd969f5',
-  includeGroups: true,
-  includeTeams: true,
-  principalId: 'Context',
-};
-
 const providers = {
   mentionProvider: {
     resolved: Promise.resolve(mentionResourceProvider),
-    external: Promise.resolve(new MentionResource(userMentionConfig)),
+    external: Promise.resolve(() => new MentionResource(userMentionConfig)),
     pending: pendingPromise,
     rejected: rejectedPromise,
     teamMentionResource: Promise.resolve(
-      new TeamMentionResource(userMentionConfig, teamMentionConfig),
-    ),
-    smartMentionResource: Promise.resolve(
-      new SmartMentionResource(smartMentionConfig),
+      () => new TeamMentionResource(userMentionConfig, teamMentionConfig),
     ),
     undefined: undefined,
   },
@@ -72,17 +65,18 @@ const providers = {
       currentUser,
     }),
     external: Promise.resolve(
-      new EmojiResource({
-        providers: [
-          {
-            url: 'https://api-private.stg.atlassian.com/emoji/standard',
-          },
-          {
-            url: `https://api-private.stg.atlassian.com/emoji/${testCloudId}/site`,
-          },
-        ],
-        allowUpload: true,
-      }),
+      () =>
+        new EmojiResource({
+          providers: [
+            {
+              url: 'https://api-private.stg.atlassian.com/emoji/standard',
+            },
+            {
+              url: `https://api-private.stg.atlassian.com/emoji/${testCloudId}/site`,
+            },
+          ],
+          allowUpload: true,
+        }),
     ),
     pending: pendingPromise,
     rejected: rejectedPromise,
@@ -102,17 +96,12 @@ const providers = {
   },
   mediaProvider: {
     resolved: storyMediaProviderFactory(),
-    'resolved (no auth provider)': storyMediaProviderFactory({
-      useMediaPickerAuthProvider: false,
-    }),
+    'resolved (no auth provider)': storyMediaProviderFactory(),
 
     pending: pendingPromise,
     rejected: rejectedPromise,
     'view only': storyMediaProviderFactory({
       includeUploadMediaClientConfig: false,
-    }),
-    'w/o userAuthProvider': storyMediaProviderFactory({
-      includeUserAuthProvider: false,
     }),
 
     undefined: undefined,
@@ -133,12 +122,10 @@ const providers = {
 rejectedPromise.catch(() => {});
 
 export type ToolbarFeatures = {
-  dynamicTextSizing: boolean;
   imageResizing: boolean;
 };
 
 const enabledFeatureNames: { [P in keyof ToolbarFeatures]: string } = {
-  dynamicTextSizing: 'dynamic text sizing',
   imageResizing: 'image resizing',
 };
 
@@ -180,7 +167,6 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
       jsonDocument: '{}',
       mediaMockEnabled: false,
       enabledFeatures: {
-        dynamicTextSizing: false,
         imageResizing: false,
       },
     };
@@ -253,7 +239,7 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
             channel="fabric-elements"
             onEvent={(e: any) => console.log(e)}
           >
-            <Content>
+            <div css={content}>
               <div style={{ padding: '5px 0' }}>
                 ️️️⚠️ Atlassians, for Media integration to work in non-mocked
                 state, make sure you're logged into{' '}
@@ -285,7 +271,7 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
                 {(Object.keys(providers) as Array<keyof typeof providers>).map(
                   (providerKey) => (
                     <div key={providerKey}>
-                      <ButtonGroup>
+                      <span css={buttonGroup}>
                         <label>{providerKey}: </label>
                         {Object.keys(providers[providerKey]).map(
                           (providerStateName) => (
@@ -310,12 +296,12 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
                             </Button>
                           ),
                         )}
-                      </ButtonGroup>
+                      </span>
                     </div>
                   ),
                 )}
                 <div>
-                  <ButtonGroup>
+                  <span css={buttonGroup}>
                     <Button onClick={this.toggleDisabled} spacing="compact">
                       {this.state.editorEnabled
                         ? 'Disable editor'
@@ -329,9 +315,11 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
                       Reload Editor
                     </Button>
 
-                    {(Object.keys(enabledFeatureNames) as Array<
-                      keyof typeof enabledFeatureNames
-                    >).map((key) => (
+                    {(
+                      Object.keys(enabledFeatureNames) as Array<
+                        keyof typeof enabledFeatureNames
+                      >
+                    ).map((key) => (
                       <Button
                         key={key}
                         onClick={() => this.toggleFeature(key)}
@@ -357,14 +345,14 @@ export default class ToolsDrawer extends React.Component<Props & any, State> {
                         Mock
                       </Button>
                     </Tooltip>
-                  </ButtonGroup>
+                  </span>
                 </div>
               </div>
               <div className="json-output">
                 <legend>JSON output:</legend>
                 <pre>{jsonDocument}</pre>
               </div>
-            </Content>
+            </div>
           </AnalyticsListener>
         </AnalyticsListener>
       </AnalyticsListener>

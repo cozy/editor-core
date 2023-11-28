@@ -1,17 +1,20 @@
-import { keymap } from 'prosemirror-keymap';
-import { Plugin } from 'prosemirror-state';
+import { keymap } from '@atlaskit/editor-prosemirror/keymap';
+import type { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
 import { bindKeymapWithCommand, addInlineComment } from '../../../keymaps';
 import { setInlineCommentDraftState } from '../commands';
-import { INPUT_METHOD } from '../../analytics';
+import { INPUT_METHOD } from '@atlaskit/editor-common/analytics';
 
-export function keymapPlugin(): Plugin {
+export function keymapPlugin(
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined,
+): SafePlugin {
   const list = {};
 
   bindKeymapWithCommand(
     addInlineComment.common!,
-    setInlineCommentDraftState(true, INPUT_METHOD.SHORTCUT),
+    setInlineCommentDraftState(editorAnalyticsAPI)(true, INPUT_METHOD.SHORTCUT),
     list,
   );
 
-  return keymap(list);
+  return keymap(list) as SafePlugin;
 }

@@ -1,9 +1,9 @@
+/** @jsx jsx */
 import React from 'react';
-import styled from 'styled-components';
+import { css, jsx } from '@emotion/react';
 import Spinner from '@atlaskit/spinner';
-import { EditorProps, EditorAppearance } from './../src/editor';
+import { EditorAppearance } from './../src/editor';
 import FullPageExample, {
-  ExampleProps,
   getAppearance,
   LOCALSTORAGE_defaultDocKey,
 } from './5-full-page';
@@ -11,7 +11,7 @@ import { InviteToEditButton } from './3-collab';
 import SidebarContainer from '../example-helpers/SidebarContainer';
 import { createCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
 
-const DisabledBlanket = styled.div`
+const disabledBlanket = css`
   position: absolute;
   top: 0px;
   left: 0px;
@@ -35,10 +35,7 @@ interface State {
  *  - 64px sidebar on the left
  *  - collab editing enabled
  */
-export default class ExampleEditorComponent extends React.Component<
-  EditorProps & ExampleProps,
-  State
-> {
+export default class ExampleEditorComponent extends React.Component<{}, State> {
   collabSessionId = 'quokka';
 
   state = {
@@ -65,25 +62,28 @@ export default class ExampleEditorComponent extends React.Component<
     const defaultDoc =
       (localStorage && localStorage.getItem(LOCALSTORAGE_defaultDocKey)) ||
       undefined;
+    const { disabled, appearance } = this.state;
+
     return (
       <SidebarContainer>
         {this.state.disabled && (
-          <DisabledBlanket>
+          <div css={disabledBlanket}>
             <Spinner size="large" />
-          </DisabledBlanket>
+          </div>
         )}
         <FullPageExample
-          {...this.props}
-          collabEdit={{
-            provider: createCollabEditProvider({
-              userId: this.collabSessionId,
-              defaultDoc,
-            }),
-            inviteToEditComponent: InviteToEditButton,
+          editorProps={{
+            collabEdit: {
+              provider: createCollabEditProvider({
+                userId: this.collabSessionId,
+                defaultDoc,
+              }),
+              inviteToEditComponent: InviteToEditButton,
+            },
+            disabled,
+            appearance,
+            shouldFocus: true,
           }}
-          disabled={this.state.disabled}
-          appearance={this.state.appearance}
-          shouldFocus={true}
         />
       </SidebarContainer>
     );

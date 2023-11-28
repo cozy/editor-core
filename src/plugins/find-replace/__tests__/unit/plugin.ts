@@ -1,12 +1,18 @@
-import { EditorView, Decoration, DecorationSet } from 'prosemirror-view';
-import { PluginKey } from 'prosemirror-state';
+import type { EditorView, Decoration } from '@atlaskit/editor-prosemirror/view';
+import { DecorationSet } from '@atlaskit/editor-prosemirror/view';
+import type { PluginKey } from '@atlaskit/editor-prosemirror/state';
 import createStub from 'raf-stub';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   insertText,
   deleteText,
 } from '@atlaskit/editor-test-helpers/transactions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
 import { find, findPrevious, replace, replaceAll } from '../../commands';
 import {
@@ -15,8 +21,9 @@ import {
   getFindReplacePreset,
 } from './_utils';
 import { getPluginState } from '../../plugin';
-import blockTypePlugin from '../../../block-type';
-import { flushPromises } from '../../../../__tests__/__helpers/utils';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 describe('find/replace plugin', () => {
   const containerElement = getContainerElement();
@@ -50,15 +57,19 @@ describe('find/replace plugin', () => {
     prevDecorations = getPluginState(editorView.state).decorationSet.find();
   };
 
-  const positionMap = (increment = 0) => (decoration: Decoration) => ({
-    from: decoration.from += increment,
-    to: decoration.to += increment,
-  });
+  const positionMap =
+    (increment = 0) =>
+    (decoration: Decoration) => ({
+      // @ts-ignore - allow assign to readonly for testing
+      from: (decoration.from += increment),
+      // @ts-ignore - allow assign to readonly for testing
+      to: (decoration.to += increment),
+    });
 
   const initEditor = (doc: DocBuilder) => {
     // blockTypePlugin includes the keyboard shortcut for undo which we need
     const preset = getFindReplacePreset().add(blockTypePlugin);
-    ({ editorView, refs } = createEditor<boolean, PluginKey>({
+    ({ editorView, refs } = createEditor<boolean, PluginKey, typeof preset>({
       doc,
       preset,
     }));

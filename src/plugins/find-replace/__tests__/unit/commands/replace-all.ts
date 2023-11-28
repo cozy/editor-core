@@ -1,7 +1,10 @@
-import { EditorView, DecorationSet } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { DecorationSet } from '@atlaskit/editor-prosemirror/view';
 import createStub from 'raf-stub';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import {
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
@@ -9,13 +12,15 @@ import { find, replaceAll } from '../../../commands';
 import { replaceAllWithAnalytics } from '../../../commands-with-analytics';
 import { editor, getContainerElement } from '../_utils';
 import { getPluginState } from '../../../plugin';
-import { flushPromises } from '../../../../../__tests__/__helpers/utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 
 const containerElement = getContainerElement();
 const createAnalyticsEvent: CreateUIAnalyticsEvent = jest.fn(
   () => ({ fire: () => {} } as UIAnalyticsEvent),
 );
 let editorView: EditorView;
+let editorAPI: any;
 let refs: { [name: string]: number };
 let rafStub: {
   add: (cb: Function) => number;
@@ -44,7 +49,7 @@ const findCommand = async (keyword?: string) => {
 };
 
 const initEditor = async (doc: DocBuilder, query = 'quokka') => {
-  ({ editorView, refs } = editor(doc, createAnalyticsEvent));
+  ({ editorView, refs, editorAPI } = editor(doc, createAnalyticsEvent));
   dispatchSpy = jest.spyOn(editorView, 'dispatch');
 
   // need to do a find before we can do a replaceAll
@@ -171,7 +176,7 @@ describe('find/replace commands: replaceAllWithAnalytics', () => {
         p('this is a {thirdMatchStart}quokka{thirdMatchEnd}'),
       ),
     );
-    replaceAllWithAnalytics({
+    replaceAllWithAnalytics(editorAPI?.analytics?.actions)({
       replaceText: 'numbat',
     })(editorView.state, editorView.dispatch);
     expect(createAnalyticsEvent).toBeCalledWith({

@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { defineMessages, InjectedIntlProps, injectIntl } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { defineMessages, injectIntl } from 'react-intl-next';
 
 import { DecisionItem } from '@atlaskit/task-decision';
 
@@ -17,7 +18,10 @@ interface Props {
   showPlaceholder?: boolean;
 }
 
-export class Decision extends React.Component<Props & InjectedIntlProps, {}> {
+export class Decision extends React.Component<
+  Props & WrappedComponentProps,
+  {}
+> {
   static displayName = 'Decision';
 
   render() {

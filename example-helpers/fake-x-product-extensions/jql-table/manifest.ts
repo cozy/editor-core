@@ -1,4 +1,7 @@
-import { ExtensionManifest } from '@atlaskit/editor-common';
+import type {
+  ExtensionManifest,
+  Parameters,
+} from '@atlaskit/editor-common/extensions';
 
 const manifest: ExtensionManifest = {
   title: 'Jira',
@@ -43,7 +46,8 @@ const manifest: ExtensionManifest = {
           import(
             /* webpackChunkName: "@atlaskit-internal_jql-table-extension-handler" */ './extension-handler'
           ).then((mod) => mod.default),
-        update: async (parameters: { id?: string }) => {
+        update: async (parameters: Parameters) => {
+          // Parameters = { id?: string }
           console.log({ parameters });
           return parameters;
         },

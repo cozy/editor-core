@@ -1,6 +1,8 @@
-import { EditorView } from 'prosemirror-view';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import {
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';

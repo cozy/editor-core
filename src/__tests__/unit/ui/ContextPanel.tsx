@@ -1,12 +1,21 @@
 import React from 'react';
+// eslint-disable-next-line
 import { mount, ReactWrapper } from 'enzyme';
 
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
-import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  doc,
+  p,
+  table,
+  tdEmpty,
+  thEmpty,
+  tr,
+} from '@atlaskit/editor-test-helpers/doc-builder';
 
 import ContextPanel, {
-  Content,
-  Panel,
+  shouldPanelBePositionedOverEditor,
   SwappableContentArea,
 } from '../../../ui/ContextPanel';
 import EditorContext from '../../../ui/EditorContext';
@@ -16,19 +25,23 @@ import {
   akEditorFullWidthLayoutWidth,
   akEditorFullWidthLayoutLineLength,
 } from '@atlaskit/editor-shared-styles';
-import { EditorPlugin } from '../../../types';
+import type { EditorPlugin } from '../../../types';
 import { EventDispatcher } from '../../../event-dispatcher';
 import EditorActions from '../../../actions';
-import contextPanelPlugin from '../../../plugins/context-panel';
+import { contextPanelPlugin } from '@atlaskit/editor-plugin-context-panel';
 import {
   ContextPanelConsumer,
   ContextPanelWidthProvider,
-} from '../../../ui/ContextPanel/context';
+} from '@atlaskit/editor-common/ui';
 
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   isPushingEditorContent,
   editorWithWideBreakoutAndSidebarWidth,
-} from '../../__helpers/page-objects/_context-panel';
+} from '@atlaskit/editor-test-helpers/page-objects/context-panel';
+import { ffTest } from '@atlassian/feature-flags-test-utils';
+
+const panelSelector = 'div[data-testid="context-panel-panel"]';
 
 describe('SwappableContentArea', () => {
   const Component: React.FC = jest.fn(() => null);
@@ -59,7 +72,8 @@ describe('SwappableContentArea', () => {
   describe('container', () => {
     it('displays content when visible is true', () => {
       wrapper = mount(<SwappableContentArea visible></SwappableContentArea>);
-      const panel = wrapper.find(Panel);
+      const panel = wrapper.find(panelSelector);
+
       expect(getComputedStyle(panel.getDOMNode()).width).toEqual('320px');
     });
 
@@ -67,13 +81,13 @@ describe('SwappableContentArea', () => {
       wrapper = mount(
         <SwappableContentArea visible={false}></SwappableContentArea>,
       );
-      const panel = wrapper.find(Panel);
+      const panel = wrapper.find(panelSelector);
       expect(getComputedStyle(panel.getDOMNode()).width).toEqual('0px');
     });
 
     it('clips content using the container', () => {
       wrapper = mount(<SwappableContentArea visible />);
-      const style = getComputedStyle(wrapper.find(Panel).getDOMNode());
+      const style = getComputedStyle(wrapper.find(panelSelector).getDOMNode());
       expect(style.overflow).toEqual('hidden');
     });
 
@@ -89,7 +103,7 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeTruthy();
     });
 
@@ -105,7 +119,7 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeFalsy();
     });
 
@@ -121,7 +135,7 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeTruthy();
     });
 
@@ -137,7 +151,7 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeFalsy();
     });
 
@@ -153,7 +167,7 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeTruthy();
     });
 
@@ -169,14 +183,16 @@ describe('SwappableContentArea', () => {
           }}
         />,
       );
-      const panelElement = wrapper.find(Panel).getDOMNode();
+      const panelElement = wrapper.find(panelSelector).getDOMNode();
       expect(isPushingEditorContent(panelElement)).toBeTruthy();
     });
   });
   describe('content', () => {
     it('is scrollable up/down', () => {
       wrapper = mount(<SwappableContentArea visible />);
-      const style = getComputedStyle(wrapper.find(Content).getDOMNode());
+      const style = getComputedStyle(
+        wrapper.find('div[data-testid="context-panel-content"]').getDOMNode(),
+      );
       expect(style.overflowY).toEqual('auto');
     });
   });
@@ -362,7 +378,10 @@ describe('ContextPanel', () => {
 
   it('uses pluginContent instead if plugins define content', () => {
     const editor = editorFactory({
-      editorPlugins: [mockContextPanelPlugin, contextPanelPlugin()],
+      editorPlugins: [
+        mockContextPanelPlugin,
+        contextPanelPlugin({ config: undefined }),
+      ],
       doc: doc(p('hello')),
     });
     const editorActions = new EditorActions();
@@ -381,4 +400,101 @@ describe('ContextPanel', () => {
     expect(wrapper.text().indexOf('yoshi bongo')).toEqual(-1);
     expect(wrapper.text().indexOf('mario saxaphone')).toBeGreaterThan(-1);
   });
+
+  it('should focus editor on ESC from the sidebar config panel', async () => {
+    const { editorView } = editorFactory({
+      editorPlugins: [contextPanelPlugin({ config: undefined })],
+      doc: doc(p('hello')),
+    });
+    const editorActions = new EditorActions();
+    const eventDispatcher = new EventDispatcher();
+
+    editorActions._privateRegisterEditor(editorView, eventDispatcher);
+
+    const mountContextPanelWithContext = (actions?: EditorActions) =>
+      mount(
+        React.createElement(
+          (props) => (
+            <EditorContext editorActions={actions}>
+              <ContextPanel {...props}>
+                <div>yoshi bongo</div>
+              </ContextPanel>
+            </EditorContext>
+          ),
+          { visible: true },
+        ),
+      );
+    const wrapper = mountContextPanelWithContext(editorActions);
+
+    const editorFocusSpy = jest.spyOn(editorView, 'focus');
+
+    await wrapper.setProps({ visible: false });
+
+    wrapper.update();
+
+    await expect(editorFocusSpy).toHaveBeenCalled();
+  });
+});
+
+describe('shouldPanelBePositionedOverEditor', () => {
+  const docCustomTableWidthEnabled = doc(
+    table({ localId: 'local-id', layout: 'default', width: 1800 })(
+      tr(thEmpty, thEmpty, thEmpty),
+      tr(tdEmpty, tdEmpty, tdEmpty),
+      tr(tdEmpty, tdEmpty, tdEmpty),
+    ),
+  );
+  const docCustomTableWidthDisabled = doc(
+    table({ localId: 'local-id', layout: 'full-width' })(
+      tr(thEmpty, thEmpty, thEmpty),
+      tr(tdEmpty, tdEmpty, tdEmpty),
+      tr(tdEmpty, tdEmpty, tdEmpty),
+    ),
+  );
+
+  const contextPanelWidth = 320;
+
+  ffTest(
+    'platform.editor.custom-table-width',
+    () => {
+      const editorTableWidthEnabled = editorFactory({
+        doc: docCustomTableWidthEnabled,
+        editorProps: {
+          allowTables: true,
+        },
+      });
+      const { editorView: view } = editorTableWidthEnabled;
+      const editorWidthEnabled = {
+        width: 1920,
+        containerWidth: 1920,
+        contentBreakoutModes: [],
+      };
+      const result = shouldPanelBePositionedOverEditor(
+        editorWidthEnabled,
+        contextPanelWidth,
+        view,
+      );
+      expect(result).toBeFalsy();
+    },
+    () => {
+      const editorTableWidthDisabled = editorFactory({
+        doc: docCustomTableWidthDisabled,
+        editorProps: {
+          allowTables: true,
+        },
+      });
+      const { editorView: view } = editorTableWidthDisabled;
+      const editorWidthDisabled = {
+        width: 1920,
+        containerWidth: 1920,
+        contentBreakoutModes: ['full-width'] as ('full-width' | 'wide')[],
+      };
+      const result = shouldPanelBePositionedOverEditor(
+        editorWidthDisabled,
+        contextPanelWidth,
+        view,
+      );
+      expect(result).toBeFalsy();
+    },
+  );
 });

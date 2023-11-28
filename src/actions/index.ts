@@ -1,36 +1,38 @@
-import { Node } from 'prosemirror-model';
-import { JSONDocNode } from '@atlaskit/editor-json-transformer';
-import { TextSelection, Selection } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
-import { Transformer } from '@atlaskit/editor-common';
-import { toJSON } from '../utils';
-import { processRawValue, isEmptyDocument } from '../utils/document';
+import { Node } from '@atlaskit/editor-prosemirror/model';
 import {
-  getEditorValueWithMedia,
+  NodeSelection,
+  TextSelection,
+} from '@atlaskit/editor-prosemirror/state';
+import { findParentNode, safeInsert } from '@atlaskit/editor-prosemirror/utils';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+
+import type { AnalyticsEventPayload } from '@atlaskit/analytics-next/AnalyticsEvent';
+import type { ResolvedEditorState } from '@atlaskit/editor-common/collab';
+import type {
+  ContextUpdateHandler,
+  EditorActionsOptions,
+  ReplaceRawValue,
+  FeatureFlags,
+  Transformer,
+} from '@atlaskit/editor-common/types';
+import {
+  analyticsEventKey,
+  isEmptyDocument,
+  processRawValue,
+  findNodePosByLocalIds,
+} from '@atlaskit/editor-common/utils';
+
+import type { EventDispatcher } from '../event-dispatcher';
+import { createDispatch } from '../event-dispatcher';
+import { getCollabProvider } from '../plugins/collab-edit/native-collab-provider-plugin';
+import { toJSON } from '../utils';
+import {
   __temporaryFixForConfigPanel,
+  getEditorValueWithMedia,
 } from '../utils/action';
-import { EventDispatcher, createDispatch } from '../event-dispatcher';
-import { safeInsert } from 'prosemirror-utils';
-import { AnalyticsEventPayload } from '@atlaskit/analytics-next/AnalyticsEvent';
-import { analyticsEventKey } from '@atlaskit/editor-common';
-import { findNodePosWithLocalId } from '../plugins/extension/utils';
-
-export type ContextUpdateHandler = (
-  editorView: EditorView,
-  eventDispatcher: EventDispatcher,
-) => void;
-
-export interface EditorActionsOptions<T> {
-  focus(): boolean;
-  blur(): boolean;
-  clear(): boolean;
-  getValue(): Promise<T | JSONDocNode | undefined>;
-  getNodeByLocalId(id: string): Node | undefined;
-  replaceDocument(rawValue: any): boolean;
-  replaceSelection(rawValue: Node | Object | string): boolean;
-  appendText(text: string): boolean;
-  isDocumentEmpty(): boolean;
-}
+import deprecationWarnings from '../utils/deprecation-warnings';
+import { processRawFragmentValue } from '../utils/document';
+import { findNodePosByFragmentLocalIds } from '../utils/nodes-by-localIds';
 
 export default class EditorActions<T = any> implements EditorActionsOptions<T> {
   private editorView?: EditorView;
@@ -59,14 +61,20 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
     return this.eventDispatcher;
   }
 
+  private getFeatureFlags(): FeatureFlags {
+    return {};
+  }
+
   // This method needs to be public for EditorContext component.
   _privateRegisterEditor(
     editorView: EditorView,
     eventDispatcher: EventDispatcher,
     contentTransformer?: Transformer<T>,
+    getFeatureFlags: () => FeatureFlags = () => ({}),
   ): void {
     this.contentTransformer = contentTransformer;
     this.eventDispatcher = eventDispatcher;
+    this.getFeatureFlags = getFeatureFlags;
 
     if (!this.editorView && editorView) {
       this.editorView = editorView;
@@ -90,6 +98,7 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
     this.contentTransformer = undefined;
     this.contentEncode = undefined;
     this.eventDispatcher = undefined;
+    this.getFeatureFlags = () => ({});
   }
 
   _privateSubscribe(cb: ContextUpdateHandler): void {
@@ -113,7 +122,9 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
     }
 
     this.editorView.focus();
+
     this.editorView.dispatch(this.editorView.state.tr.scrollIntoView());
+
     return true;
   }
 
@@ -160,6 +171,7 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
 
     const doc = await getEditorValueWithMedia(editorView);
     const json = toJSON(doc);
+
     if (!this.contentEncode) {
       return json;
     }
@@ -170,7 +182,34 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
 
   getNodeByLocalId(id: string): Node | undefined {
     if (this.editorView?.state) {
-      return findNodePosWithLocalId(this.editorView?.state, id)?.node;
+      const nodes = findNodePosByLocalIds(this.editorView?.state, [id]);
+      const node = nodes.length >= 1 ? nodes[0] : undefined;
+      return node?.node;
+    }
+  }
+
+  getNodeByFragmentLocalId(id: string): Node | undefined {
+    if (this.editorView?.state) {
+      let nodes = findNodePosByFragmentLocalIds(this.editorView?.state, [id]);
+
+      return nodes.length > 0 ? nodes[0].node : undefined;
+    }
+  }
+
+  /**
+   * This method will return the currently selected `Node` if the selection is a `Node`.
+   * Otherwise, if the selection is textual or a non-selectable `Node` within another selectable `Node`, the closest selectable parent `Node` will be returned.
+   */
+  getSelectedNode(): Node | undefined {
+    if (this.editorView?.state?.selection) {
+      const { selection } = this.editorView.state;
+
+      if (selection instanceof NodeSelection) {
+        return selection.node;
+      }
+      return findParentNode((node) => Boolean(node.type.spec.selectable))(
+        selection,
+      )?.node;
     }
   }
 
@@ -187,49 +226,38 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
   replaceDocument(
     rawValue: any,
     shouldScrollToBottom = true,
+    /** @deprecated [ED-14158] shouldAddToHistory is not being used in this function */
     shouldAddToHistory = true,
   ): boolean {
+    deprecationWarnings(
+      'EditorActions.replaceDocument',
+      { shouldAddToHistory },
+      [
+        {
+          property: 'shouldAddToHistory',
+          description:
+            '[ED-14158] EditorActions.replaceDocument does not use the shouldAddToHistory arg',
+          type: 'removed',
+        },
+      ],
+    );
+
     if (!this.editorView || rawValue === undefined || rawValue === null) {
       return false;
     }
 
-    const { state } = this.editorView;
-    const { schema } = state;
-
-    const content = processRawValue(
-      schema,
-      rawValue,
-      undefined,
-      undefined,
-      this.contentTransformer as Transformer<any>,
-      this.dispatchAnalyticsEvent,
-    );
-
-    if (!content) {
-      return false;
+    if (this.eventDispatcher) {
+      this.eventDispatcher.emit('resetEditorState', {
+        doc: rawValue,
+        shouldScrollToBottom,
+      });
     }
-
-    // In case of replacing a whole document, we only need a content of a top level node e.g. document.
-    let tr = state.tr.replaceWith(0, state.doc.nodeSize - 2, content.content);
-    if (!shouldScrollToBottom && !tr.selectionSet) {
-      // Restore selection at start of document instead of the end.
-      tr.setSelection(Selection.atStart(tr.doc));
-    }
-
-    if (shouldScrollToBottom) {
-      tr = tr.scrollIntoView();
-    }
-    if (!shouldAddToHistory) {
-      tr.setMeta('addToHistory', false);
-    }
-
-    this.editorView.dispatch(tr);
 
     return true;
   }
 
   replaceSelection(
-    rawValue: Node | Object | string,
+    rawValue: ReplaceRawValue | Array<ReplaceRawValue>,
     tryToReplace?: boolean,
   ): boolean {
     if (!this.editorView) {
@@ -245,7 +273,9 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
     }
 
     const { schema } = state;
-    const content = processRawValue(schema, rawValue);
+    const content = Array.isArray(rawValue)
+      ? processRawFragmentValue(schema, rawValue)
+      : processRawValue(schema, rawValue);
 
     if (!content) {
       return false;
@@ -284,5 +314,40 @@ export default class EditorActions<T = any> implements EditorActionsOptions<T> {
         payload,
       });
     }
+  };
+
+  /**
+   * If editor is using new collab service,
+   * we want editor to call the collab provider to
+   * retrieve the final acknowledged state of the
+   * editor. The final acknowledged editor state
+   * refers to the latest state of editor with confirmed
+   * steps.
+   */
+  getResolvedEditorState = async (): Promise<
+    ResolvedEditorState | undefined
+  > => {
+    const { useNativeCollabPlugin } = this.getFeatureFlags();
+
+    if (!this.editorView) {
+      throw new Error(
+        'Called getResolvedEditorState before editorView is ready',
+      );
+    }
+
+    if (!useNativeCollabPlugin) {
+      const editorValue = await this.getValue();
+      if (!editorValue) {
+        throw new Error('editorValue is undefined');
+      }
+      return {
+        content: editorValue,
+        title: null,
+        stepVersion: -1,
+      };
+    }
+    const editorView = this.editorView;
+    await getEditorValueWithMedia(editorView);
+    return getCollabProvider(editorView.state)?.getFinalAcknowledgedState();
   };
 }

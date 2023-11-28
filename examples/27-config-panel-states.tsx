@@ -1,20 +1,20 @@
-import React from 'react';
-import { IntlProvider } from 'react-intl';
-import styled from 'styled-components';
+/** @jsx jsx */
+import { css, jsx } from '@emotion/react';
 
-import {
-  DefaultExtensionProvider,
+import { DefaultExtensionProvider } from '@atlaskit/editor-common/extensions';
+import type {
   ExtensionManifest,
   ExtensionProvider,
-} from '@atlaskit/editor-common';
+} from '@atlaskit/editor-common/extensions';
 
 import { N30 } from '@atlaskit/theme/colors';
 
 import { nativeFields } from '../example-helpers/config-panel/fields';
 
 import ConfigPanel from '../src/ui/ConfigPanel';
+import { IntlProvider } from 'react-intl-next';
 
-const Wrapper = styled.div`
+const wrapper = css`
   display: flex;
   flex-direction: row;
 
@@ -23,12 +23,12 @@ const Wrapper = styled.div`
   }
 `;
 
-const ContextPanelWrapper = styled.div`
+const contextPanelWrapper = css`
   margin: 8px;
   height: 100%;
 `;
 
-const ContextPanel = styled.div`
+const contextPanel = css`
   border: 1px solid ${N30};
   width: 360px;
   height: 450px;
@@ -36,14 +36,13 @@ const ContextPanel = styled.div`
   overflow-y: auto;
 `;
 
-const createFakeContextPanel = (
-  extensionProvider: ExtensionProvider,
-) => (props: { title: string; nodeKey: string }) => {
-  return (
-    <ContextPanelWrapper>
-      <h3>{props.title}</h3>
-      <ContextPanel>
-        <IntlProvider locale="en-AU">
+const createFakeContextPanel =
+  (extensionProvider: ExtensionProvider) =>
+  (props: { title: string; nodeKey: string }) => {
+    return (
+      <div css={contextPanelWrapper}>
+        <h3>{props.title}</h3>
+        <div css={contextPanel}>
           <ConfigPanel
             showHeader
             extensionProvider={extensionProvider}
@@ -53,11 +52,10 @@ const createFakeContextPanel = (
             onChange={noop}
             onCancel={noop}
           />
-        </IntlProvider>
-      </ContextPanel>
-    </ContextPanelWrapper>
-  );
-};
+        </div>
+      </div>
+    );
+  };
 
 const exampleManifest: ExtensionManifest = {
   title: 'Editor example',
@@ -150,9 +148,10 @@ const FakeContextPanelWithoutDescription = createFakeContextPanel(
   new DefaultExtensionProvider([manifestWithoutDescription]),
 );
 
-const FakeContextPanelWithoutDescriptionOrDocumentation = createFakeContextPanel(
-  new DefaultExtensionProvider([manifestWithoutDescriptionOrDocumentation]),
-);
+const FakeContextPanelWithoutDescriptionOrDocumentation =
+  createFakeContextPanel(
+    new DefaultExtensionProvider([manifestWithoutDescriptionOrDocumentation]),
+  );
 
 const FakeContextPanelWithoutDocumentation = createFakeContextPanel(
   new DefaultExtensionProvider([manifestWithoutDocumentation]),
@@ -162,23 +161,24 @@ const FakeContextPanelWithoutSummaryAndDocumentation = createFakeContextPanel(
   new DefaultExtensionProvider([manifestWithoutSummaryAndDocumentation]),
 );
 
-const FakeContextPanelWithoutSummaryAndDescriptionAndDocumentation = createFakeContextPanel(
-  new DefaultExtensionProvider([
-    manifestWithoutSummaryAndDescriptionAndDocumentation,
-  ]),
-);
+const FakeContextPanelWithoutSummaryAndDescriptionAndDocumentation =
+  createFakeContextPanel(
+    new DefaultExtensionProvider([
+      manifestWithoutSummaryAndDescriptionAndDocumentation,
+    ]),
+  );
 
 const noop = () => {};
 
 export default function Example() {
   return (
-    <>
-      <Wrapper>
+    <IntlProvider locale="en">
+      <div css={wrapper}>
         <FakeContextPanel nodeKey="loading" title="Loading state" />
         <FakeContextPanel nodeKey="error" title="Error state" />
         <FakeContextPanel nodeKey="loaded" title="Loaded state" />
-      </Wrapper>
-      <Wrapper>
+      </div>
+      <div css={wrapper}>
         <FakeContextPanelWithSummary nodeKey="loaded" title="With summary" />
         <FakeContextPanelWithoutDescription
           nodeKey="loaded"
@@ -188,8 +188,8 @@ export default function Example() {
           nodeKey="loaded"
           title="Missing description and docs"
         />
-      </Wrapper>
-      <Wrapper>
+      </div>
+      <div css={wrapper}>
         <FakeContextPanelWithoutDocumentation
           nodeKey="loaded"
           title="Missing docs"
@@ -202,7 +202,7 @@ export default function Example() {
           nodeKey="loaded"
           title="Missing description, summary and docs"
         />
-      </Wrapper>
-    </>
+      </div>
+    </IntlProvider>
   );
 }

@@ -18,6 +18,14 @@ ${(<AtlassianInternalWarning />)}
   * Fetch API ([polyfill](https://www.npmjs.com/package/whatwg-fetch), [browser support](http://caniuse.com/#feat=fetch))
   * Element.closest ([polyfill](https://www.npmjs.com/package/element-closest), [browser support](http://caniuse.com/#feat=element-closest))
 
+  # Installing the editor package
+
+  The dependencies of editor is a complex beast and can confuse some package managers (\`npm\` does not seem to result in duplicates, but \`yarn\` does).
+
+  We have encountered many strange bugs that were caused by duplicated packages in a product codebase. It is highly recommend to deduplicate packages to work around the yarn bug.
+
+  Be sure to dedupe your packages after adding or upgrading \`@atlaskit/editor-core\` in your package.json file. Our recommendation is to use [yarn-deduplicate](https://www.npmjs.com/package/yarn-deduplicate).
+
   # Starting to use the editor
 
   ## Simplest Editor
@@ -200,19 +208,27 @@ ${code`
 
   We’d love to hear your feedback.
 
+  ## Theming and dark mode support
+  To render certain ADF content correctly in different color themes, such as light and dark mode, this package utilise
+  the \`@atlaskit/editor-palette\` package, which converts colors stored in ADF to Atlassian Design Tokens.
+  Learn more about this utility in the [Editor Palette docs](/packages/editor/editor-palette).
+
+  Full light and dark mode support for the Editor is a work in progress. Currently, the following experiences do not yet support theming:
+  - Custom table backgrounds
+
   ## Tab indexing / focus
-  If you are displaying a title you may need to listen for a tab event to 
+  If you are displaying a title you may need to listen for a tab event to
   explicitly enable and focus the editor.
-  
+
   Shift + Tab will move from the title bar to the toolbar preserving tab order.
 
   See the Full Page Example code for a complete implementation.
-  
+
   For example:
 
 ${code`
   <WithEditorActions
-     
+
     render={actions => (
       <TitleInput
         placeholder="Give this page a title..."

@@ -1,12 +1,12 @@
-import { Transaction } from 'prosemirror-state';
+import type { ReadonlyTransaction } from '@atlaskit/editor-prosemirror/state';
 import { pluginFactory } from '../../../utils/plugin-state-factory';
 import { findAnnotationsInSelection, inlineCommentPluginKey } from '../utils';
-import { InlineCommentPluginState } from './types';
+import type { InlineCommentPluginState } from './types';
 
 import reducer from './reducer';
 
 const handleDocChanged = (
-  tr: Transaction,
+  tr: ReadonlyTransaction,
   prevPluginState: InlineCommentPluginState,
 ): InlineCommentPluginState => {
   if (!tr.getMeta('replaceDocument')) {
@@ -17,9 +17,16 @@ const handleDocChanged = (
 };
 
 const handleSelectionChanged = (
-  tr: Transaction,
+  tr: ReadonlyTransaction,
   pluginState: InlineCommentPluginState,
 ): InlineCommentPluginState => {
+  if (pluginState.skipSelectionHandling) {
+    return {
+      ...pluginState,
+      skipSelectionHandling: false,
+    };
+  }
+
   const selectedAnnotations = findAnnotationsInSelection(tr.selection, tr.doc);
   const changed =
     selectedAnnotations.length !== pluginState.selectedAnnotations.length ||

@@ -1,10 +1,26 @@
+const mockStore = {
+  failAll: jest.fn(),
+};
+jest.mock('@atlaskit/editor-common/utils', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/utils'),
+  isOutdatedBrowser: (userAgent: string) => userAgent === 'Unsupported',
+}));
+jest.mock('@atlaskit/editor-common/ufo', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/ufo'),
+  ExperienceStore: {
+    getInstance: () => mockStore,
+  },
+}));
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { mount, shallow, ReactWrapper, ShallowWrapper } from 'enzyme';
 import React from 'react';
 import { ErrorBoundaryWithEditorView as EditorErrorBoundary } from '../../../create-editor/ErrorBoundary';
-import { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
+import type { CreateUIAnalyticsEvent } from '@atlaskit/analytics-next';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
@@ -12,10 +28,11 @@ import {
   ACTION,
   ACTION_SUBJECT,
   EVENT_TYPE,
-} from '../../../plugins/analytics/types';
-import featureFlagsContextPlugin from '../../../plugins/feature-flags-context';
+} from '@atlaskit/editor-common/analytics';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
-import { flushPromises } from '../../__helpers/utils';
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 const mockCtxIdentifierProvider = {
   objectId: 'MOCK-OBJECT-ID',
@@ -72,6 +89,7 @@ describe('create-editor/error-boundary', () => {
   const spy: { [key: string]: jest.MockInstance<any, any> } = {
     console: jest.fn(),
     componentDidCatch: jest.fn(),
+    userAgent: jest.fn(),
   };
 
   beforeAll(() => {
@@ -80,6 +98,9 @@ describe('create-editor/error-boundary', () => {
       EditorErrorBoundary.prototype,
       'componentDidCatch',
     );
+    spy.userAgent = jest
+      .spyOn(window.navigator, 'userAgent', 'get')
+      .mockReturnValue('Supported');
   });
   beforeEach(() => {
     createAnalyticsEvent = createAnalyticsEventMock();
@@ -88,10 +109,13 @@ describe('create-editor/error-boundary', () => {
     wrapper.unmount();
     spy.console.mockClear();
     spy.componentDidCatch.mockClear();
+    spy.userAgent.mockClear();
+    jest.clearAllMocks();
   });
   afterAll(() => {
     spy.console.mockRestore();
     spy.componentDidCatch.mockRestore();
+    spy.userAgent.mockRestore();
   });
 
   it('should render children when no errors are thrown', () => {
@@ -99,6 +123,7 @@ describe('create-editor/error-boundary', () => {
       <EditorErrorBoundary
         createAnalyticsEvent={createAnalyticsEvent as CreateUIAnalyticsEvent}
         contextIdentifierProvider={contextIdentifierProvider}
+        featureFlags={{}}
       >
         <Foo />
       </EditorErrorBoundary>,
@@ -114,6 +139,7 @@ describe('create-editor/error-boundary', () => {
         rethrow={false}
         createAnalyticsEvent={createAnalyticsEvent}
         contextIdentifierProvider={contextIdentifierProvider}
+        featureFlags={{}}
       >
         <Foo />
       </EditorErrorBoundary>,
@@ -128,6 +154,7 @@ describe('create-editor/error-boundary', () => {
         rethrow={false}
         createAnalyticsEvent={createAnalyticsEvent}
         contextIdentifierProvider={contextIdentifierProvider}
+        featureFlags={{}}
       >
         <Foo />
       </EditorErrorBoundary>,
@@ -155,6 +182,7 @@ describe('create-editor/error-boundary', () => {
           componentStack: expect.any(String),
         }),
         errorId: expect.any(String),
+        outdatedBrowser: false,
       },
     };
     const expectedAdditionalInformationAnalyticsEvent = {
@@ -163,6 +191,8 @@ describe('create-editor/error-boundary', () => {
       eventType: EVENT_TYPE.OPERATIONAL,
       attributes: {
         errorId: expect.any(String),
+      },
+      nonPrivacySafeAttributes: {
         errorStack: expect.any(String),
       },
     };
@@ -174,6 +204,81 @@ describe('create-editor/error-boundary', () => {
     );
   });
 
+  it('should not dispatch an analytics event when an error is caught if errorTracking is explicitly disabled', async () => {
+    wrapper = shallow(
+      <EditorErrorBoundary
+        rethrow={false}
+        createAnalyticsEvent={createAnalyticsEvent}
+        contextIdentifierProvider={contextIdentifierProvider}
+        featureFlags={{}}
+        errorTracking={false}
+      >
+        <Foo />
+      </EditorErrorBoundary>,
+    );
+    const error = new Error('Triggered error boundary');
+    wrapper.find(Foo).simulateError(error);
+    expect(spy.componentDidCatch).toHaveBeenCalledTimes(1);
+    const resolved = await expect(contextIdentifierProvider).resolves;
+    resolved.toMatchObject(mockCtxIdentifierProvider);
+
+    // Error boundary has a async operation to get the productName,
+    // I need to wait until that promise resolve
+    await flushPromises();
+
+    expect(createAnalyticsEvent).toHaveBeenCalledTimes(0);
+  });
+
+  it('should fail all active UFO experiences when an error is caught and ufo is enabled', async () => {
+    const { editorView } = createEditor({
+      preset: new Preset<LightEditorPlugin>().add([featureFlagsPlugin, {}]),
+    });
+    wrapper = shallow(
+      <EditorErrorBoundary
+        rethrow={false}
+        contextIdentifierProvider={contextIdentifierProvider}
+        editorView={editorView}
+        featureFlags={{ ufo: true }}
+      >
+        <Foo />
+      </EditorErrorBoundary>,
+    );
+    const error = new Error('Triggered error boundary');
+    wrapper.find(Foo).simulateError(error);
+    await flushPromises();
+
+    expect(mockStore.failAll).toHaveBeenCalledWith({
+      error: 'Error: Triggered error boundary',
+      errorInfo: { componentStack: expect.stringContaining('in Foo') },
+      browserInfo: expect.any(String),
+      errorId: expect.any(String),
+      errorStack: expect.stringContaining('Error: Triggered error boundary'),
+      browserExtensions: undefined,
+      docStructure: undefined,
+    });
+  });
+
+  it('should not fail all active UFO experiences when an error is caught and ufo is not enabled', async () => {
+    const { editorView } = createEditor({
+      preset: new Preset<LightEditorPlugin>().add([featureFlagsPlugin, {}]),
+    });
+    wrapper = shallow(
+      <EditorErrorBoundary
+        rethrow={false}
+        contextIdentifierProvider={contextIdentifierProvider}
+        editorView={editorView}
+        featureFlags={{}}
+      >
+        <Foo />
+      </EditorErrorBoundary>,
+    );
+    const error = new Error('Triggered error boundary');
+    wrapper.find(Foo).simulateError(error);
+    await flushPromises();
+
+    expect(mockStore.failAll).not.toHaveBeenCalled();
+  });
+
   it('should recover rendering if the problem was intermittent', () => {
     const renderSpy = jest.spyOn(IntermittentProblem.prototype, 'render');
     wrapper = mount(
@@ -181,6 +286,7 @@ describe('create-editor/error-boundary', () => {
         rethrow={false}
         createAnalyticsEvent={createAnalyticsEvent}
         contextIdentifierProvider={contextIdentifierProvider}
+        featureFlags={{}}
       >
         <IntermittentProblem />
       </EditorErrorBoundary>,
@@ -191,6 +297,10 @@ describe('create-editor/error-boundary', () => {
   });
 
   it('should re-throw caught errors for products to handle', () => {
+    const error = new Error('Some Bad Error');
+    const Bad = () => {
+      throw error;
+    };
     const productComponentDidCatch = jest.spyOn(
       ProductErrorBoundary.prototype,
       'componentDidCatch',
@@ -198,30 +308,25 @@ describe('create-editor/error-boundary', () => {
     wrapper = mount(
       <ProductErrorBoundary>
         <EditorErrorBoundary
+          rethrow
           createAnalyticsEvent={createAnalyticsEvent}
           contextIdentifierProvider={contextIdentifierProvider}
+          featureFlags={{}}
         >
-          <Foo />
+          <Bad />
         </EditorErrorBoundary>
       </ProductErrorBoundary>,
     );
 
-    expect(wrapper.html()).toEqual(renderedFooString);
-    wrapper.find(Foo).simulateError(new Error('Triggered error boundary'));
-    expect(spy.componentDidCatch).toHaveBeenCalledTimes(1);
-    expect(productComponentDidCatch).toHaveBeenCalledTimes(1);
     expect(wrapper.html()).toEqual(renderedProductErrorBoundaryFallback);
+    expect(spy.componentDidCatch).toHaveBeenCalledTimes(1);
+    expect(productComponentDidCatch).toHaveBeenCalledTimes(2);
   });
 
   describe('DocStructure', () => {
     it('should dispatch an analytics event with doc structure when FF is on', async () => {
       const { editorView } = createEditor({
-        preset: new Preset<LightEditorPlugin>().add([
-          featureFlagsContextPlugin,
-          {
-            errorBoundaryDocStructure: true,
-          },
-        ]),
+        preset: new Preset<LightEditorPlugin>().add([featureFlagsPlugin, {}]),
       });
 
       wrapper = shallow(
@@ -230,6 +335,7 @@ describe('create-editor/error-boundary', () => {
           rethrow={false}
           createAnalyticsEvent={createAnalyticsEvent}
           contextIdentifierProvider={contextIdentifierProvider}
+          featureFlags={{ errorBoundaryDocStructure: true }}
         >
           <Foo />
         </EditorErrorBoundary>,
@@ -254,7 +360,7 @@ describe('create-editor/error-boundary', () => {
     it('should dispatch an analytics event without doc structure when FF is off', async () => {
       const { editorView } = createEditor({
         preset: new Preset<LightEditorPlugin>().add([
-          featureFlagsContextPlugin,
+          featureFlagsPlugin,
           {
             errorBoundaryDocStructure: false,
           },
@@ -267,6 +373,7 @@ describe('create-editor/error-boundary', () => {
           rethrow={false}
           createAnalyticsEvent={createAnalyticsEvent}
           contextIdentifierProvider={contextIdentifierProvider}
+          featureFlags={{ errorBoundaryDocStructure: false }}
         >
           <Foo />
         </EditorErrorBoundary>,
@@ -284,6 +391,39 @@ describe('create-editor/error-boundary', () => {
           actionSubject: ACTION_SUBJECT.EDITOR,
           attributes: expect.not.objectContaining({
             docStructure: expect.any(String),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('UnsupportedBrowser', () => {
+    it('should dispatch an analytics event with outdatedBrowser flag when the current browser is unsupported', async () => {
+      wrapper = shallow(
+        <EditorErrorBoundary
+          rethrow={false}
+          createAnalyticsEvent={createAnalyticsEvent}
+          contextIdentifierProvider={contextIdentifierProvider}
+          featureFlags={{}}
+        >
+          <Foo />
+        </EditorErrorBoundary>,
+      );
+
+      spy.userAgent.mockReturnValue('Unsupported');
+      const error = new Error('Triggered error boundary');
+      wrapper.find(Foo).simulateError(error);
+
+      // Error boundary has a async operation to get the productName,
+      // I need to wait until that promise resolve
+      await flushPromises();
+
+      expect(createAnalyticsEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: ACTION.EDITOR_CRASHED,
+          actionSubject: ACTION_SUBJECT.EDITOR,
+          attributes: expect.objectContaining({
+            outdatedBrowser: true,
           }),
         }),
       );

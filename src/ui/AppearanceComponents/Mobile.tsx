@@ -1,23 +1,24 @@
-import React, { useCallback } from 'react';
-import styled from 'styled-components';
-import {
-  pluginKey as maxContentSizePluginKey,
+/** @jsx jsx */
+import React, { useCallback, forwardRef } from 'react';
+import { css, jsx } from '@emotion/react';
+import type { OptionalPlugin } from '@atlaskit/editor-common/types';
+import type { BasePlugin, BasePluginState } from '@atlaskit/editor-plugin-base';
+import type {
   MaxContentSizePluginState,
-} from '../../plugins/max-content-size';
-import { MobileScrollPluginState } from '../../plugins/mobile-scroll/types';
-import { mobileScrollPluginKey } from '../../plugins/mobile-scroll/plugin-factory';
-import WithPluginState from '../WithPluginState';
+  MaxContentSizePlugin,
+} from '@atlaskit/editor-plugin-max-content-size';
+import type { MobileDimensionsPluginState } from '../../plugins/mobile-dimensions/types';
+import type { MobileDimensionsPlugin } from '../../plugins/mobile-dimensions';
 import WithFlash from '../WithFlash';
-import ContentStyles from '../ContentStyles';
+import { createEditorContentStyle } from '../ContentStyles';
 import { ClickAreaMobile as ClickArea } from '../Addon';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { FeatureFlags } from '../../types/feature-flags';
+import { usePresetContext } from '../../presets/context';
 
-export interface MobileEditorProps {
-  isMaxContentSizeReached?: boolean;
-  maxHeight?: number;
-}
+import { useSharedPluginState } from '@atlaskit/editor-common/hooks';
 
-const MobileEditor: any = styled.div`
+const mobileEditor = css`
   min-height: 30px;
   width: 100%;
   max-width: inherit;
@@ -31,77 +32,106 @@ const MobileEditor: any = styled.div`
     margin: 0;
   }
 `;
-MobileEditor.displayName = 'MobileEditor';
 
-const ContentArea = styled(ContentStyles)``;
+const ContentArea = createEditorContentStyle();
 ContentArea.displayName = 'ContentArea';
 
-export type MobileAppearanceProps = React.PropsWithChildren<{
+type MobileAppearanceProps = React.PropsWithChildren<{
   editorView: EditorView | null;
   maxHeight?: number;
   persistScrollGutter?: boolean;
+  editorDisabled?: boolean;
+  children?: React.ReactNode;
+  featureFlags?: FeatureFlags;
 }>;
 
-export function MobileAppearance({
-  editorView,
-  maxHeight,
-  persistScrollGutter,
-  children,
-}: MobileAppearanceProps) {
+export const MobileAppearance = forwardRef<
+  HTMLDivElement,
+  MobileAppearanceProps
+>(function MobileAppearance(
+  { editorView, persistScrollGutter, children, editorDisabled, featureFlags },
+  ref,
+) {
+  const api =
+    usePresetContext<
+      [
+        OptionalPlugin<BasePlugin>,
+        OptionalPlugin<MobileDimensionsPlugin>,
+        OptionalPlugin<MaxContentSizePlugin>,
+      ]
+    >();
+  const { maxContentSizeState, mobileDimensionsState } = useSharedPluginState(
+    api,
+    ['maxContentSize', 'mobileDimensions'],
+  );
   const render = useCallback(
-    ({
-      maxContentSize,
-      mobileScroll,
-    }: {
-      maxContentSize?: MaxContentSizePluginState;
-      mobileScroll?: MobileScrollPluginState;
-    }) => {
+    ({ maxContentSize, mobileDimensions }: PluginStates) => {
       const maxContentSizeReached = Boolean(
         maxContentSize?.maxContentSizeReached,
       );
 
       let minHeight = 100;
-      if (mobileScroll) {
-        const { keyboardHeight, windowHeight, mobilePaddingTop } = mobileScroll;
+      let currentIsExpanded = true; // isExpanded prop should always be true for Hybrid Editor
+      if (mobileDimensions) {
+        const { windowHeight, mobilePaddingTop, isExpanded } = mobileDimensions;
+        const basePluginState = api?.base?.sharedState.currentState() as
+          | BasePluginState
+          | undefined;
+        const keyboardHeight = basePluginState?.keyboardHeight ?? -1;
+
         /*
           We calculate the min-height based on the windowHeight - keyboardHeight - paddingTop.
           This is needed due to scrolling issues when there is no content to scroll (like, only having 1 paragraph),
           but if the clickable area is bigger than the windowHeight - keyboard (including toolbar) then the view
           is scrolled nevertheless, and it gives the sensation that the content was lost.
         */
-        const keyboardHeightVh = (keyboardHeight * 100) / windowHeight;
-        const paddingVh = (mobilePaddingTop * 100) / windowHeight;
-        minHeight = 100 - keyboardHeightVh - paddingVh;
+
+        if (!persistScrollGutter) {
+          // in iOS Hybrid Editor windowHeight doesn't exclude keyboardHeight
+          // in Android keyboardHeight is always set to -1;
+          minHeight = windowHeight - keyboardHeight - 2 * mobilePaddingTop;
+        } else {
+          // in iOS Compact Editor windowHeight excludes keyboardHeight
+          minHeight = windowHeight - mobilePaddingTop;
+          // isExpanded can be true of false for Compact editor
+          currentIsExpanded = isExpanded;
+        }
       }
       return (
         <WithFlash animate={maxContentSizeReached}>
-          <MobileEditor
-            isMaxContentSizeReached={maxContentSizeReached}
-            maxHeight={maxHeight}
-          >
+          <div css={mobileEditor} ref={ref}>
             <ClickArea
               editorView={editorView || undefined}
               minHeight={minHeight}
               persistScrollGutter={persistScrollGutter}
+              isExpanded={currentIsExpanded}
+              editorDisabled={editorDisabled}
             >
-              <ContentArea>
+              <ContentArea featureFlags={featureFlags}>
                 <div className="ak-editor-content-area">{children}</div>
               </ContentArea>
             </ClickArea>
-          </MobileEditor>
+          </div>
         </WithFlash>
       );
     },
-    [children, maxHeight, editorView, persistScrollGutter],
+    [
+      children,
+      editorView,
+      persistScrollGutter,
+      editorDisabled,
+      ref,
+      featureFlags,
+      api?.base?.sharedState,
+    ],
   );
+  return render({
+    maxContentSize: maxContentSizeState,
+    mobileDimensions: mobileDimensionsState,
+  });
+});
 
-  return (
-    <WithPluginState
-      plugins={{
-        maxContentSize: maxContentSizePluginKey,
-        mobileScroll: mobileScrollPluginKey,
-      }}
-      render={render}
-    />
-  );
+interface PluginStates {
+  mobileDimensions?: MobileDimensionsPluginState;
+  maxContentSize?: MaxContentSizePluginState;
 }

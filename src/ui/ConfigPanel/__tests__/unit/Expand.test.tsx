@@ -1,11 +1,16 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import { act } from '@testing-library/react-hooks';
-import { IntlProvider } from 'react-intl';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { matchers } from '@emotion/jest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { IntlProvider } from 'react-intl-next';
 import { FieldDefinition } from '@atlaskit/editor-common/extensions';
-import { FieldComponent, FieldComponentProps } from '../../FormContent';
+import { FieldComponent } from '../../FormContent';
+import { FieldComponentProps } from '../../types';
+
+expect.extend(matchers);
 
 describe('Expand', () => {
+  const contentContainerId = 'expand-content-container';
   const mountExpand = (field: FieldDefinition) => {
     const props: FieldComponentProps = {
       field,
@@ -14,7 +19,7 @@ describe('Expand', () => {
       onFieldChange: () => {},
     };
 
-    return mount(
+    return render(
       <IntlProvider locale="en">
         <FieldComponent {...props} />
       </IntlProvider>,
@@ -38,42 +43,39 @@ describe('Expand', () => {
   };
 
   it('should mount expand collapsed, and click to expand', () => {
-    const target = mountExpand(expandFieldConf);
+    mountExpand(expandFieldConf);
 
-    expect(target.find('Expand').length).toEqual(1);
-    expect(target.find('ExpandContentContainer')).toHaveStyleRule(
+    expect(screen.queryByTestId('expand-config-field')).not.toBeNull();
+
+    expect(screen.queryByTestId(contentContainerId)).toHaveStyleRule(
       'display',
       'none',
     );
 
-    act(() => {
-      target.find('button[data-testid="form-expand-toggle"]').simulate('click');
-    });
+    fireEvent.click(screen.getByTestId('form-expand-toggle'));
 
-    expect(target.find('ExpandContentContainer')).toHaveStyleRule(
+    expect(screen.queryByTestId(contentContainerId)).toHaveStyleRule(
       'display',
       'block',
     );
   });
 
   it('should mount expand expanded, and click to collapse', () => {
-    const target = mountExpand({
+    mountExpand({
       ...expandFieldConf,
       isExpanded: true,
     });
 
-    expect(target.find('Expand').length).toEqual(1);
+    expect(screen.queryByTestId('expand-config-field')).not.toBeNull();
 
-    expect(target.find('ExpandContentContainer')).toHaveStyleRule(
+    expect(screen.queryByTestId(contentContainerId)).toHaveStyleRule(
       'display',
       'block',
     );
 
-    act(() => {
-      target.find('button[data-testid="form-expand-toggle"]').simulate('click');
-    });
+    fireEvent.click(screen.getByTestId('form-expand-toggle'));
 
-    expect(target.find('ExpandContentContainer')).toHaveStyleRule(
+    expect(screen.queryByTestId(contentContainerId)).toHaveStyleRule(
       'display',
       'none',
     );

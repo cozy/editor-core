@@ -1,9 +1,10 @@
-import { CollabEditProvider } from '@atlaskit/editor-common';
+import type { Plugin, Transaction } from '@atlaskit/editor-prosemirror/state';
+import type { CollabEditProvider } from '@atlaskit/editor-common/collab';
 import { sendTransaction } from '../../../events/send-transaction';
 import collabEditPlugin from '../../../';
 
-import { EditorState } from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
+import { EditorState } from '@atlaskit/editor-prosemirror/state';
+import { Schema } from '@atlaskit/editor-prosemirror/model';
 
 describe('collab-edit: send-transaction.ts', () => {
   const schema = new Schema({
@@ -22,14 +23,14 @@ describe('collab-edit: send-transaction.ts', () => {
       },
     },
   });
-  const plugin = collabEditPlugin({});
+  const plugin = collabEditPlugin({ config: {} });
   // @ts-ignore
   const pmPlugin = plugin.pmPlugins!()[0].plugin({
     dispatch: jest.fn(),
   });
   let oldEditorState = EditorState.create({
     schema,
-    plugins: [pmPlugin!],
+    plugins: [pmPlugin! as Plugin],
   });
   let useNativePlugin = false;
 
@@ -49,10 +50,8 @@ describe('collab-edit: send-transaction.ts', () => {
   describe('when the transaction is not coming from scaleTable', () => {
     it('should call the provider send function', () => {
       const transaction = oldEditorState.tr.insertText('123');
-      const {
-        state: newEditorState,
-        transactions,
-      } = oldEditorState.applyTransaction(transaction);
+      const { state: newEditorState, transactions } =
+        oldEditorState.applyTransaction(transaction);
 
       sendTransaction({
         originalTransaction: transaction,
@@ -71,10 +70,8 @@ describe('collab-edit: send-transaction.ts', () => {
       const transaction = oldEditorState.tr
         .insertText('123')
         .setMeta('scaleTable', true);
-      const {
-        state: newEditorState,
-        transactions,
-      } = oldEditorState.applyTransaction(transaction);
+      const { state: newEditorState, transactions } =
+        oldEditorState.applyTransaction(transaction);
       useNativePlugin = false;
 
       sendTransaction({
@@ -92,12 +89,10 @@ describe('collab-edit: send-transaction.ts', () => {
   describe('when the transaction has an appendedTransaction', () => {
     it('should send if the appendedTransaction changes the doc', () => {
       const transaction = oldEditorState.tr;
-      const {
-        state: newEditorState,
-        transactions,
-      } = oldEditorState.applyTransaction(transaction);
+      const { state: newEditorState, transactions } =
+        oldEditorState.applyTransaction(transaction);
 
-      transactions.push(oldEditorState.tr.insertText('123'));
+      (transactions as Transaction[]).push(oldEditorState.tr.insertText('123'));
 
       sendTransaction({
         originalTransaction: transaction,
@@ -115,10 +110,8 @@ describe('collab-edit: send-transaction.ts', () => {
     it('should always send the current state as the last parameter to the send function', () => {
       const transaction = oldEditorState.tr;
       transaction.insertText('LOL');
-      const {
-        state: newEditorState,
-        transactions,
-      } = oldEditorState.applyTransaction(transaction);
+      const { state: newEditorState, transactions } =
+        oldEditorState.applyTransaction(transaction);
 
       sendTransaction({
         originalTransaction: transaction,
@@ -138,10 +131,8 @@ describe('collab-edit: send-transaction.ts', () => {
     describe('and when the transaction is not changing the document', () => {
       it('should call the send function', () => {
         const transaction = oldEditorState.tr;
-        const {
-          state: newEditorState,
-          transactions,
-        } = oldEditorState.applyTransaction(transaction);
+        const { state: newEditorState, transactions } =
+          oldEditorState.applyTransaction(transaction);
 
         sendTransaction({
           originalTransaction: transaction,
@@ -159,10 +150,8 @@ describe('collab-edit: send-transaction.ts', () => {
       it('should call the send function', () => {
         const transaction = oldEditorState.tr;
         transaction.setMeta('isRemote', true);
-        const {
-          state: newEditorState,
-          transactions,
-        } = oldEditorState.applyTransaction(transaction);
+        const { state: newEditorState, transactions } =
+          oldEditorState.applyTransaction(transaction);
 
         sendTransaction({
           originalTransaction: transaction,

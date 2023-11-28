@@ -1,20 +1,22 @@
-import React, { PureComponent, ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import React, { PureComponent } from 'react';
 
-import { defineMessages, InjectedIntlProps, injectIntl } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { defineMessages, injectIntl } from 'react-intl-next';
 
 import {
   ProviderFactory,
-  Providers,
   WithProviders,
-} from '@atlaskit/editor-common';
-import { ContentRef } from '@atlaskit/task-decision';
+} from '@atlaskit/editor-common/provider-factory';
+import type { Providers } from '@atlaskit/editor-common/provider-factory';
+import type { ContentRef } from '@atlaskit/task-decision';
 
 import TaskItemWithProviders from './task-item-with-providers';
 
 const messages = defineMessages({
   placeholder: {
     id: 'fabric.editor.taskPlaceholder',
-    defaultMessage: "Type your action,",
+    defaultMessage: "Type your action, use '@' to assign to someone.",
     description:
       'Placeholder description for an empty action/task in the editor',
   },
@@ -23,6 +25,7 @@ const messages = defineMessages({
 export interface TaskProps {
   taskId: string;
   isDone: boolean;
+  isFocused?: boolean;
   contentRef?: ContentRef;
   onChange?: (taskId: string, isChecked: boolean) => void;
   showPlaceholder?: boolean;
@@ -31,12 +34,15 @@ export interface TaskProps {
   disabled?: boolean;
 }
 
-export class TaskItem extends PureComponent<TaskProps & InjectedIntlProps, {}> {
+export class TaskItem extends PureComponent<
+  TaskProps & WrappedComponentProps,
+  {}
+> {
   static displayName = 'TaskItem';
 
   private providerFactory: ProviderFactory;
 
-  constructor(props: TaskProps & InjectedIntlProps) {
+  constructor(props: TaskProps & WrappedComponentProps) {
     super(props);
     this.providerFactory = props.providers || new ProviderFactory();
   }

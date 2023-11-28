@@ -1,11 +1,8 @@
-import {
-  InlineCommentAction,
-  InlineCommentPluginState,
-  ACTIONS,
-} from './types';
-import { DecorationSet } from 'prosemirror-view';
+import type { InlineCommentAction, InlineCommentPluginState } from './types';
+import { ACTIONS } from './types';
+import { DecorationSet } from '@atlaskit/editor-prosemirror/view';
 import { addDraftDecoration } from '../utils';
-import { EditorState } from 'prosemirror-state';
+import type { EditorState } from '@atlaskit/editor-prosemirror/state';
 
 export default (
   pluginState: InlineCommentPluginState,
@@ -73,7 +70,12 @@ export default (
         ...(isVisible ? pluginState : getNewDraftState(pluginState, false)),
         isVisible,
       };
-
+    case ACTIONS.SET_SELECTED_ANNOTATION:
+      return {
+        ...pluginState,
+        selectedAnnotations: [...action.data.selectedAnnotations],
+        skipSelectionHandling: true,
+      };
     default:
       return pluginState;
   }
@@ -82,7 +84,7 @@ export default (
 function getNewDraftState(
   pluginState: InlineCommentPluginState,
   drafting: boolean,
-  editorState?: EditorState<any>,
+  editorState?: EditorState,
 ) {
   let { draftDecorationSet } = pluginState;
 

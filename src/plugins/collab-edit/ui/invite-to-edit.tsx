@@ -1,11 +1,15 @@
-import React from 'react';
+/** @jsx jsx */
+import React, { Fragment } from 'react';
+import { jsx } from '@emotion/react';
 
 import InviteTeamIcon from '@atlaskit/icon/glyph/editor/add';
 import ToolbarButton from '../../../ui/ToolbarButton';
-import { InviteTeamWrapper } from './styles';
+import { inviteTeamWrapper } from './styles';
 import { InviteToEditComponentProps } from '../types';
 
-const ID: React.StatelessComponent = (props) => <>{props.children}</>;
+const ID: React.StatelessComponent = (props) => (
+  <Fragment>{props.children}</Fragment>
+);
 
 export interface InviteToEditButtonProps {
   onClick?: React.MouseEventHandler;
@@ -14,14 +18,15 @@ export interface InviteToEditButtonProps {
   title: string;
 }
 
-export const InviteToEditButton: React.StatelessComponent<InviteToEditButtonProps> = (
+export const InviteToEditButton: React.FC<InviteToEditButtonProps> = (
   props,
 ) => {
   const { Component, onClick, selected, title } = props;
 
-  const iconBefore = React.useMemo(() => <InviteTeamIcon label={title} />, [
-    title,
-  ]);
+  const iconBefore = React.useMemo(
+    () => <InviteTeamIcon label={title} />,
+    [title],
+  );
 
   if (!Component && !onClick) {
     return null;
@@ -30,7 +35,7 @@ export const InviteToEditButton: React.StatelessComponent<InviteToEditButtonProp
   const Wrapper = Component ? Component : ID;
 
   return (
-    <InviteTeamWrapper>
+    <div css={inviteTeamWrapper}>
       <Wrapper>
         <ToolbarButton
           className="invite-to-edit"
@@ -41,6 +46,6 @@ export const InviteToEditButton: React.StatelessComponent<InviteToEditButtonProp
           iconBefore={iconBefore}
         />
       </Wrapper>
-    </InviteTeamWrapper>
+    </div>
   );
 };

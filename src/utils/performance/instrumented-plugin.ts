@@ -1,51 +1,58 @@
-import {
+import { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import type {
   EditorState,
-  Transaction,
-  Plugin,
-  PluginSpec,
-} from 'prosemirror-state';
-import { Schema } from 'prosemirror-model';
-import { startMeasure, stopMeasure } from '@atlaskit/editor-common';
-import { EditorView } from 'prosemirror-view';
-import { EditorProps } from '../../types/editor-props';
-import { TransactionTracker } from './track-transactions';
+  ReadonlyTransaction,
+  SafePluginSpec,
+} from '@atlaskit/editor-prosemirror/state';
+import { startMeasure, stopMeasure } from '@atlaskit/editor-common/utils';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { EditorProps } from '../../types/editor-props';
+import type { TransactionTracker } from './track-transactions';
+import { freezeUnsafeTransactionProperties } from './safer-transactions';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
 
-export class InstrumentedPlugin<
-  PluginState,
-  NodeSchema extends Schema<any, any>
-> extends Plugin<PluginState, NodeSchema> {
+type InstrumentedPluginOptions = EditorProps['performanceTracking'] & {
+  dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
+};
+
+export class InstrumentedPlugin<PluginState> extends SafePlugin<PluginState> {
   constructor(
-    spec: PluginSpec,
-    options: EditorProps['performanceTracking'] = {},
+    spec: SafePluginSpec,
+    options: InstrumentedPluginOptions = {},
     transactionTracker?: TransactionTracker,
   ) {
     const {
       transactionTracking = { enabled: false },
       uiTracking = { enabled: false },
+      dispatchAnalyticsEvent,
     } = options;
 
-    if (transactionTracking.enabled && spec.state && transactionTracker) {
+    if (spec.state) {
       const originalApply = spec.state.apply.bind(spec.state);
 
       spec.state.apply = (
-        tr: Transaction<NodeSchema>,
+        aTr: ReadonlyTransaction,
         value: PluginState,
-        oldState: EditorState<NodeSchema>,
-        newState: EditorState<NodeSchema>,
+        oldState: EditorState,
+        newState: EditorState,
       ) => {
-        const shouldTrackTransactions = transactionTracker.shouldTrackTransaction(
-          transactionTracking,
+        const self = this as any;
+        const tr = new Proxy(
+          aTr,
+          freezeUnsafeTransactionProperties<ReadonlyTransaction>({
+            dispatchAnalyticsEvent,
+            pluginKey: self.key,
+          }),
         );
+        const shouldTrackTransactions =
+          transactionTracker?.shouldTrackTransaction(transactionTracking);
 
-        if (!shouldTrackTransactions) {
+        if (!shouldTrackTransactions || !transactionTracker) {
           return originalApply(tr, value, oldState, newState);
         }
 
-        const {
-          startMeasure,
-          stopMeasure,
-        } = transactionTracker.getMeasureHelpers(transactionTracking);
-        const self = this as any;
+        const { startMeasure, stopMeasure } =
+          transactionTracker.getMeasureHelpers(transactionTracking);
         const measure = `🦉${self.key}::apply`;
         startMeasure(measure);
         const result = originalApply(tr, value, oldState, newState);
@@ -53,6 +60,8 @@ export class InstrumentedPlugin<
         return result;
       };
     }
+
+    const { samplingRate: uiTrackingSamplingRate = 100 } = uiTracking;
 
     if (uiTracking.enabled && spec.view) {
       const originalView = spec.view.bind(spec);
@@ -62,13 +71,33 @@ export class InstrumentedPlugin<
         const measure = `🦉${self.key}::view::update`;
 
         const view = originalView(editorView);
+        let uiTrackingSamplingCounter = 0;
 
         if (view.update) {
           const originalUpdate = view.update;
+
           view.update = (view, state) => {
-            startMeasure(measure);
+            const shouldTrack =
+              uiTrackingSamplingRate && uiTrackingSamplingCounter === 0;
+
+            if (shouldTrack) {
+              startMeasure(measure);
+            }
+
             originalUpdate(view, state);
-            stopMeasure(measure, () => {});
+
+            if (shouldTrack) {
+              stopMeasure(measure, () => {});
+            }
+
+            uiTrackingSamplingCounter++;
+
+            if (
+              uiTrackingSamplingRate &&
+              uiTrackingSamplingCounter >= uiTrackingSamplingRate
+            ) {
+              uiTrackingSamplingCounter = 0;
+            }
           };
         }
 
@@ -79,11 +108,15 @@ export class InstrumentedPlugin<
     super(spec);
   }
 
-  public static fromPlugin<T, V extends Schema<any, any>>(
-    plugin: Plugin<T, V>,
-    options: EditorProps['performanceTracking'],
+  public static fromPlugin<T>(
+    plugin: SafePlugin<T>,
+    options: InstrumentedPluginOptions,
     transactionTracker?: TransactionTracker,
-  ): InstrumentedPlugin<T, V> {
-    return new InstrumentedPlugin(plugin.spec, options, transactionTracker);
+  ): InstrumentedPlugin<T> {
+    return new InstrumentedPlugin(
+      plugin.spec as SafePluginSpec,
+      options,
+      transactionTracker,
+    );
   }
 }

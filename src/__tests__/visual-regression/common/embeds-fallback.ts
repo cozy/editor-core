@@ -1,4 +1,10 @@
-import { snapshot, initFullPageEditorWithAdf, Device } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initFullPageEditorWithAdf,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/embeds-fallback.adf.json';
 import erroredViewAdf from './__fixtures__/embeds-errored.adf.json';
 import { waitForBlockCardSelection } from '@atlaskit/media-integration-test-helpers';

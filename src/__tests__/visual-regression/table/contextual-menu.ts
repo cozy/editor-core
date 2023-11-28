@@ -1,6 +1,13 @@
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { snapshot, initFullPageEditorWithAdf } from '../_utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initFullPageEditorWithAdf,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/default-table.adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { retryUntilStablePosition } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   clickFirstCell,
   selectTableOption,
@@ -10,8 +17,9 @@ import {
   getSelectorForTableCell,
   mergeCells,
   splitCells,
-} from '../../__helpers/page-objects/_table';
-import { pressKeyCombo } from '../../__helpers/page-objects/_keyboard';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { pressKeyCombo } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
 
 describe('Table contextual menu: fullpage', () => {
   let page: PuppeteerPage;
@@ -25,12 +33,26 @@ describe('Table contextual menu: fullpage', () => {
     beforeAll(async () => {
       await pageInit();
     });
-    // FIXME: Inconsistent doing the Puppeteer's upgrade
-    // https://product-fabric.atlassian.net/browse/ED-13503
-    it.skip('toggles the context menu correctly', async () => {
+    it('toggles the context menu correctly', async () => {
       await clickCellOptions(page);
+      await retryUntilStablePosition(
+        page,
+        async () => {
+          await page.waitForSelector(tableSelectors.contextualMenu);
+        },
+        tableSelectors.contextualMenu,
+      );
       await snapshot(page);
       await clickCellOptions(page);
+      await retryUntilStablePosition(
+        page,
+        async () => {
+          await page.waitForSelector(tableSelectors.contextualMenu, {
+            hidden: true,
+          });
+        },
+        tableSelectors.tableWrapper,
+      );
       await snapshot(page);
     });
 
@@ -64,6 +86,13 @@ describe('Table contextual menu: fullpage', () => {
 
       // undo to re-merge
       await pressKeyCombo(page, ['Meta', 'KeyZ']);
+      await retryUntilStablePosition(
+        page,
+        async () => {
+          await page.waitForSelector(tableSelectors.contextualMenuButton);
+        },
+        tableSelectors.tableWrapper,
+      );
       await snapshot(page);
     });
   });
@@ -71,7 +100,8 @@ describe('Table contextual menu: fullpage', () => {
     beforeEach(async () => {
       await pageInit({ width: 768, height: 768 });
     });
-    it('ensures context menu is positioned correctly when there is not enought space right side of menu button ', async () => {
+    // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+    it.skip('ensures context menu is positioned correctly when there is not enought space right side of menu button ', async () => {
       await navigateToTableCell(page, 1, 3);
       await clickCellOptions(page);
       await snapshot(page);

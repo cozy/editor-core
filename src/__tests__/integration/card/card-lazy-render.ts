@@ -1,16 +1,21 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import { getDocFromElement, editable } from '../_helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  getDocFromElement,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 import * as cardLazyAdf from './_fixtures_/inline-card-lazy.adf.json';
+import type { SmartLinkTestWindow } from '@atlaskit/media-integration-test-helpers';
 import {
   waitForLazyRenderedCard,
   waitForResolvedInlineCard,
   inlineCardSelector,
   lazyCardSelector,
-  SmartLinkTestWindow,
   getRequestedCards,
 } from '@atlaskit/media-integration-test-helpers';
 
@@ -22,7 +27,7 @@ const TOTAL_CARDS = 7;
 
 BrowserTestCase(
   'card: should lazy render cards after scrolling down, requesting data in the background (with prefetching)',
-  { skip: ['safari', 'edge'] },
+  { skip: [] },
   async (client: ClientType, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
     const cardSelector = inlineCardSelector();

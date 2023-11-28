@@ -2,16 +2,12 @@
 
 import React from 'react';
 
-import {
-  Provider as SmartCardProvider,
-  Client,
-  ResolveResponse,
-  CardAppearance,
-  EditorCardProvider,
-} from '@atlaskit/smart-card';
+import { ResolveResponse, CardAppearance } from '@atlaskit/smart-card';
+import { SmartCardProvider, CardClient } from '@atlaskit/link-provider';
+import { EditorCardProvider } from '@atlaskit/editor-card-provider';
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 
-import Editor from './../src/editor';
+import { Editor } from './../src';
 import EditorContext from './../src/ui/EditorContext';
 
 const jiraUrlMatch = /https?\:\/\/[a-zA-Z0-9]+\.atlassian\.net\/browse\//i;
@@ -47,7 +43,7 @@ export class JiraCardProvider extends EditorCardProvider {
 /**
  * A Client is responsible for resolving URL to JSON-LD with metadata
  */
-export class JiraCardClient extends Client {
+export class JiraCardClient extends CardClient {
   fetchData(url: string): Promise<ResolveResponse> {
     if (!url.match(jiraUrlMatch)) {
       // This doesn't look like Jira URL, so let's use native resolver

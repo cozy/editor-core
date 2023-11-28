@@ -1,16 +1,5349 @@
 # @atlaskit/editor-core
 
+## 189.3.28
+
+### Patch Changes
+
+- [#43379](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43379) [`482c025520d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/482c025520d) - ED-20763 Upgrade ADF schema version to 33.2.3 for MBE nodes.
+- Updated dependencies
+
+## 189.3.27
+
+### Patch Changes
+
+- [#43060](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43060) [`f576ff89904`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f576ff89904) - ED-20278 Fix backslash duplication in codeBlock when pasting as plain text
+- [#43343](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43343) [`62499cd0af0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/62499cd0af0) - Decouple tasks and decisions plugin from editor core.
+- Updated dependencies
+
+## 189.3.26
+
+### Patch Changes
+
+- [#43164](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43164) [`3aeedf55e29`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3aeedf55e29) - [ED-20068] Move editSelectedExtension to ExtensionPluginActions
+- Updated dependencies
+
+## 189.3.25
+
+### Patch Changes
+
+- [#43274](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43274) [`d162c359ccf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d162c359ccf) - Move indentation plugin code from editor-core to editor-plugin-indentation.
+- Updated dependencies
+
+## 189.3.24
+
+### Patch Changes
+
+- [#42256](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42256) [`9c1a79051b6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9c1a79051b6) - Avoid submitting certain attributes for config panel analytic events
+
+## 189.3.23
+
+### Patch Changes
+
+- [#42651](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42651) [`92e9957a8bf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92e9957a8bf) - [ux] [ECA11Y-148] Added screen reader announcement for Find and Replace search results count
+- [#43111](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43111) [`d71dda4f834`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d71dda4f834) - Decouple indentation plugin from editor-core.
+- Updated dependencies
+
+## 189.3.22
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.3.20
+
+### Patch Changes
+
+- [#43094](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43094) [`c797611f8ad`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c797611f8ad) - Internally decouple extension plugin from editor-core.
+- Updated dependencies
+
+## 189.3.19
+
+### Patch Changes
+
+- [#43099](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43099) [`743652a9a4a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/743652a9a4a) - Remove deprecated internal analytics plugin.
+- Updated dependencies
+
+## 189.3.18
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.3.17
+
+### Patch Changes
+
+- [#42702](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42702) [`79e5ed8fac7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/79e5ed8fac7) - ED-19543 remove unused FF check
+- Updated dependencies
+
+## 189.3.16
+
+### Patch Changes
+
+- [#43042](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/43042) [`fd547efa4e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fd547efa4e5) - Remove `macro` editor plugin and migrate functionality into extension plugin.
+- Updated dependencies
+
+## 189.3.15
+
+### Patch Changes
+
+- [#42925](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42925) [`8ea16423505`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8ea16423505) - Removes FF platform.editor.update-table-cell-width-via-step
+- [#42859](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42859) [`16cc82bf2e3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16cc82bf2e3) - ED-20721 Extract Expand Plugin
+- [#42937](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42937) [`c9a523f6662`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c9a523f6662) - Remove internal withAnalytics function.
+- [#42451](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42451) [`36764ad64a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36764ad64a9) - [ECA11Y-87] Mentioned name is not communicated to the users of screen reader
+- Updated dependencies
+
+## 189.3.14
+
+### Patch Changes
+
+- [#42995](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42995) [`a527682dee6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a527682dee6) - add in missing dependencies for imported types
+- [#42618](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42618) [`d55f8d9c0a3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d55f8d9c0a3) - ED-20359 extracted max-content-size plugin from editor-core
+- Updated dependencies
+
+## 189.3.13
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.3.12
+
+### Patch Changes
+
+- [#42899](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42899) [`4b3e40bff6f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4b3e40bff6f) - Added a new media plugin state `allowInlineImages` to support upcoming feature development.
+- [#42848](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42848) [`f2f8428f703`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f2f8428f703) - Abandons feature flag lp-link-picker-focus-trap as it was not successfully rolled out. Will re-introduce as platform feature flag as/when necessary.
+
+## 189.3.11
+
+### Patch Changes
+
+- [#42869](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42869) [`e49e90d2093`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e49e90d2093) - Decoupling internal analytics plugin from extensions and macro plugins.
+- Updated dependencies
+
+## 189.3.10
+
+### Patch Changes
+
+- [#42818](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42818) [`66c577c11dd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/66c577c11dd) - ED-20659: migrates paste webdriver tests to libra
+- [#42834](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42834) [`a4695f1205a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a4695f1205a) - Fix TS errors for editor packages in AFM
+
+## 189.3.9
+
+### Patch Changes
+
+- [#42746](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42746) [`ea352517252`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea352517252) - Update editor dropdown menu component to support section behind platform.editor.menu.group-items FF
+- Updated dependencies
+
+## 189.3.7
+
+### Patch Changes
+
+- [#42151](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42151) [`192b62f6d36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/192b62f6d36) - Cleans up editor feature flag 'lp-analytics-events-next'. Card plugin will now always dispatch link tracking events.
+
+## 189.3.6
+
+### Patch Changes
+
+- [#42770](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42770) [`c7a6a824958`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c7a6a824958) - Extract code-block plugin from editor-core as `@atlaskit/editor-plugin-code-block`.
+- Updated dependencies
+
+## 189.3.4
+
+### Patch Changes
+
+- [#42754](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42754) [`21c26ae2798`](https://bitbucket.org/atlassian/atlassian-frontend/commits/21c26ae2798) - stop explicitly stating the version in which deprecations will be actioned in
+- [#42757](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42757) [`73c66d2c6db`](https://bitbucket.org/atlassian/atlassian-frontend/commits/73c66d2c6db) - remove media securedClipboard FF
+- Updated dependencies
+
+## 189.3.3
+
+### Patch Changes
+
+- [#42734](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42734) [`9a298d1b3c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9a298d1b3c3) - Decouple code-block plugin from editor-core.
+
+## 189.3.2
+
+### Patch Changes
+
+- [#42567](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42567) [`7c771cc4e22`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7c771cc4e22) - [ux] [ECA11Y-142] Added feature flag to rollout A11y changes for find and replace
+
+## 189.3.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.3.0
+
+### Minor Changes
+
+- [#42535](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42535) [`39770b766f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/39770b766f1) - [ux] MODES-3618 Use hideAvatarGroup instead of feature flag to determine whether avatar should be hidden
+
+## 189.2.0
+
+### Minor Changes
+
+- [#42452](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42452) [`bdbe13c80c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bdbe13c80c9) - ED-19900 Removing indentationButtonsInTheToolbar FF fallback from showIndentationButtons editor prop.
+
+### Patch Changes
+
+- [#42352](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42352) [`965649a4121`](https://bitbucket.org/atlassian/atlassian-frontend/commits/965649a4121) - Decouple find replace prop from the full page toolbar.
+- [#42604](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42604) [`182627d0f5e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/182627d0f5e) - Extracted panel plugin from editor-core as @atlaskit/editor-plugin-panel
+- Updated dependencies
+
+## 189.1.15
+
+### Patch Changes
+
+- [#42584](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42584) [`2191409c070`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2191409c070) - Decouple panel plugin from editor-core.
+
+## 189.1.13
+
+### Patch Changes
+
+- [#42391](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42391) [`f46e9fd8b00`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f46e9fd8b00) - [ux] ED-20479: Extracts placeholder-test editor plugin from editor-core
+- Updated dependencies
+
+## 189.1.12
+
+### Patch Changes
+
+- [#42505](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42505) [`48e5f1efdde`](https://bitbucket.org/atlassian/atlassian-frontend/commits/48e5f1efdde) - Extract layout plugin into new package @atlaskit/editor-plugin-layout.
+- Updated dependencies
+
+## 189.1.11
+
+### Patch Changes
+
+- [#42477](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42477) [`8f5175dc714`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f5175dc714) - Decouple layout plugin from editor-core
+
+## 189.1.10
+
+### Patch Changes
+
+- [#42152](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42152) [`0097171c562`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0097171c562) - ED-19766-collab: Adding collab support for paste options toolbar for confluence
+
+## 189.1.7
+
+### Patch Changes
+
+- [#42426](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42426) [`fb9b3dea8f8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fb9b3dea8f8) - NO-ISSUE dependency clean-up in editor-core
+- [#42431](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42431) [`b6fd3da758d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b6fd3da758d) - Remove some unused barrel files.
+- Updated dependencies
+
+## 189.1.6
+
+### Patch Changes
+
+- [#42416](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42416) [`d4e57bf9189`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d4e57bf9189) - Removing unused dependencies in editor-core.
+
+## 189.1.5
+
+### Patch Changes
+
+- [#42373](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42373) [`f607a815ffc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f607a815ffc) - Decoupled deprecated analytics plugin imports from remaining plugins except for collab-edit, macro, find-replace, extension.
+- Updated dependencies
+
+## 189.1.3
+
+### Patch Changes
+
+- [#42329](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42329) [`2bdcd641710`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2bdcd641710) - Decouple indentation plugin from deprecated analytics plugin.
+
+## 189.1.2
+
+### Patch Changes
+
+- [#42323](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42323) [`a4cb1c16536`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a4cb1c16536) - Fix useSharedPluginState if the editor API changes to ensure that the state updates.
+- Updated dependencies
+
+## 189.1.1
+
+### Patch Changes
+
+- [#42279](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42279) [`f4fd8d16522`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f4fd8d16522) - ED-20556 Extract Fragment plugin
+- [#42255](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42255) [`44cdc71165d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/44cdc71165d) - Decouple annotation plugin from deprecated analytics plugin.
+- Updated dependencies
+
+## 189.1.0
+
+### Minor Changes
+
+- [#42210](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42210) [`a00e52ea8b8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a00e52ea8b8) - ED-20478: removes editor fake-text-cursor editor plugin and relocates it under placeholder-text plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.0.14
+
+### Patch Changes
+
+- [#42201](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42201) [`17d3a9df7c0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/17d3a9df7c0) - ED-20650 Move selectionToolbar higher in presets to prevent it from overriding the link picker floating toolbar
+- [#42194](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42194) [`6b57f690c13`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6b57f690c13) - Updating comment to trigger build in editor-plugin-ai branch
+
+## 189.0.12
+
+### Patch Changes
+
+- Updated dependencies
+
+## 189.0.11
+
+### Patch Changes
+
+- [#42153](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42153) [`56e9ac7f76d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56e9ac7f76d) - Extract text-color plugin from editor-core into @atlaskit/editor-plugin-text-color.
+- Updated dependencies
+
+## 189.0.10
+
+### Patch Changes
+
+- [#42139](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42139) [`9474db7141c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9474db7141c) - [ED-20622] Fix task and decision placeholder been removed when the TypeAhead was open
+
+## 189.0.9
+
+### Patch Changes
+
+- [#42137](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42137) [`88058fc0fcb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/88058fc0fcb) - ED-20197 moved editor preset and other prod code out of labs
+
+## 189.0.6
+
+### Patch Changes
+
+- [#41805](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41805) [`2d24da18c8e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2d24da18c8e) - ED-20043: Added feature flag for Editor Multi-bodied extension feature
+
+## 189.0.5
+
+### Patch Changes
+
+- [#42111](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42111) [`e60618a4870`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e60618a4870) - Decouple paste from the legacy analytics plugin.
+
+## 189.0.4
+
+### Patch Changes
+
+- [#41991](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41991) [`28a7171e7e3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/28a7171e7e3) - [ux] add shift click select backward feature to expand selection
+
+## 189.0.3
+
+### Patch Changes
+
+- [#41773](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41773) [`2ad7c026f79`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ad7c026f79) - ED-20478: partially decouples placeholdertext editor plugin for future package extraction, migrates associated failing integration tests to libra
+
+## 189.0.1
+
+### Patch Changes
+
+- [#39920](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39920) [`c08ab6beb65`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c08ab6beb65) - [ux] Adding new plugin for paste options toolbar. Also making required changes for the new toolbar in folating-toolbar plugin and paste plugin.
+- Updated dependencies
+
+## 189.0.0
+
+### Major Changes
+
+- [#42052](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/42052) [`12b16804202`](https://bitbucket.org/atlassian/atlassian-frontend/commits/12b16804202) - Decoupled submit-editor plugin, used to allow mod+Enter keyboard shortcut to trigger saving the editor content, from editor-core
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.13.6
+
+### Patch Changes
+
+- [#41967](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41967) [`8f6d293c321`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f6d293c321) - Decouple tasks and decisions, code block, and expand plugins from internal deprecated analytics plugin.
+
+## 188.13.5
+
+### Patch Changes
+
+- [#41921](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41921) [`12d685a4b30`](https://bitbucket.org/atlassian/atlassian-frontend/commits/12d685a4b30) - Removed chromeCursorHandlerFixedVersion feature flag
+
+## 188.13.3
+
+### Patch Changes
+
+- [#41937](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41937) [`d510a8e569a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d510a8e569a) - Migrate code-block, panel, and layout to new editor analytics API.
+
+## 188.13.2
+
+### Patch Changes
+
+- [#41634](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41634) [`e7cd20932b9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7cd20932b9) - on windows, toggles mark when the capslock is on
+
+## 188.13.1
+
+### Patch Changes
+
+- [#41501](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41501) [`67d84139104`](https://bitbucket.org/atlassian/atlassian-frontend/commits/67d84139104) - Update comment to point to the correct file
+
+## 188.13.0
+
+### Minor Changes
+
+- [#41895](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41895) [`96066a06792`](https://bitbucket.org/atlassian/atlassian-frontend/commits/96066a06792) - ED-20524: Adding shared state for paste plugin which will be used by new paste options toolbar plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.12.3
+
+### Patch Changes
+
+- [#41923](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41923) [`0120da635b9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0120da635b9) - [ED-20519] Decoupling more paste plugin from editor-core moving common functions to editor-common
+- Updated dependencies
+
+## 188.12.2
+
+### Patch Changes
+
+- [#40916](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40916) [`0b80e2e68ea`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0b80e2e68ea) - [ux] media single node with external type media should not show migration ui. Update external image with natural dimensions accordingly, and fixed whitespace issue in external image.
+
+## 188.12.1
+
+### Patch Changes
+
+- [#41835](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41835) [`94e9da119e9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94e9da119e9) - Decouple plugins from internal deprecated analytics plugin action "withAnalytics".
+- [#41731](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41731) [`8a9ec6c3e8d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8a9ec6c3e8d) - ED-20161 Added editor-plugin-selection-toolbar as a dependency behind platform.editor.enable-selection-toolbar_ucdwd feature flag. Also moves toolbar position logic from annotation plugin in to selection toolbar.
+- [#41168](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41168) [`94faad53870`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94faad53870) - [ux] Allows for navigating overlapping inline comments
+- Updated dependencies
+
+## 188.12.0
+
+### Minor Changes
+
+- [#41770](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41770) [`0d7961fbb3b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0d7961fbb3b) - Extract History Plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.11.4
+
+### Patch Changes
+
+- [#41366](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41366) [`b0fae9ec9d9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b0fae9ec9d9) - [ux] Avatar group removed from confluence full page toolbar if launch darkly feature flag set (platform.confluence.frontend.editor.no.platform.avatar.group)
+
+## 188.11.3
+
+### Patch Changes
+
+- [#41862](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41862) [`668cb3bcd3a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/668cb3bcd3a) - [ED-20519] Extract Paste Plugin: Moving the plugin type to a new package
+- Updated dependencies
+
+## 188.11.2
+
+### Patch Changes
+
+- [#41783](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41783) [`60b12780695`](https://bitbucket.org/atlassian/atlassian-frontend/commits/60b12780695) - [ED-20519] Extract Better Type Plugin to help paste decoupling and extraction
+- Updated dependencies
+
+## 188.11.1
+
+### Patch Changes
+
+- [#41780](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41780) [`986e88d2f0d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/986e88d2f0d) - [ED-20510] Fix: Hide placehoder wqhen TypeAhead opens inside a Task/Decision item
+
+## 188.11.0
+
+### Minor Changes
+
+- [#41651](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41651) [`68871f23ed3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68871f23ed3) - Extract Date Plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.10.7
+
+### Patch Changes
+
+- [#41648](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41648) [`20f43769aa7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/20f43769aa7) - [ED-19746] Extract mentions plugin from editor-core to its own package: @atlaskit/editor-plugin-mentions
+- Updated dependencies
+
+## 188.10.5
+
+### Patch Changes
+
+- [#41549](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41549) [`2b9597a3f14`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2b9597a3f14) - ESS-3896-remove-safer-dispatch-transaction-FF
+
+## 188.10.4
+
+### Patch Changes
+
+- [#40640](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40640) [`42b4beab30c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42b4beab30c) - ux [ED-18034] Inconsistent copy/paste behaviour of inline nodes in nested code blocks
+
+## 188.10.2
+
+### Patch Changes
+
+- [#40384](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40384) [`1ed4227201a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ed4227201a) - [ux] ED-19206 Fixing the issue of color Selection from toolbar doesn't refocus to editor
+- Updated dependencies
+
+## 188.10.1
+
+### Patch Changes
+
+- [#40950](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40950) [`6fa1988ec35`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6fa1988ec35) - clean up FF for enabling fallback to reconcile
+- [#40056](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40056) [`1a189e4493d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a189e4493d) - [ux] COMMENTS-481: reverted changes from ED-19508
+
+## 188.10.0
+
+### Minor Changes
+
+- [#41206](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41206) [`26d333c7c9b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/26d333c7c9b) - ED-20333 Added a new annotation example and fixed annotation experiement by defining off method on AnnotationUpdateEmitter class.
+- [#41572](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41572) [`e2c74f2ae09`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2c74f2ae09) - Scaffolding for editor-plugin-date. Adds package.json, LICENSE, tsconfig, exported type and other fundamentals required to create a new package
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.9.5
+
+### Patch Changes
+
+- [#41044](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41044) [`ea97b09431b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea97b09431b) - migrated the flaky card vr tests to gemeni-vr test
+
+## 188.9.2
+
+### Patch Changes
+
+- [#41047](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41047) [`8f0b00d165f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f0b00d165f) - [ED-20003] Extract TypeAhead from editor-core to its own package @atlaskit/editor-plugin-type-ahead
+- Updated dependencies
+
+## 188.9.0
+
+### Minor Changes
+
+- [#41276](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41276) [`12babd16e09`](https://bitbucket.org/atlassian/atlassian-frontend/commits/12babd16e09) - [ED-20361] Editor Plugin Save-on-enter
+
+### Patch Changes
+
+- [#41562](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41562) [`d698f4b6e02`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d698f4b6e02) - Small refactor of ReactEditorView
+- [#41560](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41560) [`75f34802424`](https://bitbucket.org/atlassian/atlassian-frontend/commits/75f34802424) - Extract the status plugin from editor-core to @atlaskit/editor-plugin-status
+- [#41434](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41434) [`a10d06a26af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a10d06a26af) - [ED-20429] Extracting Scroll-into-view plugin
+- Updated dependencies
+
+## 188.8.0
+
+### Minor Changes
+
+- [#41459](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41459) [`9874d0f70b0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9874d0f70b0) - [ED-20003] TypeAhead extraction: Replace the mobile view-subscription with proper API
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.7.6
+
+### Patch Changes
+
+- [#41438](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41438) [`b8d36b142ca`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b8d36b142ca) - Make insertDate and deleteDate an Editor Command
+
+## 188.7.5
+
+### Patch Changes
+
+- [#41452](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41452) [`53c21a4394a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53c21a4394a) - Decouple status plugin from editor-core.
+- Updated dependencies
+
+## 188.7.3
+
+### Patch Changes
+
+- [#41387](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41387) [`5b2cd469875`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5b2cd469875) - Fix scrolling to top of page on status selection.
+- Updated dependencies
+
+## 188.7.0
+
+### Minor Changes
+
+- [#41355](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41355) [`150c2a815ac`](https://bitbucket.org/atlassian/atlassian-frontend/commits/150c2a815ac) - Editor now forcibly sets position static on its dropdown menu items.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.6.0
+
+### Minor Changes
+
+- [#41341](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41341) [`bd128fb1cfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bd128fb1cfb) - Decouple status plugin from editor-core. Add new actions for updating status.
+
+## 188.5.2
+
+### Patch Changes
+
+- [#40750](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40750) [`fc19a7b9edd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc19a7b9edd) - [ED-19875] Extraction of Editor Core's Selection Plugin into independent package '@atlaskit/editor-plugin-selection'.
+- Updated dependencies
+
+## 188.5.0
+
+### Minor Changes
+
+- [#41289](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41289) [`805e20742e7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/805e20742e7) - Decouple Date Plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.4.0
+
+### Minor Changes
+
+- [#41203](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41203) [`4aa3dc2fa1a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4aa3dc2fa1a) - [ED-20291] New package for Editor border plugin
+
+### Patch Changes
+
+- [#41143](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41143) [`7d6dfe2befa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d6dfe2befa) - [ED-20003] Replace TyepAhead API for Editor Plugin Injection API
+- Updated dependencies
+
+## 188.3.1
+
+### Patch Changes
+
+- [#41187](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41187) [`c09b3a047f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c09b3a047f4) - Extract media plugin from `@atlaskit/editor-core` to `@atlaskit/editor-plugin-media.
+- Updated dependencies
+
+## 188.3.0
+
+### Minor Changes
+
+- [#41239](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41239) [`7d70b962986`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d70b962986) - Extract Caption Plugin from Editor Core
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.2.11
+
+### Patch Changes
+
+- [#41224](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41224) [`6818e578fd6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6818e578fd6) - Added new Tables toggle option for enabling Drag and Drop
+- Updated dependencies
+
+## 188.2.9
+
+### Patch Changes
+
+- [#41100](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41100) [`54a4a1cef12`](https://bitbucket.org/atlassian/atlassian-frontend/commits/54a4a1cef12) - ED-20264 - clipboard plugin extraction
+- Updated dependencies
+
+## 188.2.8
+
+### Patch Changes
+
+- [#41120](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41120) [`011df0ba8ab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/011df0ba8ab) - Fix media icon showing in comment editor toolbar due to state not updating.
+
+## 188.2.7
+
+### Patch Changes
+
+- [#41217](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41217) [`288b7a988c7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/288b7a988c7) - Caption Plugin Scaffolding
+- [#41209](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41209) [`1e9d1d550ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e9d1d550ec) - Decouple Caption Plugin from editor-core
+- Updated dependencies
+
+## 188.2.6
+
+### Patch Changes
+
+- [#41212](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41212) [`db0107e09d7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db0107e09d7) - Updates failing datasources playwright test
+
+## 188.2.5
+
+### Patch Changes
+
+- [#41103](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41103) [`e268e178096`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e268e178096) - ED-20195 Decouple Text color plugin from editor core
+- Updated dependencies
+
+## 188.2.4
+
+### Patch Changes
+
+- [#39425](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39425) [`4c27d14af2e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4c27d14af2e) - [ED-19408] Fix issue where FocusTrap returnFocus was causing the cursor to end up at the beginning of the document when inserting elements using the element browser modal.
+
+## 188.2.3
+
+### Patch Changes
+
+- [#41015](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41015) [`a372c39bc57`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a372c39bc57) - ED-20297 fixed nested video overlapping issue
+
+## 188.2.1
+
+### Patch Changes
+
+- [#41113](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41113) [`8142e7dce17`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8142e7dce17) - Linting updates to media plugin. No code changes.
+- [#40699](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40699) [`55ee186cac1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/55ee186cac1) - Fix Media Single gap cursor placement when center aligned and when align-end in full-width
+
+## 188.2.0
+
+### Minor Changes
+
+- [#41049](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41049) [`56e271b5da6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56e271b5da6) - Extract help-dialog-plugin from editor-core
+
+### Patch Changes
+
+- Updated dependencies
+
+## 188.1.0
+
+### Minor Changes
+
+- [#40850](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40850) [`e7cead0f099`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7cead0f099) - Move shared messages to editor-common
+- [#40910](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40910) [`820e75ceeda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/820e75ceeda) - Decoupling the media plugin from the paste plugin.
+
+### Patch Changes
+
+- [#41021](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41021) [`79abfef6196`](https://bitbucket.org/atlassian/atlassian-frontend/commits/79abfef6196) - ED-20299 remove unnecessary entry points in editor-plugin-copy-button and refactor
+- [#41020](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41020) [`ab49509530f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ab49509530f) - Add editor-plugin-help-dialog
+- Updated dependencies
+
+## 188.0.12
+
+### Patch Changes
+
+- [#40788](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40788) [`30e085a3e77`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30e085a3e77) - Fix type violations from upgrading lodash.
+
+## 188.0.11
+
+### Patch Changes
+
+- [#40955](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40955) [`30dc2b1e6c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30dc2b1e6c9) - [ED-19746] Decoupling mentions plugin from Editor-core libraries
+- Updated dependencies
+
+## 188.0.9
+
+### Patch Changes
+
+- [#40920](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40920) [`cbc14adc54a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cbc14adc54a) - ED-20003 moved TypeAhead tests as part of extraction efforts in Scalability
+- [#41009](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/41009) [`d760dcdc8a2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d760dcdc8a2) - Updates failing datasources playwright test for site selector alphabetical ordering
+
+## 188.0.8
+
+### Patch Changes
+
+- [#40755](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40755) [`c1cd5ba7d38`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c1cd5ba7d38) - [ED-16733] Extraction Media Plugin: Add new placeholder package for media types.
+- Updated dependencies
+
+## 188.0.7
+
+### Patch Changes
+
+- [#40876](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40876) [`25ab77d5406`](https://bitbucket.org/atlassian/atlassian-frontend/commits/25ab77d5406) - Adds datasource integration test case for copy button
+- Updated dependencies
+
+## 188.0.5
+
+### Patch Changes
+
+- [#40878](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40878) [`15c7575b19c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/15c7575b19c) - Fixing comments for editor-common, editor-core
+
+## 188.0.4
+
+### Patch Changes
+
+- [#40655](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40655) [`e08f00068b8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e08f00068b8) - [ECA11Y-76] Typeahead List - Improvement for screen reader users, now it correctly reads the position of the selected item in the list
+- [#40774](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40774) [`c61db65ea25`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c61db65ea25) - [ED-17196] Refactored provider factory initialisation
+
+## 188.0.2
+
+### Patch Changes
+
+- [#39749](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39749) [`e6b69f455c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e6b69f455c3) - Connect yarn changeset to packages, upgrade adf-schema
+
+## 188.0.0
+
+### Major Changes
+
+- [#40718](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40718) [`c1d4b48bdd9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c1d4b48bdd9) - WHAT: This change removes plugin exports from editor-core that were used only for the mobile bridge.
+
+  This includes:
+
+  - All plugin keys
+  - Plugin commands
+  - Plugin types
+
+  The full list is:
+
+  - EditorFeatureFlags (available via '@atlaskit/editor-common/types' as `FeatureFlags`)
+  - EmojiResource (available via '@atlaskit/emoji/resource' as `EmojiResource`)
+  - mediaPlugin
+  - insertMediaSingleNode
+  - CustomMediaPicker
+  - mediaPluginKey
+  - textColorPluginKey
+  - TextColorPluginState
+  - changeColor
+  - CodeBlockPlugin
+  - PanelPlugin
+  - subscribeToToolbarAndPickerUpdates
+  - subscribeTypeAheadUpdates
+  - TextFormattingInputMethodToolbar
+  - TextFormattingInputMethodBasic
+  - createTable
+  - insertTaskDecisionCommand
+  - TaskDecisionInputMethod
+  - EventDispatcher
+  - statusPluginKey
+  - StatusState
+  - StatusType
+  - DatePluginState
+  - insertDate
+  - openDatePicker
+  - deleteDate
+  - dateToDateType
+  - datePluginKey
+  - commitStatusPicker
+  - setStatusPickerAt
+  - updateStatus
+  - updateStatusWithAnalytics
+  - removeStatus
+  - typeAheadPluginKey
+  - TypeAheadPluginState
+  - setKeyboardHeight
+  - setMobilePaddingTop
+  - setIsExpanded
+  - dedupe (available via '@atlaskit/editor-common/utils' as `dedupe`)
+  - GapCursorSelection (available via '@atlaskit/editor-common/selection' as `GapCursorSelection`)
+  - GapCursorSide (available via '@atlaskit/editor-common/selection' as `Side`)
+  - HistoryPluginState
+  - MentionPluginState
+  - InsertBlockInputMethodToolbar
+  - selectionPluginKey
+  - SelectionData
+  - SelectionDataState
+  - insertExpand
+  - createTypeAheadTools
+  - AbstractMentionResource (available via '@atlaskit/mention/resource' as `AbstractMentionResource`)
+  - PresenceResource (available via '@atlaskit/mention/resource' as `PresenceResource`)
+  - ReactEditorView
+  - BaseReactEditorView
+  - getDefaultPresetOptionsFromEditorProps
+  - lightModeStatusColorPalette
+  - darkModeStatusColorPalette
+  - PaletteColor
+  - DEFAULT_BORDER_COLOR
+
+  WHY: We have been extracting plugins out of `editor-core` and as we move them out we need to remove these exports as the new architecture does not support plugin keys or commands.
+
+  This major bump will remove all remaining commands and keys in one go - some of these features will be accessible in a safe manner in the future via the `ComposableEditor` and the appropriate plugins.
+
+  HOW: Should be no consumers using these methods currently (only mobile bridge which has been updated).
+
+  If there are any issues please reach out to the #help-editor for information on how to update appropriately.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.48.8
+
+### Patch Changes
+
+- [#40754](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40754) [`fc1c299c926`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc1c299c926) - ED-20017 Extract Floating toolbar plugin to its own package
+- Updated dependencies
+
+## 187.48.7
+
+### Patch Changes
+
+- [#40786](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40786) [`fc0c789c450`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc0c789c450) - Add platform.linking-platform.datasource.show-jlol-basic-filters feature flag reference for usage in editor examples
+
+## 187.48.6
+
+### Patch Changes
+
+- [#40691](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40691) [`cffa2089176`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cffa2089176) - Decouple Help Dialog Plugin from Editor Core
+- [#40485](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40485) [`14a726ecf5d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14a726ecf5d) - [ux] Respect allowResizingInTables for pixel entry component
+- Updated dependencies
+
+## 187.48.5
+
+### Patch Changes
+
+- [#40763](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40763) [`7ff70f99909`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7ff70f99909) - Decouple media from editor-core and expose GridPluginState from grid plugin.
+- Updated dependencies
+
+## 187.48.4
+
+### Patch Changes
+
+- [#40723](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40723) [`d9af2213ef1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d9af2213ef1) - update zIndex for emoji picker button in editor toolbar
+
+## 187.48.2
+
+### Patch Changes
+
+- [#40698](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40698) [`37b11d838e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/37b11d838e4) - ED-20017 Decouple floating toolbar from editor-core
+- [#40700](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40700) [`07c8d720947`](https://bitbucket.org/atlassian/atlassian-frontend/commits/07c8d720947) - [ED-17196] Refactored editor internal abstraction
+- Updated dependencies
+
+## 187.48.0
+
+### Minor Changes
+
+- [#40580](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40580) [`f8e7203eec6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f8e7203eec6) - ED-19618 Extract base plugin from editor-core
+
+### Patch Changes
+
+- [#40549](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40549) [`4e0f5ccf818`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4e0f5ccf818) - ADFEXP-526: fix loading-adf test
+- Updated dependencies
+
+## 187.47.9
+
+### Patch Changes
+
+- [#40563](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40563) [`36b7e4fd8d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36b7e4fd8d5) - ED-20017 Clean up unused functions in Dropdown
+
+## 187.47.6
+
+### Patch Changes
+
+- [#40622](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40622) [`5de1ca6bb97`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5de1ca6bb97) - Bumped @atlaskit/editor-plugin-content-insertion dependency version to latest released ^0.1.4
+
+## 187.47.5
+
+### Patch Changes
+
+- [#40448](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40448) [`b1b8c7d356c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b1b8c7d356c) - [ED-19757] Fix getPos throwing exception for all nodeviews
+
+## 187.47.3
+
+### Patch Changes
+
+- [#39366](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39366) [`3aaff60be08`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3aaff60be08) - ED-18988 Updates overflow property for content area of comment editor when table sticky scrollbar is enabled.
+- Updated dependencies
+
+## 187.47.2
+
+### Patch Changes
+
+- [#40056](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40056) [`c89c55c6d49`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c89c55c6d49) - [ux] ED-19508 fixes closed inline comments reopening when user toggles an expand node
+
+## 187.47.0
+
+### Minor Changes
+
+- [#40367](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40367) [`8cb8dafa05a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8cb8dafa05a) - [ED-19774] Removing ../selection imports where possible. selectionPlugin imports still exist until we have an extracted package for selection.
+
+### Patch Changes
+
+- [#40439](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40439) [`6a4f206b435`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6a4f206b435) - [ux] MEX-2598 Bug fix: Fixed the bug that caused certain nodes from disappearing when it was located beneath a media group node that got switched to a media inline node. This bug fix ensures that switching from media group to media inline should not affect the surrounding nodes.
+- Updated dependencies
+
+## 187.46.1
+
+### Patch Changes
+
+- [#40558](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40558) [`bb4caba1310`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb4caba1310) - Remove participants count metric from frozen analytics event
+
+## 187.46.0
+
+### Minor Changes
+
+- [#40470](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40470) [`16a0e1fef2b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16a0e1fef2b) - ED-20017 Decouple editor core from floating toolbar plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.45.3
+
+### Patch Changes
+
+- [#40497](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40497) [`d48ef0409af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d48ef0409af) - ED-20003 decoupled editor-core from type-ahead
+
+## 187.45.0
+
+### Minor Changes
+
+- [#40440](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40440) [`b9264ebb903`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b9264ebb903) - Deprecate 'UNSAFE_allowBorderMark' prop in the editor plugin and replace it with 'allowBorderMark'
+
+## 187.44.11
+
+### Patch Changes
+
+- [#38479](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38479) [`d5088ec1cdf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d5088ec1cdf) - [ED-16733] Prepare Media plugin for extraction
+
+## 187.44.10
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.44.8
+
+### Patch Changes
+
+- [#39632](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39632) [`966f90e1edf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/966f90e1edf) - [ux] [ECA11Y-44] Adjust 'Popup' component so that it doesn't always have to have 'aria-label' attribute displayed
+
+## 187.44.7
+
+### Patch Changes
+
+- [#40389](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40389) [`beb32df5147`](https://bitbucket.org/atlassian/atlassian-frontend/commits/beb32df5147) - [ECA11Y-45] [ECA11Y-22] Change the tab key handling the status popup to improve accessibility.
+- Updated dependencies
+
+## 187.44.6
+
+### Patch Changes
+
+- [#40017](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40017) [`21305ee6254`](https://bitbucket.org/atlassian/atlassian-frontend/commits/21305ee6254) - ED-19874 Align the dropdown with the floating toolbar if there is a single button in the toolbar
+- [#40244](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40244) [`f7f51be4eac`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f7f51be4eac) - [ux] ED-19784: Adjust logic in onCreateSelectionBetween logic to prevent premature selections on multi-line selections inside block nodes.
+- Updated dependencies
+
+## 187.44.4
+
+### Patch Changes
+
+- [#40381](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40381) [`fa39c6ce044`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fa39c6ce044) - [ED-19775] Decouple selection plugin from the editor-core code
+- [#40295](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40295) [`6b0dd092ac1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6b0dd092ac1) - ED-19729 media single performance optimization
+- Updated dependencies
+
+## 187.44.3
+
+### Patch Changes
+
+- [#40228](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40228) [`bb3d72ef732`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb3d72ef732) - ED-20041 added check for external media
+
+## 187.44.2
+
+### Patch Changes
+
+- [#40062](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40062) [`66fc865caaf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/66fc865caaf) - Added handling for case when mediaSingle childNode is null
+- [`f98f51cda72`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f98f51cda72) - Fixed typo in comment
+- Updated dependencies
+
+## 187.44.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.44.0
+
+### Minor Changes
+
+- [#40207](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40207) [`11861bb36d4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/11861bb36d4) - [ux] [ECA11Y-44] [ECA11Y-22] [ECA11Y-19] Change the focus order in the status popup to improve accessibility.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.43.19
+
+### Patch Changes
+
+- [#40361](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40361) [`2a6a2518852`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2a6a2518852) - Reverse dependencies for mobile dimensions plugin & base plugin
+
+## 187.43.18
+
+### Patch Changes
+
+- [#40341](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40341) [`eaa9770d475`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eaa9770d475) - [ED-18264] Remove feature flag for chart colors
+
+## 187.43.17
+
+### Patch Changes
+
+- [#40293](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40293) [`3323edc01b9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3323edc01b9) - ED-20003 decoupled type-ahead plugin from editor-core
+
+## 187.43.13
+
+### Patch Changes
+
+- [#40092](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40092) [`9f2365fabcc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9f2365fabcc) - ED-19617 - Initial creation of editor-plugin-copy-button package
+- Updated dependencies
+
+## 187.43.12
+
+### Patch Changes
+
+- [#39894](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39894) [`621b904a076`](https://bitbucket.org/atlassian/atlassian-frontend/commits/621b904a076) - ED-19729 fix behaviour of image floating toolbar layout
+
+## 187.43.11
+
+### Patch Changes
+
+- [#40236](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40236) [`65b155b2787`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65b155b2787) - [ux] ED-19172: Updated tableHeaderCellBackgroundColor to use non-transparent token."
+- [#38929](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38929) [`96f4e9fe6de`](https://bitbucket.org/atlassian/atlassian-frontend/commits/96f4e9fe6de) - [ux] ECA11Y-1 Added keyboard support to focus checkbox, check or uncheck, inside action item
+- [#39905](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39905) [`9131a0a2ffa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9131a0a2ffa) - Extract quick-insert plugin from @atlaskit/editor-core to @atlaskit/editor-plugin-quick-insert.
+- Updated dependencies
+
+## 187.43.8
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.43.5
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.43.3
+
+### Patch Changes
+
+- [#40004](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/40004) [`12843a6f104`](https://bitbucket.org/atlassian/atlassian-frontend/commits/12843a6f104) - ED-19617 - Initial creation of editor-plugin-copy-button package
+- Updated dependencies
+
+## 187.43.0
+
+### Minor Changes
+
+- [#39320](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39320) [`ec4867e1376`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ec4867e1376) - Removed captions flag and replaced with a new media prop `allowCaptions`. `allowCaptions` is set to `false` by default and products will need to opt in to be able to use captions from now on.
+
+## 187.42.6
+
+### Patch Changes
+
+- [#39984](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39984) [`37c62369dae`](https://bitbucket.org/atlassian/atlassian-frontend/commits/37c62369dae) - NO-ISSUE Import doc builder types from editor-common
+
+## 187.42.5
+
+### Patch Changes
+
+- [#39925](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39925) [`1c085549bd9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1c085549bd9) - clean up pctWidth used in new image resize experience
+
+## 187.42.4
+
+### Patch Changes
+
+- [#39427](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39427) [`e6122bf1c9a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e6122bf1c9a) - MEX-2481 revert and re-introduce a new fix for media border gap issue
+- [#39921](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39921) [`a29f4f2d43c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a29f4f2d43c) - Fix legacy resizer handle is not highlighted on delete button hover
+- Updated dependencies
+
+## 187.42.3
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.42.0
+
+### Minor Changes
+
+- [#39730](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39730) [`8441acc0e0c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8441acc0e0c) - Extract block-type plugin into @atlaskit/editor-plugin-block-type
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.41.8
+
+### Patch Changes
+
+- [#39946](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39946) [`890ab8d6307`](https://bitbucket.org/atlassian/atlassian-frontend/commits/890ab8d6307) - NO-ISSUE Move doc builder types to editor-common to break circular dependencies
+- Updated dependencies
+
+## 187.41.7
+
+### Patch Changes
+
+- [#39669](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39669) [`64c9a1be1b1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/64c9a1be1b1) - [ux] Show notification dot when image is sized using percentage or legacy
+
+## 187.41.5
+
+### Patch Changes
+
+- [#38828](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38828) [`1e26db8ffd0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e26db8ffd0) - ED-18264: Clean up useSomewhatSemanticTextColorNames - default behaviour will be same as when FF was on.
+- [#39787](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39787) [`6900f89eb0e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6900f89eb0e) - Internal changes to use space tokens. There is no expected visual or behaviour change.
+- [#39940](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39940) [`69857bbbff0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/69857bbbff0) - [ED-20004] Capture errors in getPos due to prosemirror-view bump
+- [#39908](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39908) [`ba95f6c1fd5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ba95f6c1fd5) - handleMarkdown no longer throws RangeError when 'from' argument exceeds document length, resolving bug where pasting a Jira issue datasource node at the end of a document would result in the legacy Jira issue macro being rendered instead
+- Updated dependencies
+
+## 187.41.4
+
+### Patch Changes
+
+- [#39481](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39481) [`aeb5c9a01e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aeb5c9a01e8) - Delete adf-schema from AFE and rely on npm package for adf-schema
+- [#39622](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39622) [`111ff4f4f1f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/111ff4f4f1f) - Add input resizing event analytics
+- [#39743](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39743) [`da629b62ef9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da629b62ef9) - ED-19617 Refactor actions to remove createExtenstionAPI and call it instead during initialisation
+- [`4b4dcfe0bba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4b4dcfe0bba) - Delete adf-schema, use published version
+- Updated dependencies
+
+## 187.41.3
+
+### Patch Changes
+
+- [#39788](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39788) [`85b6a5da67a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/85b6a5da67a) - [ux] Fix [Regression] keyboard selections within actions are unpredictable
+
+## 187.41.1
+
+### Patch Changes
+
+- [#39848](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39848) [`9c76ed81343`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9c76ed81343) - [ED-16733] Purge WithPluginState from media plugin
+
+## 187.41.0
+
+### Minor Changes
+
+- [#39837](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39837) [`c06bb97591a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c06bb97591a) - [ED-19023] Add distorted duration to TTI event (tracking tab visibility)
+
+### Patch Changes
+
+- [#39790](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39790) [`d4cbb84052d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d4cbb84052d) - Move element-browser to `editor-common` to decouple quick-insert plugin.
+- Updated dependencies
+
+## 187.40.2
+
+### Patch Changes
+
+- [#39550](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39550) [`dd2ce170f94`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dd2ce170f94) - ED-17959 improve typing performance in find replace input field
+
+## 187.40.1
+
+### Patch Changes
+
+- [#39884](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39884) [`da6dac74c66`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da6dac74c66) - Fix libra testing.
+
+## 187.40.0
+
+### Minor Changes
+
+- [#39012](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39012) [`705d8ec0641`](https://bitbucket.org/atlassian/atlassian-frontend/commits/705d8ec0641) - [ux] Added a new shortcut (⌘ + Opt + ⏎) for Check/Uncheck Action item
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.39.4
+
+### Patch Changes
+
+- [#39202](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39202) [`dca155209d9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dca155209d9) - ED-15094 Feature flag clean up for copy button
+
+## 187.39.0
+
+### Minor Changes
+
+- [#39694](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39694) [`985ecca5c88`](https://bitbucket.org/atlassian/atlassian-frontend/commits/985ecca5c88) - Add new editor plugin action for the selection plugin, which allows other plugins to control the visibility of the gap cursor
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.38.5
+
+### Patch Changes
+
+- [#39538](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39538) [`d1bd1be0923`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d1bd1be0923) - [ux] ED-19794 updated media resize handle style
+- [#39612](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39612) [`dfb663969a0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dfb663969a0) - ED-19820: Fix for table scroll when insert media node when extended-resize-experience is off
+- Updated dependencies
+
+## 187.38.3
+
+### Patch Changes
+
+- [#39628](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39628) [`1b66c23221e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b66c23221e) - Fix missing analytics parameter in media plugin.
+- [#39590](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39590) [`da2d3589ba4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da2d3589ba4) - Extract placeholder plugin from editor-core to "@atlaskit/editor-plugin-placeholder"
+- Updated dependencies
+
+## 187.38.2
+
+### Patch Changes
+
+- [#39460](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39460) [`882e4e88358`](https://bitbucket.org/atlassian/atlassian-frontend/commits/882e4e88358) - Add playwright tests and add test ids to find elements
+
+## 187.38.1
+
+### Patch Changes
+
+- [#38532](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38532) [`7b6a2c6671b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7b6a2c6671b) - Introducing 'media-state' for handling media internal file state.
+  Introducing 'media-client-react' to provide hooks for seamless media-client integration with React.
+  Introducing 'MediaCardV2' with a feature flag to replace rxjs based fileState subscription with 'useFileState' hook.
+  Removed unused feature flags APIs from 'media-client' and its helper functions from 'media-common'.
+- Updated dependencies
+
+## 187.38.0
+
+### Minor Changes
+
+- [#39416](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39416) [`0724d0a9d82`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0724d0a9d82) - ED-15466 Adding prop showIndentationButtons for indentation buttons.
+
+## 187.37.6
+
+### Patch Changes
+
+- [#39575](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39575) [`ef0c2a89c72`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ef0c2a89c72) - Add isTypeAheadOpen action to type-ahead plugin. Decouple placeholder plugin from editor-core.
+- Updated dependencies
+
+## 187.37.5
+
+### Patch Changes
+
+- [#39533](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39533) [`1f6e908f2bd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1f6e908f2bd) - Workaround invalid getPos error occuring for TableComponent
+- [#39510](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39510) [`94662d7c5af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94662d7c5af) - Extracted rule plugin from editor-core to editor-plugin-rule.
+- Updated dependencies
+
+## 187.37.4
+
+### Patch Changes
+
+- [#39530](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39530) [`e31a001b8b8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e31a001b8b8) - Add pixel entry resize analytic event payload
+
+## 187.37.3
+
+### Patch Changes
+
+- [#39517](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39517) [`e0f15f5af8a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e0f15f5af8a) - Fix invalid getPos issue happening for Media and Media group nodeviews
+
+## 187.37.2
+
+### Patch Changes
+
+- [#39487](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39487) [`39fcb436aba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/39fcb436aba) - ED-19617 Create editor-plugin-extension scaffold
+- Updated dependencies
+
+## 187.37.1
+
+### Patch Changes
+
+- [#39290](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39290) [`9c066a01776`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9c066a01776) - ED-19445: Copied HTML is being reformatted when pasted into the editor
+
+## 187.37.0
+
+### Minor Changes
+
+- [#38783](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38783) [`082b7cf0ea7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/082b7cf0ea7) - [ux] ECA11Y-1 Added new typeahead shortcut to create checked action item
+
+## 187.36.0
+
+### Minor Changes
+
+- [#39360](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39360) [`085d722e77f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/085d722e77f) - Decoupling the rule plugin and adding the insertHorizontalRule action to the rule plugin.
+
+### Patch Changes
+
+- [#39408](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39408) [`3b7bf91daa5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3b7bf91daa5) - [ux] ED-19785 Add dark mode icon for custom panel and update light mode icon with new colours.
+
+## 187.35.7
+
+### Patch Changes
+
+- [#39390](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39390) [`c377886771f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c377886771f) - ED-19744 moved `mention` styles to `ContentStyles` as part of Scalability Project
+
+## 187.35.4
+
+### Patch Changes
+
+- [#39348](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39348) [`10a82c0490c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/10a82c0490c) - ED-19792 disable guideline plugin for comment and mobile.
+
+## 187.35.3
+
+### Patch Changes
+
+- [#39367](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39367) [`1a4a64498ae`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a4a64498ae) - fix media floating toolbar cut off issue on align right and wrap right
+
+## 187.35.2
+
+### Patch Changes
+
+- [#39304](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39304) [`6acf9830b36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6acf9830b36) - Update feature flags plugin
+  (@atlaskit/editor-plugin-feature-flags) to use a named export
+  rather than default export to match other plugins.
+
+  ```ts
+  // Before
+  import featureFlagsPlugin from '@atlaskit/editor-plugin-feature-flags';
+
+  // After
+  import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+  ```
+
+- Updated dependencies
+
+## 187.35.1
+
+### Patch Changes
+
+- [#39329](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39329) [`b1e03fb86a1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b1e03fb86a1) - Update layout and width calculation for resizing
+- [#39370](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39370) [`6f85651b350`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6f85651b350) - Reduce the gap between handles when image is a nested node
+
+## 187.35.0
+
+### Minor Changes
+
+- [#39062](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39062) [`3542bead318`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3542bead318) - Move block type commands to next editor plugin actions
+
+### Patch Changes
+
+- [#39246](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39246) [`02e113fb1e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/02e113fb1e4) - Update test fixtures for calendar update.
+- Updated dependencies
+
+## 187.34.2
+
+### Patch Changes
+
+- [#39341](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39341) [`5e0bef65120`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e0bef65120) - [ux] Fix copy button for mediaSingle with link or border
+
+## 187.34.1
+
+### Patch Changes
+
+- [#38971](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38971) [`55b4cc5ee36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/55b4cc5ee36) - ED-18026 Fixing issue of adding panel in codeblock
+- Updated dependencies
+
+## 187.34.0
+
+### Minor Changes
+
+- [#38829](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38829) [`3f12e00f046`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3f12e00f046) - [ux] EDM-7493 Link create Jira quick insert
+
+## 187.33.0
+
+### Minor Changes
+
+- [#39159](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39159) [`7613b6b6a51`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7613b6b6a51) - [ED-19428] Decouple quick-insert plugin from editor-core
+
+### Patch Changes
+
+- [#39007](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39007) [`b06cd74349c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b06cd74349c) - # Media Picker
+
+  Make Clipboard secured by adding `container` and `onPaste()` to `config` `prop`. These two params address customer dissatisfaction when attachments are pasted duplicated, or to unwanted Jira issues (https://product-fabric.atlassian.net/browse/MEX-2454).
+
+  Note for migration:
+  The added `container` parameter sets a boundary for copy-paste zone. This is to filter out noise from existing practice that is problematic. **To ensure the effectiveness of this fix, please avoid using global `document` as `container` in best effort; please avoid overlapped boundary in best effort**.
+
+  When `container` is not added, the behaviour falls back to legacy mechanism.
+
+  # Media Common
+
+  Add feature toggle (`securedClipboard` in `MediaFeatureFlags`) to control the rollout of Secured Clipboard (https://product-fabric.atlassian.net/browse/MEX-2454).
+
+  # Editor Core
+
+  Add support of the Secured Clipboard (https://product-fabric.atlassian.net/browse/MEX-2454).
+
+  Use feature flag `securedClipboard` to protect such change.
+
+- [#39248](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39248) [`93b4b1394bf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/93b4b1394bf) - ED-19673: Updated shouldPanelBePositionedOverEditor to adapt to custom table width project
+- Updated dependencies
+
+## 187.32.7
+
+### Patch Changes
+
+- [#39145](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39145) [`8b78535f8bd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8b78535f8bd) - Fix sticky header not resize with table
+- Updated dependencies
+
+## 187.32.6
+
+### Patch Changes
+
+- [#39250](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39250) [`20fa6edb5d4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/20fa6edb5d4) - ED-19617 Extract Floating Toolbar VR test to editor-core
+- [#38895](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38895) [`7d9ffc3a1ce`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d9ffc3a1ce) - [ux] ED-19342 Fix: Inserting Code-Block at gap-cursor will not consume all the content after gap-cursor
+
+## 187.32.5
+
+### Patch Changes
+
+- [#39207](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39207) [`ee475b14581`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ee475b14581) - Set max width for nested media single node to 100% to make it reponsive to parent width change
+
+## 187.32.3
+
+### Patch Changes
+
+- [#39154](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39154) [`113fcc02759`](https://bitbucket.org/atlassian/atlassian-frontend/commits/113fcc02759) - ED-19433 Extract Emoji Plugin to its own package
+- Updated dependencies
+
+## 187.32.2
+
+### Patch Changes
+
+- [#39080](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39080) [`eab48233583`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eab48233583) - Calculate parent content width properly when inserting a nested media single node
+
+## 187.32.1
+
+### Patch Changes
+
+- [#39218](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39218) [`37624e80f01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/37624e80f01) - NO-ISSUE Cancel animation frame debounced call when unmounting scroll buttons
+- [#39199](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39199) [`dc93b06778b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dc93b06778b) - Fix pasted mediaSingle nodes into parent nodes
+
+## 187.32.0
+
+### Minor Changes
+
+- [#39010](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39010) [`8467bdcdf4f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8467bdcdf4f) - Removing `dependencies` prop from PluginInjectionAPI and changing
+  signature of `NextEditorPlugin`.
+
+  Previously a `NextEditorPlugin` would be consumed as so:
+
+  ```ts
+  const plugin: NextEditorPlugin< ... > = (config, api) => {
+    // Can use api like so:
+    api.dependencies.core.actions.execute( ... )
+    return { ... }
+  }
+  ```
+
+  Now these have become named parameters like so and the `pluginInjectionAPI` is used
+  without the `dependencies` prop:
+
+  ```ts
+  const plugin: NextEditorPlugin< ... > = ({ config, api }) => {
+    // Can use api like so:
+    api.core.actions.execute( ... )
+    return { ... }
+  }
+  ```
+
+### Patch Changes
+
+- [#38855](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38855) [`8f2f42eab4d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f2f42eab4d) - update layout when submit pixel values in media toolbar
+- Updated dependencies
+
+## 187.31.7
+
+### Patch Changes
+
+- [#38977](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38977) [`c3de9f17631`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c3de9f17631) - ED-19359:
+  editor-core: Migrated skipped test: packages/editor/editor-core/src/tests/integration/gap-cursor/gap-cursor.ts to Libra
+  Libra: added a new page-model(editor-confirmation-popup-base-model.ts) to libra package and updated editor extension model
+- [#39196](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39196) [`a9feb9fae6e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a9feb9fae6e) - [ED-19672] Workaround tofix detached Extension calling NodeView.getPos
+
+## 187.31.6
+
+### Patch Changes
+
+- [#38900](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38900) [`e0f020abea0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e0f020abea0) - created new plugin for unsupported-content, moved code and styles
+- [#39042](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39042) [`dcf5ea47df4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dcf5ea47df4) - [ux] Display 'Full width' in media single floating toolbar when the node reaches full width
+- Updated dependencies
+
+## 187.31.5
+
+### Patch Changes
+
+- [#39126](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39126) [`a1965abfbe9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a1965abfbe9) - Fix `allowBlockType` so that exclude codeBlock correctly disables codeBlock in the editor.
+- Updated dependencies
+
+## 187.31.4
+
+### Patch Changes
+
+- [#39177](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39177) [`24e27147cbd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/24e27147cbd) - Added atlaskit docs to all existing plugins.
+- Updated dependencies
+
+## 187.31.3
+
+### Patch Changes
+
+- [#39081](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39081) [`0debfab882f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0debfab882f) - ED-17959 prevent redundant rerenders on insert block component and due to typeahead state changes
+
+## 187.31.2
+
+### Patch Changes
+
+- [#38934](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38934) [`dbccd831543`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbccd831543) - [ux] tokenize ColorPicker, make charts package compatible with tokens, make check mark compatible with tokens
+
+## 187.31.1
+
+### Patch Changes
+
+- [#38766](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38766) [`4b8154ff94d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4b8154ff94d) - added node attributes to safeInsert, so that it does not takes the default attributes
+
+## 187.31.0
+
+### Minor Changes
+
+- [#38851](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38851) [`c70a6612aba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c70a6612aba) - [ED-19428] Decouple quick-insert plugin from editor-core
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.30.10
+
+### Patch Changes
+
+- [#39009](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39009) [`a31ffa191cb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a31ffa191cb) - [ux] ED-19348 Fix gap-cursor position for numbered-table in wide/full-width mode
+
+## 187.30.9
+
+### Patch Changes
+
+- [#39023](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39023) [`4795a87a349`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4795a87a349) - Migrating some actions of `editor-plugin-list` to commands. Adding sharedState for `editor-plugin-text-formatting`.
+- [#39094](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39094) [`1f40b8ca01b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1f40b8ca01b) - [ux] ED-16028 Serializing mention text during copy
+- [#39047](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39047) [`a34c6ca52c2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a34c6ca52c2) - [ux] [ED-19442] - Modified images and mentions icons and added dark mode
+- Updated dependencies
+
+## 187.30.8
+
+### Patch Changes
+
+- [#39069](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39069) [`04a2b9f4cfe`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04a2b9f4cfe) - fix convert pixels in nested table when media single node does not have width
+- [#39075](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39075) [`edeab2d50b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/edeab2d50b2) - Fix analytics event for image resizing and relative snaps
+- Updated dependencies
+
+## 187.30.7
+
+### Patch Changes
+
+- [#39111](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39111) [`f7f92b615ff`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f7f92b615ff) - [ux] ED-19439 Added dark mode icons for link and layout. Fixed gradient in date dark mode icon.
+- Updated dependencies
+
+## 187.30.6
+
+### Patch Changes
+
+- [#39040](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39040) [`c77b39ff19f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c77b39ff19f) - [ux] [ED-19130] Fix up gap cursor positioning for breakout nodes
+- [#38976](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38976) [`33cb07de05f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/33cb07de05f) - change adf-schema to fixed versioning
+- Updated dependencies
+
+## 187.30.5
+
+### Patch Changes
+
+- [#38879](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38879) [`ef2d5662e05`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ef2d5662e05) - [ux] Implement pixel entry input validation when submitting and render warning decoration for invalid input
+
+## 187.30.4
+
+### Patch Changes
+
+- [#39063](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39063) [`14a853a7939`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14a853a7939) - [ux] ED-19439 Added dark mode icons for emoji, expand and fallback
+
+## 187.30.3
+
+### Patch Changes
+
+- [#38894](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38894) [`f68eb1b1731`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f68eb1b1731) - Move common functions from `editor-core` to `editor-common` in preparation for `base` plugin extraction
+
+## 187.30.1
+
+### Patch Changes
+
+- [#39046](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39046) [`e6582078cf9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e6582078cf9) - ED-19433 Create editor-plugin-emoji package for atlaskit
+- Updated dependencies
+
+## 187.30.0
+
+### Minor Changes
+
+- [#38980](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38980) [`7f45581d141`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f45581d141) - ED-19630 fixed guideline alignment issue.
+
+### Patch Changes
+
+- [#38871](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38871) [`1e4b853a636`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e4b853a636) - ED-19411 added guideline test, fixed invalid cursor location issue.
+- Updated dependencies
+
+## 187.29.4
+
+### Patch Changes
+
+- [#39038](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39038) [`8595f0ddc4b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8595f0ddc4b) - Always show resizer handles when mediaSingle node is selected
+- [#38994](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38994) [`1af653a9630`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1af653a9630) - ED-19433 Initial scaffold for editor-plugin-type-ahead
+- [#39035](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/39035) [`2f7d7be2983`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2f7d7be2983) - [ux] ED-19438 Added dark mode icons for headings 1 to 6
+- [#38906](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38906) [`1b917526a9f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b917526a9f) - [ux] add convert to pixels cta in pixel entry for legacy experience
+- Updated dependencies
+
+## 187.29.3
+
+### Patch Changes
+
+- [#38935](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38935) [`9650cf173e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9650cf173e5) - Fix bug where if mediaSingle node is first item in document it is treated as video
+
+## 187.29.2
+
+### Patch Changes
+
+- [#38963](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38963) [`90520713d49`](https://bitbucket.org/atlassian/atlassian-frontend/commits/90520713d49) - [ux] [ED-19441] - Added dark mode icons for panels
+
+## 187.29.0
+
+### Minor Changes
+
+- [#38881](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38881) [`8e9c21af71d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8e9c21af71d) - Extracting list plugin code from editor-core to @atlaskit/editor-plugin-list.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.28.5
+
+### Patch Changes
+
+- [#38706](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38706) [`5ce0bea6aa6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5ce0bea6aa6) - [ED-19399] Fixing text color underline on toolbar
+
+## 187.28.3
+
+### Patch Changes
+
+- [#38858](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38858) [`6cced3b0ed6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6cced3b0ed6) - Warn if the emoji provider prop for the Editor is changing too quickly as it will cause performance issues.
+
+## 187.28.2
+
+### Patch Changes
+
+- [#38637](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38637) [`a3c9fd814c5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a3c9fd814c5) - Set minimum width for media single node of video type (when first inserted and when resizing)
+
+## 187.28.1
+
+### Patch Changes
+
+- [#38740](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38740) [`79c0b7e6821`](https://bitbucket.org/atlassian/atlassian-frontend/commits/79c0b7e6821) - Decouple `base` plugin from `editor-core`
+- [#38491](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38491) [`5d6ec9ac49c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5d6ec9ac49c) - ED-19330 Decouple list plugin from editor-core
+- Updated dependencies
+
+## 187.28.0
+
+### Minor Changes
+
+- [#38838](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38838) [`9ebabeaa630`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9ebabeaa630) - added ExtractPublicEditorAPI type helper
+
+### Patch Changes
+
+- [#38162](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38162) [`fd6bb9c9184`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fd6bb9c9184) - Delete version.json
+- Updated dependencies
+
+## 187.27.1
+
+### Patch Changes
+
+- [#38768](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38768) [`719a3a60441`](https://bitbucket.org/atlassian/atlassian-frontend/commits/719a3a60441) - ED-19411 minor refactor of ResizableMediaSingleNext
+
+## 187.27.0
+
+### Minor Changes
+
+- [#38808](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38808) [`967f4819f58`](https://bitbucket.org/atlassian/atlassian-frontend/commits/967f4819f58) - Introduce core plugin that is always injected into the pluginInjectionApi. This has a new action `execute` that replaces the existing `executeCommand` that was called from the `pluginInjectionApi`.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.26.0
+
+### Minor Changes
+
+- [#37656](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37656) [`0f3026deda5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0f3026deda5) - ED-12027 cleaned up table optimisation feature flags, made optimised code run by default.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.25.3
+
+### Patch Changes
+
+- [#38688](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38688) [`cbff538b420`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cbff538b420) - [ED-19428] Move shared types from quick-insert plugin to editor-common as a first step towards decoupling it from editor-core
+
+## 187.25.2
+
+### Patch Changes
+
+- [#38577](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38577) [`f12aff135b6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f12aff135b6) - Extract Composition Plugin
+- Updated dependencies
+
+## 187.25.1
+
+### Patch Changes
+
+- [#38728](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38728) [`8b914beaa94`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8b914beaa94) - [DTR-1800] Fixed boundary value bug that caused gap cursors to trigger when clicking inside a leaf node at the root of the element
+
+## 187.25.0
+
+### Minor Changes
+
+- [#38664](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38664) [`af2e8676033`](https://bitbucket.org/atlassian/atlassian-frontend/commits/af2e8676033) - Create new command for typeahead plugin which exposes openTypeAheadAtCursor. Typeahead plugin is now a dependency for both emoji and mention plugins.
+
+## 187.24.3
+
+### Patch Changes
+
+- [#38496](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38496) [`72e552fe076`](https://bitbucket.org/atlassian/atlassian-frontend/commits/72e552fe076) - [ux] ED-17954: Fix inline node selections for mentions and emojis in iOS. Previously, the visually hidden assistive text would also be shown as a selection in iOS which would often make the selection look larger than the actual node itself.
+- [#38696](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38696) [`048717e2a19`](https://bitbucket.org/atlassian/atlassian-frontend/commits/048717e2a19) - fix janky media toolbar when resize
+
+## 187.24.2
+
+### Patch Changes
+
+- [#38692](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38692) [`8efc1dfc706`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8efc1dfc706) - ED-19330 create editor-list-plugin
+- Updated dependencies
+
+## 187.24.1
+
+### Patch Changes
+
+- [#36819](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36819) [`5c3064cffe3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5c3064cffe3) - Remove a selection hack for Chrome 88 to improve foucs/blur performance
+- [#38672](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38672) [`51e6a0128eb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/51e6a0128eb) - ED-18969 Implemented relative guideline
+
+## 187.24.0
+
+### Minor Changes
+
+- [#38495](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38495) [`24fc3925d73`](https://bitbucket.org/atlassian/atlassian-frontend/commits/24fc3925d73) - Add a new hook called `usePreset` accesed via `@atlaskit/editor-core/use-preset`. This hook can be used to safely access state and commands from outside the editor using `EditorContext`.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.23.2
+
+### Patch Changes
+
+- [#38489](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38489) [`3a2d2104ca9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a2d2104ca9) - [ux] [ED-19468] Adds dark mode icon for date
+- [#38679](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38679) [`5365e42ef97`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5365e42ef97) - cleaned up more of the \* as keymaps imports to enable better tree-shaking
+
+## 187.23.1
+
+### Patch Changes
+
+- [#38462](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38462) [`20439ad4597`](https://bitbucket.org/atlassian/atlassian-frontend/commits/20439ad4597) - [ux] Remove all floatingbar items other than size input when resizing media single
+- [#38669](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38669) [`86794f736c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/86794f736c3) - cleaned up some of the keymap imports, and their function calls
+
+## 187.23.0
+
+### Minor Changes
+
+- [#38394](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38394) [`1cadce074e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1cadce074e4) - [ux] ED-19213 Improved typeahead styling with single point of interaction
+
+## 187.22.1
+
+### Patch Changes
+
+- [#38655](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38655) [`8d950264934`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8d950264934) - typing change to hangleMediaSingle for EditorAnalyticsAPI
+
+## 187.22.0
+
+### Minor Changes
+
+- [#38629](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38629) [`ee20a0c6142`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ee20a0c6142) - Exporting default preset via preset-default endpoint. This can be accessed like so:
+
+  ```ts
+  import { createDefaultPreset } from '@atlaskit/editor-core/preset-default';
+  ```
+
+  Also renaming the composable editor to ComposableEditor.
+
+  Before:
+
+  ```ts
+  import { Editor } from '@atlaskit/editor-core/composable-editor';
+  ```
+
+  After:
+
+  ```ts
+  import { ComposableEditor } from '@atlaskit/editor-core/composable-editor';
+  ```
+
+## 187.21.1
+
+### Patch Changes
+
+- [#38464](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38464) [`cf71a66559b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf71a66559b) - Update analytics event for new resize experience
+
+## 187.21.0
+
+### Minor Changes
+
+- [#38095](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38095) [`560ce4c7a2b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/560ce4c7a2b) - Pass annotations list to inline comment component
+
+## 187.20.1
+
+### Patch Changes
+
+- [#38613](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38613) [`24f092238be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/24f092238be) - NO-ISSUE Switch collab type imports in editor-core to editor-common
+- [`469b5c12303`](https://bitbucket.org/atlassian/atlassian-frontend/commits/469b5c12303) - NO-ISSUE Move CollabEventLocalStepData to editor-common
+- [#38385](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38385) [`c2cd174b721`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2cd174b721) - - Add layout calculation in full width editor
+  - Prevent scroll bar for wrapped layout in small viewport
+  - Limit resizing for nested node with wrapped layout
+  - Update size state for full-width layout to avoid flicker when first resizing
+- [#38476](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38476) [`da58165fe10`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da58165fe10) - [ux] ED-19440 - Adds dark mode icons for bullet list, numbered list, quote, status and table
+
+## 187.20.0
+
+### Minor Changes
+
+- [#38458](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38458) [`644c7942b34`](https://bitbucket.org/atlassian/atlassian-frontend/commits/644c7942b34) - [ux] support updating pixel entry in media toolbar when resize media single
+- [#38497](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38497) [`43c51e0a282`](https://bitbucket.org/atlassian/atlassian-frontend/commits/43c51e0a282) - [ED-19431] Migrate all text-formatting plugin actions over to plugin commands
+- [#38566](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38566) [`a867b562d62`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a867b562d62) - Add insertEmoji command and sharedState to emoji plugin.
+
+### Patch Changes
+
+- [#38607](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38607) [`8375e041861`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8375e041861) - [ED-16733] Extract common functions used by media plugin to editor-common
+- Updated dependencies
+
+## 187.19.1
+
+### Patch Changes
+
+- [#38414](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38414) [`f284dd4d761`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f284dd4d761) - updated withAnalytics usage to new EditorAnalyticsAPI
+- [#38425](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38425) [`442d9be406d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/442d9be406d) - [ux] [ED-19027] Fixed gap cursor for nodes with fixed width
+
+## 187.19.0
+
+### Minor Changes
+
+- [#38415](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38415) [`7cb6ec49e68`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7cb6ec49e68) - Decouple `composition` plugin from `base` plugin
+
+## 187.18.2
+
+### Patch Changes
+
+- [#38501](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38501) [`079e7748c62`](https://bitbucket.org/atlassian/atlassian-frontend/commits/079e7748c62) - Extracted `editor-plugin-image-upload` from `editor-core`.
+- Updated dependencies
+
+## 187.18.1
+
+### Patch Changes
+
+- [#38419](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38419) [`7e77fe6f2ed`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7e77fe6f2ed) - ED-19330 Decouple list plugin from editor-core
+- Updated dependencies
+
+## 187.18.0
+
+### Minor Changes
+
+- [#38359](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38359) [`80b964e24a2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/80b964e24a2) - [ED-19205] Extract the text-formatting editor plugin to a separate package
+
+### Patch Changes
+
+- [#38161](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38161) [`8474692c96d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8474692c96d) - [ux] ED-18785 Place toolbar below selection if not sufficient space above
+- Updated dependencies
+
+## 187.17.6
+
+### Patch Changes
+
+- [#37887](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37887) [`bdb69158e0a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bdb69158e0a) - [ED-13910] Bump ProseMirror libraries to match prosemirror-view@1.31.6 dependencies
+- Updated dependencies
+
+## 187.17.5
+
+### Patch Changes
+
+- [#38405](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38405) [`c1e5a879e02`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c1e5a879e02) - [ED-17979] Remove the ability to clear formatting when selection is within a codeblock
+
+## 187.17.3
+
+### Patch Changes
+
+- [#38424](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38424) [`7a438d76a8a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7a438d76a8a) - [ED-16733] Extract Focus plugin to its own plugin
+- Updated dependencies
+
+## 187.17.2
+
+### Patch Changes
+
+- [#38388](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38388) [`5f8e4780f9e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f8e4780f9e) - [ux] ED-19473 & ED-19435 Adds dark mode icons for action, code, decision, divider and Editor example to test them in none, light and dark modes.
+
+## 187.17.1
+
+### Patch Changes
+
+- [#38145](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38145) [`9d2794a7753`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d2794a7753) - Add `executeCommand` to `pluginInjectionAPI` which should be used to dispatch a `PluginCommand` - from the `commands` property of a plugin.
+- Updated dependencies
+
+## 187.17.0
+
+### Minor Changes
+
+- [#38345](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38345) [`fb3dab2b017`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fb3dab2b017) - Decouple `better-type-history` plugin from `base` plugin
+
+### Patch Changes
+
+- [#38196](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38196) [`93a1fd7ce1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/93a1fd7ce1e) - Removed ResizeLabel
+
+## 187.16.1
+
+### Patch Changes
+
+- [#38287](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38287) [`8b104cb7575`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8b104cb7575) - [ED-14769] Remove tableCellOptionsinFloatingToolbar feature flag & make it default behaviour
+
+## 187.16.0
+
+### Minor Changes
+
+- [#38389](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38389) [`3413f770f2b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3413f770f2b) - Moving references to floating-toolbar types to `editor-common`
+
+### Patch Changes
+
+- [#37960](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37960) [`3a43f854e59`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a43f854e59) - [ux] ED-18841: When cursor inside panel, at start of content, is backspaced, it should lift panel line of content out of panel, instead of only selecting the node above it (such as an expand or table node).
+- Updated dependencies
+
+## 187.15.1
+
+### Patch Changes
+
+- [#38377](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38377) [`3df14c86161`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3df14c86161) - Cleaning up better typeahead feature flag.
+
+## 187.15.0
+
+### Minor Changes
+
+- [#38231](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38231) [`1a15910366d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a15910366d) - [ux] New pixel entry component for image resizing floating bar
+
+## 187.14.12
+
+### Patch Changes
+
+- [#38367](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38367) [`7b8e8b52110`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7b8e8b52110) - [ED-16733] Editor Media Extraction: Moving Floating Toolbar Separator to editor-common
+- Updated dependencies
+
+## 187.14.11
+
+### Patch Changes
+
+- [#38222](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38222) [`bc706129ddb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bc706129ddb) - Updated media to no longer use the old addAnalytics, using new AnalyticsAPI
+
+## 187.14.9
+
+### Patch Changes
+
+- [#38352](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38352) [`021d5f488ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/021d5f488ec) - [ED-16733] Media Plugin Extractation - Move core commands to common entrypoint
+- Updated dependencies
+
+## 187.14.8
+
+### Patch Changes
+
+- [#38134](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38134) [`8fe864e4f7a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8fe864e4f7a) - [ux] ED-19336: Fixed insert column button not visible when sticky header is enabled."
+- [#38219](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38219) [`4cbae03c15c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4cbae03c15c) - Set maxWidth for ResizerNext to stop lable updating when reaching max width
+
+## 187.14.7
+
+### Patch Changes
+
+- [#38130](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38130) [`3bbe8f91f34`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3bbe8f91f34) - refactor ResizableMediaSingleNext around guidelines and snapping
+- [#38001](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38001) [`a675f834911`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a675f834911) - Introduce `commands` optional parameter to `NextEditorPlugin`. It can be used similarly to `actions` in `NextEditorPlugin` but `commands` must adhere to the type of `PluginCommand`:
+
+  ```ts
+  type PluginCommand = ({ tr }: { tr: Transaction }) => Transaction | null;
+  ```
+
+  `PluginCommand`s are specifically used for code that is executed to modify a Transaction. They should be used in preference to the existing prosemirror `Command` type.
+
+- Updated dependencies
+
+## 187.14.4
+
+### Patch Changes
+
+- [#38323](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38323) [`8699cf99ceb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8699cf99ceb) - Exporting LayoutPluginOptions and CollabEditOptions from editor-common.
+- Updated dependencies
+
+## 187.14.3
+
+### Patch Changes
+
+- [#38319](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38319) [`c8c91a25360`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c8c91a25360) - [ux] Fix floating toolbar breakout buttons on extensions.
+
+## 187.14.2
+
+### Patch Changes
+
+- [#38316](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38316) [`9064e2d0f28`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9064e2d0f28) - [ux] HOT-104783 Reverting https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37639
+- Updated dependencies
+
+## 187.14.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.14.0
+
+### Minor Changes
+
+- [#38269](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38269) [`ffd94268ee9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ffd94268ee9) - ED-16575 follow up refactor of EditorNext plugins
+
+## 187.13.5
+
+### Patch Changes
+
+- [#37639](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37639) [`30d82d3462c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30d82d3462c) - [ED-19175] add missing support for the unsupportedBlock in table related nodes
+- [#38229](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38229) [`b041e51896d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b041e51896d) - Fix width plugin state reading when inserting a media single node
+- Updated dependencies
+
+## 187.13.3
+
+### Patch Changes
+
+- [#38156](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38156) [`62d6f381722`](https://bitbucket.org/atlassian/atlassian-frontend/commits/62d6f381722) - ED-18969 preliminaary refactor for relative guideline.
+
+## 187.13.2
+
+### Patch Changes
+
+- [#38132](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38132) [`f194fae5d20`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f194fae5d20) - Refactored ResizableMediaSingleNext to use editor-common utils
+
+## 187.13.0
+
+### Minor Changes
+
+- [#38217](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38217) [`8695abdde8e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8695abdde8e) - [ED-18289] Clean-up Editor Sentry feature flag
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.12.0
+
+### Minor Changes
+
+- [#38066](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38066) [`94eaf42403b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94eaf42403b) - ED-16575 - clean up EditorNext Props
+- [#38225](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38225) [`c2279d7aeb1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2279d7aeb1) - [ED-19205] Update text formatting plugin API to abstract away the analytics implementation
+
+## 187.11.0
+
+### Minor Changes
+
+- [#37920](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37920) [`c6c3b7e43d3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c6c3b7e43d3) - [ED-19202] Remove direct dependency of editor-core code on text-formatting plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.10.8
+
+### Patch Changes
+
+- [#37839](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37839) [`7c8a9a4c0c1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7c8a9a4c0c1) - Update mediaSingleWidth props to render legacy media single with correct dimensions
+
+## 187.10.6
+
+### Patch Changes
+
+- [#37885](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37885) [`eeecb78b23f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eeecb78b23f) - Added media-single utils to editor-common and moved utils from editor-core/media to edtor-common/media-single.
+
+## 187.10.4
+
+### Patch Changes
+
+- [#38048](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/38048) [`14fb6018157`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14fb6018157) - [ED-19354] Small fixes to respect the next ProseMirror version
+
+## 187.10.3
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.10.2
+
+### Patch Changes
+
+- [#37872](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37872) [`7cca8fcf473`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7cca8fcf473) - ED-18274: Remove unused feature flags listNumberContinuity and restartNumberedListsToolbar (not planned for future use either) (all related to the restart lists project)
+
+## 187.10.1
+
+### Patch Changes
+
+- [#37702](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37702) [`31405891e32`](https://bitbucket.org/atlassian/atlassian-frontend/commits/31405891e32) - Extract editor disabled plugin as separate package.
+- Updated dependencies
+
+## 187.10.0
+
+### Minor Changes
+
+- [#37964](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37964) [`1944b35b538`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1944b35b538) - move common utilities to editor-common, to help with decoupling block-type plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.9.2
+
+### Patch Changes
+
+- [#37926](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37926) [`6190030df97`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6190030df97) - Migrate `emoji` plugin to the new Analytics API
+- [#37581](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37581) [`78068814a36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/78068814a36) - [ux] Fix user selection via arrow keys getting stuck inside nested body macro if it's not empty or cannot shift + arrow into the macro
+
+## 187.9.0
+
+### Minor Changes
+
+- [#32787](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32787) [`936c30f8dc9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/936c30f8dc9) - support new image resize experience under feature flag
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.8.13
+
+### Patch Changes
+
+- [#37744](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37744) [`0756bf2b120`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0756bf2b120) - [ux] ED-18780 Add first element to page when pressing enter on Insert Menu
+
+## 187.8.11
+
+### Patch Changes
+
+- [#37821](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37821) [`2b54c3b0d24`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2b54c3b0d24) - [ED-19203] Decouple text-formatting plugin and editor-core
+- Updated dependencies
+
+## 187.8.10
+
+### Patch Changes
+
+- [#37650](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37650) [`d8c1bcdc71a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d8c1bcdc71a) - ED-19217 decoupled lists related util functions from editor-core
+- Updated dependencies
+
+## 187.8.7
+
+### Patch Changes
+
+- [#37775](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37775) [`22e9c894ca1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22e9c894ca1) - update test for numbered column table
+- [#37493](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37493) [`3a1cd78b42a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a1cd78b42a) - [ED-19203] Moving some common logic, styles, and types to editor-common to make it easier to extract the text-formatting plugin from editor-core
+- Updated dependencies
+
+## 187.8.3
+
+### Patch Changes
+
+- [#37785](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37785) [`4e6f1bf8511`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4e6f1bf8511) - [ED-19233] Import prosemirror libraries from internal facade package
+- Updated dependencies
+
+## 187.8.0
+
+### Minor Changes
+
+- [#37503](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37503) [`9bc531568ad`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9bc531568ad) - [ED-19216] Remove current analytics in list plugin
+
+## 187.7.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.7.1
+
+### Patch Changes
+
+- [#37567](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37567) [`b0277c41c33`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b0277c41c33) - ED-19064: Fixed border issue when selecting and deleting header column, and fixed border issue of the column control decoration."
+
+## 187.7.0
+
+### Minor Changes
+
+- [#37572](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37572) [`e83596269e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e83596269e5) - Add isResizing support into media plugin
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.6.10
+
+### Patch Changes
+
+- [#37663](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37663) [`fa2209eee80`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fa2209eee80) - [ux] Fixes z-index full page editor main toolbar
+- [#37606](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37606) [`9b64591559a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b64591559a) - [ux] ED-19163 Expand should only wrap selected text if added inline
+
+## 187.6.1
+
+### Patch Changes
+
+- [#37405](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37405) [`65f1e2bf9fc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65f1e2bf9fc) - [ux] ED-18212 Disable toolbar mention when cursor is inside a codeblock
+
+## 187.6.0
+
+### Minor Changes
+
+- [#37158](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37158) [`91410d6064c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91410d6064c) - [ux] NOISSUE Fix linkify of file links on space
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.5.6
+
+### Patch Changes
+
+- [#37353](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37353) [`6b6ec9afee3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6b6ec9afee3) - [ED-19157] Support setting image width based on editor size for newly inserted images behind feature flag
+
+## 187.5.5
+
+### Patch Changes
+
+- [#37496](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37496) [`01237de37e7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/01237de37e7) - [ED-17901] Update clear button on input to have tabindex and update tests to test for both chrome / firefox and safari
+
+## 187.5.0
+
+### Minor Changes
+
+- [#37442](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37442) [`164ab991f40`](https://bitbucket.org/atlassian/atlassian-frontend/commits/164ab991f40) - Updating the composable editor (@atlaskit/editor-core/composable-editor) to a functional component.
+
+## 187.4.11
+
+### Patch Changes
+
+- [#36896](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36896) [`8f01c8d69d7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f01c8d69d7) - ED-18946 fixed leaking debounce function on assistive text unmount
+- Updated dependencies
+
+## 187.4.10
+
+### Patch Changes
+
+- [#37428](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37428) [`33cec4ba4f0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/33cec4ba4f0) - [ED-19203] Extract common logic, styles, and types to editor-common
+
+## 187.4.8
+
+### Patch Changes
+
+- [#37456](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37456) [`d3851530199`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d3851530199) - Update snapping logic, tests and examples
+- Updated dependencies
+
+## 187.4.7
+
+### Patch Changes
+
+- [#37357](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37357) [`6255c2ad1c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6255c2ad1c9) - [ux] Adds ability to open Assets datasource dialog using the slash command in the editor, behind a feature flag
+
+## 187.4.5
+
+### Patch Changes
+
+- [#37391](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37391) [`eba71a21f88`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eba71a21f88) - [ED-19204] Let ProseMirror handle selections targeting empty paragraphs on root
+
+## 187.4.2
+
+### Patch Changes
+
+- [#36845](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36845) [`e64541c6fda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e64541c6fda) - [ux] [ED-18759] Updated table border, handlebar controls, blanket, icon, icon background and table cell options button colour tokens on light and dark theme for table selection and table deletion. Borders for Table Floating Contextual Button & Floating toolbar color palette button on dark & light theme are also updated.
+
+## 187.4.0
+
+### Minor Changes
+
+- [#37189](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37189) [`315332d1509`](https://bitbucket.org/atlassian/atlassian-frontend/commits/315332d1509) - Converts the existing withAnalytics events within the text-formatting to use the new EditorAnalyticsAPI instead
+
+## 187.3.6
+
+### Patch Changes
+
+- [#37340](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37340) [`b9355830504`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b9355830504) - Opt out of peer dependency enforcement
+
+## 187.3.5
+
+### Patch Changes
+
+- [#37163](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37163) [`f10d32545d2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f10d32545d2) - Fix bug where clicking anything in column picker inside Datasource table triggers editor focus toggling
+
+## 187.3.4
+
+### Patch Changes
+
+- [#37252](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37252) [`dbc45526d36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbc45526d36) - ED-18879 prevent cursor from appearing at incorrect position after IME composition
+
+## 187.3.0
+
+### Minor Changes
+
+- [#36750](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36750) [`6bacee18c2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6bacee18c2d) - [ux] Add new allowDatasource prop for enabling datasource in editor and add inlineCard fallback render for blockCard with datasource
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.2.7
+
+### Patch Changes
+
+- [#37175](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37175) [`022b25d8eed`](https://bitbucket.org/atlassian/atlassian-frontend/commits/022b25d8eed) - ED-17862: Fixed cusor position after pasting panel decisions in the same table cell."
+
+## 187.2.5
+
+### Patch Changes
+
+- [#34967](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34967) [`9663c3a9616`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9663c3a9616) - [ux] fix editor first focus
+
+## 187.2.4
+
+### Patch Changes
+
+- [#37012](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37012) [`30f2b96479f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30f2b96479f) - Update image upload plugin to use optional plugin upload interface
+
+## 187.2.3
+
+### Patch Changes
+
+- [#37139](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37139) [`a70c938c3de`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a70c938c3de) - fix issue where wrong expand node type was being inserted into tables (insert menu)
+
+## 187.2.2
+
+### Patch Changes
+
+- [#36982](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36982) [`0e45d910987`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0e45d910987) - [ED-18083] Moved panel gap cursor tests to Libra
+- Updated dependencies
+
+## 187.2.1
+
+### Patch Changes
+
+- [#37140](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37140) [`f4f06674b2f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f4f06674b2f) - Fix additional typeahead character being added to editor when using composition.
+
+## 187.2.0
+
+### Minor Changes
+
+- [#36960](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36960) [`e7ed90bad7c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7ed90bad7c) - Remove platform feature flag calls to editor-core and pass through a new option instead for custom table widths project, allowing for simpler clean up and reference
+
+### Patch Changes
+
+- Updated dependencies
+
+## 187.1.4
+
+### Patch Changes
+
+- [#36836](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36836) [`b00f47b4576`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b00f47b4576) - [ED-18035] stop keydown propogation for typeaheadlist
+
+## 187.1.3
+
+### Patch Changes
+
+- [#36408](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36408) [`6f9db080133`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6f9db080133) - flaky test reporter
+
+## 187.1.1
+
+### Patch Changes
+
+- [#36757](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36757) [`3fb20c4aeba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3fb20c4aeba) - Add postinstall check to enforce internal peer dependencies
+
+## 187.0.0
+
+### Major Changes
+
+- [#36917](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36917) [`304c002d875`](https://bitbucket.org/atlassian/atlassian-frontend/commits/304c002d875) - Removing `Editor` from `labs-next` entry point. This `Editor` was experimental and is not maintained any longer.
+
+  You should use the existing `Editor` from `editor-core`:
+
+  ```
+  import { Editor } from '@atlaskit/editor-core';
+  ```
+
+## 186.0.1
+
+### Patch Changes
+
+- [#37050](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37050) [`38dc2298bf5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/38dc2298bf5) - fix issue where wrong expand node type was being inserted into tables
+- Updated dependencies
+
+## 186.0.0
+
+### Major Changes
+
+- [#37010](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/37010) [`8e084d87da5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8e084d87da5) - Remove deprecated hyperlink commands and plugin key including:
+
+  - isTextAtPos
+  - isLinkAtPos
+  - insertLink
+  - insertLinkWithAnalyticsMobileNative
+  - insertLinkWithAnalytics
+  - updateLink
+  - hyperlinkStateKey
+
+  If you require `isTextAtPos` or `isLinkAtPos` these can be accessed via `editor-common`:
+
+  ```ts
+  import { isTextAtPos, isLinkAtPos } from '@atlaskit/editor-common/link`;
+  ```
+
+  If you require `insertLink`, `updateLink`, or `hyperlinkStateKey` you can access these via the new composable editor using a custom plugin. Here is an example:
+
+  ```ts
+  import { Editor } from '@atlaskit/editor-core/composable-editor';
+  import { EditorProps } from '@atlaskit/editor-core';
+  import { useUniversalPreset } from '@atlaskit/editor-core/preset-universal';
+  import type { NextEditorPlugin } from '@atlaskit/editor-common/types';
+  import type { hyperlinkPlugin } from '@atlaskit/editor-plugin-hyperlink';
+
+  const customPlugin: NextEditorPlugin<'custom', {
+      dependencies: [typeof hyperlinkPlugin]
+  }> = (_, api) => {
+      // Can access insertLink and updateLink here
+      api?.dependencies.hyperlink.actions.insertLink( ... )
+      api?.dependencies.hyperlink.actions.updateLink( ... )
+
+
+      // Rather than using the `hyperlinkStateKey` you can access via `sharedState`
+      api?.dependencies.hyperlink.sharedState.onChange(({ nextSharedState }) => {
+          // subscribe to changes
+      })
+      // OR for current value
+      api?.dependencies.hyperlink.sharedState.currentState()
+
+      return {
+          name: 'custom'
+      }
+  }
+
+  // This function is the equivalent of `Editor` from `editor-core`
+  function EditorWrapped(props: EditorProps) {
+      const preset = useUniversalPreset(props).add(customPlugin)
+      return <Editor preset={preset} ... />
+  }
+  ```
+
+  Note: By default `insertLink` via this interface is `insertLinkWithAnalytics`, however if you want to disable analytics disable them via the `EditorProps` and if you want to run `insertLinkWithAnalyticsMobileNative` pass `cardsAvailable` parameter as `false` (default).
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.17.0
+
+### Minor Changes
+
+- [#36772](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36772) [`464745a92e6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/464745a92e6) - [ux] Updated the Editor Table plugin to use the new guidelines plugin when custom-table-widths FF is enabled
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.16.7
+
+### Patch Changes
+
+- [#36865](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36865) [`1d3e0468d4c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1d3e0468d4c) - Adds a new analytics event to be implemented later
+
+## 185.16.6
+
+### Patch Changes
+
+- [#36837](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36837) [`1901ebeafcb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1901ebeafcb) - [ux] Fix expand title selection bug
+
+## 185.16.5
+
+### Patch Changes
+
+- [#36863](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36863) [`32ca42e82c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/32ca42e82c3) - Extracted internal editor card plugin to new package `editor-plugin-card`.
+- [#36923](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36923) [`ac863be242b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ac863be242b) - change props of ResizableMediaSingle with removing displayGrid and adding pluginInjectionApi
+- Updated dependencies
+
+## 185.16.3
+
+### Patch Changes
+
+- [#36768](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36768) [`6e113937892`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e113937892) - switched use of analytics plugin to new EditorAnalyticsAPI for text-formatting pluginModified file
+
+## 185.16.1
+
+### Patch Changes
+
+- [#36756](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36756) [`75520758a9d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/75520758a9d) - Fix layout not persisting on edits of datasource
+
+## 185.16.0
+
+### Minor Changes
+
+- [#36344](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36344) [`5e03045b1a0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e03045b1a0) - Adds support in /jira command to insert jira datasource table
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.15.4
+
+### Patch Changes
+
+- [#36890](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36890) [`9b75434a668`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b75434a668) - Fixing import order in editor-core and feature flags plugin.
+
+## 185.15.2
+
+### Patch Changes
+
+- [#35424](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35424) [`776a88442e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/776a88442e4) - [ux] When on mobile, the datasources will fallback to inline smartcard views.
+
+## 185.15.0
+
+### Minor Changes
+
+- [#36631](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36631) [`8b891bf3590`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8b891bf3590) - This change introduces `editor-plugin-hyperlink` which separates the hyperlink plugin from `editor-core`. In order to enable this change there are now new entry points on `editor-common` (such as `/link`, `/quick-insert`) in order to separate common code. Further `prosemirror-input-rules` now has new exports of `createPlugin` and `createRule` which are used in many plugins in `editor-core`.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.14.3
+
+### Patch Changes
+
+- [#36477](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36477) [`b8d84a1ffcd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b8d84a1ffcd) - [ux] ED-17632 disable table resizer when nested
+- [#36487](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36487) [`f188d9ea397`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f188d9ea397) - Create reference event for legacy image upload so DataTransfer is not lost
+- [`ade972c0252`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ade972c0252) - Remove stopPropagation from paste image plugin main
+
+## 185.14.2
+
+### Patch Changes
+
+- [#36816](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36816) [`700074a0830`](https://bitbucket.org/atlassian/atlassian-frontend/commits/700074a0830) - [ux] ED-18027 Upgrades editor-markdown-transformer to latest version.
+
+## 185.14.0
+
+### Minor Changes
+
+- [#36748](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36748) [`91c4edcea5a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91c4edcea5a) - The analytics plugin (`editor-plugin-analytics`) now creates the `createAnalyticsEvent` if none is supplied and shares it with other plugins internally.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.13.1
+
+### Patch Changes
+
+- [#36626](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36626) [`202f8c2ee69`](https://bitbucket.org/atlassian/atlassian-frontend/commits/202f8c2ee69) - The changes here adds support for datasource feature flag for rollout.
+
+## 185.13.0
+
+### Patch Changes
+
+- [#36700](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36700) [`36f667d92e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36f667d92e5) - Add data-testid to ToolbarBlockType
+
+## 185.12.2
+
+### Patch Changes
+
+- [#35870](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35870) [`a20c7920f82`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a20c7920f82) - [ux] ED-15477 Update insertion behaviour for expands, code blocks and panels to make them consistent
+
+## 185.12.1
+
+### Patch Changes
+
+- [#36358](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36358) [`a9bd271beba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a9bd271beba) - Fixes link updated linking platform events being dispatched without an updateType
+
+## 185.12.0
+
+### Minor Changes
+
+- [#36530](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36530) [`ad94cd465e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ad94cd465e4) - ED-18748: [ux] Adding chevron to floating toolbar cell background
+
+## 185.11.3
+
+### Patch Changes
+
+- [#36498](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36498) [`f486dbd535c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f486dbd535c) - MEX-2481 Fix minor gap between image and border
+- Updated dependencies
+
+## 185.11.0
+
+### Minor Changes
+
+- [#34966](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34966) [`f21b48e8a51`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f21b48e8a51) - enabled access to NextEditorPlugin actions for mobile bridge
+
+## 185.10.3
+
+### Patch Changes
+
+- [#36491](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36491) [`6c6c3491dfa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c6c3491dfa) - Move collab provider subscription into plugin#view methods to avoid race conditions with re-configuring editor state
+
+## 185.10.0
+
+### Minor Changes
+
+- [#36263](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36263) [`41820924223`](https://bitbucket.org/atlassian/atlassian-frontend/commits/41820924223) - [ux] [ED-15876] Add additional value option to `allowDate` editor prop. Previously it could only be a boolean (true or false) but now it can be a boolean OR an object with `weekStartDay` and `WeekDay` (from `@atlaskit/calendar/types`) type as the value.
+
+  Example Usage:
+
+  ```tsx
+  const startOfWeekDay = get(
+    getLocale(locale),
+    'options.weekStartsOn',
+    DEFAULT_WEEK_START_DAY,
+  );
+
+  <Editor
+    editorProps={{
+      allowDate: { weekStartDay: 5 },
+    }}
+  />;
+  ```
+
+  OR
+
+  ```tsx
+  <Editor
+    editorProps={{
+      allowDate: false,
+    }}
+  />
+  ```
+
+  is also still valid.
+
+  This allows the users preferred day for the week to begin in the date calendar picker to be passed in to the editor. Eg. instead of it always defaulting to the week starting on Sunday (0), we could pass in 1 to make it Monday.
+
+## 185.9.5
+
+### Patch Changes
+
+- [#36402](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36402) [`dbfd6704c14`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbfd6704c14) - [ux] ED-18061 - Safe insert node selected codeblock in paste handler logic
+- Updated dependencies
+
+## 185.9.2
+
+### Patch Changes
+
+- [#36465](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36465) [`42e5defb430`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42e5defb430) - Fix typing of internal EditorNext react component.
+
+## 185.9.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.9.0
+
+### Minor Changes
+
+- [#36134](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36134) [`65fe45e0cc0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65fe45e0cc0) - Promoted border mark to full schema and add border support for email renderer
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.8.3
+
+### Patch Changes
+
+- [#36241](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36241) [`5f5ba16de66`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f5ba16de66) - [ED-13910] Fix prosemirror types
+- Updated dependencies
+
+## 185.8.2
+
+### Patch Changes
+
+- [#36367](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36367) [`5f6168797f7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f6168797f7) - Improve run-time performance of editor on scroll/resizing by using newer APIs for toolbar keyline.
+
+## 185.8.0
+
+### Minor Changes
+
+- [#35517](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35517) [`68ef7e6146c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68ef7e6146c) - Added feature flag for the new media resize experience.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.7.0
+
+### Minor Changes
+
+- [#36220](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36220) [`9fc1422dec1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9fc1422dec1) - Make `hyperlink` plugin an explicit dependency of `card` plugin. Move card styles and types into editor-common.
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.6.5
+
+### Patch Changes
+
+- [#36139](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36139) [`1622659f976`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1622659f976) - [ux] Render the image border submenu to the left if it goes out of bounds
+- Updated dependencies
+
+## 185.6.3
+
+### Patch Changes
+
+- [#35848](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35848) [`d73305e0246`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d73305e0246) - ED-18796 enable FF for table cell optimisation
+
+## 185.6.1
+
+### Patch Changes
+
+- [#35871](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35871) [`a1a0ac82bce`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a1a0ac82bce) - ED-18861 Update editor wrapper div when assistiveLabel prop change.
+- [#35954](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35954) [`8d460228bf3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8d460228bf3) - NONE: fix collabparticipant import
+- Updated dependencies
+
+## 185.6.0
+
+### Minor Changes
+
+- [#35499](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35499) [`a1b70608039`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a1b70608039) - [ux] Adds editor toolbar to link datasource component
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.5.7
+
+### Patch Changes
+
+- [#35749](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35749) [`6e54d9fbeea`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e54d9fbeea) - Added tableAddWidthPlugin
+
+## 185.5.5
+
+### Patch Changes
+
+- [#35176](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35176) [`072578e8f55`](https://bitbucket.org/atlassian/atlassian-frontend/commits/072578e8f55) - [ux] The change here enables the datasource table to be configured with varying width based on 3 layout modes.
+- [#35898](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35898) [`dd532ad4f99`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dd532ad4f99) - [MEX-2457] fix wrong upload position for mediaGroup
+
+## 185.5.2
+
+### Patch Changes
+
+- [#36132](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/36132) [`d11b0938949`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d11b0938949) - [No Issue] Add aria label for Hyperlink Edit popup
+
+## 185.5.0
+
+### Minor Changes
+
+- [#35032](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35032) [`04295e9d5bc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04295e9d5bc) - [ux] Updating ORS response to include datasources and facilitating pasting JQL links turning into datasource tables
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.4.5
+
+### Patch Changes
+
+- [#35989](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35989) [`9c56055e190`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9c56055e190) - Fixed session duration payload calculation to use consistent timers
+
+## 185.4.4
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.4.2
+
+### Patch Changes
+
+- [#35233](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35233) [`a9350cf3831`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a9350cf3831) - Check existence of window and document variable for confluence SSR to work
+
+## 185.4.0
+
+### Minor Changes
+
+- [#34936](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34936) [`714f16e525a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/714f16e525a) - [ux] Added blockCard integration with datasource ADFs
+
+## 185.3.1
+
+### Patch Changes
+
+- [#35788](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35788) [`18344c31ea3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/18344c31ea3) - [ED-13910] Fix EditorView getPos type
+
+## 185.3.0
+
+### Minor Changes
+
+- [#35868](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35868) [`4bf22e4eb1c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4bf22e4eb1c) - The editor dropdown menu items are now forced to be `position: static` when a feature flag is on to work around menu items being position relative now. This is a short term fix to keep the table cell color nested menu working.
+
+### Patch Changes
+
+- [#35782](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35782) [`8b14ad8d3e2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8b14ad8d3e2) - Dummy change to trigger pipeline
+- Updated dependencies
+
+## 185.2.27
+
+### Patch Changes
+
+- [#35506](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35506) [`8114875676c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8114875676c) - [ux] ED-17625: move playwright test from editor-plugin-table to editor-core
+
+## 185.2.26
+
+### Patch Changes
+
+- [#35353](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35353) [`5e01082b600`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e01082b600) - Extracting SelectionBasedNodeView to editor-common.
+- Updated dependencies
+
+## 185.2.25
+
+### Patch Changes
+
+- [#35475](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35475) [`87366c84531`](https://bitbucket.org/atlassian/atlassian-frontend/commits/87366c84531) - Extract context panel plugin to new package @atlaskit/editor-plugin-context-panel
+- Updated dependencies
+
+## 185.2.24
+
+### Patch Changes
+
+- [#35604](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35604) [`a7642631f34`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a7642631f34) - Reduce re-rendering due to props changing in the Editor.
+
+## 185.2.23
+
+### Patch Changes
+
+- [#35183](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35183) [`91ea76040d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91ea76040d5) - Fix editor not providing creation method for link created events triggered by link picker insertions on text selections
+
+## 185.2.20
+
+### Patch Changes
+
+- [#35589](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35589) [`9702c38714d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9702c38714d) - ED-16962 close element browser on tab
+
+## 185.2.19
+
+### Patch Changes
+
+- [#35122](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35122) [`6d852a003e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6d852a003e4) - Fixes link picker not returning focus on close when `lp-link-picker-focus-trap` feature flag is enabled
+
+## 185.2.16
+
+### Patch Changes
+
+- [#35564](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35564) [`b273cb8b28a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b273cb8b28a) - The ModalElementBrower will no longer rerender when the editor state changes, instead it will only cause a rerender when the view is changed. This is to avoid lose of context within the element browser.
+
+## 185.2.14
+
+### Patch Changes
+
+- [#35085](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35085) [`6de13a329d4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6de13a329d4) - Move `width` and `layout` out from `datasource` into `attr` root (context blockCard node)
+- Updated dependencies
+
+## 185.2.13
+
+### Patch Changes
+
+- [#35514](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35514) [`406f89ad910`](https://bitbucket.org/atlassian/atlassian-frontend/commits/406f89ad910) - [ux] fix image border missing in renderer when image is linked and also double seperators issue
+
+## 185.2.10
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.2.9
+
+### Patch Changes
+
+- [#35468](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35468) [`c0d84ed8771`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c0d84ed8771) - fix copy and paste across issues in Jira
+
+## 185.2.8
+
+### Patch Changes
+
+- [#35310](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35310) [`af998742600`](https://bitbucket.org/atlassian/atlassian-frontend/commits/af998742600) - [ux] ED-18059 Updated arrow key navigation within insert menu and element browser.
+
+## 185.2.7
+
+### Patch Changes
+
+- [#34961](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34961) [`1259df9a9ef`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1259df9a9ef) - converted some of block-type's analytics to use new EditorAnalyticsAPI
+
+## 185.2.5
+
+### Patch Changes
+
+- [#35227](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35227) [`b48d0a5f88f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b48d0a5f88f) - Create new placeholder for the floating toolbar plugin and use a new action to replace the forceFocusSelector action.
+- Updated dependencies
+
+## 185.2.2
+
+### Patch Changes
+
+- [#35005](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35005) [`f07a1e036a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f07a1e036a9) - Refactoring editor-core to prepare for extracting card plugin.
+- Updated dependencies
+
+## 185.2.0
+
+### Minor Changes
+
+- [#35061](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/35061) [`66adfa8cd12`](https://bitbucket.org/atlassian/atlassian-frontend/commits/66adfa8cd12) - [ux] Passthru editor feature flags props into the Appearance content area so it's able to setup styles which rely on feature flags
+
+## 185.1.6
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.1.3
+
+### Patch Changes
+
+- [#34938](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34938) [`7cd4abcdc0d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7cd4abcdc0d) - Fix workaround in `editor-plugin-width`. This involved removing `WidthEmitter` in `editor-core`, removing `containerWidth` from `WidthPluginState`. This change also introduces `usePluginHook` for an `EditorPlugin` - this enables a react hook to be mounted for plugins (in all appearances).
+- Updated dependencies
+
+## 185.1.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.1.1
+
+### Patch Changes
+
+- [#34620](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34620) [`63ef771aab9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/63ef771aab9) - [ux] Fix layout button. breakoutNode equals check should include position.
+
+## 185.1.0
+
+### Minor Changes
+
+- [#34887](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34887) [`d9fe34b3f2b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d9fe34b3f2b) - [ux] The ResizerNext component now supports a new property handleAlignmentMethod which defaults to "sticky". This means the resizer handles wil stick to the top/bottom bounds of the browser viewport if the component extends beyond and the user scrolls down. An alternative "center" value can be set which means the handles will just center to their content and not stick.
+
+### Patch Changes
+
+- [`bb442ced942`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb442ced942) - Remove newCardExperience feature flag
+- [`daee7ddddc2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/daee7ddddc2) - [MEX-2405] Fixed the flickering error (inline) card issue
+- [`d7888f058a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d7888f058a9) - converted to using new AnalyticsAPI in mentions plugin and wrote test for it
+- Updated dependencies
+
+## 185.0.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 185.0.0
+
+### Major Changes
+
+- [#34644](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34644) [`741b3acd455`](https://bitbucket.org/atlassian/atlassian-frontend/commits/741b3acd455) - This major change includes:
+
+  - `EditorMigrationComponent` being renamed to `Editor`. This includes making component methods which should never be used private (which should never be used in normal operation and have been deprecated for several releases).
+  - `EditorMigrationComponent` is now removed
+  - Removing `useEditorNext` feature flag
+
+  This change was made as part of our strategy to move to a new architecture with `EditorMigrationComponent`, now that the component has served its purpose it is no longer required.
+
+  Any references to this component can be updated like so:
+
+  Before:
+
+  ```ts
+  import { EditorMigrationComponent } from '@atlaskit/editor-core';
+  ```
+
+  After:
+
+  ```ts
+  import { Editor } from '@atlaskit/editor-core';
+  ```
+
+### Minor Changes
+
+- [`26d9c8cb4b1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/26d9c8cb4b1) - Extract decorations plugin from editor-core to its own package.
+
+### Patch Changes
+
+- [`4fe16193baa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4fe16193baa) - [ux] fix element browser adding component twice
+- [`6f5276b3eb1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6f5276b3eb1) - ED-17921 updated placeholder text analytics event to use new analyticsAPI
+- [`1df016865b3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1df016865b3) - [ED-17443] Update escape key behaviour when typeahead is open
+- [`65ff31a2ad4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65ff31a2ad4) - use onError prop on smart card to handle errors
+- Updated dependencies
+
+## 184.0.4
+
+### Patch Changes
+
+- [#34395](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34395) [`42486e5e512`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42486e5e512) - Updated `ColorPickerButton`'s size prop type from number to string for width and height, allowing use of space tokens.
+
+## 184.0.0
+
+### Major Changes
+
+- [#34192](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/34192) [`b7086232a7c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b7086232a7c) - ESS-3135: move collab provider types into @atlaskit/collab-provider
+
+### Minor Changes
+
+- [`1549c2e6dda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1549c2e6dda) - Extract width plugin from `editor-core` to separate `editor-plugin-width` package.
+
+### Patch Changes
+
+- [`10ddf00db40`](https://bitbucket.org/atlassian/atlassian-frontend/commits/10ddf00db40) - [ux] add a handler size option and relevant style and demo page
+- [`6d2cb452718`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6d2cb452718) - converted the analytics events within help-dialog to use the new Analytics API
+- [`18fc85285dc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/18fc85285dc) - Fix extensions in Confluence.
+- [`3247424b653`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3247424b653) - Removed unused styling for the recently removed fileCardImageViewSelectedSelector classname
+- [`d2ebe077406`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d2ebe077406) - [ux] ED-17083 Fix copy button for extension
+- [`8c54caf3c01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8c54caf3c01) - Focus editor when closing extension sidebar config
+- [`19389328bfd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19389328bfd) - [ED-16813] Fix uiTracking logic so it honours the sampling rate set in performance feature flags
+- [`1a167533ab8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a167533ab8) - [ux] ED-17834 - Pasting over layout columns is able to be undone
+- [`f055b886032`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f055b886032) - Extract the grid plugin to a separate package.
+- Updated dependencies
+
+## 183.1.6
+
+### Patch Changes
+
+- [#33904](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33904) [`42fa291e96f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42fa291e96f) - Updated color hovering styles for image borders toolbar
+
+## 183.1.1
+
+### Patch Changes
+
+- [#33793](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33793) [`9d00501a414`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d00501a414) - Ensure legacy types are published for TS 4.5-4.8
+- Updated dependencies
+
+## 183.1.0
+
+### Minor Changes
+
+- [#33771](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33771) [`6bc52e5a406`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6bc52e5a406) - [ED-17687] Capture errors caught in error boundaries in Sentry
+- [`5cc449dac8d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5cc449dac8d) - Decouple card plugin so that it uses new NextEditorPlugin for any injected dependencies.
+- [`4dcb7845a4d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4dcb7845a4d) - COLLAB-2425 Fixed mediasingle resize issue.
+
+### Patch Changes
+
+- [`2ce80b34bff`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ce80b34bff) - Add platform feature flag in editor example page
+- [`8a391616ecc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8a391616ecc) - Moving insert node API to a new editor plugin to allow it to be more extensible. Also exposing a new editor plugin action for tables to allow for consistent insertion.
+- [`9220da2225b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9220da2225b) - ED-16320: Add checks to certain SLO related events to see if they are explicitly disabled, in preparation for disabling them for synthetic tenants in prod
+- [`e6e4b524824`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e6e4b524824) - Minor refactor to toolbar insert block props.
+- [`06ec9abd06e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/06ec9abd06e) - Add nodeContext attribute to link analytics
+- [`b804d3ad561`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b804d3ad561) - Remove unused code related to GASv2 table analytics from editor-plugin table, editor-core and editor-common
+- [`6550d08f5af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6550d08f5af) - [ux] Color picker button should not be focused after selecting color.
+- [`9ddf10cda28`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9ddf10cda28) - Bumps maximum number of link analytics callbacks for any given transaction.
+- [`017e02e34db`](https://bitbucket.org/atlassian/atlassian-frontend/commits/017e02e34db) - ED-17539 Redo for multiple statues are working now.
+- [`8d4d36690ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8d4d36690ec) - Updates lpAnalyticsEventsNext feature flag link events to ignore transactions where inserted and deleted links appear to be identical.
+- [`e20cca743c4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e20cca743c4) - Moving editor analytics plugin to new package.
+- [`f621ae6490a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f621ae6490a) - Adding type dependency on analytics plugin to tables plugin.
+- [`a142ba1aa28`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a142ba1aa28) - [ED17172] Bump prosemirror-model to 1.16.0 and prosemirror-view to 1.23.7 and removed work-arounds for fixed issues
+- [`be561d3491c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/be561d3491c) - [ED-17622] Adds styles and creates an example for the new Resizer component
+- [`9369cc38a68`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9369cc38a68) - Migrated use of `gridSize` to space tokens where possible. There is no expected visual or behaviour change.
+- [`acaceaa764e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/acaceaa764e) - [ux] ED-17308 fix paste action item in panel. It should paste below panel (or decision)
+- Updated dependencies
+
+## 183.0.12
+
+### Patch Changes
+
+- [#33677](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33677) [`7a87ea4b905`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7a87ea4b905) - Fixes document inserted smartLink instead firing document pasted smartLink
+
+## 183.0.9
+
+### Patch Changes
+
+- [#33618](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33618) [`333fa827c25`](https://bitbucket.org/atlassian/atlassian-frontend/commits/333fa827c25) - ED-15646: Fix paste behaviour for markdown which contains headings inside list items. List items with headings will now be retained.
+
+## 183.0.8
+
+### Patch Changes
+
+- [#33649](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33649) [`41fae2c6f68`](https://bitbucket.org/atlassian/atlassian-frontend/commits/41fae2c6f68) - Upgrade Typescript from `4.5.5` to `4.9.5`
+- Updated dependencies
+
+## 183.0.6
+
+### Patch Changes
+
+- [#32882](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32882) [`98c74fa6f26`](https://bitbucket.org/atlassian/atlassian-frontend/commits/98c74fa6f26) - [ux] fix placeholder fallback
+
+## 183.0.0
+
+### Minor Changes
+
+- [#33258](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33258) [`56507598609`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56507598609) - Skip minor dependency bump
+
+### Patch Changes
+
+- Updated dependencies
+
+## 182.2.0
+
+### Minor Changes
+
+- [#33004](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/33004) [`31302b3cec6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/31302b3cec6) - Add location attribute to editor smart card analytics
+- [`dbf2e414624`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbf2e414624) - ED-15685: Adjust selection-based indent behaviour to match visual selection (as done in Editor lists)
+
+### Patch Changes
+
+- [`054186aa44f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/054186aa44f) - Remove email from CollabParticipant type and rely more on ProviderParticipant type.
+- [`0ffb55018c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0ffb55018c9) - Revert "[ED-17172] Bumped prosemirror-view from 1.23.2 to 1.23.7 and removed work-around for fixed issues"
+- [`87a1c6a8030`](https://bitbucket.org/atlassian/atlassian-frontend/commits/87a1c6a8030) - [ux] ED-17019 fix hover style of ColorPickerButton with custom height (seen in table chart ConfigPanel)
+- [`6bd5d9824be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6bd5d9824be) - Updates link created analytics event to include creationMethod as editor_type when autoformatting input rule is triggered.
+- [`56198bcd29d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56198bcd29d) - [ux] JCA11Y-31 - Added tab support for web accessibility keyboard users according to Toolbar Pattern (see https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/)
+- [`888cd482b98`](https://bitbucket.org/atlassian/atlassian-frontend/commits/888cd482b98) - Fix logic of generated new duplicated localIds when pasting a copied node above the copied node
+- Updated dependencies
+
+## 182.1.2
+
+### Patch Changes
+
+- [#32631](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32631) [`a6a3544d04d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a6a3544d04d) - [ux] Fix the image border split button so that both the toggle and the dropdown buttons share the same select state; and add a divider line between it and the align left icon group
+
+## 182.1.1
+
+### Patch Changes
+
+- [#32353](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32353) [`dc608155b35`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dc608155b35) - [ux] ED-17486 stopped event propagation on Esc key on the main toolbar so that it is only focuses editor.
+- Updated dependencies
+
+## 182.1.0
+
+### Minor Changes
+
+- [#32424](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32424) [`ba95f121a52`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ba95f121a52) - ED-17378 Added assistiveLabel prop to Editor.
+- [`c2385dcb8f7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2385dcb8f7) - [ux] ED-17043 Expanded table chart colors from 20 to 36 colors.
+- [`e88e54a14e3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e88e54a14e3) - [ux] [ux] Added 'allowAlignment' and 'allowWrapping' as options in 'cardOptions' to let Trello to disable the features
+- [`d9a8fe191f2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d9a8fe191f2) - [ED-17295] Update feature flag usage for media plugin
+- [`0237059f136`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0237059f136) - Integrates @atlaskit/link-analytics for improved tracking of links
+  This can be enabled via the `lp-analytics-events-next` feature flag.
+  When enabled, tracks links changed in every transaction and fires `link created`, `link deleted` and `link updated` accordingly.
+
+  ```ts
+  <SmartCardProvider
+    featureFlags={{
+      enableResolveMetadataForLinkAnalytics: true,
+    }}
+  >
+    <Editor
+      featureFlags={{
+        'lp-analytics-events-next': true,
+      }}
+    />
+  </SmartCardProvider>
+  ```
+
+- [`21b20f571fa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/21b20f571fa) - [ED-17382] Update feature flag usage for rule plugin
+- [`b289da93d3c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b289da93d3c) - [ED-17384] Remove feature flags context plugin
+- [`f99b84adfab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f99b84adfab) - Fix backspace behaviour in block quotes to prevent merging into panels
+- [`2cfb05a2cf8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2cfb05a2cf8) - [ux] ED-17278 - Added shortcuts to Editor Help dialog
+
+### Patch Changes
+
+- [`2e01c9c74b5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2e01c9c74b5) - DUMMY remove before merging to master; dupe adf-schema via adf-utils
+- [`e9422d1b0c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e9422d1b0c9) - [ED-17383] Update feature flag usage in text color plugin
+- [`b6ee3d64a94`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b6ee3d64a94) - Improves internal getStepRange utility accuracy
+- [`3e612ba32a6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3e612ba32a6) - [ED-17381] Update feature flag usage in paste plugin
+- [`1be4313d684`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1be4313d684) - Removes redundant code paths related to outstanding card requests from internal card plugin
+- Updated dependencies
+
+## 182.0.3
+
+### Patch Changes
+
+- [#32147](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32147) [`bcdf4f2913f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bcdf4f2913f) - add missing border mark data to the media analytic context
+
+## 182.0.2
+
+### Patch Changes
+
+- [#32087](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/32087) [`1fa59166180`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1fa59166180) - [ux] ED-17355 added shortcut to focus main toolbar in comment editor
+
+## 182.0.1
+
+### Patch Changes
+
+- [#31952](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/31952) [`190cca54c10`](https://bitbucket.org/atlassian/atlassian-frontend/commits/190cca54c10) - [ux] Update the image border icon
+
+## 182.0.0
+
+### Major Changes
+
+- [#31891](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/31891) [`d066f461786`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d066f461786) - [ED-16946] Remove deprecated feature flag allowMoreTextColors
+
+### Minor Changes
+
+- [`bf04c417bfd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bf04c417bfd) - Add "border" mark to stage0 ADF schema
+- [`ef830fdabfa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ef830fdabfa) - [ED-17294] Enable type checking for Preset plugins on unit tests
+- [`af9a85063e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/af9a85063e5) - add image border toolbar
+- [`0419ca96512`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0419ca96512) - [ED-17209] `Renamed externalPlugins` API to `dependencies`
+- [`c138d6d000f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c138d6d000f) - CCECO-283 Extended Extension API update function with ability to update the content of the node
+
+### Patch Changes
+
+- [`4f75910f899`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4f75910f899) - [ux] Add code wrapping button to code block TSLA-266
+- [`1b4642c6b8c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b4642c6b8c) - [ED-17287] Update feature flag usage for base plugin
+- [`aa2bb8e9af3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa2bb8e9af3) - [ED-17292] Update feature flag usage for hyperlink plugin
+- [`240b33ea31e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/240b33ea31e) - [ux] ED-17200 Restore typeahead initial-navigation behaviour
+- [`5bb30bba83f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5bb30bba83f) - [ED-17289] Update feature flag usage for collab-edit plugin
+- [`a12242d5600`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a12242d5600) - ED-16683 fixed inability to paste content with inline comment into italic text
+- [`ed91763381c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ed91763381c) - [ux] enable focus trap for emoji picker popup, and add press escape key to close emoji picker popup
+- [`7c08fc37676`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7c08fc37676) - [17293] Update feature flag usage for hyperlink plugin
+- [`9e49aa408ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9e49aa408ec) - [ED-17291] Update feature flag usage for base plugin
+- [`5843631fc43`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5843631fc43) - [ux] ED-17135: Added missing aria-label to the Clear Formatting menu item.
+- [`04edc92c8f0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04edc92c8f0) - ED-16974: Set focus to Editor after Confirmation dialog is closed.
+- [`7946da1848a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7946da1848a) - [ux] [ED-16668] Update table shadow intersection table to observe new shadow sentinels instead of first and last cell
+- [`bad1fae839b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bad1fae839b) - Adds `useSharedPluginState` hook which can be used to replace instances of `WithPluginState`. It will take the dependency injection API (provided by a `NextEditorPlugin` and return the shared state for the specified plugins rather than using plugin keys in `WithPluginState`.
+- [`a9d6c74f7cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a9d6c74f7cd) - Update typeahead changes to be behind a feature flag named `use-better-typeahead-navigation`/`useBetterTypeaheadNavigation`. This is an opt-out feature flag! To disable, please supply the feature flag as false.
+- [`da8e67aa763`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da8e67aa763) - [ED-17288] Update feature flag usage for card plugin
+- [`7d13224adfc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d13224adfc) - [ED-16731] Initial migration for Feature Flags plugin
+- [`4766fa2e12b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4766fa2e12b) - Prevent Voiceover Cursor from navigating over decorative elements in the Editor Toolbar such as separators and unused hidden text.
+- [`a87ef158b49`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a87ef158b49) - [ED-17290] Update feature flag usage for expand plugin
+- [`22594b22f8b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22594b22f8b) - fix missing Extension edit button bug by updating potentially stale Extension state
+- [`7f54728ea5f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f54728ea5f) - [ux] ED-15271 Update divider node insertion logic to prevent replacement of empty list nodes when inserted via markdown shortcut. Additionally, ensure consistency between other insertion modes like quick insert, hot key shortcuts and toolbar.
+- [`fcda6a668eb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fcda6a668eb) - Fix default prop behaviour on EditorMigrationComponent.
+- [`8537da6fa71`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8537da6fa71) - Fixes a bug where the height of the link picker popup is incorrectly assigned if link picker plugins are not provided to the editor.
+- Updated dependencies
+
+## 181.0.1
+
+### Patch Changes
+
+- [#31898](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/31898) [`40c9132b8cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/40c9132b8cd) - [ux] ED-17200 Restore typeahead initial-navigation behaviour
+- [`b737494c727`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b737494c727) - Update typeahead changes to be behind a feature flag named `use-better-typeahead-navigation`/`useBetterTypeaheadNavigation`. This is an opt-out feature flag! To disable, please supply the feature flag as false.
+
+## 181.0.0
+
+### Major Changes
+
+- [#31299](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/31299) [`6c543971074`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c543971074) - [ux] PTC-6520 remove team mention highlight
+
+### Minor Changes
+
+- [`a697f9eb7ca`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a697f9eb7ca) - [ED-16746] Introduce the shareable actions concept into the NextEditorPlugin
+- [`a7e36157e01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a7e36157e01) - [ED-15941] Refactor Preset into EditorPresetBuilder
+- [`406c29f8cf1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/406c29f8cf1) - ED-15802:Added stickyOffsetTop prop inside useStickyToolbar to support customise top for main toolbar when it is sticky.
+- [`0078ddc7e2e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0078ddc7e2e) - New smartLinks prop to allow renderer and editor to determine whether smart link should show actions that can change the link resource.
+- [`0ad977ead6d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0ad977ead6d) - EDM-2674: remove last reference to plainTextPasteLinkification feature flag in cleanup process."
+- [`4292f200ec9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4292f200ec9) - [ED-16560] Add preset prop to EditorNext
+- [`592e3761622`](https://bitbucket.org/atlassian/atlassian-frontend/commits/592e3761622) - [ED-15941] NextEditorPlugins will receive an api with the plugins dependencies on runtime
+
+### Patch Changes
+
+- [`b38ca291f7b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b38ca291f7b) - Fixed inlineCode issue cause by apostrophe replacements reported in DTR-987
+- [`1a2ba1a53a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a2ba1a53a9) - ED-17113: Fixed assistive text in mentions not including user name due to async look up.
+- [`deeb5ebee1f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/deeb5ebee1f) - Fix self mention highlighting
+- [`f07824eeccc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f07824eeccc) - ED-15647 fix undo when pasting table with resized column in expand
+- [`f81e7ba7c07`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f81e7ba7c07) - [ux] ED-16556 Fixed - Table floating toolbar "Table Options" and "Cell Options" are not accessible
+- [`dae1c82956b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dae1c82956b) - [ux] ED-17122 - Toolbar extension icons use tooltip as aria label
+- [`9d3fb04c725`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d3fb04c725) - [ED-16948] Fix crash in template editor when image is the first node.
+- [`568b7d96689`](https://bitbucket.org/atlassian/atlassian-frontend/commits/568b7d96689) - [ux] [ED-16819] Prevent up/down arrow from a media selection from creating new paragraphs. Should move to gap cursor instead if it cannot move into node before.
+- [`9dde8374c54`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9dde8374c54) - Update import of EditorCardProvider from `@atlaskit/link-provider` to `@atlaskit/editor-card-provider` for scheduled release packages.
+- [`f7fc96b3738`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f7fc96b3738) - ED-17086 - Added feature flag for expandedChartColors
+- [`a6b3a866e9d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a6b3a866e9d) - [ux] ED-16941: we now ignore screenshots when pasting text from Microsoft Office when using the image-upload plugin (legacyImageUploadProvider)
+- [`a57e2849f71`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a57e2849f71) - Remove unused code in editor-core that is not imported anywhere
+- [`eb7ef06e38c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eb7ef06e38c) - Contextual toolbar focus will now be regained when exiting via ArrowLeft / ArrowRight keys, and will progress to the next toolbar item. onBlur will now also be called correctly when dropdown menu items lose focus.
+- [`2661a586431`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2661a586431) - ED-15843 Applied fix for bodiedExtensions animation as per DTR-807
+- [`023b96ba3da`](https://bitbucket.org/atlassian/atlassian-frontend/commits/023b96ba3da) - emoji picker vertical alignment refinement
+- [`db34131a1e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db34131a1e4) - [ED-16579] Add methods to Preset object including `setProvider`, `getProvider` and `getAllProviders`.
+
+  These are used internally to set providers (objects which can return functionality such as `emojiProvider`).
+
+- [`8ef5e96b6c4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8ef5e96b6c4) - Fix that removes remaining layout attribute from inlineCard type during updating from embedCard type to inlineCard type when embed is not allowed.
+- [`7f26be97caf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f26be97caf) - [ux] ED-14957: add border color for dark mode for layout
+- [`68f4ce6955d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68f4ce6955d) - Fix logic to reconfigure state in ReactEditorView to fix a breakage on NCS pages.
+- [`1720ddc8076`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1720ddc8076) - [ux] ED-16725 Added support for semantic tooltip names for background color palette.
+- Updated dependencies
+
+## 180.1.0
+
+### Minor Changes
+
+- [#30248](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/30248) [`434699a8b0e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/434699a8b0e) - [ux] [ED-15904] Implements new functionality for the restart numbered lists project which allows a user to paste a block node into a list. It will now split the list and insert the node in that position. If it's an ordered list, list numbering will continue in the now split list.
+
+  This feature is behind the `restartNumberedLists` feature flag.
+
+  The change also includes a refactor to handle pasting of content from decisions into lists which should paste just the content, but currently pastes the wrapping decision node as well. This was previously only handled for panels, but also applies to decisions. This is not behind the feature flag.
+
+- [`15059b00c15`](https://bitbucket.org/atlassian/atlassian-frontend/commits/15059b00c15) - [ED-16585] Allow editorActions.replaceSelection and processRawValue to accept fragments. Allow quickInsert actions on extensions to return a fragment.
+- [`c22905e224e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c22905e224e) - [ux] ED-16335: First menu item gains focus when the dropdown menu is opened by keyboard.
+- [`9a25538e0ef`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9a25538e0ef) - [ux] ED-16723 Custom panel background color is tokensied. More details at https://hello.atlassian.net/wiki/spaces/DST/pages/2382075153/Draft+Custom+panel+background+color+is+tokenised
+- [`6ec4f0aca5a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6ec4f0aca5a) - [ED-16558] Introduces a new parameter for ReactEditorView (getEditorPlugins) which can be used to return a list of EditorPlugins used by the component.
+
+  This parameter is optional, for existing behaviour pass undefined.
+
+- [`1d11b24f17e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1d11b24f17e) - [ux] ED-15549 Implemented keyboard navigation in color palette
+- [`52c5dfd3a76`](https://bitbucket.org/atlassian/atlassian-frontend/commits/52c5dfd3a76) - [ux] ED-15902 fixed an issue where the user types when the floating toolbar is scrolled, it resets scroll position to the left most position
+- [`710adab73cf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/710adab73cf) - [ED-16557] Introduces EditorMigrationComponent which
+  can be used as a replacement for Editor. This
+  component calls Editor under the hood but if the
+  `useEditorNext` feature flag is active will start
+  using an experimental version of the Editor API.
+
+  At this stage Makers can start adopting
+  EditorMigrationComponent to replace the Editor
+  component.
+
+  This change also introduces the `useEditorNext`
+  feature flag. Activating this flag will start to use
+  the new Editor API.
+
+  Warning: This new Editor API is in development and
+  should not be used until the EditorNext component is
+  released and the API is stable.
+
+- [`56d6c797d39`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56d6c797d39) - ED-16654 Calculate correct input latency and also added other timings for it
+
+### Patch Changes
+
+- [`2ee31675e66`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ee31675e66) - [ED-16557] Refactor Editor and EditorNext to share common code in editor-core.
+
+  Introduce new hooks in editor-common including:
+
+  1. `usePreviousState` can be used to remember the last props passed to a functional component
+
+  2. `useConstructor` can be used to run only once on a functional component
+
+- [`278411ec1e2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/278411ec1e2) - [ED-17022] Fixed regression issue where the typeahead caret was black and on firefox the caret was shifted down
+- [`21168c61c7d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/21168c61c7d) - [MEX-2205] Remove mediaGroupNodes and all the related logic
+- [`6dc6528ffab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6dc6528ffab) - ED-16888 Fix backslash duplication in codeBlock when pasting as plain text
+- [`cc150a98124`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cc150a98124) - [ED-17041] Fix createAnalytics stub API fallback logic
+- [`286cc5d6e94`](https://bitbucket.org/atlassian/atlassian-frontend/commits/286cc5d6e94) - Minor improvement to WidthEmitter to stop console error logging and test migration.
+- [`6a031b9b2da`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6a031b9b2da) - [ED-16334] Merge NextEditorPlugin interface with NextEditorPluginWithDependencies
+- [`f5bb69ce155`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f5bb69ce155) - Add location attribute to Generic card and EditorLinkPicker
+- [`d0c2b12418d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d0c2b12418d) - [ED-16826] Add codemod to migrate from Editor to EditorMigrationComponent.
+- [`05c8f919801`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05c8f919801) - ESS-3046 modify documentAri in collaborative editing example
+- [`2d8955e4740`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2d8955e4740) - Remove UNSAFE lifecycle method from PanelTextInput.
+- [`c3eba8c788d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c3eba8c788d) - Updates Media Viewer input data object
+- [`e907b6924cc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e907b6924cc) - [ux] ED-16505 Update confirmation dialog message shown when data source element is about to removed
+- [`373b2c585c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/373b2c585c3) - [ED-16578] Inject stubs apis to reduce amount of parameters on preset creation
+- [`2d6074f31bb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2d6074f31bb) - ED-16740: [ux] Updated the dropdown menu to shift the focus for indentation and outdentation button to their respective opposite in case they become disabled. Also added fallback case where any disabled button will adjust focus to the next button down in the dropdown menu
+- [`6ab06e05f95`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6ab06e05f95) - [ED-16607] Pass popupsMountPoint to status plugin
+- [`3a3ff6a8735`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a3ff6a8735) - Fixed issue where typeahead was wrapping incorrectly
+- [`4d5404b104c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4d5404b104c) - [ux] ED-16400 - Ensure no local id is copied over when copy/pasting a table row
+- [`81d9a6b42c4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/81d9a6b42c4) - [ux] ED-16592 fix existed table name been copied that cannot regenerate
+- [`a6cf418fe1b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a6cf418fe1b) - ED-16904 Fixed floating toolbar disappearing on clicking color picker button."
+- [`dfb37c5d4c2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dfb37c5d4c2) - [ED-16752] Migrated fireAnlyticsEvent, getAnalyticsEventsFromTransaction, FireAnalyticsEvent, FireAnalyticsEventPayload
+  and extended FireAnalyticsEvent type with optional createAnalyticsEvent parameter in @atlaskit/editor-common. Decoupled
+  plugin dependency in some areas of @atlaskit/editor-core to now use the migrated code from @atlaskit/editor-common instead by
+  updating import endpoints.
+- Updated dependencies
+
+## 180.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 179.1.2
+
+### Patch Changes
+
+- [#30335](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/30335) [`f770f0118a4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f770f0118a4) - This package is now declared as a singleton within its package.json file. Consumers should provide tooling to assist in deduplication and enforcement of the singleton pattern.
+- Updated dependencies
+
+## 179.1.1
+
+### Patch Changes
+
+- [#30359](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/30359) [`c38fe3fa7d1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c38fe3fa7d1) - [ux]ED-16915 Adds back styles for placeholder span on Android
+
+## 179.1.0
+
+### Minor Changes
+
+- [#29470](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29470) [`ef0beaafa36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ef0beaafa36) - [ux] ED-15862: Add analytics for restartNumberedLists custom list start numbers
+- [`75e0af42bcd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/75e0af42bcd) - [ux] ED-16568 added selected state to emoji button in the main toolbar, when it is clicked and emoji popup is displayed
+
+### Patch Changes
+
+- [`e78c04fa97c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e78c04fa97c) - [ux] ED-16489 Fixed - textFormatBridge.updateTextWithADFStatus returns "isEmptyAdf: false" when ADF has only whitespace
+- [`eab04c03dbc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eab04c03dbc) - ED-15641 Update transfromIndentationMarks() to remove heading indention from tableHeaders.
+- [`4c16f77b286`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4c16f77b286) - [ux] ED-15498 Added forceFocus plugin. The plugin handles moving focus back to a specified floating toolbar button after pressing ESC to close a floating toolbar submenu.
+- [`a2ebf475e82`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a2ebf475e82) - ED-16197 Updating DOCUMENT_PROCESSING_ERROR event action to map to new event "documentProcessingErrorV2" and moving its errorStack attribute to nonPrivacySafeAttributes.
+- [`b3d1ccd9059`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b3d1ccd9059) - ED-16475: [ux] Added functionality for indentation buttons that shift focus to their counterpart button when they become disabled as a result of keyboard access and commands
+- [`e1f9f1cfac1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1f9f1cfac1) - ED-16559 This commit creates a new preset which contains all plugins for the editor. The create-plugins-list now uses this to create the plugins list.
+- [`7ac23f207d6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7ac23f207d6) - ED-16557 - Refactor prepareQuickInsertProvider in Editor to make it more testable.
+- [`f3386f58d81`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3386f58d81) - [ux] ED-15391 When the floating toolbar unmounts or updates, remove any temporary styling that was added to table via hovering over a floating toolbar button.
+- [`23eca7ad593`](https://bitbucket.org/atlassian/atlassian-frontend/commits/23eca7ad593) - [ux] [ED-15904] Fix regression where pasting blocknodes into a list would split the list instead of safe inserting
+- [`0532d79f513`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0532d79f513) - Avoids having CSS for typeahead getting overriden by products.
+- [`c4563e66246`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c4563e66246) - [ux] Fix for ED-15722 Top section of new dropdown menu is blocked from scrolling in Jira - dropdown aligns to bottom right
+- Updated dependencies
+
+## 179.0.4
+
+### Patch Changes
+
+- [#29732](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29732) [`5139cd8cbdf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5139cd8cbdf) - [ED-16854] Add @deprecate annotations to public class methods in editor.
+
+## 179.0.3
+
+### Patch Changes
+
+- [#29606](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29606) [`d93b14cdda6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d93b14cdda6) - [ED-16678] fix - add extra check for props.getPos to fix slow extension rendering
+
+## 179.0.2
+
+### Patch Changes
+
+- [#29831](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29831) [`9e088852e54`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9e088852e54) - ED-16199 moved domainName to nonPrivacySafeAttributes
+
+## 179.0.1
+
+### Patch Changes
+
+- [#29846](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29846) [`38549274b29`](https://bitbucket.org/atlassian/atlassian-frontend/commits/38549274b29) - Replace &&= operator in editor-core since not all platforms support it.
+
+## 179.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 178.1.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 178.1.1
+
+### Patch Changes
+
+- [#29227](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29227) [`4ee60bafc6d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4ee60bafc6d) - ED-16603: Remove tooltips from VR tests and make them opt in. To opt-in, add `allowedSideEffects` when loading the page.
+
+## 178.1.0
+
+### Minor Changes
+
+- [#28932](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/28932) [`59e998e408f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/59e998e408f) - [ESS-2914] Switch to the forked prosemirror-collab library (based on version 1.3.0) to filter out analytics steps
+- [`a0a35fe7fb1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a0a35fe7fb1) - Renaming contentComponent event subject to contentComponentv2. Move errorStack attribute to nonPrivacySafeAttributes
+- [`4f6a895f1d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4f6a895f1d5) - [ux] Editor Node Block selection stabilization
+
+### Patch Changes
+
+- [`513cb2010b7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/513cb2010b7) - Users are able to select dropdown menu item using keyboard via the Enter key
+- [`f1a780414ae`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f1a780414ae) - prevent ReactNodeViewState to trigger selection updates when selection hasn't changed
+- [`2f5a0f96c6d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2f5a0f96c6d) - Adds invokeMethod analytics context for link picker.
+- [`aaa6509f036`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aaa6509f036) - ED-16198 Update & restore dedupeMarksTransformed analytics event. Also addresses
+  a bug when `discardedMarks` would only return the latest discarded mark
+- [`36d661f9252`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36d661f9252) - [WS-4504] Fix Editor hijacking click events inside Annotation components
+- [`af4ab0d3e60`](https://bitbucket.org/atlassian/atlassian-frontend/commits/af4ab0d3e60) - [ux] Fix for a regression issue where a link is the last node in the ADF and a user is trying to switch from 'block' to 'embed' view or vice versa.
+- [`9a36555eac5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9a36555eac5) - [ux] ED-15773 InsertMenu in Toolbar should not display "View More" option when editorProp `showModal` is set to false. Although this is happening, currently the "View More" button is replaced with "Status" option and retaining the same look and feel.
+  This ticket is to remove the look and feel of "View More" option when `showModal` is set to false.
+- [`fd12b01c877`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fd12b01c877) - Clear text button should still work without activity provider
+- [`8da99a328df`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8da99a328df) - [ux] This changes the behaviour of changing the appearance of a Smart Link or Smart Card.
+
+  1. Previously, upon changing the appearance of a Smart Link, the cursor would move to _before_ the Smart Link. Now, the cursor will be placed after the Smart Link. In the case of Block Card and Embed, the cursor will be placed one paragraph after the Block or Embed card (due to Block and Embed being a "block" node).
+  2. When changing an inline or hyperlink into a Block or Embed card (i.e. a block node) there will no longer be a new paragraph inserted before the Block or Embed card.
+
+- [`a6f514af105`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a6f514af105) - [ux] ED-16077 fix deleteRange deleting parent node when it shouldn't. Use tr.delete instead of tr.deleteRange because deleteRange would grow the selection to include the parent.
+- [`db7602d84c9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db7602d84c9) - [ux] ED-16527 - Fixed issue where pressing 'Esc' while a Floating Toolbar Select menu was open would focus editor instead of the Floating Toolbar
+- [`8d798b78505`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8d798b78505) - Media Group no longer tries to update all Media nodes, but only the ones that belong to it.
+- [`7cc0f5b5dad`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7cc0f5b5dad) - Remove unused @atlaskit/activity dependency
+- [`a5dcaef4136`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a5dcaef4136) - [ux] Fixed keyboard navigation issues relating to the main editor toolbar and floating toolbars.
+- [`70ec535a1c6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/70ec535a1c6) - [ux] A fix for the usage of editor props 'allowBlockCards' & 'allowEmbeds'. Previously even if the prop 'allowBlockCards' was passed to editor as false, the toolbar would still allow switching to a block card option.
+- [`5ac1c18bd04`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5ac1c18bd04) - [ux] Fix selection blocking issue where user cannot left/right arrow key past a mediaSingle
+- Updated dependencies
+
+## 178.0.2
+
+### Patch Changes
+
+- [#29169](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/29169) [`2ff1c66a6ab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ff1c66a6ab) - [ux] ED-16490 fixed bug so big margin will not occur before a Decision node in Renderer on iOS
+
+## 178.0.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 178.0.0
+
+### Major Changes
+
+- [#28374](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/28374) [`04e3aacbcc0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04e3aacbcc0) - ED-16069 Unskip type over mediagroup integ test
+
+### Minor Changes
+
+- [`055a333dad9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/055a333dad9) - [ux] Remove `moreTextColors` feature flag and deprecate `allowMoreTextColors` field of `allowTextColor` editor prop and `colorPaletteExtended` mark.
+
+  Showing more colors in the color selection palette is now a default behaviour.
+
+  ## **DEPRECATION WARNING:**
+
+  There are 2 deprecations in this change:
+
+  ### 1. `allowMoreTextColors` field of `allowTextColor` editor prop.
+
+  `allowMoreTextColors` field of `allowTextColor` editor prop. **is now deprecated and will be removed in the next stable release of `@atlaskit/editor-core` package**. Please take steps to remove that field from your code. E.g.:
+
+  ```tsx
+  <Editor
+   ...
+   allowTextColor ={
+    allowMoreTextColors: true // <-- Deprecated
+    defaultColour: {color: 'red', label: 'red'}
+   }
+  />
+  ```
+
+  Remove all instances of `allowMoreTextColors` field from `allowTextColor` `Editor` prop. I.e.:
+
+  ```tsx
+  <Editor
+   ...
+   allowTextColor ={
+    defaultColour: {color: 'red', label: 'red'}
+   }
+  />
+  ```
+
+  If the resulting `allowTextColor` prop is an empty object, set `allowTextColor` property value to `true`. E.g.:
+
+  ```tsx
+  <Editor
+   appearance="full-page"
+   ...
+   allowTextColor ={
+    allowMoreTextColors: true // <-- Invalid
+   }
+  />
+  ```
+
+  should become
+
+  ```tsx
+  <Editor
+   appearance="full-page"
+   ...
+   allowTextColor={true}
+  />
+  ```
+
+  ### 2. `colorPaletteExtended` mark of the ADF schema
+
+  `colorPaletteExtended` mark of the ADF schema **is now deprecated and will be removed in the next stable release**. The extended palette is now rolled into the main one. use `colorPalette` instead.
+
+### Patch Changes
+
+- [`a7eb7a6bb47`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a7eb7a6bb47) - ED-16068 unskipped tests
+- [`f7cdc36d75b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f7cdc36d75b) - ED016195 update EDITOR_CRASHED_ADDITIONAL_INFORMATION event name
+- [`20117f2de5a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/20117f2de5a) - [ux] ED-16204 Fix table cell options floating toolbar context menu closes after clicking on disabled options
+- [`3f3720a4964`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3f3720a4964) - EDM-5368 make type="button" to the buttons in HyperLinkToolbar. This has caused an issue in Jira Portal where clicking the button would submit the creation form.
+- [`efa8b7ee68e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/efa8b7ee68e) - ED-15808 Changes to replace usage of enzyme with React test library
+- [`df20a33d886`](https://bitbucket.org/atlassian/atlassian-frontend/commits/df20a33d886) - ED-16445: Set allowUndoRedoButtons prop codemod in editor-core to run against the correct editor version (v175)
+- [`e1637ca6a5c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1637ca6a5c) - ED-16004 unskipped test
+- [`31c37c54ee2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/31c37c54ee2) - ED-15548 To add keyboard shortcut Alt + F9 to reach main toolbar and on 'Esc' user comes back to editor
+- [`70d0799eee0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/70d0799eee0) - ED-14002 Added `safer-dispatched-transactions` featureFlag to preventtransactions from being mutated after dispatch at runtime.
+- [`c6c0cab10e0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c6c0cab10e0) - [ux] ED-16205 - Fix missing yellow highlight on merged table cells when hover sort column options on table floating toolbar
+- [`b9141027f87`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b9141027f87) - [ux] ED-13873 fixes a bug where after deleting a list in a panel or table the cursor would move to the cell to the right. Uses setSelection to position the cursor as expected after delete.
+- [`e9a8cb724c1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e9a8cb724c1) - [ux] ED-16207 - Update color picker button size and background to allow hover effect to standout
+- Updated dependencies
+
+## 177.0.1
+
+### Patch Changes
+
+- [#28324](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/28324) [`6455cf006b3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6455cf006b3) - Builds for this package now pass through a tokens babel plugin, removing runtime invocations of the tokens() function and improving performance.
+
+## 177.0.0
+
+### Major Changes
+
+- [#28090](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/28090) [`ac1c880cf4c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ac1c880cf4c) - [ux] ED-12395 - Remove the keyboard accessible date picker feature flag, which has been 100% rolled out
+
+  ## **DEPRECATION WARNING:**
+
+  There's two deprecations in this change:
+
+  ### 1. Remove `keyboardAccessibleDatepicker` and the `allowKeyboardAccessibleDatepicker` feature flag
+
+  Now that this has been fully rolled out, this feature flag is no longer required. The if-statement that depends on this feature flag was also removed in point 2 below:
+
+  ### 2. Remove the `showTextField` prop on the DatePicker
+
+  This was exclusively used to conditionally render the `DatePickerInput`. Its usage was always set to `true` in code or through the feature flag that has now been rolled out. Thus, this deprecation simplifies the API.
+
+  Since no code related to this feature flag remains, there are no inline deprecation warnings.
+
+- [`5d317ed8aa3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5d317ed8aa3) - [ux] ED-15882: Implement custom starting numbers for orderedList nodes in adf-schema, editor, renderer, transformers behind restartNumberedLists feature flag. Users will be able to set a custom starting number when typing to create a numbered list in the Editor and this will be persisted across Renderer and other format transformations.
+
+  Note: restartNumberedLists will be off by default. To enable it, consumers will need to set <Editor featureFlags={{ restartNumberedLists: true }}> or <Renderer featureFlags={{ restartNumberedLists: true }}>
+
+### Minor Changes
+
+- [`5307b130e91`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5307b130e91) - Cleaned up placeholder lint feature as it was no longer being used
+- [`fe0fa175ab6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fe0fa175ab6) - Add support to prevent Editor Popup overflowing top of the viewport.
+  To enable the behaviour use the feature flag `prevent-popup-overflow` as follows:
+
+  ```tsx
+  <Editor
+    featureFlags={{
+      'prevent-popup-overflow': true,
+    }}
+  />
+  ```
+
+- [`3ca38fe77c1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3ca38fe77c1) - [ux] ED-16206 Fixed - Tooltip for “Sort column Z-A“ option isn’t displayed if you first hover over the “Sort column A-Z“ option
+- [`c42a0344d32`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c42a0344d32) - The linking view changing experiment toolbar style will be removed, including the feature flag. All variants will be removed except for toolbarIcons which will be the only view of the toolbar of the linking view switcher.
+- [`c253ecf5377`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c253ecf5377) - Use preventPopupOverflow ff to prevent the link picker going off the screen horizontally in the inline comment Editor
+- [`8820442c2b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8820442c2b2) - [ux] ED-15709: add feature for delete element if it is `isReferencedSource` is `true`
+
+  - add checkbox confirmation dialog when then config have `isReferentiality.`
+  - add referentiality helper functions.
+  - update confirmDialog config to a handler to reduce traverse times.
+  - user can now tick checkbox to delete descendent nodes or only selected node when user click the delete icon in floating toolbar.
+
+- [`1d41bbc2965`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1d41bbc2965) - This changeset introduces non breaking changes to support ssr within the loader emoji component
+- [`d2c62b69a6a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d2c62b69a6a) - [ux] Adds support to floating toolbar configuration to enable trapping focus within the Popup.
+- [`92613b1f023`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92613b1f023) - ED-15018 and ED-13913 - Remove all circular dependencies and ignored warnings in editor
+
+### Patch Changes
+
+- [`2fd53283b55`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2fd53283b55) - Updated i18n language files
+- [`dfb5f68a5c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dfb5f68a5c3) - [ux] ED-16187: prevent CollapsedEditor from crashing when IntlProvider isn't provided
+- [`b03147b4b1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b03147b4b1e) - [ux] editor copy paste block cards as inline where allowBlockCards is false
+- [`1ea235bf3f5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ea235bf3f5) - ED-15489 Changes to improve the assistive text for emoji and mention typeaheads
+- [`4a79928bc16`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4a79928bc16) - Updated aria label for editor content area according to content design recommendations.
+- [`4c80b42a754`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4c80b42a754) - [ED-16245] Make sure the Media dom nodes are mounted before scroll into
+- [`0d5dfdc07bc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0d5dfdc07bc) - Refactored Typeahead component to be compatible with VoiceOver in Safari.
+- [`873ba4d6ae1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/873ba4d6ae1) - Fix task ticks updates not being reflected in the editor.
+- [`aa3c130c43a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa3c130c43a) - Changes the annotation mark to inclusive in order to fix the annotation being deleted when doing composition
+- [`9f142486837`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9f142486837) - ED-14867 updated zIndex for width toggle breakout btn to be below other popups
+- [`b616ba20f04`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b616ba20f04) - [ux] The height of the panel stays the same when the emoji is removed
+- [`c1eedb6a5e1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c1eedb6a5e1) - [ux] Removed extra span and it's related styles from Placeholder plugin to align height of flashing cursor with height of text line
+- [`f608bc44cf2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f608bc44cf2) - [ux] ED-16177 Added new text color labels. These new labels are disabled by default and only present when useSomewhatSemanticTextColorNames feature flag is set to true.
+- [`62789954243`](https://bitbucket.org/atlassian/atlassian-frontend/commits/62789954243) - react-virutlaized has been replaced with @tanstack/react-virutal in @atlaskit/emoji
+- [`224a2482244`](https://bitbucket.org/atlassian/atlassian-frontend/commits/224a2482244) - [ED-16166] Changes the renderer prop document type from any to DocNode
+
+  BREAKING for `@atlaskit/renderer`: Previously the `document` prop for the renderer component had the type of `any`. This has now been changed to `DocNode` which comes from `@atlaskit/adf-schema`.
+
+  Documents being passed into the renderer component will need to be updated to use this type.
+
+  Example Usage:
+
+  ```tsx
+  import { DocNode } from '@atlaskit/adf-schema';
+
+  const emptyDoc: DocNode = {
+    type: 'doc',
+    version: 1,
+    content: [],
+  };
+  ```
+
+- [`41810bb081d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/41810bb081d) - [ux] ED-15897 fixed unexpected behaviour when using scroll buttons
+- [`76183098160`](https://bitbucket.org/atlassian/atlassian-frontend/commits/76183098160) - [ux] ED-15285 - fix initial visibility of edit icon on extension floating toolbar when selecting an editable extension at the first node in the document
+- [`bb9a5f9d77d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb9a5f9d77d) - [ux] ED-16176 Added useSomewhatSemanticTextColorNames feature flag. This is part of COMMIT-5058 work to unblock dark mode for Jira. The intention of the flag is to show semantic names in tooltips when hovering over colors in the text color palette in token light/dark mode. Note that the flag is 'somewhat semantic' due to white/dark-gray not being semantic names.
+- [`233e03b2d92`](https://bitbucket.org/atlassian/atlassian-frontend/commits/233e03b2d92) - ED-16007 To highlight the table rows and columns when the 'Delete Row' and 'Delete Column' options are highlighted in the 'cell options' menu of floating toolbar
+- [`7fd5785d37d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7fd5785d37d) - [ESS-2752] Fix clientId type derived from prosemirror-collab
+- [`651dee737d2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/651dee737d2) - ED-15301 Added initial preset builder types
+- [`3a35da6c331`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a35da6c331) - DTR-825 ED-9775: added jamfselfservice:// to whitelistedURLPatterns
+- [`069fe0a9aa4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/069fe0a9aa4) - [ux] When trying to apply a mark and the selection contains a mix of the selected mark and other content it will apply the mark rather than removing the mark from the selection.
+- [`3a236cfd8d3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a236cfd8d3) - refactor typeahead emoji plugin by removing usage of legacy context provider
+- [`129c07f042d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/129c07f042d) - ED-16271 To skip the scroll buttons when user uses arrow keys to navigate in floating toolbar as it is not keyboard user friendly (changes are not feature falgged)
+- [`1267ffe2c42`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1267ffe2c42) - Add media traceId into copy/paste operations
+- [`b2fa6d3e611`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b2fa6d3e611) - [ED-16106] Fix margin top when paragraph has alignment marks
+- [`0745d7b54df`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0745d7b54df) - Updated containsClass method to be more robust, to prevent console errors
+- [`97eb6fb59c8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/97eb6fb59c8) - [ux] Fixes focus being lost when closing the new link picker user interface when inserting via shortcut or toolbar. Focus instead now returns to the editor.
+- [`f451c36becf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f451c36becf) - Fixed reconciliation issue causing emoji picker in floating-toolbar to re-mount on parent component update
+- [`e4089f2c471`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e4089f2c471) - Modified toolbar buttons to read out keyboard shortcuts by screen readers.
+- [`968ac659016`](https://bitbucket.org/atlassian/atlassian-frontend/commits/968ac659016) - [ux] ED-16274 fixed typeahead query line height issue
+- [`53b8ef2ab95`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53b8ef2ab95) - Updates link picker feature flag to be the only logic to determine if the new link picker UI should be used.
+- [`e3c011d1c03`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e3c011d1c03) - [ux] Fixed issue where z-index of stickyToolbar was way to high, which meant popups were under the toolbar instead of over it
+- [`60068f7fcbe`](https://bitbucket.org/atlassian/atlassian-frontend/commits/60068f7fcbe) - [ED-16007] Changes made to improve the floating toolbar's keyboard accessibility
+- Updated dependencies
+
+## 176.0.3
+
+### Patch Changes
+
+- [#28261](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/28261) [`7f49aa601ae`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f49aa601ae) - ED-16445: Fix to set allowUndoRedoButtons prop codemod in editor-core to run against the correct editor version v175 rather than v173
+
+## 176.0.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 176.0.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 176.0.0
+
+### Major Changes
+
+- [#26712](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/26712) [`2df5ab17c10`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2df5ab17c10) - DSP-6459: Adds a background to code blocks in the editor to remove transparency. E.g. prevents table cell background colors from affecting code blocks. Also modifies code blocks in table headers to have a border instead of a different color when design tokens are enabled.
+
+### Minor Changes
+
+- [`e657779ba39`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e657779ba39) - [ux] ED-15877 Added plain text fallback when using the copy button. When copying links, the url would be the plain text fallback. This also resolves ED-15955: copy button does not work on Android
+- [`2e7d2c81d2f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2e7d2c81d2f) - EDM-3626 Remove plain text paste linkification feature flag
+  the feature flag will not exist anymore so this cannot be enabled/disabled
+  plain text containing URLs will always be 'linkified' using shift-cmd-v/shift-ctrl-v
+
+### Patch Changes
+
+- [`cb8f8e76d25`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cb8f8e76d25) - Update types for react-select and @atlaskit/select upgrade
+  Update commerce-ui entrypoints that caused a pipeline issue.
+- [`1a798ec6296`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a798ec6296) - ED-15425 Adds table row check when using up arrow in table
+- [`352f2b5a90f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/352f2b5a90f) - ED-15984 fix sticky toolbar on JIRA
+- [`25617fe0633`](https://bitbucket.org/atlassian/atlassian-frontend/commits/25617fe0633) - [ux] ED-16010 this updates the text color picker to use design tokens when available.
+- [`9f597c3c697`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9f597c3c697) - ED-14996 allow start/end line selection when cursor is next to an inline comment
+- [`94f8a899d36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94f8a899d36) - [ED-15851] Add feature flags for the restart numbered lists project. These include:
+
+  - restartNumberedLists: Allow numbered lists to start from any number greater than 0, not just 1
+  - listNumberContinuity: Allow lists to continue their numbering when split by other nodes
+  - restartNumberedListsToolbar: Show a toolbar for users to restart the numbering of a list
+
+  We will be encapsulating all dev work under these flags.
+
+  These flags are for development purposes only, please don't turn these on. Only feature leads can turn these on.
+
+- [`c472a1eed2f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c472a1eed2f) - DSP-3443 Updates tokens used for floating buttons; updated appearances only visible in applications configured to use the new Tokens API (currently in alpha).
+- [`01472b73d72`](https://bitbucket.org/atlassian/atlassian-frontend/commits/01472b73d72) - DSP-4815 - Adds design tokens to non-custom panels. Updated appearances only visible in applications configured to use the new Tokens API (currently in alpha).
+- [`7a1a5d392ef`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7a1a5d392ef) - [ux][ed-15366] remove right align shortcut as it was interfering with default browser activity
+- [`9995644eec0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9995644eec0) - [ux] ED-16095: Resolve a bug where the codeblock floating toolbar disappeared on selecting a language from the dropdown menu. (Add getter paths for atlaskit/select refs that safely work for both react-select v5 and v4 scenarios).
+- [`8a11811caca`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8a11811caca) - ED-15298 clean up table cell optimisation
+- [`10a6576545e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/10a6576545e) - [ED-16104] To fix a regression caused by [ED-15947] The arrow key behaviour is unexpected when we open find and replace button.
+- [`be6ac35db24`](https://bitbucket.org/atlassian/atlassian-frontend/commits/be6ac35db24) - [ED-15485 & ED-15486] changes to make emojis and mention nodes screen reader compatible (only the ones which are rendered in the editor - toolbar and typeahead emojis are out of scope)
+- [`0606572f9b8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0606572f9b8) - [ux] ED-15348 docs(changeset): ED-15348 Fix a bug preventing typeahead actions to be fired from a gap cursor. Typing a typeahead trigger key (/, : or @) should pop-up a typeahead menu. However, if the current selection is inside a gap cursor, the trigger character is inserted and the pop-up menu doesn't open. This changeset fixes that.
+- [`e143a0cc82e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e143a0cc82e) - [ED-15851] Adjust set up of feature flags for the restart numbered lists project so that they work for mobile.
+- [`b80e36ad1fb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b80e36ad1fb) - ED-15290 adds padding bottom to chromeless editor
+- [`6a9d0618b08`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6a9d0618b08) - Fix bug on safari where the caret briefly appears in the middle of a mention after autocompleting a mention.
+- [`e3f86801895`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e3f86801895) - To Focus the last typeahead list item when up arrow key is pressed [ED-15805]
+- [`d5fd6da78ab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d5fd6da78ab) - To add arrow key navigation for the main toolbar items and menu items [ED-15497]
+
+  To make the editor main toolbar items accessible using left and right arrow keys.
+  The menus are expandable using Space or Enter key, once the menus are expanded the options are accessible using up/down arrow keys.
+  'Esc' key closes the menus and focuses the toolbar item.
+
+- [`1b489f87e1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b489f87e1e) - Removed unused prop 'stickToolbarToBottom' from editor-core
+- [`46561872fb9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/46561872fb9) - ED-16357 To restore default keyboard navigation in emoji popup in main toolbar
+- [`9176a182f13`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9176a182f13) - [MEX-2012] Fix iOS 16 introduced regression in media single selection
+- [`7bf4281949a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7bf4281949a) - ED-15704 - Fix missing hover inducators on Delete column and Delete row under table floating toolbar context menu
+- [`e55b07b8fcd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e55b07b8fcd) - fix whole media caption is removed if delete emoji in it
+- [`e5792780377`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e5792780377) - don't encode PM node twice when rendering table toolbar
+- [`db75d733f3c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db75d733f3c) - [ux] DSP-4354 - Adds design tokens for code snippet deletion hover state. Adds overlay for code snippet gutter to create a more saturated color for the deletion hover state. Updated appearances only visible in applications configured to use the new Tokens API (currently in alpha).
+- [`c80ef2d3bd0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c80ef2d3bd0) - [ux] Allow tabbing past the save indicator
+- [`3a66592edd7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a66592edd7) - [ED-16104] To fix a regression caused by [ED-15947] The arrow key behaviour is unexpected when we open find and replace button.
+- [`17014a9004c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/17014a9004c) - [ux] ED-15632 preprocess invalid media adf to avoid empty mediaSingle node and duplicated captions and media inside mediaSingle.The document will be transformed for this cases and validation error not thrown.When mediaSingle with empty content is encountered - it will be removed.When mediaSingle with duplicated captions or media nodes is encountered - duplicate captions or media nodes will be removed, prioritising removal of nodes with empty content first.
+- [`8cc8e807222`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8cc8e807222) - DSP-4001 - Removes custom eslint rule for design token usage to follow a standard design token tech stack.
+- [`c2510fa261f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2510fa261f) - [ux] ED-15961 [ux] Updates the presentation of text color to use dark and light mode colors when those modes are enabled
+- [`0724b5e6562`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0724b5e6562) - Fixed typeahead behaviour after undoing insertion.
+- [`9116ae65eaf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9116ae65eaf) - [ux] ED-15345 fix annotation should work with leading and trailing whitespace across mark
+- [`28e25520771`](https://bitbucket.org/atlassian/atlassian-frontend/commits/28e25520771) - [ED-16264] changes made to fix a regression caused in ED-15483 and ED-15497 , The arrow key navigation in 'Edit Link' 'Alt Text' popup and 'cell options' popup of table is hijacked incorrectly. post this fix the arrow key navigation behaviour should be deafult in these two popups
+- [`84254f9842e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/84254f9842e) - ED-14828 Make sure typeahead does not show when it is at the beginning of the slash command
+- [`47dfcc04652`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47dfcc04652) - ED-15703 - Minor change on floating toolbar to allow z-index value to be passed as parameter
+- [`58365aae521`](https://bitbucket.org/atlassian/atlassian-frontend/commits/58365aae521) - [ux] Refactor messages on tooltip of media toolbar item and media slash commend result to show video as an explicit upload option.
+- [`3354633aa75`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3354633aa75) - Modified quick insert menu items such that they are read according to content design by screen readers.
+- Updated dependencies
+
+## 175.0.5
+
+### Patch Changes
+
+- [#27511](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/27511) [`403e0d2d291`](https://bitbucket.org/atlassian/atlassian-frontend/commits/403e0d2d291) - ED-16246 fix prevent @types/prosemirror-commands @types/prosemirror-keymap updating to incompatible version.
+
+## 175.0.4
+
+### Patch Changes
+
+- Updated dependencies
+
+## 175.0.3
+
+### Patch Changes
+
+- [#27527](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/27527) [`c1d2045d68f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c1d2045d68f) - [ux] Fix margins for extensions with fragment marks
+
+## 175.0.2
+
+### Patch Changes
+
+- [#27437](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/27437) [`560af4b794c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/560af4b794c) - Preventing ReactEditorView declaration file from being generated with cypress types by changing the shape of the interface.
+
+## 175.0.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 175.0.0
+
+### Major Changes
+
+- [#25860](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/25860) [`291529c1b2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/291529c1b2d) - ED-12937: change Editor prop name from UNSAFE_allowUndoRedoButtons to allowUndoRedoButtons.
+
+  BREAKING CHANGE: `UNSAFE_allowUndoRedoButtons` change to `allowUndoRedoButtons` in `<Editor />` in `@atlaskit/editor-core`
+
+  Upgrade guide: If you are currently consume `<Editor />` with `UNSAFE_allowUndoRedoButtons`, You need to update name to `allowUndoRedoButtons`.
+
+  ```jsx
+  import Editor from '@atlaskit/editor-core';
+
+  return (
+      <Editor
+          // .....
+          allowUndoRedoButtons={true}
+          // ....
+      >
+  )
+
+  ```
+
+### Minor Changes
+
+- [`7b1d6002178`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7b1d6002178) - added 'measurement' and 'hasCustomAttributes' tags to operational feature exposed event
+- [`30e8425f7d6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30e8425f7d6) - [ux] ED-15706 Reenable copy button on editor-plugin-table. Added property copyButton to floatingToolbarConfig.
+- [`65d0516e638`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65d0516e638) - Adds a new function to editorActions: getNodeByFragmentLocalId. Exposes fragmentLocalId as part of ExtensionComponent. extension-api.update function starts using parent node to check if mark changes are allowed.
+- [`90c44a68da2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/90c44a68da2) - Removed editor-core table plugin and replaced with new `editor-plugin-table` package. This change required adding copying new table changes from editor-core to the new table package, moving IconTable to shared package, and creating new entry-points from editor-plugin-table. `getPluginState` from `packages/editor/editor-plugin-table/src/plugins/table/pm-plugins/table-resizing` was also exported.
+
+  [ED-15674][ed15739] [ED-15633]
+
+- [`72d44f7f681`](https://bitbucket.org/atlassian/atlassian-frontend/commits/72d44f7f681) - [ux] ED-15457: call replaceDocument() from mobile bridge to properly reload web Editor with all props taken into consideration
+- [`61cd2188e62`](https://bitbucket.org/atlassian/atlassian-frontend/commits/61cd2188e62) - [ux] ED-15405 added horizontal scrolling to floating toolbar in case of overflow
+- [`ab072299e05`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ab072299e05) - ED-15519 - Extensions used as data sources will now display a delete confirmation dialog
+
+### Patch Changes
+
+- [`f7764c8dac0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f7764c8dac0) - [ux][ed-15511] Handle pasting nested bullet list from within a table within an extension so it does not maintain parent unexpectedly
+- [`860d7a34a93`](https://bitbucket.org/atlassian/atlassian-frontend/commits/860d7a34a93) - [ux] ED-15743 prevent content area from scrolling when copy button is clicked
+- [`415c9dbd1dc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/415c9dbd1dc) - Removed duplication from plugin rankings
+- [`91f1d4531c8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91f1d4531c8) - [ux] Fix behaviour of forward delete when selection is on empty paragraphs, allowing panels, quoteblocks, desision and action lists to move upwards.
+- [`ad1da0b1bf7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ad1da0b1bf7) - [ux] Disabled visual hints for the hyperlink copy button. These caused the floating toolbar to jump around when the link mark was applied to inline nodes.
+- [`36ce7fd0da1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36ce7fd0da1) - [ux] ED-15476 Fixes visual hints for hyperlink copy buttons, and what goes into the clipboard when the button is used.
+- [`ab1d440e0de`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ab1d440e0de) - [ux] ED-12978 Updated insertCodeBlock() command to allow the current range selection to be added to the codeBlock as content on insertion.
+- [`3f7900cbf37`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3f7900cbf37) - [ux] ED-14993 added better support for codeblocks inside lists and gap cursor selection inside lists:
+
+  - made list markers visible in safari (desktop and mobile) when list contains codeblocks;
+  - fixed bug so users can now set gapcursor next to codeblock by clicking or touching (mobile) the list marker;
+  - fixed bug so when users have gapcursor next to a codeblock, they can still toggle (or untoggle) it into a list;
+  - fixed margins for codeblocks in lists;
+
+- [`eb229be25c4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eb229be25c4) - Fixed expand button vertical alignment not correctly aligned with title
+- [`094edf099c0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/094edf099c0) - [ux] ED-15522 Fix up arrow not working past blank new line in code block when paste. windows
+- [`e7836c150bb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7836c150bb) - Re-enable Performance metric for ReactNodeView, WithPluginState
+- [`e6e37b36e94`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e6e37b36e94) - ED-14611 - Patch to fix Uncaught RangeError exception while keyboard doing shift arrow-up / shift arrow-down
+- [`1e32a1072b9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e32a1072b9) - [ux] Ensure more than three backticks are not converted to a codeblock
+- [`b2b98eca8cc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b2b98eca8cc) - ED-14814 Add "outdatedBrowser" attribute into analytics error payload, add browser check and expose the function "isOutdatedBrowser()"
+- [`8f52252d256`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f52252d256) - Ed-15440 CMD+ArrowLeft after a code block should move the cursor to the start of the line.
+  Also the reverse should happen for CMD+ArrowRight.
+- [`51e84999643`](https://bitbucket.org/atlassian/atlassian-frontend/commits/51e84999643) - ED-15381 - Patch table / layout CSS to fix issue of ProseMirror gapcursor within the cell
+- [`edb93baa953`](https://bitbucket.org/atlassian/atlassian-frontend/commits/edb93baa953) - Moved sendLogs to editor-common. Re-exported in editor-core and import sendLogs from editor-common in editor-plugin-table package.
+- [`d98c5a4168b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d98c5a4168b) - [ux] ED-13528 fixed - Unable to exit list with an empty character after cursor
+- [`907a18e29bb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/907a18e29bb) - [ux] Increase padding for panels with no emoji
+- [`2016989cd5d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2016989cd5d) - unblock document from saving when the “uploading card” is removed
+- [`cb758a1eedf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cb758a1eedf) - [ux] ED-15707: fixed floating toolbar select mount point for comment/chromeless appearance
+- [`f42f1472587`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f42f1472587) - [ux] ED-15399 Fix create column before. Ctrl + Option + Left should create column before when cursor is in a table header.
+- [`1e1ac6d1d15`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e1ac6d1d15) - [ED-15501] Removal of coupled table-resizing code in `editor-core` media and card plugin. This makes entry-point `/table-resizing` from `editor-plugin-table` unused so removed the entry-point.
+- [`184d3cf7ce6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/184d3cf7ce6) - Preventing error being logged to the console if the consumer of the Editor component does not have IntlProvider in the component hierarchy.
+- [`8a1155bee73`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8a1155bee73) - [ux] ED-15050 Fixed - Pasting list markup into a table cell ends up with cursor in the next cell
+- [`afd30c4664e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/afd30c4664e) - Refactored Editor Help Dialog to be more conformant to accessibility standards
+- [`858c4edfa37`](https://bitbucket.org/atlassian/atlassian-frontend/commits/858c4edfa37) - [ux] ED-15262 Don't linkify string starting with \$ or {
+- [`51224a1893c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/51224a1893c) - ED-15405 fixed an issue with the Code block language select dropdown not mounting to the correct div on first load
+- [`dad944b371c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dad944b371c) - To add role attributes for main and contextual toolbars for better accessibility [ED-15493]
+- [`8c16cb97a11`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8c16cb97a11) - ED-12676 cleanup useUnpredictableInputRule feature flag
+- [`47f1c7fff80`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47f1c7fff80) - [ux] ED-14991 rework extension breakout to share logic with breakout mark views. Fixes an issue where iframes inside bodied extensions that were set to full-width or wide would be blurry.
+- [`3cecda14f87`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3cecda14f87) - [ED-15847] To fix the arrow key navigation regression caused in ED-15483, post this fix user should be able to edit a hyperlink text and url using arrow keys.
+- [`6c7d7adbd7a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c7d7adbd7a) - ED-14740 Removes margin top for rich media items in a layout
+- [`5128df4c8bd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5128df4c8bd) - Fixed a bug where toolbar would disappear / break when mediaSingle is resized
+- [`1b04126a190`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b04126a190) - These changes are to improve the keyboard navigation support for floating toolbars through a specific shortcut and to trap the focus inside the floating toolbar [more details in ED-15483]
+- [`901aa96d69f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/901aa96d69f) - Remove the node check in UNSAFE_componentWillReceiveProps in mediaGroup to prevent infinite steps creation
+- [`14e7ee2737a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14e7ee2737a) - [ED-12768] Fix splitParagraph to avoid try to insert invalid content inside paragraphs
+- [`992ed2b7e2a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/992ed2b7e2a) - ED-15510 Fixes animation when resizing breakout
+- [`e7157aaf997`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7157aaf997) - ED-15476 internal refactor of `getCopyButtonConfig` function in preparation for supporting marks.
+- Updated dependencies
+
+## 174.0.0
+
+### Patch Changes
+
+- Updated dependencies. This is not actually a breaking change. Major bump is because @atlaskit/link-provider was bumped with `minor`. Please, ignore this major bump.
+
+## 173.0.1
+
+### Patch Changes
+
+- [#25718](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/25718) [`74abc212007`](https://bitbucket.org/atlassian/atlassian-frontend/commits/74abc212007) - Move `setTextSelection` from `editor-core` to `editor-common`, then re-export it form `editor-core` to ensure there are no breaking changes
+- Updated dependencies
+
+## 173.0.0
+
+### Major Changes
+
+- [#24710](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24710) [`aed2ee012bc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aed2ee012bc) - ED-13182 insertTaskDecision has been depreciated and removed from this release in favor of insertTaskDecisionCommand.
+
+  `insertTaskDecision` was a duplicate of `insertTaskDecisionCommand` with added unnecessary overhead, replace all occurrences with `insertTaskDecisionCommand`. The function signatures are slightly different to remediate remove the first parameter from the function call (`view: EditorView`) and insert a third parameter with a value of `undefined`.
+
+### Minor Changes
+
+- [`e71cf110b81`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e71cf110b81) - [ux] ED-14418 Copied table cell options to the floating toolbar if feature flag is enabled (off by default)
+- [`d8acf7254db`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d8acf7254db) - ED-8567 added tracking for fixTables()
+
+### Patch Changes
+
+- [`0474f9cedb2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0474f9cedb2) - ED-15443 replace only telepointer and not zero character
+- [`7302b885bb3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7302b885bb3) - Fixed blue selection frame not showing up in typeahead menu.
+- [`adaf9bab9a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/adaf9bab9a9) - ED-15530 remove styled-component dependency from editor-core
+- [`53c2a7f9eb4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53c2a7f9eb4) - [ux] ED-15174: Ensure original link paste position is honoured when pasting macro links even if other changes occur while resolving links
+- [`07160af53b7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/07160af53b7) - [ux] ED-15447: Stop breakout width layout button position flickering when user moves selection out and into breakout-supported nodes
+- [`1ee63eda764`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ee63eda764) - Fixed typeahead selection frame showing with mouse selections.
+- [`0ed72f9c96e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0ed72f9c96e) - [ux] ED-15208 fixed status bar selection issue
+- [`15e418edc1b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/15e418edc1b) - Set Firefox collab telepointer decoration side value to 0 to fix backspace issues
+- [`95f2b5569a5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/95f2b5569a5) - Bump & force prosemirror-dev-tools to 3.0.1
+- [`556bcd32873`](https://bitbucket.org/atlassian/atlassian-frontend/commits/556bcd32873) - ED-15593 Fixed a regression - Adding back the hover style of mention menu items
+- [`dbc1b4943c2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbc1b4943c2) - ED-13162 add word joiner before and after telepointer
+- [`da012d93a6a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da012d93a6a) - [ux] Insert a paragraph beside an embedded smart card when it changes its layout wrap to either left or right, ensuring a user can add text beside it
+- [`13f3001af1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/13f3001af1e) - ED-15482 Improve esbuild devloop
+
+  - Bumps esbuild to 0.15.5
+  - Unlock locked prosemirror-dev-tools dependency version
+  - Add prosemirror-dev-tools to Editor kitchen sink example
+  - Partially address translations not working in examples via esbuild
+  - Defaults esbuild for non-VR editor-core + renderer devloop
+
+- [`8f1264a6bc8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f1264a6bc8) - Updated date lozenge component from styled components to use Emotion CSS
+- [`5b018789978`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5b018789978) - To fix scroll position of typeahead list elements [ED-15754]
+- [`dbfc8c36104`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbfc8c36104) - [ux][ux] ED-15655 To add visible focus styles for type ahead list items when focused through navigation
+- [`f5a41e1c164`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f5a41e1c164) - Fixed pasting of plain text content where double slashes collapsed into a single slash.
+- [`e47c25f7cbd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e47c25f7cbd) - [ux] ED-15388 Fixed - Lose focus when canceling composition input in Japanese at the beginning of page
+- [`d58c77cae8d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d58c77cae8d) - ED-15182 corrected blockquote to blockquote content copy paste bug
+- [`f86e84d3cd8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f86e84d3cd8) - ED-13980 Changes to make typeahead menu accessible by adding assistive text and improving keyboard navigation
+- [`830f3ba0e98`](https://bitbucket.org/atlassian/atlassian-frontend/commits/830f3ba0e98) - [ux] ED-15324 Allow pasted inline nodes to replace placeholder nodes.
+- Updated dependencies
+
+## 172.3.2
+
+### Patch Changes
+
+- Updated dependencies
+
+## 172.3.1
+
+### Patch Changes
+
+- [#25617](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/25617) [`ebbb19af585`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ebbb19af585) - bump editor-common to 69.4.1
+
+## 172.3.0
+
+### Minor Changes
+
+- [#25390](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/25390) [`06ae7af103f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/06ae7af103f) - [ux][ed-15739] Bring back the table icon to the typeahead menu by moving IconTable component to shared package
+
+### Patch Changes
+
+- Updated dependencies
+
+## 172.2.1
+
+### Patch Changes
+
+- [#24874](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24874) [`8cc2f888c83`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8cc2f888c83) - Upgrade Typescript from `4.3.5` to `4.5.5`
+- Updated dependencies
+
+## 172.2.0
+
+### Minor Changes
+
+- [#24607](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24607) [`922840a4c85`](https://bitbucket.org/atlassian/atlassian-frontend/commits/922840a4c85) - [ED-15502][ed-15564] Decoupled selection and tables and re-enabled tableSelectionKeymap in new table plugin. Introduced new api EditorSelectionAPI.
+- [`7955a53b7aa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7955a53b7aa) - [ED-15550] Move analytics types to editor-common package
+- [`762d8bfe380`](https://bitbucket.org/atlassian/atlassian-frontend/commits/762d8bfe380) - [ED-15503] First InsertionNodeAPI code: Removing the Toolbar - Table couple code
+
+### Patch Changes
+
+- [`c804f3217e7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c804f3217e7) - [ED-15588] Decouple messages in table plugin by moving dependencies to editor-common.
+- [`7b0587fe2ee`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7b0587fe2ee) - [ED-1556] Fixed up tests failing due Babel generates properties with only `get` defined for re-exported functions. Solution is to import the modules where the functions used are defined or mock implementation.
+- [`a4d1c1e9dd0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a4d1c1e9dd0) - Shifted slice transforms to editor-common
+- [`131a0e81682`](https://bitbucket.org/atlassian/atlassian-frontend/commits/131a0e81682) - [ED-15586] Fix missing analytics from table's cut event
+- [`f920b646662`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f920b646662) - Shifted many common utils from editor-core to editor-common
+- [`7987d8b379b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7987d8b379b) - ED-15584 Re-enable extracted layout button, shifting common editor-core UI elements to `editor-common/menu-ui`
+- [`7487d066e92`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7487d066e92) - [ED-15551] Copy ReactNodeView and dependencies into editor-common
+- [`949bba4aaf4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/949bba4aaf4) - [ED-15556] Initial Editor Analytic API for Table extraction
+- [`95f007063cf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/95f007063cf) - Decoupling paste plugin and table plugin, copied `replaceSelectedTable` and `getSelectedTableInfo` utils to editor-tables utils package and analytics dependency shifted to paste plugin.
+- [`73d9a2fa116`](https://bitbucket.org/atlassian/atlassian-frontend/commits/73d9a2fa116) - ED-15568 Restore table's FloatingContextualMenu, extract utils/UI components
+- [`1691708e13b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1691708e13b) - [ED-15555] Export getParentNodeWidth to editor-common
+- [`fdeacec217f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fdeacec217f) - [ED-15590] Import editor utils functions from editor-common
+- Updated dependencies
+
+## 172.1.2
+
+### Patch Changes
+
+- [#24961](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24961) [`764bb2b1267`](https://bitbucket.org/atlassian/atlassian-frontend/commits/764bb2b1267) - Fixed a bug where toolbar would disappear / break when mediaSingle is resized
+
+## 172.1.1
+
+### Patch Changes
+
+- [#24814](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24814) [`fb0c1db4bf7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fb0c1db4bf7) - [ux] ED-15512 Fix can't delete quote in first line jira comment
+
+## 172.1.0
+
+### Minor Changes
+
+- [#24004](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24004) [`0a2a2ff14d9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0a2a2ff14d9) - [ux] ED-15284 Updated shared styles to add margin-top to paragraphs and headings with indentation mark. Prior to this, indented content had different spacing to the rest of the document.
+- [`d7c4506066d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d7c4506066d) - [ux][ed-15295] improve code block copy button label to better indicate to users what will end up in the clipboard when used.
+- [`82d38ab18c1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/82d38ab18c1) - [ux] ED-11600 Fixed - Keyboard composition in code block removes texts
+- [`1c7de731b84`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1c7de731b84) - [ux][ed-15135] Add image and video to keywords of files & images typeahead item
+- [`a7e0b90de6a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a7e0b90de6a) - [ux] ED-15243 fixed page scroll unexpectedly on action item check
+- [`84b5a76c7d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/84b5a76c7d5) - [ux] Add link settings button to hyperlink and smart card toolbars.
+
+### Patch Changes
+
+- [`a6df7e823d8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a6df7e823d8) - [ux] Fixed trello card overflow issue in table cells & fixed merged table cells selection / hover state
+- [`d3d1dd0a666`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d3d1dd0a666) - Hyperlink: Fix embed option not showing on toolbar after converting smart link to url
+- [`f5f3d1a0db9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f5f3d1a0db9) - Smart Links: Fix edit unresolved link lost link url
+- [`f01b0350e42`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f01b0350e42) - Repaints editor nodes when theme mode changes.
+- [`da7d675ec1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da7d675ec1e) - [ux] ED-15363: Preserve leading and trailing whitespaces when pasting plain text into Editor
+- [`bd524db3926`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bd524db3926) - ED-15380 Update fragment prosemirror-schema to match ADF schema
+- [`d28c3de46fe`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d28c3de46fe) - ED-14771 Replaced react-window with react-virtualized
+- [`c64c93a5cab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c64c93a5cab) - Internal ED-12831 changes to not to log deprecated warnings in prod mode"
+- [`f718a9eb83a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f718a9eb83a) - Fixing usage of diffLines return types in 23-diffing example to be pulled from @types/diff
+- [`c73fb17957a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c73fb17957a) - [ux] ED-10207 When the floating toolbar unmounts or updates, remove any temporary styling that was added to the node via hovering over a floating toolbar button.
+- [`688f1d012a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/688f1d012a9) - [ux][ed-15181] Fix typeahead not opening when typing really quickly
+- [`d3ae8684731`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d3ae8684731) - [ux] ED-14658 Pressing escape in edit mode when popover open shouldn't cancel changes
+
+  - Moved keydown listener from document to editor element .akEditor to be able to prevent bubbling
+  - Applies to toolbar menus and typeahead, date, emoji picker
+
+- [`9b778e5cd54`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b778e5cd54) - [ME-2621] Remove legacy code that imposes risks
+- [`cb72385b5f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cb72385b5f4) - [ux] Prevented cursor selecting table corner controls
+- [`15c39553e92`](https://bitbucket.org/atlassian/atlassian-frontend/commits/15c39553e92) - [ux] ED-15130: Make tableRenderOptimization flag default enabled to fix table row control heights being incorrect when smart link inlineCards finish rendering
+- [`45b6d35ea96`](https://bitbucket.org/atlassian/atlassian-frontend/commits/45b6d35ea96) - [ME-1327] Added new upload methods to editor mobile bridge to support previews and progress for media cards.
+- [`1bdeac4d8a5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1bdeac4d8a5) - [ux] ED-13528 Fixed - Unable to exit list with an empty character after cursor
+- [`a75f0f02c24`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a75f0f02c24) - [ux] ED-14683 fix arrow keys in code block unpredictable
+
+  Fixed cursor jumping to expand title when pressing up in a code
+  block in an expand.
+
+- [`e2d54b5e990`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2d54b5e990) - ED-9738 selection should work when editor is disabled
+- [`1ac9c1f7234`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ac9c1f7234) - [ux] Fixes analytics not firing and ctrl+z not downgrading a smart link paste when smartLinks.resolveBeforeMacros and featureFlags.smartCards.macro-override are enabled.
+- [`cbc6a5ed686`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cbc6a5ed686) - Fixes a bug where active states for Editor dropdown menus rendered incorrectly
+- Updated dependencies
+
+## 172.0.5
+
+### Patch Changes
+
+- [#24330](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24330) [`36de2bb7444`](https://bitbucket.org/atlassian/atlassian-frontend/commits/36de2bb7444) - Removing the table background-color style which was introduced as a work around during a HOT, this caused other regressions and the actual fix was implemented by the chromium team. See HOT-99849 for more details
+
+## 172.0.4
+
+### Patch Changes
+
+- Updated dependencies
+
+## 172.0.3
+
+### Patch Changes
+
+- [#24492](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24492) [`8d4228767b0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8d4228767b0) - Upgrade Typescript from `4.2.4` to `4.3.5`.
+- Updated dependencies
+
+## 172.0.2
+
+### Patch Changes
+
+- [#24029](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/24029) [`8ed516834c1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8ed516834c1) - [ux] ED-15407: Bring forward patches below to master:
+
+  - ED-14988: Patch dark mode in mobile-bridge by ensuring theme context is not stale. Repaints editor nodes when theme mode changes.
+  - ME-2511: Revert the premature optimisation that introduces race condition.
+  - Partly from ED-15327: PortalProvider fix to ensure theme toggling updates nested mentions, nodes
+
+## 172.0.1
+
+### Patch Changes
+
+- [#23984](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/23984) [`4e63a26de78`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4e63a26de78) - [ux] DTR-624 Reversed order of indentation buttons in the toolbar. Note that the buttons are behind a feature flag and disabled by default.
+
+## 172.0.0
+
+### Major Changes
+
+- [#23381](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/23381) [`c72a6787b9d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c72a6787b9d) - BREAKING: Removes optional `cardOptions` parameter for the `FloatingToolbarHandler` type.
+
+  Adds support for using `@atlaskit/link-picker` as the link picking user interface.
+
+  The link picker requires configuration via the `linking` prop in order to enable link search and suggestions capabilities.
+
+  The new link picking UI can be opted in by enabling the `lp-link-picker` feature flag.
+
+  In addition, `smartLinks` is now also configurable via the `linking` prop.
+
+  Example Usage:
+
+  ```tsx
+  import { AtlassianLinkPickerPlugin } from '@atlassian/link-picker-atlassian-plugin';
+
+  <Editor
+    linking={{
+      smartLinks: { ... },
+      linkPicker: {
+        plugins: [new AtlassianLinkPickerPlugin({ ... })]
+      }
+    }}
+    featureFlags={{
+      'lp-link-picker': true
+    }}
+    />
+  ```
+
+  See [Link Picker docs on Atlaskit](https://atlaskit.atlassian.com/packages/linking-platform/link-picker) for more information on how to configure the link picker.
+
+- [`080e2269f18`](https://bitbucket.org/atlassian/atlassian-frontend/commits/080e2269f18) - ED-14838: Completely remove allowDynamicTextSizing prop references and deprecation warnings from editor and renderer
+- [`3cc03bb97e3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3cc03bb97e3) - replace @atlaskit/smart-card peer dependency with @atlaskit/link-provider
+
+### Minor Changes
+
+- [`83e8b89dfc0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/83e8b89dfc0) - [ux] ED-15098 added floating toolbar copy button to card
+- [`559bc4c2996`](https://bitbucket.org/atlassian/atlassian-frontend/commits/559bc4c2996) - [ux] ED-15100 add floating toolbar copy button to extension
+- [`6433d875811`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6433d875811) - [ux] ED-15101 add floating toolbar copy button to media file cards
+- [`92207ab17aa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92207ab17aa) - Added analytics to floating toolbar copy button
+- [`2affe8adcfa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2affe8adcfa) - ED-14510: Generic feature flag to disable spellcheck via browser and version
+- [`5020781d90a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5020781d90a) - [ux] ED-15099 added floatng toolbar copy button to Expand
+- [`8c3844a3d0c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8c3844a3d0c) - [ux] Refactored DropDown to remove dependency to deprecated package @alaskit/droplist
+- [`6ef6f24577e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6ef6f24577e) - [ux] ED-15010 added floating toolbar copy button to media
+- [`995991c4b11`](https://bitbucket.org/atlassian/atlassian-frontend/commits/995991c4b11) - [ux] ED-15108 added floating toolbar copy button to Layout
+- [`aa0ef1b96e2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa0ef1b96e2) - Passing theme context to editor data portals
+- [`1847f358354`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1847f358354) - [ux] ED-15067 Enables indent and outdent buttons for allowed nodes when indentationButtonsInTheToolbar feature flag is true.
+- [`653778721dc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/653778721dc) - ED-15099 fixed floating toolbar copy button not working for nested Expand (Expand inside a table)
+- [`6da96104699`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6da96104699) - [ux][ed-15095] Adds visual feedback to what will be copied when using the code blocks toolbar copy button.
+- [`9df1b8dc62e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9df1b8dc62e) - [ux] ED-15133 Update Extension component to use the editor default text size. Prior to this, text inside of extensions was 2px smaller than the rest of the document.
+- [`ac105d01a9a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ac105d01a9a) - [ux] ED-15096 add floating toolbar copy button to hyperlink
+- [`4c921ea986d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4c921ea986d) - [ME-2375] Fix the duplicated `@` symbol when mention is after an inline content
+- [`6ec84e8dd3f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6ec84e8dd3f) - [ux] ED-15098 add floating toolbar copy button to Card
+
+### Patch Changes
+
+- [`330619e1611`](https://bitbucket.org/atlassian/atlassian-frontend/commits/330619e1611) - [ux] Fix focus when a user clicks the editor container when editor is rendered inside a modal
+- [`89757fc6ad2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/89757fc6ad2) - ED-14959 Remove handler code that prevents the native find toolbar from appearing
+- [`d989ae10078`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d989ae10078) - ED-15134 - Pasting unsupported markdown will result in paste as plain text action
+- [`2eb44cace7f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2eb44cace7f) - [ED-15095] fix visual indicator of selection to be copied when hovering/focusing on the code block copy button
+- [`2475c367647`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2475c367647) - ED-14860 remove code-block-syntax highlighting
+- [`721bc4d7794`](https://bitbucket.org/atlassian/atlassian-frontend/commits/721bc4d7794) - ED-14377 To remove the imports of version.json which is deprecated
+- [`575b4888124`](https://bitbucket.org/atlassian/atlassian-frontend/commits/575b4888124) - Removed internal test/demo usages of setSmartUserPickerEnv
+- [`7389a63560c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7389a63560c) - ED-14510-test added more unit test and an error handler when parsing JSON string.
+- [`cc39f3ee3b8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cc39f3ee3b8) - [ux] ED-15067 Enables indentation buttons for paragraphs and headings inside of layout columns. Note that the buttons are disabled by default and behind indentationButtonsInTheToolbar feature flag.
+- [`16fa5a45e7a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16fa5a45e7a) - [EDM-3364] Remove @atlaskit/smart-card peer dependency which was accidentally put back during a conflict resolution. It should no longer be in the peer dependencies of editor-core or renderer packages as it has been replaced by @atlaskit/link-provider
+- [`6f23f0982e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6f23f0982e8) - [ED-15036] Remove custom scrollbar styles from Element Browser
+- [`46a69f32845`](https://bitbucket.org/atlassian/atlassian-frontend/commits/46a69f32845) - remove unused code from editor-core
+- [`b09e4b69ec0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b09e4b69ec0) - [ux] ED-15212: Fix pasting single list items into actions and decisions by ensuring the list content is added to the action or decision rather than pasted after it
+- [`05c057b6252`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05c057b6252) - [ux] ED-15307 Fixes issues where the table cell options actions would not work on firefox, and visual indicators added to the table on hover of the actions would not consistently be cleared.
+- [`f33714afb1c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f33714afb1c) - ED-15310 Prevents indentation buttons on paragraphs and headings nested in blocks in layouts.
+- [`de16b09b138`](https://bitbucket.org/atlassian/atlassian-frontend/commits/de16b09b138) - ED-15071 Added toolbar input type to list, paragraph and heading, action list indent and outdent functions for analytics. Added a check for indentationAllowed in toolbar-lists-indentation plugin to disable the buttons for paragrpahs and headings if it is false.
+- [`1b1af645388`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b1af645388) - [ux] ED-15250 Disables indentation button for lists that are already at max indentation level.
+- [`6cbd22a9318`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6cbd22a9318) - ED-15179 bumped markdown-it dependency to prevent vulnerability issue
+- [`f44a3db7605`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f44a3db7605) - [ux] ED-15255 Fixes indentation buttons inside layout columns.
+- [`b10472a1e57`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b10472a1e57) - ED-14471 remove codeBidiWarnings feature flag
+- [`09df2919a7f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/09df2919a7f) - [ux][ed-15176] disabled embedCardLinks in unsupported parent nodes
+- [`16982c2890e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16982c2890e) - [ux] ED-15112 - Bugfix on the issue when copying text from a panel and pasting it into a list, which creates another panel underneath the list. Instead, this bugfix is now just pasting the text inside the list.
+- [`04db970c32b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04db970c32b) - ED-14899 add attribute to render measurements and rework analytics events to prevent measurements done in background to resulting in misleading render durations.
+- Updated dependencies
+
+## 171.0.1
+
+### Patch Changes
+
+- [#23721](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/23721) [`e4d5a7638c4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e4d5a7638c4) - Fix table border issue on chrome 104 by adding background color to table
+
+## 171.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 170.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 169.1.1
+
+### Patch Changes
+
+- [#23388](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/23388) [`ebe16f97977`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ebe16f97977) - [ux] ED-15292 adjusted weights for the quickinsert search to match weighting system used in newer version of fuse.js (library that we use for fuzzy search)
+
+## 169.1.0
+
+### Minor Changes
+
+- [#22642](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/22642) [`ceb3d47ff02`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ceb3d47ff02) - [ux] ED-15074 Adds indentation buttons to the Editor toolbar. Buttons are disabled by default and also behind indentationButtonsInTheToolbar feature flag.
+- [`8ff3031db06`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8ff3031db06) - Introduce new optional argument to CardProvider.resolve
+- [`e7659ee829a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e7659ee829a) - ED-15074 Moved list toolbar UI into toolbarListsIndentation plugin to share logic with indentation toolbar buttons.
+- [`54079156b5a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/54079156b5a) - ED-15092 Added floatingToolbarCopyButton feature flag
+- [`07c8b0b4504`](https://bitbucket.org/atlassian/atlassian-frontend/commits/07c8b0b4504) - [ux] ED-15102 adds a copy button to nodes with floating toolbars
+- [`2d979ce9877`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2d979ce9877) - [ux] ED-14945: Add windowed codeblock support in renderer (This feature sits behind a flag in the featureFlags prop 'allow-windowed-code-block')
+- [`46ddfdc949b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/46ddfdc949b) - [ux] Removing deprecated `@atlaskit/item` package and replacing with new DS component
+- [`04746af08f6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04746af08f6) - [ux] ED-15097 added floating toolbar copy button to table
+- [`9de4b38fdd6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9de4b38fdd6) - ED-15073 Added indentationButtonsInTheToolbar feature flag ready for feature development.
+
+### Patch Changes
+
+- [`cf63e4add85`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf63e4add85) - Removes extraneous padding from around the floating toolbar when editing a link.
+- [`450a17a332a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/450a17a332a) - [ux] ED-14654: Lower z-index values on editor elements so they do not stick out of the editor and interfere with consuming products
+- [`215256ec669`](https://bitbucket.org/atlassian/atlassian-frontend/commits/215256ec669) - [ED-15023] Remove typescript override in text formatting toolbar utils
+- [`30c74c32783`](https://bitbucket.org/atlassian/atlassian-frontend/commits/30c74c32783) - [ux] ED-15234: reverts ED-14654 because causing header zindex issues
+- [`86b38a65f7f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/86b38a65f7f) - Add integration test for non image files upload
+- [`e4dba654a71`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e4dba654a71) - [ux] ED-15233: Fix breakout button positioning for breakout supported nodes in scenarios where editor disabled props changes while Editor is visually hidden and redisplayed.
+  Fixed by skipping breakout width update work when the editorView dom element is width 0 (hidden) and deferring LayoutButton position updates to second animation frame (on window
+  and editor resizes).
+- Updated dependencies
+
+## 169.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 168.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 167.0.3
+
+### Patch Changes
+
+- [#22029](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/22029) [`49eced64ce2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/49eced64ce2) - [ux] ED-14758: Fixed bug where query text would remain after pressing Enter on typeahead menu if user is in composition input
+- [`2a788e7026e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2a788e7026e) - ED-14812: Allows breakout nodes to be pasted inside tables
+- [`559b6610a0e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/559b6610a0e) - Modified some CSS rules to ensure Emotion is compatible with server side rendering.
+- [`daab566aecb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/daab566aecb) - [ux] ME-2402 cursor moves to after date node after inserting a date on mobile
+- [`dbbd9e189aa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dbbd9e189aa) - ED-14384 - Fixed flickering floating toolbar when clicking on the edge of a link.
+- [`cf3d8e740f9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf3d8e740f9) - [ux] ED-14968 ED-14856 Fixed - Copying multiple paragraphs from a table and pasting them into an empty paragraph pastes within a new table cell
+- [`7c7dcb3c41a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7c7dcb3c41a) - [ux] Solve a bug where copying text from a panel maintains the panel. Now it does not.
+- [`bd55ec19911`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bd55ec19911) - Deleted untranslated string from our i18n files to trigger our translation pipeline in order to get them retranslated correctly
+- Updated dependencies
+
+## 167.0.2
+
+### Patch Changes
+
+- [#22099](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/22099) [`9fcb08f3070`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9fcb08f3070) - Upgrade "fuse.js" fuzzy search plugin to version `^6.6.2`
+
+## 167.0.1
+
+### Patch Changes
+
+- [#22244](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/22244) [`39937036dc5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/39937036dc5) - [RM-77] Change the tableSupported check for ToolbarInsertBlock to account for forks of the table plugin.
+
+## 167.0.0
+
+### Major Changes
+
+- [#21570](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/21570) [`0c808b11322`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0c808b11322) - ED-14489 - Add implementation to allow parseDoc.check() to throw exception.
+  This change will crash any apps that use the editor without a React's Error Boundary <ErrorBoundary /> ancestor in certain cases.
+  This changed handling of how the Editor responds when;
+
+  1. Previously it would load an empty document, it will now throw an error. Documents which it will exhibit this new behaviour are;
+
+  - Passing a `defaultValue` which it is unable to understand (e.g. invalid document)
+  - Calling `editorActions.replaceSelection()`
+
+  2. Some actions occur that result in an invalid prosemirror document. These are not expected to be currently occurring, and would generally indicate a bug in the editor.
+
+- [`d8b3bc73330`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d8b3bc73330) - [ED-14507] Deprecate the allowDynamicTextSizing editor prop and remove all code related to it. This feature has been unused since 2020.
+
+### Minor Changes
+
+- [`28ce65e89dd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/28ce65e89dd) - [ux] ED-14386: Remove special handling for partial table copy paste, so that we still keep the table on paste. Also fixing undo for copy-paste of partial tables.
+- [`39b7001ad4e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/39b7001ad4e) - [ux] Instrumented `@atlassian/editor-core/ (media plugin)` with the new theming package, `@atlaskit/tokens`.
+
+  New tokens will be visible only in applications configured to use the new Tokens API (currently in alpha).
+  These changes are intended to be interoperable with the legacy theme implementation. Legacy dark mode users should expect no visual or breaking changes.
+
+- [`b8f1db6d6a2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b8f1db6d6a2) - [ux] Extended the use of @atlaskit/tokens theming package to ElementBrowser (inside editor-core package)
+
+  New tokens will be visible only in applications configured to use the new Tokens API (currently in alpha).
+  These changes are intended to be interoperable with the legacy theme implementation. Legacy dark mode users should expect no visual or breaking changes.
+
+- [`22425f2620a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22425f2620a) - fix panel icon rendering issue with lazy loaded emoji
+- [`8949731bc6a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8949731bc6a) - ED-14608: Migrate adf-utils imports in atlassian-frontend to new child entry points to improve treeshaking
+- [`d2da7718823`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d2da7718823) - [ux] Fix the experience of backspace on editor with placeholder (Android)
+- [`b0992c06706`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b0992c06706) - [ux] ED-14471 backspacing inside an empty panel or blockquote, should not merge into a panel or a blockquote above it.
+- [`8ecd5222731`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8ecd5222731) - [ux] Extended use of theming package, `@atlaskit/tokens` across `editor-core/plugins`: `mention`, `date`, `emoji`, `expand`, `layout`, `code-block`, `hyperlink`, `grid`.
+
+  New tokens will be visible only in applications configured to use the new Tokens API (currently in alpha).
+  These changes are intended to be interoperable with the legacy theme implementation. Legacy dark mode users should expect no visual or breaking changes.
+
+- [`6e240912dda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e240912dda) - [ux] Fix the Enter keydown behaviour on Android
+- [`637ed7b07b1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/637ed7b07b1) - [ux] Instrumented the general ui packages of `@atlaskit/editor-core` with the new theming package, `@atlaskit/tokens`.
+
+  New tokens will be visible only in applications configured to use the new Tokens API (currently in alpha).
+  These changes are intended to be interoperable with the legacy theme implementation. Legacy dark mode users should expect no visual or breaking changes.
+
+- [`55d3e93b205`](https://bitbucket.org/atlassian/atlassian-frontend/commits/55d3e93b205) - [ED-13045] Add getSelectedNode API to EditorActions
+
+  This PR introduces a new `getSelectedNode` API to the `EditorActions` module in `editor-core`.
+
+  This method will return the currently selected `Node` if the selection is a `Node`.
+  Otherwise, if the selection is textual or a non-selectable `Node` within another selectable `Node`, the closest selectable parent `Node` will be returned.
+
+  ```
+    const editorActions = new EditorActions();
+    const node = editorActions.getSelectedNode();
+  ```
+
+- [`b8dee69a0d6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b8dee69a0d6) - [ONECLOUD-433] Notify of promise rejection when autosave in the ConfigPanel fails for any reason, so we can proceed with closing the ConfigPanel
+
+### Patch Changes
+
+- [`c5d17b278f5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c5d17b278f5) - ED-14998 Fix paste issue in a table inside a bodied extension. Copying and pasting inline nodes inside the table should not create a new table during paste
+- [`4a2048d8751`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4a2048d8751) - [ux] extending use of token theming package on Plugin components - /table
+- [`b68e80d658f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b68e80d658f) - add hover previews feature flag
+- [`d5c8e9f1c9c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d5c8e9f1c9c) - [ux][ed-14949] TypeAhead max height is its default height to prevent horziontal overflow. Height is used to calculate grid size in react-window.
+- [`b73f20ed703`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b73f20ed703) - EDM-3073: Fix collab for media inline and copy-paste regression
+- [`9c170e41064`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9c170e41064) - [ux] EDM-2314: Links that are part of a filepath should not resolve to hyperlinks/smart links.
+- [`17480b66f3e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/17480b66f3e) - [ux][ed-9943] Fix to have the TypeAhead component appear above the main editor toolbar.
+- [`d25c84739af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d25c84739af) - ED-14341 migrate tests and examples to emotion
+- [`b3d7fb93229`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b3d7fb93229) - [ux] ED-14656 Fix an issue that Typing multi-byte characters in a table duplicates the text in Safari
+- [`c3df9b4fe7f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c3df9b4fe7f) - [ux] ED-14911 Updated the inline cursor target plugin to add fixes for safari arrow key navigation across inline node views. Also added additional keyboard navigation and selection tests in getInlineNodeViewProducerTestSuite.
+- [`789b211a5e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/789b211a5e5) - Removed the use of :first-child and nth-child selectors in CSS
+- [`45c427e8ac9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/45c427e8ac9) - [ux] extending use of token theming package on Plugin components - /alignment, /floating-toolbar, /find-replace, /extension, /help-dialog
+- [`420808687d2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/420808687d2) - EDM-3072: fix copy-paste of media inline stuck on loading and renderer copy-paste copying only text
+- [`8300a668772`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8300a668772) - [ux] ED-14488: Extend ADF sanitising coverage to prevent Prosemirror failing validation checks on adf that can be repaired
+- [`e1f853c4415`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1f853c4415) - [ux] Set fullpage toolbar to small width when two line editor toolbar is enabled
+- [`fe8f9fc51de`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fe8f9fc51de) - ED-14732 remove table column controls rendering delay to fix issue with composition events
+- [`2e611fd88b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2e611fd88b2) - [ux][ux] extending use of token theming package on other plugin components
+- [`23b8d36fa72`](https://bitbucket.org/atlassian/atlassian-frontend/commits/23b8d36fa72) - Adds a token to the background color of the editor toolbar
+- [`be5938bff91`](https://bitbucket.org/atlassian/atlassian-frontend/commits/be5938bff91) - Fix block type format across multiple selected table cells
+- [`ed6cdd2d397`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ed6cdd2d397) - added onfullscreenchange property to media to avoid triggering table resizing when media is in full screen mode
+- [`b6834b8db25`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b6834b8db25) - ED-14903 Added block node selection test suite to table node, also modified test suite to allow multiple objects to be passed into content
+- [`10d3e380f95`](https://bitbucket.org/atlassian/atlassian-frontend/commits/10d3e380f95) - fix copy-paste issue for media caption
+- [`e61e5524ebb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e61e5524ebb) - [ux] ED-14939 Fixed - Gap cursor blinking between end of panel and end of content
+- [`dd0a9232657`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dd0a9232657) - [ED-14954][ux] Removes token in the default color value in the custom panel color picker
+- Updated dependencies
+
+## 166.0.4
+
+### Patch Changes
+
+- [#21932](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/21932) [`08b3ceadbe3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/08b3ceadbe3) - [Hotfix] Revert of ED-14241
+
+## 166.0.3
+
+### Patch Changes
+
+- [#21859](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/21859) [`56238fdc70e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56238fdc70e) - ED-14998 Fix paste issue in a table inside a bodied extension. Copying and pasting inline nodes inside the table should not create a new table during paste
+
+## 166.0.2
+
+### Patch Changes
+
+- [#21687](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/21687) [`61b504d9af7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/61b504d9af7) - [ED-15023] Fix editor crashing when first line contains only sub or super script
+
+## 166.0.1
+
+### Patch Changes
+
+- Updated dependencies
+
+## 166.0.0
+
+### Minor Changes
+
+- [#20721](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/20721) [`2a04b47848b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2a04b47848b) - Removed unused emoji experiment (emojiNext).
+- [`d86aa096946`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d86aa096946) - [ux] Added prop minHeight for editor appearance='comment' and 'chromeless'
+- [`b6d47de3fd9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b6d47de3fd9) - [MEX-1417] remove access to media file streams cache
+- [`19486acfe8f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19486acfe8f) - [ED-14501] Add a new input latency performance analytics event `editor.inputPerfSamplingAvg`. Refactor the input latency tracking logic into a class.
+- [`de9e3c28026`](https://bitbucket.org/atlassian/atlassian-frontend/commits/de9e3c28026) - [ED-14689] Refactor getFinalAcknowledgedState to only wait for the unconfirmed steps at the time of calling it to be confirmed. It will no longer wait for there to be no unconfirmed steps at all.
+- [`02bfb564e45`](https://bitbucket.org/atlassian/atlassian-frontend/commits/02bfb564e45) - [ux] Instrumented `@atlaskit/editor-shared-styles` and partial `@atlaskit/editor-core` with the new theming package, `@atlaskit/tokens`.
+
+  New tokens will be visible only in applications configured to use the new Tokens API (currently in alpha).
+  These changes are intended to be interoperable with the legacy theme implementation. Legacy dark mode users should expect no visual or breaking changes.
+
+### Patch Changes
+
+- [`74f39b3fcf8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/74f39b3fcf8) - [ux] EDM-2398: When a user types a link as opposed to pasting one, it will only be made into a link, not a smart card.
+- [`ea41bc8a2ed`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea41bc8a2ed) - [ux] ED-14577 add support for skipable tests for placeholder-text
+- [`aec3f6e6d01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aec3f6e6d01) - Add closeHistory() on indentList / outdentList at the beginning as for a undo restore point
+- [`67ebd08a55c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/67ebd08a55c) - [ux] ED-14581 Reworks unsupportedInline and confluenceUnsupportedInline to use getInlineNodeViewProducer api.
+- [`05502fa8c02`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05502fa8c02) - [ux] ED-14572 Migrated Mention node view to use the new getInlineNodeViewProducer api.
+- [`994b3c53e55`](https://bitbucket.org/atlassian/atlassian-frontend/commits/994b3c53e55) - ED-14373 Removed displayInlineBlockForInlineNodes feature flag as it is no longer required. Inline nodes now use the getInlineNodeViewProducer api which addresses issues that the feature flag was intended to fix.
+- [`f0f5ea7e9b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f0f5ea7e9b2) - [ux] ED-14050 Fixes mouse wheel not working when hovering table header row while its sticky
+- [`6e7c648ddb7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e7c648ddb7) - ED-14055: Fix out of range error during a collab session when deleting a paragraph at the end of the document and another user has a selection inside that paragraph.
+- [`1b59c7df167`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b59c7df167) - [ED-14700] Checks if typeAhead was dismissed after inserting an item to make sure we don't sent cancelled analytics events when an item was inserted successfully
+- [`b1f97a33e1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b1f97a33e1e) - [ux] Rework emoji to use getInlineNodeViewProducer api.
+- [`a702917cbde`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a702917cbde) - [ux][ed-14725] Fixed duplicated line when pasted from google docs
+- [`513476f63a0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/513476f63a0) - ED-14158 deprecate shouldAddToHistory arg from EditorActions.replaceDocument
+- [`702b032500c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/702b032500c) - [ux] Corrected ordering of the toolbar text colour picker's drop down menu, updated its rows to be from darkest to lightest.
+- Updated dependencies
+
+## 165.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 164.0.4
+
+### Patch Changes
+
+- [#21226](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/21226) [`798c0d0b9c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/798c0d0b9c3) - [ux] Fixes an issue where some editor nodes did not work with dark mode (which is only used on mobile). When the environment is detected to be mobile, this adds a Atlaskit Theme Provider and a styled-components theme provider to the top of the editors "portals" (not react portals), which allows theming to work.
+
+## 164.0.3
+
+### Patch Changes
+
+- [#20862](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/20862) [`1f18014c3c3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1f18014c3c3) - [ux] ED-14909: Fix Chrome bug where typeahead would write duplicate slash prefix triggers on multiple focusout events
+
+## 164.0.2
+
+### Patch Changes
+
+- [#20650](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/20650) [`a424e62b264`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a424e62b264) - Changes to support Node 16 Typescript definitions from `@types/node`.
+
+## 164.0.1
+
+### Patch Changes
+
+- [`cb2392f6d33`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cb2392f6d33) - Upgrade to TypeScript 4.2.4
+- Updated dependencies
+
+## 164.0.0
+
+### Major Changes
+
+- [#20033](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/20033) [`675613ff0f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/675613ff0f4) - [MEX-1390] Remove Media-picker popup as an export and remove useMediaPickerPopup flag
+
+### Minor Changes
+
+- [`b623cae0fe6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b623cae0fe6) - [ux][ed-13182] Uses the same logic for inserting or adding new action and decision items via different methods.
+
+  It helps to avoid inconsistent spacing between items that were inserted via different insertion methods.
+
+  Deprecates insertTaskDecision command in favor of insertTaskDecisionCommand.
+
+  New command is used to unify the logic we use in different insert methods for task(action) list or decision list items: menu toolbar, slash command, keyboard shortcut.
+
+  To avoid multi dispatch, this change transformed insertTaskDecision command into an action and added insertTaskDecisionCommand.
+
+- [`f26db4dcd65`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f26db4dcd65) - ME-1322 The mobile editor with the compact appearance has a submit button which is disabled when the editor is empty. Currently, when you insert a block node such as code snippet or table, and don't add anything else, the content is still considered empty. This does not align with the web version. The comment editor in web considers this as a content and enables the submit button. With this change, the mobile editor also aligned with the web behaviour.
+- [`c4b5c9f0f0d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c4b5c9f0f0d) - [MEX-1100] Remove external references to MediaPicker PopUp
+
+### Patch Changes
+
+- [`0c64f6136e6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0c64f6136e6) - ED-14268 migrate editor-core to use emotion
+- [`546490297ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/546490297ec) - ED-14268 migrated some styled-components to use emotion
+- [`001b0e67dc4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/001b0e67dc4) - Remove table plugin dependencies from paste plugin
+- [`e2b0dbd04f6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2b0dbd04f6) - Remove table plugin dependencies from the paste plugin
+- [`bb037baa675`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb037baa675) - [ED-14690] Fix media node helper functions - Make sure the media node exists before change the attributes
+- [`b29ce16dad8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b29ce16dad8) - [ED-14606] Move bitbucket schema, confluence schema, jira schema, and default schema from @atlaskit/adf-schema to their own entry points. These new entry points are as follows
+
+  @atlaskit/adf-schema/schema-bitbucket for:
+
+  - bitbucketSchema
+
+  @atlaskit/adf-schema/schema-confluence for:
+
+  - confluenceSchema
+  - confluenceSchemaWithMediaSingle
+
+  @atlaskit/adf-schema/schema-jira for:
+
+  - default as createJIRASchema
+  - isSchemaWithLists
+  - isSchemaWithMentions
+  - isSchemaWithEmojis
+  - isSchemaWithLinks
+  - isSchemaWithAdvancedTextFormattingMarks
+  - isSchemaWithCodeBlock
+  - isSchemaWithBlockQuotes
+  - isSchemaWithMedia
+  - isSchemaWithSubSupMark
+  - isSchemaWithTextColor
+  - isSchemaWithTables
+
+  @atlaskit/adf-schema/schema-default for:
+
+  - defaultSchema
+  - getSchemaBasedOnStage
+  - defaultSchemaConfig
+
+  This change also includes codemods in @atlaskit/adf-schema to update these entry points. It also introduces a new util function "changeImportEntryPoint" to @atlaskit/codemod-utils to handle this scenario.
+
+- [`0615f984959`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0615f984959) - [ux] Add workaround in paste plugin so that nodes like panels/decisions are not lost when pasting content into them.
+- [`3ef794dc11f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3ef794dc11f) - Removed emoji and media packages dependencies from renderer initial load.
+- [`d1e45c6ae0e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d1e45c6ae0e) - ED-14268 replace editor-core to use emotion
+- [`e18ded9309d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e18ded9309d) - ED-14268 replaced parts of editor-core to use emotion
+- [`084c7854868`](https://bitbucket.org/atlassian/atlassian-frontend/commits/084c7854868) - [ux] ED-14573 Migrate inlineCard to use getInlineNodeViewProducer. This change also includes some updates to inline node view styles to better selections in Chrome specifically.
+- [`1d1c52856f2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1d1c52856f2) - ED-14268 migrated some usages of styled-components to emotion
+- [`d6a5f238b34`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d6a5f238b34) - [ux] Bug fix for pasting multiple code blocks where previously they were being merged into one, but now they paste separately as individual code blocks (unless they are pasted from bitbucket)
+- [`41e11bd11a0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/41e11bd11a0) - ED-14268 migrated parts of editor-core to use emotion.
+- [`20a8be7d4af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/20a8be7d4af) - [ux][ed-14731] Solve a regression where headings pasted into empty panels replaced the whole panel. Now it will paste inside the panel.
+- Updated dependencies
+
+## 163.0.0
+
+### Major Changes
+
+- [#19618](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19618) [`0ba6e613e60`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0ba6e613e60) - [ux] Removed media-editor references in editor-core
+- [`2ec99bf6f9f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ec99bf6f9f) - [ux] ED-14651: removed react-intl v2.
+
+### Minor Changes
+
+- [`8767658360f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8767658360f) - Adds support to editor-core analytics types to dispatch operational feature exposure events.
+- [`bceab5fa97d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bceab5fa97d) - ED-14632: Add render count tracking reRendered event in Renderer
+- [`c5ac02c5672`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c5ac02c5672) - [ux] ED-9226 padding fix for numbered list inside table
+- [`16ffd1a95fd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16ffd1a95fd) - [ux] ED-14479 Created getInlineNodeView api and added test suite. Refactored status node view to use new api.
+- [`a94f57c6d61`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a94f57c6d61) - fix integration tests to remove dependency of mediaPicker popup and use native picker
+
+### Patch Changes
+
+- [`0863c318a75`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0863c318a75) - [ED-14590] Fix unclickable links on mention team highlight
+- [`ef7b2acee8d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ef7b2acee8d) - [ux] ED-14633 Adds editable widgets either side of the cursor when positioned between inline node views to prevent the cursor disappearing or appearing in the wrong position. Also removes old Firefox selection workaround.
+- [`874489b6b05`](https://bitbucket.org/atlassian/atlassian-frontend/commits/874489b6b05) - [ux] Migrate the DateNodeView to the node view producer api, which provides a number of selection fixes.
+- [`44c6c36d8d9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/44c6c36d8d9) - ED-14263 replaced styled usages
+- [`523d46ed69d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/523d46ed69d) - ED-11836 Restrict ListsJoined type
+- [`b38234b895c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b38234b895c) - ED-14268 editor-core replace some of styled-components with emotion
+- [`3c24bc606e4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3c24bc606e4) - [ux][ed-14191] Stop config panel with tabs overflowing when long dropdown option is selected
+- [`92f9b06ab4b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92f9b06ab4b) - ED-14269 Migrated css in editor-core to emotion.
+- [`2cfb953f2af`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2cfb953f2af) - ED-14739: Fix backspace issue. When you have a list and have empty paragraphs after the list, if you position the cursor just after the list, the cursor doesn't move going into the list.
+- [`2a8cbf13f57`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2a8cbf13f57) - ED-14339 removed ThemeProvider from editor-core
+- [`d175ef22258`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d175ef22258) - Change default analytic value
+- [`5c1bba527ee`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5c1bba527ee) - [ux] ED-14573 Updated getInlineNodeViewProducer markup and styles to allow multiline node views to wrap across lines and not act as a block element.
+- [`1e2086467f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1e2086467f1) - [ED-13775] Added resize observer on scroll parent element to realign popup components when template context panel is opened/closed.
+- [`78aec52dea0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/78aec52dea0) - use latest SmartUserPicker in Editor packages
+- [`0dad4610a36`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0dad4610a36) - ED-14268 migrated parts of editor-core to use emotion.
+- [`b060587bd38`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b060587bd38) - [ux][ed-14584] Solve inconsistencies of node insertion via the toolbar. Specifically targeting nodes being inserted into other nodes that cannot contain them. Previously the node being inserted into would split in half, but now the invalid node will insert underneath.
+- [`1b0b4544d74`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b0b4544d74) - Change default value of FF for experiment
+- [`447feec5678`](https://bitbucket.org/atlassian/atlassian-frontend/commits/447feec5678) - [ED-11900] Make table node top of the quick insert result by adding "table" in the keywords list
+- [`9b5c590caae`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b5c590caae) - ED-14268 replaced some styled in editor-core
+- [`ea050810214`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea050810214) - EDM-2935: Reimplement change experiment tracking event without localId
+- [`5c6607ee0e7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5c6607ee0e7) - Migrated link, rule, panel and expand styles in editor-common to emotion.
+- [`62edf20ab1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/62edf20ab1e) - Migrates all usage of brand tokens to either selected or information tokens. This change is purely for semantic reasons, there are no visual or behavioural changes.
+- [`1bf958a90f5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1bf958a90f5) - EDM-2892: Fix view switcher casing in feature flags from props.
+- Updated dependencies
+
+## 162.0.1
+
+### Patch Changes
+
+- [#19655](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19655) [`cfcc23db294`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cfcc23db294) - ED-14735 Rename table styles from '.css.ts' to '.
+
+## 162.0.0
+
+### Minor Changes
+
+- [#19019](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19019) [`b70bf801c6d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b70bf801c6d) - [ux] ED-14235 Fix conversion of aligned text to list
+- [`53046ba2ac3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53046ba2ac3) - [ux] Added a new dropdown menu for smart cards view changing in the floating toolbar as a variant to be tested against the current dropdown.
+- [`d1faad40e59`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d1faad40e59) - [ux] Adds helper function to find caption node and hides adaptive toolbar on mobile when selection is inside caption node
+- [`7f158b2734b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f158b2734b) - [ux] Shows correct toolbar state after header row or header column option is undone
+- [`9712e78abb0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9712e78abb0) - ED-14255 moved some usages of editor-shared-styles to emotion
+- [`9d6e344a6d6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d6e344a6d6) - [ux] EDM-2642: Added icons/buttons for smart cards view changing directly in the toolbar as opposed to the normal dropdown.
+- [`171af4f5fda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/171af4f5fda) - Ed-14165 Remove table resize button optimization code.
+  Removing the code fixes the strange behaviour in multi-user collaboration.
+
+### Patch Changes
+
+- [`35c1a07273b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/35c1a07273b) - [ux] ED-13003: Fix copying table rows, ensuring they keep the original table's attributes (such as layout).
+- [`6e551822ea8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e551822ea8) - Extracted out smart-mention-resource
+- [`98304ee1b02`](https://bitbucket.org/atlassian/atlassian-frontend/commits/98304ee1b02) - import embedHeaderHeight from smart-card instead of media-ui
+- [`29c631e4e60`](https://bitbucket.org/atlassian/atlassian-frontend/commits/29c631e4e60) - ED-11866 Remove unused canSink parameter from list analytics
+- [`8984ab2e078`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8984ab2e078) - [ux] ED-14650 Ensure we locate any table node in the current list of children nodes to determine if table wrapper exists
+- [`d0eed99c3e3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d0eed99c3e3) - ED-14264 Moved styles to emotion css
+- [`cb6bf345163`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cb6bf345163) - [ED-13933] Fix issue when backspacing text into an image inside a list. Avoid also the ProseMirror error when this issue occurs.
+- [`f9a144c5a71`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f9a144c5a71) - ED-14255 migrated table styles to use emotion
+- [`55256125722`](https://bitbucket.org/atlassian/atlassian-frontend/commits/55256125722) - ED-14262 update editor packages to use emotion 11
+- [`ee8e5f50b6f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ee8e5f50b6f) - Add regression testing for multi cell table selection
+- [`9dfdfaab7c6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9dfdfaab7c6) - [ux] ED-14241: fix initial visibility of edit icon on extension floating toolbar when selecting an editable extension at the first node in the document
+
+  - fixed bug in bodiedExtension where clicking on the border of 'extension-content' wont trigger a selection
+
+- [`b960f4f81ee`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b960f4f81ee) - [ED-11194] Fix typehead insertion from placeholders
+- [`d0dff8da956`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d0dff8da956) - [ED-14514] In NCS backed editor wait for media uploads to complete before getting the final acknowledged state in getResolvedEditorState EditorAction. Fixes from ED-14588 were also copied over and a fix on media uploads in the collaborative-editing atlaskit example.
+  ResolvedEditorState type updated for compatability with synchrony code.
+- [`03930b9f4c7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/03930b9f4c7) - ED-14253: fixed infinite transaction loop after uploading a file to the editor.
+
+  - updated ADF for MediaBaseAttributes.\_\_contextId to allow for null value
+  - fixed Editor example page 2-comment-jira-bento
+
+- [`1a664f6b1e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a664f6b1e5) - [ux][ed-14583] Solve inconsistencies in paste handler. Specifically targeting invalid nodes being pasted into decision nodes (should safe insert if not valid content) and nested expands being pasted into tables (invalid so return early out of expand paste handler).
+- [`e22509504e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e22509504e8) - ED-14255 migrate editor-shared-style to emotion
+- [`58016841de5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/58016841de5) - [ux] Now allows users to use the toolbar to insert action items and decision items when wrapped within a blockquote.
+- [`92537fdfe96`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92537fdfe96) - ED-14376 Removes workaround code for Chrome 58 selection bug as solution has been implemented by prosemirror
+- [`6dc2254f102`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6dc2254f102) - AK-850: Text formatting shortcuts provide status updates for screen readers
+- Updated dependencies
+
+## 161.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 160.0.0
+
+### Major Changes
+
+- [#19405](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19405) [`a0b1dde9b9e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a0b1dde9b9e) - [ux] Fixed the issue where the "change table width" button was incorrectly positioned, overlapping the side panel, when the table is being rendered in sticky header mode.
+
+## 159.0.1
+
+### Patch Changes
+
+- [#19339](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19339) [`e68f0f554fa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e68f0f554fa) - remove mousedown handler for inline links and add a vr test for the logic
+- Updated dependencies
+
+## 159.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 158.0.1
+
+### Patch Changes
+
+- [#19204](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/19204) [`c7a3ccf95cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c7a3ccf95cd) - Patching versions to no longer reference localid from adf or smart-cards
+
+## 158.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 157.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 156.0.0
+
+### Patch Changes
+
+- Updated dependencies
+
+## 155.0.0
+
+### Major Changes
+
+- [#18526](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/18526) [`304351e4b1e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/304351e4b1e) - CETI-241 - Added additional panel ADF attributes (panelIconId, panelIconText) to uniquely identify custom panel emojis. The change has been categorised as major since it is a change to the full-schema ADF. However, the custom panel feature is behind a feature flag, has not yet been released to production, and is only currently planned for release to Confluence. See ADF change #61 for further details.
+- [`9d1e0356622`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d1e0356622) - [ux] CETI-166 Increase the standard panel icons size to make it consistent with the emojis in the panel content area
+
+### Minor Changes
+
+- [#16752](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16752) [`4e234e7fe93`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4e234e7fe93) - CETI-240 handle add custom emoji in floating toolbar
+- [`88ada10af2c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/88ada10af2c) - [ED-14097] Moved getFinalAcknowledgedState control to editor and made the API public
+- [`a52644f9bf5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a52644f9bf5) - [ux][me-1931] Fix expands losing content on mobile when pressing enter mid sentence.
+- [`c2e08fae750`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2e08fae750) - ME-1660 ContentInSelection in Mobile Selection return array of selected nodes instead of a Set
+- [`134b7496dba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/134b7496dba) - Add react key to smart links
+- [`beb3969bd64`](https://bitbucket.org/atlassian/atlassian-frontend/commits/beb3969bd64) - [ux] Change the media floating toolbar view switcher dropdown text to Change view
+- [`e0103080b39`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e0103080b39) - [ux][me-1342] Fixup scroll behaviour on mobile for compact editor. Removes jumpiness occuring in certain nodes.
+- [`e8331a3b79a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e8331a3b79a) - [ux] EDM-2492 Smart linkification paste override
+- [`25b9e20f62e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/25b9e20f62e) - ED-14002 Added `safer-dispatched-transactions` featureFlag to prevent
+  transactions from being mutated after dispatch at runtime.
+
+### Patch Changes
+
+- [`72af413496a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/72af413496a) - AK-847: add ARIA landmark regions for the FullPageEditor
+- [`0f738d38e25`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0f738d38e25) - [ux] ED-7331: Try to preserve tinyMCE tables that include images during copy paste to Fabric Editor and try to rebuild incomplete tinyMCE tables where possible.
+- [`74a8672bf5e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/74a8672bf5e) - ED-13664 selection should convert to a list
+- [`0eb2553d1eb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0eb2553d1eb) - Fixed putting cursor in text not working when text is above table.
+- [`da1de1b2741`](https://bitbucket.org/atlassian/atlassian-frontend/commits/da1de1b2741) - [ED-14077] Fix hyperlink toolbar closing when open it in a collab session
+- [`b3dc897bae2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b3dc897bae2) - EDM-2750: Added logic to separate design served for toolbar based on feature flag.
+- [`69984830c1d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/69984830c1d) - [ux] ED-14045 Only add zero margin-top to the first paragraph node in centre and right aligned table cells.
+- [`b5375cd4f66`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b5375cd4f66) - AK-316: add aria-label for the status picker input field
+- [`a82b0695d1c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a82b0695d1c) - ED-14060 prevent recreating editor schema when calling replaceDocument
+- [`b2de2c58b01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b2de2c58b01) - [ux] ED-13962 Persist stored marks across transactions that are created by applying remote steps. This prevents marks being lost between the mark being selected and the remote step being applied if the user hasn't typed anything.
+- [`05670d615c7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05670d615c7) - EDM-2646: Added new view changer icons.
+- [`6d675d908cb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6d675d908cb) - [ux] ED-11668 fixed selecting links with shift click
+- [`1f52295dade`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1f52295dade) - [ux] ED-14003 Fixed the issue, now will delete an empty paragraph under a table. This will only delete empty paragraphs that are not the last node in the document as per the original design decision.
+- [`97412280671`](https://bitbucket.org/atlassian/atlassian-frontend/commits/97412280671) - [ED-13939] Add analytics event to track "can't syncup with collab service" error
+- [`be29fc7e504`](https://bitbucket.org/atlassian/atlassian-frontend/commits/be29fc7e504) - [ux][ed-13990] Ensure that previous find results are no longer highlighted when the next search occurs
+- [`85648c038a4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/85648c038a4) - ED-13939 Rename newCollabSyncUpError analytics event to newCollabSyncUpErrorNoSteps
+- [`9cf75acdaf0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9cf75acdaf0) - [ux] EDM-1777: Fixed embed cards touching cell border in a table.
+- [`869dceac208`](https://bitbucket.org/atlassian/atlassian-frontend/commits/869dceac208) - ticket AK-834: remove aria-hidden from macros modal dialog
+- [`610217c8b67`](https://bitbucket.org/atlassian/atlassian-frontend/commits/610217c8b67) - [ux][ed-13970] Creating a new list from a paragraph and a list below now correctly merge when a list is above the paragraph
+- [`db38bcc02d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db38bcc02d5) - [ED-14099] Fixup flakey test in expand plugin
+- [`4e6fbaf5898`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4e6fbaf5898) - ED-14117 Change EditorState.apply type to receive readonly transaction
+
+  Transactions should not be mutated after being dispatched as it can lead to
+  unexpected behaviour. This change patches the relevant types declared in
+  prosemirror-state as a compile-time safeguard.
+
+- [`2f5133aedd7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2f5133aedd7) - ED-13881 Update existing imports from @atlaskit/adf-schema to use declarative entry points
+- [`b48b9e66b75`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b48b9e66b75) - Sticky class persist in table header row even after table is out of viewport. Fixed that.
+- [`3b49ff824ec`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3b49ff824ec) - ED-14043 update prosemirror schema to only allow link mark on children of paragraph and mediaSingle
+- [`1b76b5d7090`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1b76b5d7090) - Added in analytics events to switching media inline views
+- [`0fdd92d8c01`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0fdd92d8c01) - [ux] ED-14205: fixed heading margins for aligned text in table row/column header cells
+
+  Work on this PR was originally marked as ED-14026
+
+- [`cc3d8ab686b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cc3d8ab686b) - [ux] ED-14177 Remove More/Fewer color button from color palatte
+- [`83337aced9d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/83337aced9d) - ED-13871 Fix jumpiness in table when typing in row. This usually happens when you have the table occupying most of the viewport and there are no nodes underneath. This is due to the sticky header trying to make it sticky and non-sticky as you type. This PR improves the logic of determining when to make it sticky/non-sticky. And also made the rule that if the height of the table is less than the viewport of the editor then make the header non-sticky.
+- [`16294b02fd4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16294b02fd4) - CETI-242 Change the Color palette labels for panel
+- [`14f4f5f0a82`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14f4f5f0a82) - [ux] ED-14033 Adds position fixed to table layout button when table has sticky headers to prevent the button from jumping on scroll
+- [`14ec4d6a770`](https://bitbucket.org/atlassian/atlassian-frontend/commits/14ec4d6a770) - [ux] ED-14046 Fix bug where pressing arrow down before a table moved the cursor behind the table
+- [`19d5531e8e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d5531e8e8) - ED-14318 Handle null ref in typeahead input query component
+- [`560d126648f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/560d126648f) - [ux] ED-10482 paste invalid content after a node rather than split the node in half
+- [`7f8be1a6a30`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f8be1a6a30) - clean stage0 artefacts from dataConsumer mark
+- [`e1f87868725`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1f87868725) - [ED-14588] Fix feature flag check for useNativeCollabPlugin
+- [`78c6a40ef5e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/78c6a40ef5e) - [ED-13118] Removing dead workaround code that causes tapping after a bullet item with a smart link to select the smart link
+- [`767a791e25c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/767a791e25c) - Added descriptions for new view changing designs to messages.ts
+- [`2e9ab136b60`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2e9ab136b60) - ED-14131 Improve table stickiness rule (related to ED-13871) and unskip VR tests
+- [`efc43c1ca69`](https://bitbucket.org/atlassian/atlassian-frontend/commits/efc43c1ca69) - ED-14051 Shift-Tab not working inside table cell having list with paragraph issue fixed.
+- [`783bda0d683`](https://bitbucket.org/atlassian/atlassian-frontend/commits/783bda0d683) - Extra information added to analytics for toolbar change view options
+- [`357967647ac`](https://bitbucket.org/atlassian/atlassian-frontend/commits/357967647ac) - ED-14206 Add newline between list items when copied as plain text
+- [`7f544c17140`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f544c17140) - [UR-3222]: Enable intl context for mention node
+- [`6eac2d18bf4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6eac2d18bf4) - [ux][ed-10012] Add a check to backspace keymap for expands + fix a bug in the code block backspace keymap. This solves issues where an empty panel or code block is nested within an expand, and backspace is pressed. Previously the expand would be deleted as well, but now only the panel or code block will be deleted and the expand will remain. Also added integration tests for this behaviour.
+- [`cce2116c3dd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cce2116c3dd) - AK-839: when the Children display's Edit dialog opens, a screen reader should announce the dialog title
+- [`a750eda9a6f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a750eda9a6f) - [ED-14036] Fix floating typeahead coming from rebased steps
+- [`a36d06dee66`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a36d06dee66) - [ux] Added intl tooling to all strings that were previously not using intl tooling. Should mean that more things are able to be translated. Also fixed the relevent tests to account for intl tooling.
+- [`356d6e87129`](https://bitbucket.org/atlassian/atlassian-frontend/commits/356d6e87129) - Added new feature flag for smart links view changing experiment.
+- [`e757b21eba9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e757b21eba9) - ED-13066 fixed view jumps to the top of the page
+- [`86fd3754245`](https://bitbucket.org/atlassian/atlassian-frontend/commits/86fd3754245) - Pasting link having space character in it replacing selected text issue fixed.
+- [`5db40924cf9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5db40924cf9) - AK-701: removed redundant tabindex=0 from toolbar buttons
+- Updated dependencies
+
+## 154.0.0
+
+### Major Changes
+
+- [`5af69bfe9be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5af69bfe9be) - CETI-241 - Added additional panel ADF attributes (panelIconId, panelIconText) to uniquely identify custom panel emojis. The change has been categorised as major since it is a change to the full-schema ADF. However, the custom panel feature is behind a feature flag, has not yet been released to production, and is only currently planned for release to Confluence. See ADF change #61 for further details.
+- [`272a64c6bf0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/272a64c6bf0) - [ux] CETI-166 Increase the standard panel icons size to make it consistent with the emojis in the panel content area
+
+### Minor Changes
+
+- [`51b65ffbd1b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/51b65ffbd1b) - CETI-240 handle add custom emoji in floating toolbar
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux][me-1599] Fix entering a new line when inside a code block on mobile in composition.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Added setClickAreaExpanded method to be called on the native side when compact editor is expanded or collapssed
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - CETI-80 added dark mode color palette for mobile through bridge
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - - Allow `table` nodes to have `fragment` marks
+  - Promote `fragment` mark to "full" ADF schema
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Add `update` function to `ExtensionAPI.doc`
+
+  This function allows consumers to mutate `ADFEntity.attrs` or `ADFEntity.marks` by the `localId` of the entity.
+
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Add accessibility improvements for editor toolbar controls. Remove redundant attributes.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux] AK-325 add shortcuts to set aligment, superscript and subscript
+
+### Patch Changes
+
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - AK-707 add communicate state (attribute aria-pressed) to toggle button in floating toolbar
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - AK-740: make suggested links announceable as a whole entity by a screen reader
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux] ED-13868 Prevent page scroll after resizing chart
+- [`5c247f0010f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5c247f0010f) - [ED-14256] Fix dispatching when destroying table row
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux] ED-13991 Fix bug causing cursor to move to the next table cell when adding a task or decision (via toolbar) to a table
+- [`c4435882937`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c4435882937) - Blue selection border not appearing on emoji when clicked issue fixed.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [Floating toolbar] - Button property 'aria-haspopup' is optional
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13846 Rerender tables with tableRenderOptimization flag set to true if the table size changes to prevent table flashing when adding new columns.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux][ed-13870] Insert paragraph node at the correct location when selecting attachment in the last column of table
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13941 Explicitly use UTF in regex for bulletList to prevent transformation of characters in build steps
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13912-pt3 For NCS, we don't want to use memoizeOne when initialising collab
+- [`d71aa067600`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d71aa067600) - Add items ids for media toolbar view switcher
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13875 Removed editor common root entry
+
+  We remove the ability to import from `@atlaskit/editor-common` in favour of the following sub entries:
+
+  `@atlaskit/editor-common/collab`
+
+  `@atlaskit/editor-common/extensions`
+
+  `@atlaskit/editor-common/normalize-feature-flags`
+
+  `@atlaskit/editor-common/messages`
+
+  `@atlaskit/editor-common/provider-factory`
+
+  `@atlaskit/editor-common/styles`
+
+  `@atlaskit/editor-common/validator`
+
+  `@atlaskit/editor-common/in-product`
+
+  `@atlaskit/editor-common/cypress-config`
+
+  `@atlaskit/editor-common/type-ahead`
+
+  `@atlaskit/editor-common/ufo`
+
+  `@atlaskit/editor-common/types`
+
+  `@atlaskit/editor-common/ui`
+
+  `@atlaskit/editor-common/utils`
+
+  `@atlaskit/editor-common/card`
+
+  `@atlaskit/editor-common/emoji`
+
+  `@atlaskit/editor-common/mention`
+
+  `@atlaskit/editor-common/provider-helpers`
+
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13912 refactor editor collab-provider and make sure that initializeChannel is only called once
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13025 Bump prosemirror-view 1.23.1 -> 1.23.2
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-10264 fixed jumping cursor when clicking overflown status in table
+- [`231b3d8b718`](https://bitbucket.org/atlassian/atlassian-frontend/commits/231b3d8b718) - CETI-242 Change the Color palette labels for panel
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux][hyperlinkaddtoolbar] - clear text and clear links buttons are keyboard accessible
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13696: Fix undo/redo behaviour when interacting with tables while the
+  `allowCollapse` is enabled on the `allowTables` Editor prop.
+- [`c461c43a44e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c461c43a44e) - [ux][ed-14208] Revert addition of center text align keyboard shortcut because mod-shift-e conflicts with a Confluence keyboard shortcut which opens the page preview. Originally introduced in AK-325
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - AK-838: make Toolbar's Text styles, More formatting and Text alignment buttons accessible for screen reader users
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [Floating toolbar] Notify screenreader users about opened floating controls
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Revert media inline ff to use query params
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Add media node updater to media inline node
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13912-pt2 put back memoizeOne since Synchrony is still relying on it
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - [ux] ED-9979 Fixed bug stopping tab navigation from proceeding in tableCells that contained lists, taskLists or decisionLists
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - Bump raf-schd to latest (4.0.3), including better TS typings.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - AK-632 Made macros focusable
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13753 Updated editor-common import entries.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - The color constant tableToolbarSelectedColor has been changed to more contrast.
+- [`19d72473dfb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/19d72473dfb) - ED-13908 Ensure extensions being added always have localIds
+
+  In some cases of extension insertion (quick insert / typeahead), extensions wouldn't
+  have a localId generated immediately.
+
+- Updated dependencies
+
+## 153.1.4
+
+### Patch Changes
+
+- [#18233](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/18233) [`60a8ae28c1f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/60a8ae28c1f) - [ux] HOT-97965: Strip code marks from text nodes when code and link marks both exist
+
+## 153.1.3
+
+### Patch Changes
+
+- [#17892](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/17892) [`fa87054a61a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fa87054a61a) - workaround issue where prosemirrors new drag selection delay logic breaks safaris table selections.
+
+## 153.1.2
+
+### Patch Changes
+
+- [#17475](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/17475) [`c55c736ecea`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c55c736ecea) - Patch VULN AFP-3486 AFP-3487 AFP-3488 AFP-3489
+
+## 153.1.1
+
+### Patch Changes
+
+- [#17354](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/17354) [`bfc3a31f7d0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bfc3a31f7d0) - ED-14130 fix copy paste block cards
+
+## 153.1.0
+
+### Minor Changes
+
+- [#16928](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16928) [`b9cd2373064`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b9cd2373064) - [ED-14106] Reset custom color when the node is inside a link
+
+### Patch Changes
+
+- [`d6c140182ce`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d6c140182ce) - [ED-14095] Send a new analytics events when the document loaded is not a valid ProseMirror Model
+- Updated dependencies
+
+## 153.0.1
+
+### Patch Changes
+
+- [#16889](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16889) [`44f1ead3628`](https://bitbucket.org/atlassian/atlassian-frontend/commits/44f1ead3628) - [HOT-97409] Add feature flag to disable spellchecking for Chrome >= 96
+
+  Update `@atlaskit/icon` dependency to `^21.9.2`
+
+## 153.0.0
+
+### Major Changes
+
+- [#14810](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/14810) [`47f58da5946`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47f58da5946) - ED-13322, ED-13324, ED-13326, ED-13323, ED-13204: Upgrade and support react-intl@^5.18.1 including breaking API changes, types and tests in atlassian-frontend packages
+
+  What changed: Upgraded our react-intl support from ^2.6.0 to ^5.18.1. This means editor packages now rely on consumers installing ^5.18.1, otherwise editor usage of react-intl will mismatch with actual installed react-intl APIs.
+  Why change was made: As part of a coordinated upgrade effort across AF packages, as react-intl v2 is quite dated.
+  How consumer should update their code: Ensure react-intl ^5.18.1 is installed in consuming applications.
+
+  Upgrade guide: To consume atlassian-frontend packages that use react-intl5 setup a second provider for the new version, using an npm alias
+
+  ```js
+  "react-intl": "^2.6.0",
+  "react-intl-next": "npm:react-intl@^5.18.1",
+  ```
+
+  ```js
+  import { IntlProvider } from 'react-intl';
+  import { IntlProvider as IntlNextProvider } from 'react-intl-next';
+
+  return (
+    <IntlProvider
+      key={locale}
+      data-test-language={locale}
+      locale={locale}
+      defaultLocale={DEFAULT_LOCALE}
+      messages={messages}
+    >
+      <IntlNextProvider
+        key={locale}
+        data-test-language={locale}
+        locale={locale}
+        defaultLocale={DEFAULT_LOCALE}
+        messages={messages}
+      >
+        {children}
+      </IntlNextProvider>
+    </IntlProvider>
+  );
+  ```
+
+### Patch Changes
+
+- Updated dependencies
+
+## 152.0.1
+
+### Patch Changes
+
+- [#16612](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16612) [`977f778e630`](https://bitbucket.org/atlassian/atlassian-frontend/commits/977f778e630) - Add action elements to paste allowlist
+
+## 152.0.0
+
+### Major Changes
+
+- [#15998](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/15998) [`3a2a5e14fdc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3a2a5e14fdc) - As we are moving to full schema, merged the customPanel nodeSpec with panel nodeSpec
+- [`0cf5fa82add`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0cf5fa82add) - CETI-20 Rename custom panel FF from `UNSAFE_allowCustomPanel` to `allowCustomPanel`
+- [`fd675db8754`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fd675db8754) - [ux] ED-13100: added GroupedField.hasGroupedValues and enable parameter flattening for expand/tab-group/tab fields in config panels. The default value of `GroupedField.hasGroupedValues` is `False`, which will flatten data structures. Set `GroupedField.hasGroupedValues` to `True` on all tab-group/tab/expand fields if you wish to retain existing behaviour.
+
+  This change has several parts to ensure the correctness of serialize(), deserialize(), GroupedField.hasGroupedValues and BaseFieldDefinition.allowDuplicates
+
+  - Introduced GroupedField.hasGroupedValues which allows expand/tabgroup/tab to store the value of its fields by the name of the expand/tabgroup/tab if hasGroupedValues=True (False by default)
+  - Fixed a type safety issue with Parameters and ParametersWithDuplicateFields where Typescript would consider the types Parameters = Parameters[] (resolves some inconsistencies in the editor code and extensions)
+  - Restrict allowDuplicates so it only works within Fieldset as originally intended
+  - serialize() now populates `Field.defaultValue` as expected
+
+- [`01a41e75803`](https://bitbucket.org/atlassian/atlassian-frontend/commits/01a41e75803) - Removes `allowMediaInline` media prop and replaces with Inline Files feature flag for editor and mobile bridge
+
+### Minor Changes
+
+- [`65a541166fe`](https://bitbucket.org/atlassian/atlassian-frontend/commits/65a541166fe) - ED-13766 fix pm node spec for media single with caption
+- [`d32688fd0aa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d32688fd0aa) - [ux] CETI-138 Colour picker border size is not consistent with table colour picker
+- [`42ecbc9358e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42ecbc9358e) - [ux] CERN-1124 When feature flag `twoLineEditorToolbar` is on, show editor toolbar in two lines when viewport is small.
+- [`7ad1c5a4243`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7ad1c5a4243) - CETI-131 Enabled remove emoji button for standard panels
+- [`23514411f27`](https://bitbucket.org/atlassian/atlassian-frontend/commits/23514411f27) - CETI-134 added support to render dark colors for the custom panels in the dark mode
+- [`42c7ac64c39`](https://bitbucket.org/atlassian/atlassian-frontend/commits/42c7ac64c39) - AK-654 Set a status link label with input
+- [`e81dd06a8a0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e81dd06a8a0) - CETI-158 Use large productivity icons when changing standard panel background colour
+- [`8581ed429dd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8581ed429dd) - ED-13688: Add reliability edit sessions to UFO analytics
+- [`bb59175355d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bb59175355d) - [ux] CETI-150: Colour picker border size is not consistent with table colour picker
+- [`71bf4ef83f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/71bf4ef83f4) - CETI-130 change default custom panel color
+- [`229177bb85d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/229177bb85d) - CETI-16 added remove emoji icon so that it appears in mobilekit too
+- [`b230f366971`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b230f366971) - [ED-14008] Bump prosemirror-view from 1.20.2 to 1.23.1
+- [`47c349601b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47c349601b2) - ED-13869 Added the option to automatically select ADF content inserted via the `insertAfter()` extension API. We've modified our extension API and introduced a new parameter in `insertAfter()`. The function has now a third parameter, ie `options`, which is an object and has a property flag called `allowSelectionToNewNode` that lets you focus on the ADF added when set to `true`.
+- [`287e8cd3bd2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/287e8cd3bd2) - CETI-135 handle the focus of cursor when user selects an emoji from emoji picker
+- [`8bbb96540ea`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8bbb96540ea) - Add "fragment" mark to stage0 ADF schema
+- [`a3737a9b3aa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a3737a9b3aa) - CETI-64 Updating the dark mode colors for the standard panels
+- [`35b575a601c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/35b575a601c) - CETI-148 Emoji picker vertical alignment
+- [`398bbc9f353`](https://bitbucket.org/atlassian/atlassian-frontend/commits/398bbc9f353) - [ux] AK-649 Change color of count of found items
+- [`87d66ea4618`](https://bitbucket.org/atlassian/atlassian-frontend/commits/87d66ea4618) - [ux] ED-13183 allow creating annotations from selections with trailing new line
+- [`62a91dbe7d9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/62a91dbe7d9) - [ux] CERN-896 Update primaryToolbarComponents to accept before and after react components.
+- [`ad0c44e802a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ad0c44e802a) - pass singleLayout to mobile editor element"
+- [`d21da111ec2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d21da111ec2) - CETI-95 Predefined icon sizes are different from existing icons
+
+### Patch Changes
+
+- [`97479886f9e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/97479886f9e) - ED-13534 Fixed issue with right shadow not hiding with overflow shadows optimisation
+- [`47fc9ae7b2a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47fc9ae7b2a) - [ux] ED-11481 Fix bug preventing tables and extensions from being selected with Shift + ArrowDown or ArrowUp
+- [`7f85f712286`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7f85f712286) - Ticket: https://a11y-internal.atlassian.net/browse/AK-747, when activating the MoreColors button inside the ColorPalette component, set focus to the first color of the updated content.
+- [`34ffcf18914`](https://bitbucket.org/atlassian/atlassian-frontend/commits/34ffcf18914) - [ux] Added a floating toolbar to the new mediaInline component
+- [`e26ff629f3d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e26ff629f3d) - [ux] Update warning message when deleting a table that's linked to a chart.
+- [`1c2e00c6e65`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1c2e00c6e65) - ED-10827: Fixed a UI bug where undoing a tabbed task list item would not show any change in the UI.
+- [`c6feed82071`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c6feed82071) - ED-11632: Bump prosemirror packages;
+
+  - prosmirror-commands 1.1.4 -> 1.1.11,
+  - prosemirror-model 1.11.0 -> 1.14.3,
+  - prosemirror-state 1.3.3 -> 1.3.4,
+  - prosemirror-transform 1.2.8 -> 1.3.2,
+  - prosemirror-view 1.15.4 + 1.18.8 -> 1.20.2.
+
+- [`2f791df708a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2f791df708a) - Changed link search list item description color to meet minimum contrast requirements
+- [`fc70978492a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc70978492a) - Using type for SSR prop to reduce dependency on media-common
+- [`132e841431b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/132e841431b) - [ux][ed-10831] Refactor part of conversions.ts in the lists plugin to solve for cases where the selection covers multiple lists with paragraphs in between.
+- [`2136e4844f0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2136e4844f0) - [ux] ED-13286 Fixes 'wide' and 'full-width' extensions breaking styling when pasted into bodiedExtensions.
+- [`aa6b3a474ff`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa6b3a474ff) - ED-13286 extensions inside a bodied extension shouldn't overflow width
+- [`50f99428aab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/50f99428aab) - [ux] ED-11088- FIxed bug that prevented block components containing a hardbreak followed by list markdown from being pasted
+- [`365e507451e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/365e507451e) - [ux] This reworks the changes triggered by a user inserting a new column.
+  Previously the table cells would always be resized based on a max table
+  size which did not overflow.
+  This changes that logic to only resize table cells if the table did not
+  overflow prior to the insertion.
+- [`16ab2a61721`](https://bitbucket.org/atlassian/atlassian-frontend/commits/16ab2a61721) - fix copy paste emoji wrapped in a span
+- [`e741804b52a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e741804b52a) - Fixed media nodes not being built synchronously on SSR
+- [`57b4778a620`](https://bitbucket.org/atlassian/atlassian-frontend/commits/57b4778a620) - [ux] AK-244 Accessibility fix. Color of borders have minimum contrast of 3:1
+- [`7b91aee9c39`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7b91aee9c39) - Add File Preview tooltip to media card/media inline floating toolbar
+- [`ea3a31eda5a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea3a31eda5a) - AK-745: ColorPalette -> Color add aria attributes in order to announce state of color buttons for screen reader users
+- [`add1e51d5a9`](https://bitbucket.org/atlassian/atlassian-frontend/commits/add1e51d5a9) - EDM-2510: Fix media inline insertion behaviour when inside empty list item
+- [`529d612d6e5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/529d612d6e5) - ED-11474 fixed incorrect table header heights caused by empty column width, and sticky header flicker effect
+- [`320ad93b5b0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/320ad93b5b0) - [ux] ED-13305: Fix bug where clear formatting button incorrectly appeared to be disabled (despite clear formatting action being valid operation).
+- [`39faad06953`](https://bitbucket.org/atlassian/atlassian-frontend/commits/39faad06953) - ED-10312 adds analytics event for tables with negative colspans or rowspans
+- [`fe8e5ca9a92`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fe8e5ca9a92) - [ux] MediaInline package now correctly shows a border around it upon being selected
+- [`8f0577e0eb1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8f0577e0eb1) - [ux] Promoted captions to full schema and better support of wikimarkup, email and slack renderer
+- [`22b53432054`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22b53432054) - AK-560 Update color of the clear link button
+- [`f391c63f5d5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f391c63f5d5) - AK-704: AltText - changes for better screen reader announcing
+- [`f461edcfd05`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f461edcfd05) - Update CardLoader to use react-loadable
+  Add SSR feature prop to be passed in renderer and media card
+- [`4264bd36d32`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4264bd36d32) - Update mobile bridge media inline feature flag and add tests
+- [`5abd27cbb9c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5abd27cbb9c) - AK-246: Table --> Cell options: provide an aria-label attr for the CellOptions button, provide role=menu for the CellOption menu and role=menuitems for its items
+- [`9d43feb1f6a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9d43feb1f6a) - CETI-167 Remove opacity for panels in dark mode.
+- [`61c17fa38a5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/61c17fa38a5) - move waitForFloatingControl to VR package
+- Updated dependencies
+
+## 151.3.0
+
+### Minor Changes
+
+- [#16503](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16503) [`08348b6692c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/08348b6692c) - Update CodeBlockOptions to have appearance prop optional
+
+## 151.2.1
+
+### Patch Changes
+
+- [#16263](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16263) [`69fc91803d4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/69fc91803d4) - [ux] Find and replace tooltip now icons are now correctly aligned and does not have a scrollbar showing up.
+
+## 151.2.0
+
+### Minor Changes
+
+- [#16168](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16168) [`db3477abb18`](https://bitbucket.org/atlassian/atlassian-frontend/commits/db3477abb18) - [ux] ED-13938 disabled code-bidi warning tooltip for mobile, reworked TextWrapper to fix bidi mitigation, and fixed issue where bidi warnings were not presented when renderer used with an annotation provider with draftMode set to true
+
+### Patch Changes
+
+- Updated dependencies
+
+## 151.1.2
+
+### Patch Changes
+
+- [#16148](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16148) [`52f0c296810`](https://bitbucket.org/atlassian/atlassian-frontend/commits/52f0c296810) - ED-13940 fixed selecting line with a status via keys
+
+## 151.1.1
+
+### Patch Changes
+
+- [#15807](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/15807) [`05527b1acf8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05527b1acf8) - 'Renaming deprecated React lifecycle methods.'
+
+## 151.1.0
+
+### Minor Changes
+
+- [#16006](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/16006) [`c80c71b537d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c80c71b537d) - [ux] ED-13860 add bidi warning decorations to code components
+
+### Patch Changes
+
+- Updated dependencies
+
+## 151.0.0
+
+### Major Changes
+
+- [#14777](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/14777) [`b3606652fa1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b3606652fa1) - [ux] Editor integration for Media Inline component
+
+### Minor Changes
+
+- [`93da0afefce`](https://bitbucket.org/atlassian/atlassian-frontend/commits/93da0afefce) - CETI-78 Change panel nodeSpec to handle paste when feature flag is off
+- [`53d2eac387d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53d2eac387d) - ED-12705 Fail all active editor UFO experiences from the editor error boundary
+- [`b58f3c24179`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b58f3c24179) - ED-13643 Instrument editor interaction UFO experience
+- [`971845eac0d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/971845eac0d) - CETI-96 Added new rule to emoji to solve the duplicate icon issue when we copy from renderer
+- [`7024003c42e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7024003c42e) - ED-13213 Base work to set up UFO in the editor & implement editor load UFO experience
+
+  UFO experiences are hidden behind a feature flag, to enable set
+
+  ```jsx
+  <Editor featureFlags={{ ufo: true }} />
+  ```
+
+- [`eab5cc4f8bc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/eab5cc4f8bc) - CETI-21 User should be able to see the panel Icon when user changes the background color of a predefined panel
+- [`04fdcc4a097`](https://bitbucket.org/atlassian/atlassian-frontend/commits/04fdcc4a097) - Quick insert ability for Media Inline component
+- [`a9e8fe41756`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a9e8fe41756) - Internationalisation for static label of Beautiful Panels Web
+- [`0d8132a260a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0d8132a260a) - Fix Slack link default to block card view when editor has allowBlockCards disabled
+- [`b53d0d54ac2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b53d0d54ac2) - ED-12887 Add render count profiler utilities
+- [`f235d19dcdb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f235d19dcdb) - Added an api for creating a brand new editor state when replacing the document using editorActions
+- [`7fc265976b2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7fc265976b2) - ED-13214 Instrument typing in editor UFO experience
+
+### Patch Changes
+
+- [`53cfa98d9f6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53cfa98d9f6) - [ux] Cursors can now be placed after emojis and statuses without trailing spaces
+- [`540988ac12b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/540988ac12b) - Debounce editor and reactEditorView reRendered analytics
+- [`cbde8994bd4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cbde8994bd4) - ED-12846: Fix disappearing table borders in Chrome
+- [`d7b4aa7c019`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d7b4aa7c019) - ED-13878: Force block-type selected menu items to be white font color
+- [`25393b5c63b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/25393b5c63b) - Add prefetch proper ty analytic event to tell if the result is selected from prefetch list
+- [`e9658042982`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e9658042982) - [ux] ED-7545 Fix selected language in one code snippet visually populating to other code snippets on the page
+- [`99757fa97fb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/99757fa97fb) - ED-13642 added ufo session complete analytics event
+- [`8c68b14866f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8c68b14866f) - ED-12700 Fix for compositions in the find input not being supported.
+- [`e856b56fd31`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e856b56fd31) - ED-13669 reuse same links normalization method in plugin and adf schema
+- [`e731664ad62`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e731664ad62) - [ux][ed-13588] move max-height CSS from akEditor root to ak-editor-content-area so that the editor maxHeight prop actually enforces a maximum height
+- [`05c9526a999`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05c9526a999) - CETI-123 Web: Feature flag for editing custom panels
+- [`125c6ed9212`](https://bitbucket.org/atlassian/atlassian-frontend/commits/125c6ed9212) - ED-13458 Fix for foreign input causing tables to break
+- [`a113abe23e1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a113abe23e1) - [ux] The selected width of an extension is correctly highlighted in its floating toolbar when toolbar actions are un-done/re-done
+- [`3fde369f5d4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3fde369f5d4) - Fix a bug where sometimes the embed link will get states from other embed link
+- [`a92e1f67411`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a92e1f67411) - ED-13633 Disabled editor code highting in safari
+- Updated dependencies
+
+## 150.0.3
+
+### Patch Changes
+
+- [#15871](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/15871) [`b52e6fa288b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b52e6fa288b) - [HOT-97127] Fix mentions getItems comunication to avoid wrong results
+
+## 150.0.2
+
+### Patch Changes
+
+- [#15694](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/15694) [`b85e7ce12cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b85e7ce12cd) - Internal upgrade of memoize-one to 6.0.0
+
+## 150.0.1
+
+### Patch Changes
+
+- [#15497](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/15497) [`52aed763767`](https://bitbucket.org/atlassian/atlassian-frontend/commits/52aed763767) - [ED-13879] deletes a placeholder text node when opening a typeahead
+
+## 150.0.0
+
+### Major Changes
+
+- [#14319](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/14319) [`954a69badf2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/954a69badf2) - [ux][ed-8288] Removing a multi-dispatch when user inserts/deletes a column in resized tables. This change fixes the undo/redo
+  flow that is currently corrupted due to a multi-dispatch. This slightly changes the col-width sizing as it reduces the
+  unnecessary number of calls to resize the columns. EditorView is now passed as a parameter to insertColumn
+  functions to update the column widths manually.
+
+### Minor Changes
+
+- [`8c36177a89c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8c36177a89c) - [ux] Changed wording of 'hideEmoji' to 'removeEmoji' & disbaled th button when there is no emoji (& enabled when there was one)
+- [`cf853e39278`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf853e39278) - COLLAB-411-change-to-metadata: 'setTitle' and 'setEditorWidth' are deprecated, going to be removed in the next release, use 'setMetadata' instead.
+- [`cf853e39278`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf853e39278) - [ux] add single layout support for layout
+- [`795fb7c1d42`](https://bitbucket.org/atlassian/atlassian-frontend/commits/795fb7c1d42) - CETI-91 Emoji picker and colour picker overlapping each other
+- [`1a07c1caf61`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a07c1caf61) - CETI-93 - Fixed custom panel icon sizing and alignment when icon render as image
+
+### Patch Changes
+
+- [`7e04a493a4b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7e04a493a4b) - [ux] ED-13108 The text color and emoji menus in the toolbar now close when you press ESC or click away
+- [`aa3f2a800e6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa3f2a800e6) - fixed invite from mention experiment feature exposed event firing logic and atributes
+- [`cf853e39278`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf853e39278) - Add single column support for layouts
+- [`9fbaa50c904`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9fbaa50c904) - ED-13133 fixed broken table with sticky headers after undo merge cells with tableCellOptimisation on
+- [`114cfd6cb20`](https://bitbucket.org/atlassian/atlassian-frontend/commits/114cfd6cb20) - CETI-7 Select custom panel through keyboard
+- [`cf853e39278`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf853e39278) - [ux][ed-12775] Remove logic for auto joining lists of the same type as this is causing errors to be thrown and a fix would require too much effort for the value it adds.
+- [`cf853e39278`](https://bitbucket.org/atlassian/atlassian-frontend/commits/cf853e39278) - Internal changes to remove `@atlaskit/theme/math` usage.
+- [`fbee1c6f08a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fbee1c6f08a) - [ED-8288] Regression fix where insert column keyboard shorcuts on resized tables were being inserted with zero-width.
+- Updated dependencies
+
+## 149.0.1
+
+### Patch Changes
+
+- [#14337](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/14337) [`226979a2a40`](https://bitbucket.org/atlassian/atlassian-frontend/commits/226979a2a40) - [ED-13713] Move TypeAhead keydown events to run by VanillaJS to avoid bubbling hijacking by product code
+
+## 149.0.0
+
+### Major Changes
+
+- [#13864](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/13864) [`71bb1bb3cd0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/71bb1bb3cd0) - [ED-12933] Replace TypeAhead node mark to ProseMirror Decoration
+
+  # Minor change
+
+  Type Ahead isn't a part of the document anymore. This version is introducing
+  the Decoration system for this internal API.
+
+  # Breaking Change
+
+  We are replacing those public API:
+
+  ```
+  export { selectItem } from './plugins/type-ahead/commands/select-item';
+  export { insertTypeAheadQuery } from './plugins/type-ahead/commands/insert-query';
+  export { dismissCommand } from './plugins/type-ahead/commands/dismiss';
+  export { insertMentionQuery } from './plugins/mentions/commands/insert-mention-query';
+  export { insertEmojiQuery } from './plugins/emoji/commands/insert-emoji-query';
+  ```
+
+  If you need those behavior, please use this new one:
+
+  ```
+  export { createTypeAheadTools } from './plugins/type-ahead/api';
+  export { createQuickInsertTools } from './plugins/quick-insert/api';
+  ```
+
+  Before:
+
+  ```
+  import {
+    insertTypeAheadQuery,
+    insertMentionQuery,
+    dismissCommand,
+  } from '@atlaskit/editor-core';
+
+  // open the typeahead menu for mention
+  insertMentionQuery(editorView.state, editorView.dispatch);
+
+  // insert item
+  insertTypeAheadQuery(editorView.state, editorView.dispatch);
+
+  // close type ahead menu
+  insertTypeAheadQuery(editorView.state, editorView.dispatch);
+  ```
+
+  Now:
+
+  ```
+
+  import {
+    createTypeAheadTools,
+  } from '@atlaskit/editor-core';
+
+  const tools = createTypeAheadTools(editorView);
+
+  tools.openMention();
+  tools.insertMention();
+  tools.close();
+  ```
+
+### Minor Changes
+
+- [`ad67f6684f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ad67f6684f1) - Add MediaInline to ADF Stage0 schema
+- [`2a6a10f9c5f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2a6a10f9c5f) - CETI-29 Updated emoji picker toolbar icon for custom panels
+- [`5bafe5d2ccf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5bafe5d2ccf) - Add a new attribute to existing prop elementBrowser to pass a function to render Marketplace component for app discovery
+- [`53d81fa08ee`](https://bitbucket.org/atlassian/atlassian-frontend/commits/53d81fa08ee) - CETI-14 added functionality to hide emoji from custom panel
+- [`bd510f46bff`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bd510f46bff) - CETI-30 added functionality to add custom panel via the slash command
+- [`6f9352d04b5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6f9352d04b5) - analytics for beautiful emoji panels
+- [`511f07f7f7b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/511f07f7f7b) - allow enabling download for media card via enableDownloadButton feature prop
+- [`d1a58a7a520`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d1a58a7a520) - [ux] ED-12460 Implement collab scroll-to-telepointer: a user can now click on a collab avatar and be scrolled to another user's position in the document
+- [`ab905c0e924`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ab905c0e924) - [ux] EDM-1641: add floating toolbar to media card and view switcher for inline view
+- [`b95863772be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b95863772be) - Support external observers.
+  Use better naming for refNode (refNode => reference).
+  In favor of further work (supporting multiple references) pass array of references to Extension component.
+  Expand node with localId for extentions.
+- [`68c3a924b0c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68c3a924b0c) - [ux] ED-13288: fixed ColorPickerField to work with fix color picker transformBefore()
+
+### Patch Changes
+
+- [`7d4bf49be6d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d4bf49be6d) - CETI-2 Gracefully exiting the beautiful panel analytics when previousColor=== color | previousIcon=== icon. Such that we are not sending redundant analytics
+- [`33a3f8baf8a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/33a3f8baf8a) - ED-12787 fixed issue with misaligned sticky header shadows with stickyHeadersOptimization on
+- [`387c68f623c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/387c68f623c) - [ED-13558] Add the TypeAhead VIEWED and RENDERED events to the popup component
+- [`099e8495f3d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/099e8495f3d) - CETI-37 - Fixed custom panel icon sizing and alignment
+- [`5e1c18076db`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e1c18076db) - [ED-13550] Fix Mention and Emoji toolbar menu disable when the TypeAhead menu is open
+- [`b5072618005`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b5072618005) - ED-13347 Prevent list toolbar from crashing when the list state does not exist
+- [`146ca2d6009`](https://bitbucket.org/atlassian/atlassian-frontend/commits/146ca2d6009) - CETI-24 Copy and paste custom panels makes page unresponsive
+- [`56129bdfc79`](https://bitbucket.org/atlassian/atlassian-frontend/commits/56129bdfc79) - Upgrade to the latest version of @atlaskit/modal-dialog.
+- [`47f2d84b5ac`](https://bitbucket.org/atlassian/atlassian-frontend/commits/47f2d84b5ac) - [ED-13567] Fix mobile typeahead API when its open
+- [`b90c0237824`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b90c0237824) - Update package.jsons to remove unused dependencies.
+- [`363971afa29`](https://bitbucket.org/atlassian/atlassian-frontend/commits/363971afa29) - [ux][ed-13574] Resolving a regression in the quick insert in mobile. A hotfix was merged to master a week ago to fix mobile feature flags, which seems to have clashed with changes in develop resulting in quick insert no longer working on mobile and a bunch of mobile integration tests failing.
+
+  This change includes making quick insert work on mobile again by making sure the tracker isn’t reset every time CC @Sean Chamberlain
+
+  All tests with configureEditor now have a way to refocus the editor after the config is set and before any document changes are made.
+
+  New mobile integration tests have been added for feature flags to ensure we don't have any further regressions with mobile feature flags.
+
+- [`6c2c8a1b3a5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c2c8a1b3a5) - EDM-2288 Implement analytics attribute for paste link on text
+- Updated dependencies
+
+## 148.0.0
+
+### Major Changes
+
+- [#13302](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/13302) [`96c6146eef1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/96c6146eef1) - ED-13187: localId optional & empty values filtered
+- [`86503f6d38f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/86503f6d38f) - [ux] Fixup the divider being inserted below the cursor on mobile using quick insert and when using shortcuts in web editor
+- [`1dee7b71aee`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1dee7b71aee) - ED-12500 distribute columns feature flag cleanup
+
+### Minor Changes
+
+- [`ea1cb28fb03`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ea1cb28fb03) - CETI-3 User is able to change emoji and background color when selected
+- [`c796dfa0ae4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c796dfa0ae4) - [ME-1589] Rearchitect the adaptive toolbar solution for the editor mobile bridge.
+
+  - Add a new plugin to editor-core that allows you to subscribe to events when the editor view is updated.
+  - Created a subscription that allows you to listen to toolbar and picker plugin updates.
+
+- [`86aeb07cae3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/86aeb07cae3) - EDM-2264: allow embed resize events from all domains
+
+  **Note:**
+
+  The breaking change in this commit is a rename from `IframelyResizeMessageListener` to `EmbedResizeMessageListener`. The functionality of the component itself remains the same for all consumers.
+
+- [`d2911917e8e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d2911917e8e) - [ux] ED-12991: added ability to collapse a table, flagged via table.allowCollapse option
+
+  - feature can be accessed via table floating toolbar item "table options"
+  - hidden when flag is off or expands are not in the schema
+  - option to collapse is disabled when table is currently in an expand OR when collapsing will result in an invalid ADF state
+  - option to collapse will be ticked if the table is currently in an expand
+
+- [`6de7ba8ca3b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6de7ba8ca3b) - ED-12424 Add scrollTo function to extension api
+- [`e2e02bf0bd7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2e02bf0bd7) - Removed mobile auto scrolling as it has been fixed elsewhere and renamed the mobile scroll plugin to mobile dimensions plugin to better represent its purpose.
+
+### Patch Changes
+
+- [`c0b7c19909b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c0b7c19909b) - [ux][ed-12164] Fix for smart quotes overriding text formatting by doing a replace on the individual quotes and not including inner content
+- [`aa6f29f8c3d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/aa6f29f8c3d) - Setting up empty string value for alt attribute (images) by default
+- [`a84a23aac69`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a84a23aac69) - ED-12917 Fix issue converted smart char to ascii inside inline code
+- [`745605cc84e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/745605cc84e) - Higlight removed component when remove button is focused
+- [`a7ffff656ad`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a7ffff656ad) - [ux][ed-11714] Adding an additional edge case check to the paste plugins transformPastedHTML. We're checking for cases of invalid HTML where there are nested links (eg. <a><a></a></a>) which occurs when a user pastes a list item block from Notion that contains a link as the first element). Two new utils, one to find these cases, and the other to fix the html enough to be parsed correctly.
+- [`f3d416fc608`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3d416fc608) - Set correct alt text based on icon url [ListItem]
+- [`5f6d2350dc0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f6d2350dc0) - ED-12391 Add special case to fix markdown for network paths
+- [`15d14d67db0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/15d14d67db0) - ED-13010: track extension details when config panel is shown for extensions
+- [`2aef13b22d8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2aef13b22d8) - ED-12604: add localId for tables and dataConsumer mark for extensions in full schema
+- [`501650d5d6c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/501650d5d6c) - Change type of emoji-picker to select with selectType of emoji
+- [`0a30f9abe5b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0a30f9abe5b) - Add analytics to floating toolbar actions in links
+- [`d68173a8c8d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d68173a8c8d) - manually update smart-links appearance translations
+- Updated dependencies
+
 ## 147.0.1
 
 ### Patch Changes
 
-- [`61eabb132cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/61eabb132cd) - [ux][ed-13498] This solves a regression that has popped up in the editor-mobile-bridge version 28.0.0 where changes made to feature flags in the editor config are not triggering the shouldReconfigureState function which updates the state and applies the feature flag change.
+- [#13242](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/13242) [`61eabb132cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/61eabb132cd) - [ux][ed-13498] This solves a regression that has popped up in the editor-mobile-bridge version 28.0.0 where changes made to feature flags in the editor config are not triggering the shouldReconfigureState function which updates the state and applies the feature flag change.
 
 ## 147.0.0
 
 ### Major Changes
 
-- [`5e55b55d035`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e55b55d035) - [ux][ed-9961] Remove the predictable lists feature flag and the legacy lists plugin so that predictable lists is default.
+- [#12837](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12837) [`5e55b55d035`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e55b55d035) - [ux][ed-9961] Remove the predictable lists feature flag and the legacy lists plugin so that predictable lists is default.
 
   Doing this by removing the lists plugin, removing the predictableLists feature flag, renaming lists-predictable to just list, refactoring any areas of the code that used the feature flag or the legacy lists still.
 
@@ -41,26 +5374,26 @@
 
 ### Patch Changes
 
-- [`1a2d907b45f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a2d907b45f) - [ux][ed-13470] Hotfix to increase the moment the toolbar begins to collapse / scroll to medium instead of small due to an increase in width of toolbar contents.
+- [#13079](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/13079) [`1a2d907b45f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1a2d907b45f) - [ux][ed-13470] Hotfix to increase the moment the toolbar begins to collapse / scroll to medium instead of small due to an increase in width of toolbar contents.
 
 ## 146.0.2
 
 ### Patch Changes
 
-- [`a572da3653e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a572da3653e) - HOT-96031 Extension with no localId were not showing context panel
+- [#12960](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12960) [`a572da3653e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a572da3653e) - HOT-96031 Extension with no localId were not showing context panel
 
 ## 146.0.1
 
 ### Patch Changes
 
-- [`414b6216adf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/414b6216adf) - Upgrade date-fns to ^2.17
+- [#9328](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9328) [`414b6216adf`](https://bitbucket.org/atlassian/atlassian-frontend/commits/414b6216adf) - Upgrade date-fns to ^2.17
 - Updated dependencies
 
 ## 146.0.0
 
 ### Minor Changes
 
-- [`dc5951fa724`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dc5951fa724) - Allows the editor mobile bridge plugin subscription listeners to optionally only update once the dom has been rendered. Also adds fix for inserting a date not triggering a toolbar update.
+- [#12328](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12328) [`dc5951fa724`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dc5951fa724) - Allows the editor mobile bridge plugin subscription listeners to optionally only update once the dom has been rendered. Also adds fix for inserting a date not triggering a toolbar update.
 - [`bc3a0ad32d3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bc3a0ad32d3) - ED-12998 Add docStructured to ErrorBoundary
 - [`6a0a7c704cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6a0a7c704cd) - ED-12998 Add docStructure to synchrony error analytic events
 - [`bfef6a174d1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/bfef6a174d1) - Stop date plugin from firing a plugin state update for every selection, even if it is not date related.
@@ -83,31 +5416,31 @@
 
 ### Patch Changes
 
-- [`2725933f7ba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2725933f7ba) - [ux] ED-13331 Fix autoformatting being triggered after any keypress
+- [#12611](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12611) [`2725933f7ba`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2725933f7ba) - [ux] ED-13331 Fix autoformatting being triggered after any keypress
 
 ## 145.0.3
 
 ### Patch Changes
 
-- [`c48b38bf577`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c48b38bf577) - ED-13281 - Hotfix to ensure insert toolbar popup renders into popupMountPoint dom node when passed
+- [#12488](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12488) [`c48b38bf577`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c48b38bf577) - ED-13281 - Hotfix to ensure insert toolbar popup renders into popupMountPoint dom node when passed
 
 ## 145.0.2
 
 ### Patch Changes
 
-- [`e780cc4e0cb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e780cc4e0cb) - Breadcrumb clicking fix
+- [#12425](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12425) [`e780cc4e0cb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e780cc4e0cb) - Breadcrumb clicking fix
 
 ## 145.0.1
 
 ### Patch Changes
 
-- [`d316627b838`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d316627b838) - Fix mouse click event on hyperlinktoolbar
+- [#12319](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12319) [`d316627b838`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d316627b838) - Fix mouse click event on hyperlinktoolbar
 
 ## 145.0.0
 
 ### Major Changes
 
-- [`0b9318d5c23`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0b9318d5c23) - ED-11952 updated extension interface to allow dynamic toolbar buttons.
+- [#11649](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11649) [`0b9318d5c23`](https://bitbucket.org/atlassian/atlassian-frontend/commits/0b9318d5c23) - ED-11952 updated extension interface to allow dynamic toolbar buttons.
   BREAKING CHANGE: `ExtensionModules.contextualToolbarItems` has been removed in favor of `ExtensionModules.contextualToolbars`.
 
   `ExtensionModules.contextualToolbars` consist of a list of `ContextualToolbar` which has the following signature:
@@ -167,25 +5500,25 @@
 
 ### Patch Changes
 
-- [`139a522574f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/139a522574f) - Change selector for checking if breadcrumbs where clicked with click-area-helper
+- [#12210](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12210) [`139a522574f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/139a522574f) - Change selector for checking if breadcrumbs where clicked with click-area-helper
 
 ## 144.1.2
 
 ### Patch Changes
 
-- [`5d7f119c55d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5d7f119c55d) - Fix bread crumb issue
+- [#12105](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/12105) [`5d7f119c55d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5d7f119c55d) - Fix bread crumb issue
 
 ## 144.1.1
 
 ### Patch Changes
 
-- [`9b9ca925f18`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b9ca925f18) - ED-13109 Fix inline extension insertion behavior
+- [#11928](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11928) [`9b9ca925f18`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b9ca925f18) - ED-13109 Fix inline extension insertion behavior
 
 ## 144.1.0
 
 ### Minor Changes
 
-- [`92c1a74eb2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92c1a74eb2d) - [ux] ED-13083: fixed serialize() for Tabs and Expand fields
+- [#11843](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11843) [`92c1a74eb2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/92c1a74eb2d) - [ux] ED-13083: fixed serialize() for Tabs and Expand fields
 
 ### Patch Changes
 
@@ -198,20 +5531,20 @@
 
 ### Patch Changes
 
-- [`9e09b407b43`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9e09b407b43) - Exclude `__tests_external__` from the `build/tsconfig.json`.
+- [#11778](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11778) [`9e09b407b43`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9e09b407b43) - Exclude `__tests_external__` from the `build/tsconfig.json`.
   Add `local-cypress` and remove types export.
 
 ## 144.0.3
 
 ### Patch Changes
 
-- [`070261ec304`](https://bitbucket.org/atlassian/atlassian-frontend/commits/070261ec304) - Fix Cypress types for packages
+- [#11723](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11723) [`070261ec304`](https://bitbucket.org/atlassian/atlassian-frontend/commits/070261ec304) - Fix Cypress types for packages
 
 ## 144.0.2
 
 ### Patch Changes
 
-- [`6abc1fb5b10`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6abc1fb5b10) - Change default value for displayInlineBlockForInlineNodes feature flag
+- [#11405](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11405) [`6abc1fb5b10`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6abc1fb5b10) - Change default value for displayInlineBlockForInlineNodes feature flag
 
 ## 144.0.1
 
@@ -223,7 +5556,7 @@
 
 ### Major Changes
 
-- [`566f674ac8f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/566f674ac8f) - _Removes_ `allowReferentiality` & `UNSAFE_allowDataConsumer` props from editor props.
+- [#11113](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/11113) [`566f674ac8f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/566f674ac8f) - _Removes_ `allowReferentiality` & `UNSAFE_allowDataConsumer` props from editor props.
   These can now be toggled via the feature flags prop, e.g.
 
   ```tsx
@@ -294,13 +5627,13 @@
 
 ### Patch Changes
 
-- [`312a2810b0b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/312a2810b0b) - [ux] ED-12931 Fix input rules replacing text outside of matched word in a long paragraph
+- [#10943](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/10943) [`312a2810b0b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/312a2810b0b) - [ux] ED-12931 Fix input rules replacing text outside of matched word in a long paragraph
 
 ## 143.1.1
 
 ### Patch Changes
 
-- [`8efef26a27e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8efef26a27e) - [COLLAB-683] Fix editor collab plugin to always call the send function from collab provider when the native collab is enabled
+- [#10867](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/10867) [`8efef26a27e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8efef26a27e) - [COLLAB-683] Fix editor collab plugin to always call the send function from collab provider when the native collab is enabled
 
   # Why?
 
@@ -312,7 +5645,7 @@
 
 ### Minor Changes
 
-- [`1fbe305bf7d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1fbe305bf7d) - ED-12273 Unsupported content support for Layout
+- [#10569](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/10569) [`1fbe305bf7d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1fbe305bf7d) - ED-12273 Unsupported content support for Layout
 - [`90cb0207d4e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/90cb0207d4e) - Make code block content dynamic to different font sizes.
 - [`f973bb5dde8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f973bb5dde8) - [ux] ED-12782 Remove codeblock languages from adf-schema
 
@@ -340,7 +5673,7 @@
 
 ### Major Changes
 
-- [`4befa7c039c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4befa7c039c) - ED-12593: rename ExtensionAPI.editInLegacyMacroBrowser() to \_editInLegacyMacroBrowser()
+- [#10230](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/10230) [`4befa7c039c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4befa7c039c) - ED-12593: rename ExtensionAPI.editInLegacyMacroBrowser() to \_editInLegacyMacroBrowser()
 
   Also cleaned up the options for createExtensionAPI() for easier use.
 
@@ -389,14 +5722,14 @@
 
 ### Patch Changes
 
-- [`c2c0160f566`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2c0160f566) - Bump editor-shared-styles to pick up relativeFontSizeToBase16
+- [#10316](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/10316) [`c2c0160f566`](https://bitbucket.org/atlassian/atlassian-frontend/commits/c2c0160f566) - Bump editor-shared-styles to pick up relativeFontSizeToBase16
 - Updated dependencies
 
 ## 142.0.0
 
 ### Major Changes
 
-- [`864bae0214b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/864bae0214b) - Removed old methods for inserting a link as they were only being used by mobile. Fix hyperlink text removal on editor mobile bridge.
+- [#9756](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9756) [`864bae0214b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/864bae0214b) - Removed old methods for inserting a link as they were only being used by mobile. Fix hyperlink text removal on editor mobile bridge.
 
 ### Minor Changes
 
@@ -431,13 +5764,13 @@
 
 ### Patch Changes
 
-- [`57ae710818f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/57ae710818f) - Turn off CustomSelect create animation in Config Panel
+- [#9755](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9755) [`57ae710818f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/57ae710818f) - Turn off CustomSelect create animation in Config Panel
 
 ## 141.0.0
 
 ### Minor Changes
 
-- [`769e10a40a7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/769e10a40a7) - ED-12108 Support duplicate named fields in config panel fieldset
+- [#9510](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9510) [`769e10a40a7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/769e10a40a7) - ED-12108 Support duplicate named fields in config panel fieldset
 
   For a field to be allowed to have duplicates you must set `allowDuplicates: true` on the field definition
 
@@ -481,7 +5814,7 @@
 
 ### Major Changes
 
-- [`5a02668a6f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5a02668a6f1) - [ED-12169] Removes the following methods being exposed from `@atlaskit/editor-core`
+- [#9083](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9083) [`5a02668a6f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5a02668a6f1) - [ED-12169] Removes the following methods being exposed from `@atlaskit/editor-core`
 
   ```
   indentList
@@ -578,7 +5911,7 @@
 
 ### Patch Changes
 
-- [`471e2431a7c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/471e2431a7c) - Downgrade back to date-fns 1.30.1
+- [#9299](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9299) [`471e2431a7c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/471e2431a7c) - Downgrade back to date-fns 1.30.1
   We discovered big bundle size increases associated with the date-fns upgrade.
   We're reverting the upgarde to investigate
 
@@ -586,20 +5919,20 @@
 
 ### Patch Changes
 
-- [`e2fb7440936`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2fb7440936) - ED-12430: Fix issue with Editor showing double scrollbar when context panel is visible.Update context panel to have same height as editor content area when using position absolute styles
+- [#9281](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/9281) [`e2fb7440936`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e2fb7440936) - ED-12430: Fix issue with Editor showing double scrollbar when context panel is visible.Update context panel to have same height as editor content area when using position absolute styles
 - Updated dependencies
 
 ## 139.0.1
 
 ### Patch Changes
 
-- [`70f0701c2e6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/70f0701c2e6) - Upgrade date-fns to 2.17
+- [#8291](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8291) [`70f0701c2e6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/70f0701c2e6) - Upgrade date-fns to 2.17
 
 ## 139.0.0
 
 ### Major Changes
 
-- [`511a91ad376`](https://bitbucket.org/atlassian/atlassian-frontend/commits/511a91ad376) - [ux] ED-12128: Update Context Panel to use set width of 320px and remove 'width' prop.
+- [#8644](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8644) [`511a91ad376`](https://bitbucket.org/atlassian/atlassian-frontend/commits/511a91ad376) - [ux] ED-12128: Update Context Panel to use set width of 320px and remove 'width' prop.
   Remove 'width' prop from the Context Panel component as we no longer allow dynamic panel width to enforce consistency.
 
   All references to this component can safely remove the 'wdith' prop as it is no longer part of the component props.
@@ -672,13 +6005,13 @@
 
 ### Patch Changes
 
-- [`a940fb90ccc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a940fb90ccc) - ED-11968: added function to determine difference in timing so it can be mocked during tests
+- [#8596](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8596) [`a940fb90ccc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a940fb90ccc) - ED-11968: added function to determine difference in timing so it can be mocked during tests
 
 ## 138.0.0
 
 ### Minor Changes
 
-- [`5ee57944f46`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5ee57944f46) - ED-11948 Fix issue with table resize logic not retaining original node selection.
+- [#8178](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8178) [`5ee57944f46`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5ee57944f46) - ED-11948 Fix issue with table resize logic not retaining original node selection.
   Refactor table resize logic to retain selection after table resize.
 - [`70fecd78610`](https://bitbucket.org/atlassian/atlassian-frontend/commits/70fecd78610) - [ux] This commit includes UX changes to Cmd+K link toolbar
 
@@ -724,25 +6057,25 @@
 
 ### Patch Changes
 
-- [`003a79ed2be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/003a79ed2be) - HOT-94478 Fix Editor selection reset problem on Chrome 88+
+- [#8446](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8446) [`003a79ed2be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/003a79ed2be) - HOT-94478 Fix Editor selection reset problem on Chrome 88+
 
 ## 137.0.2
 
 ### Patch Changes
 
-- [`8aa5285c47b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8aa5285c47b) - ED-12124 Fix plus menu search
+- [#8319](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8319) [`8aa5285c47b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8aa5285c47b) - ED-12124 Fix plus menu search
 
 ## 137.0.1
 
 ### Patch Changes
 
-- [`1ce3cd83260`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ce3cd83260) - pass multiple option to media-picker Browser component so that one can select multiple files in native upload
+- [#8187](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/8187) [`1ce3cd83260`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1ce3cd83260) - pass multiple option to media-picker Browser component so that one can select multiple files in native upload
 
 ## 137.0.0
 
 ### Major Changes
 
-- [`4d65f8a67f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4d65f8a67f4) - [ED-11699] Persist scroll gutter for mobile COMPACT appearance and change mobile scroll gutter to 50px
+- [#7762](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7762) [`4d65f8a67f4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4d65f8a67f4) - [ED-11699] Persist scroll gutter for mobile COMPACT appearance and change mobile scroll gutter to 50px
 
 ### Minor Changes
 
@@ -800,19 +6133,19 @@
 
 ### Patch Changes
 
-- [`d361f290d63`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d361f290d63) - NO-ISSUE avoid bundling test data for development
+- [#7803](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7803) [`d361f290d63`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d361f290d63) - NO-ISSUE avoid bundling test data for development
 
 ## 136.3.0
 
 ### Minor Changes
 
-- [`a30fc2921e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a30fc2921e8) - HOT-94214 fix chrome selection issue
+- [#7876](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7876) [`a30fc2921e8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a30fc2921e8) - HOT-94214 fix chrome selection issue
 
 ## 136.2.0
 
 ### Minor Changes
 
-- [`658184c615`](https://bitbucket.org/atlassian/atlassian-frontend/commits/658184c615) - [ED-11630] Removes the usage of Query Parameter for Predictable List and Makes the Predictable List reconfigurable via the bridge.configureEditor method. All the clients setting allowPredictableList from query parameter should use bridge.configureEditor and pass in the allowPredictableList flag.
+- [#7425](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7425) [`658184c615`](https://bitbucket.org/atlassian/atlassian-frontend/commits/658184c615) - [ED-11630] Removes the usage of Query Parameter for Predictable List and Makes the Predictable List reconfigurable via the bridge.configureEditor method. All the clients setting allowPredictableList from query parameter should use bridge.configureEditor and pass in the allowPredictableList flag.
   Example: bridge.configureEditor("{\"allowPredictableList\": true}")
 - [`2fe88ab389`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2fe88ab389) - [ED-11642] Remove "window.resize" listner and "ClickArea" for compact editor. Include padding calculation in onRenderedContentHeightChanged.
 - [`7d8f1facfc`](https://bitbucket.org/atlassian/atlassian-frontend/commits/7d8f1facfc) - [ME-300](https://product-fabric.atlassian.net/browse/ME-300) Introduced a toolbarBridge to support data-driven editing capabilities.
@@ -845,13 +6178,13 @@
 
 ### Patch Changes
 
-- [`3e52031824`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3e52031824) - HOT-93991 Fix async legacy macro insertion
+- [#7415](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7415) [`3e52031824`](https://bitbucket.org/atlassian/atlassian-frontend/commits/3e52031824) - HOT-93991 Fix async legacy macro insertion
 
 ## 136.1.0
 
 ### Minor Changes
 
-- [`22c89bff23`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22c89bff23) - [ED-11493][twista-405] Add predictable list at the mobile bridge plugin subscription
+- [#7170](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/7170) [`22c89bff23`](https://bitbucket.org/atlassian/atlassian-frontend/commits/22c89bff23) - [ED-11493][twista-405] Add predictable list at the mobile bridge plugin subscription
 - [`385e3de61b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/385e3de61b) - Remove the scroll gutter for compact mobile editor.
 
 ### Patch Changes
@@ -868,7 +6201,7 @@
 
 ### Major Changes
 
-- [`00ba3076ab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/00ba3076ab) - [ux] Paste hyperlink into selected text will apply link mark to the selected text
+- [#6930](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/6930) [`00ba3076ab`](https://bitbucket.org/atlassian/atlassian-frontend/commits/00ba3076ab) - [ux] Paste hyperlink into selected text will apply link mark to the selected text
   Breaking change on `isNodeTypeParagraph` function, use `isParagraph` instead (requires a schema to be passed as a second param)
 
 ### Minor Changes
@@ -896,7 +6229,7 @@
 
 ### Minor Changes
 
-- [`4d9d11c246`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4d9d11c246) - Fixes nodes with multiple validation specs to return node with most suitable spec.
+- [#6833](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/6833) [`4d9d11c246`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4d9d11c246) - Fixes nodes with multiple validation specs to return node with most suitable spec.
 
 ### Patch Changes
 
@@ -906,7 +6239,7 @@
 
 ### Minor Changes
 
-- [`5e68f04701`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e68f04701) - ED-11232 Make resolvers aware of other field values
+- [#6571](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/6571) [`5e68f04701`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5e68f04701) - ED-11232 Make resolvers aware of other field values
 - [`dfd440f4b5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dfd440f4b5) - [ux] New functionality to add and remove captions to images and videos. Select an image or video in the editor to start using it!
   editor-core now exports dedupe which aids in not having duplicate plugins added when initialising an editor
 - [`9b1c48edd1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9b1c48edd1) - Revert ED-10820 to resolve broken validator
@@ -941,14 +6274,14 @@
 
 ### Patch Changes
 
-- [`d3265f19be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d3265f19be) - Transpile packages using babel rather than tsc
+- [#5857](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5857) [`d3265f19be`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d3265f19be) - Transpile packages using babel rather than tsc
 - Updated dependencies
 
 ## 134.0.0
 
 ### Major Changes
 
-- [`9f81260dd5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9f81260dd5) - ED-10683 Serialize number fields to Number instead of String
+- [#6228](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/6228) [`9f81260dd5`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9f81260dd5) - ED-10683 Serialize number fields to Number instead of String
 
 ### Minor Changes
 
@@ -1029,7 +6362,7 @@
 
 ### Major Changes
 
-- [`142d765bc4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/142d765bc4) - Revert ConfigPanel autoSaving in EditorActions.getValue
+- [#5860](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5860) [`142d765bc4`](https://bitbucket.org/atlassian/atlassian-frontend/commits/142d765bc4) - Revert ConfigPanel autoSaving in EditorActions.getValue
 - [`f73b500ffa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f73b500ffa) - ED-10681 API for dismiss typeahead
 
 ### Minor Changes
@@ -1089,7 +6422,7 @@
 
 ### Minor Changes
 
-- [`8904f49fe0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8904f49fe0) - [EDM-1235] Add Display URL option
+- [#5516](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5516) [`8904f49fe0`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8904f49fe0) - [EDM-1235] Add Display URL option
 - [`88e836d94d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/88e836d94d) - ED-10462 Disabled linking keyboard shortcut for video
 - [`a41378f853`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a41378f853) - Refactor & fix few cases of unsupported node attributes:
 
@@ -1150,26 +6483,26 @@
 
 ### Patch Changes
 
-- [`34674fa4cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/34674fa4cd) - [ux] ED-10780 removed the threshold that enabled responsive changes
+- [#5762](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5762) [`34674fa4cd`](https://bitbucket.org/atlassian/atlassian-frontend/commits/34674fa4cd) - [ux] ED-10780 removed the threshold that enabled responsive changes
 
 ## 131.0.9
 
 ### Patch Changes
 
-- [`ac54a7870c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ac54a7870c) - Remove extraneous dependencies rule suppression
+- [#5725](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5725) [`ac54a7870c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/ac54a7870c) - Remove extraneous dependencies rule suppression
 
 ## 131.0.8
 
 ### Patch Changes
 
-- [`a2634b5390`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a2634b5390) - [ux] ED-10780 reduced the threshold for responcive toolbar oayout;fixed problem with italic button not working when it is in collapse menu.
+- [#5720](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5720) [`a2634b5390`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a2634b5390) - [ux] ED-10780 reduced the threshold for responcive toolbar oayout;fixed problem with italic button not working when it is in collapse menu.
 - Updated dependencies
 
 ## 131.0.7
 
 ### Patch Changes
 
-- [`5f58283e1f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f58283e1f) - Export types using Typescript's new "export type" syntax to satisfy Typescript's --isolatedModules compiler option.
+- [#5497](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5497) [`5f58283e1f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/5f58283e1f) - Export types using Typescript's new "export type" syntax to satisfy Typescript's --isolatedModules compiler option.
   This requires version 3.8 of Typescript, read more about how we handle Typescript versions here: https://atlaskit.atlassian.com/get-started
   Also add `typescript` to `devDependencies` to denote version that the package was built with.
 - Updated dependencies
@@ -1178,13 +6511,13 @@
 
 ### Patch Changes
 
-- [`91854cd5b6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91854cd5b6) - ED-10645 Fix not being able to change dates in some collab sessions
+- [#5409](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5409) [`91854cd5b6`](https://bitbucket.org/atlassian/atlassian-frontend/commits/91854cd5b6) - ED-10645 Fix not being able to change dates in some collab sessions
 
 ## 131.0.5
 
 ### Patch Changes
 
-- [`9a055964a3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9a055964a3) - ED-10628 Re-enable single click selection on mobile
+- [#5373](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5373) [`9a055964a3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9a055964a3) - ED-10628 Re-enable single click selection on mobile
 
   Long press selection is temporarily blocked, so we will re-enable single click selection for now
 
@@ -1192,33 +6525,33 @@
 
 ### Patch Changes
 
-- [`9798ad1405`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9798ad1405) - Remove deep import paths of dependencies in TS declaration files
+- [#5344](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5344) [`9798ad1405`](https://bitbucket.org/atlassian/atlassian-frontend/commits/9798ad1405) - Remove deep import paths of dependencies in TS declaration files
 - Updated dependencies
 
 ## 131.0.3
 
 ### Patch Changes
 
-- [`e27286a0f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e27286a0f1) - Fix unable to change a date inside a table
+- [#5288](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5288) [`e27286a0f1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e27286a0f1) - Fix unable to change a date inside a table
 
 ## 131.0.2
 
 ### Patch Changes
 
-- [`a1969c1be1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a1969c1be1) - [ux] Deduplicate items from the Cmd+k search result
+- [#5163](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5163) [`a1969c1be1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a1969c1be1) - [ux] Deduplicate items from the Cmd+k search result
 
 ## 131.0.1
 
 ### Patch Changes
 
-- [`2ac834240e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ac834240e) - Undo analytics-next file restructure to allow external ts definitions to continue working
+- [#5164](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/5164) [`2ac834240e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2ac834240e) - Undo analytics-next file restructure to allow external ts definitions to continue working
 - Updated dependencies
 
 ## 131.0.0
 
 ### Major Changes
 
-- [`dd849c6a0c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dd849c6a0c) - [ED-9500] Removes sendDataOnViewUpdated property from EditorProps.
+- [#4749](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4749) [`dd849c6a0c`](https://bitbucket.org/atlassian/atlassian-frontend/commits/dd849c6a0c) - [ED-9500] Removes sendDataOnViewUpdated property from EditorProps.
 
   # BREAKING CHANGE:
 
@@ -1385,27 +6718,27 @@
 
 ### Patch Changes
 
-- [`f3698d4c2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3698d4c2d) - only render smart-card when react context is ready
+- [#4829](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4829) [`f3698d4c2d`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3698d4c2d) - only render smart-card when react context is ready
 - Updated dependencies
 
 ## 129.0.2
 
 ### Patch Changes
 
-- [`b284fba3d1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b284fba3d1) - Components that had missing names are now fixed - this helps when looking for them using the React Dev Tools.
+- [#4649](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4649) [`b284fba3d1`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b284fba3d1) - Components that had missing names are now fixed - this helps when looking for them using the React Dev Tools.
 
 ## 129.0.1
 
 ### Patch Changes
 
-- [`383bdfb201`](https://bitbucket.org/atlassian/atlassian-frontend/commits/383bdfb201) - Updated VR test
+- [#4455](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4455) [`383bdfb201`](https://bitbucket.org/atlassian/atlassian-frontend/commits/383bdfb201) - Updated VR test
 - Updated dependencies
 
 ## 129.0.0
 
 ### Major Changes
 
-- [`94ac6099e2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94ac6099e2) - Rename FieldResolver to CustomFieldResolver
+- [#4424](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4424) [`94ac6099e2`](https://bitbucket.org/atlassian/atlassian-frontend/commits/94ac6099e2) - Rename FieldResolver to CustomFieldResolver
 - [`2914e9ec0a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2914e9ec0a) - Change EditorManifest generic to propagate instead of defaulting to any
 
 ### Minor Changes
@@ -1540,7 +6873,7 @@
 
 ### Patch Changes
 
-- [`6c525a8229`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c525a8229) - Upgraded to TypeScript 3.9.6 and tslib to 2.0.0
+- [#3885](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3885) [`6c525a8229`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6c525a8229) - Upgraded to TypeScript 3.9.6 and tslib to 2.0.0
 
   Since tslib is a dependency for all our packages we recommend that products also follow this tslib upgrade
   to prevent duplicates of tslib being bundled.
@@ -1549,13 +6882,13 @@
 
 ### Patch Changes
 
-- [`76165ad82f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/76165ad82f) - Bump required because of conflicts on wadmal release
+- [#4393](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4393) [`76165ad82f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/76165ad82f) - Bump required because of conflicts on wadmal release
 
 ## 128.0.0
 
 ### Major Changes
 
-- [`68ca47f536`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68ca47f536) - ED-9145: Remove analyticsHandler prop.
+- [#3823](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3823) [`68ca47f536`](https://bitbucket.org/atlassian/atlassian-frontend/commits/68ca47f536) - ED-9145: Remove analyticsHandler prop.
 
   We have removed the prop `analyticsHandler` from the `Editor` component, as these events are no longer tracked.
 
@@ -1628,25 +6961,25 @@
 
 ### Patch Changes
 
-- [`f3749628bb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3749628bb) - CEMS-1258: Fixing misaligned Sticky header cells on tables with merged cells
+- [#4157](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4157) [`f3749628bb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/f3749628bb) - CEMS-1258: Fixing misaligned Sticky header cells on tables with merged cells
 
 ## 127.0.2
 
 ### Patch Changes
 
-- [`64abcd247b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/64abcd247b) - CEMS-1231 make table contents align with row controls with sticky headers
+- [#4127](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/4127) [`64abcd247b`](https://bitbucket.org/atlassian/atlassian-frontend/commits/64abcd247b) - CEMS-1231 make table contents align with row controls with sticky headers
 
 ## 127.0.1
 
 ### Patch Changes
 
-- [`d03bff2147`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d03bff2147) - updated translations
+- [#3369](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3369) [`d03bff2147`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d03bff2147) - updated translations
 
 ## 127.0.0
 
 ### Major Changes
 
-- [`6e5c32935a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e5c32935a) - Remove deprecated flag allowUnsupportedContent and enable by default
+- [#3428](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3428) [`6e5c32935a`](https://bitbucket.org/atlassian/atlassian-frontend/commits/6e5c32935a) - Remove deprecated flag allowUnsupportedContent and enable by default
 - [`35be24c587`](https://bitbucket.org/atlassian/atlassian-frontend/commits/35be24c587) - ED-9344: avoid toolbar layout shift in comment appearance
 
 ### Minor Changes
@@ -1734,13 +7067,13 @@
 
 ### Patch Changes
 
-- [`d218cac0a3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d218cac0a3) - ED-9816 fix: create appropriate item for image upload
+- [#3580](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3580) [`d218cac0a3`](https://bitbucket.org/atlassian/atlassian-frontend/commits/d218cac0a3) - ED-9816 fix: create appropriate item for image upload
 
 ## 126.0.0
 
 ### Major Changes
 
-- [`87f4720f27`](https://bitbucket.org/atlassian/atlassian-frontend/commits/87f4720f27) - Officially dropping IE11 support, from this version onwards there are no warranties of the package working in IE11.
+- [#3335](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3335) [`87f4720f27`](https://bitbucket.org/atlassian/atlassian-frontend/commits/87f4720f27) - Officially dropping IE11 support, from this version onwards there are no warranties of the package working in IE11.
   For more information see: https://community.developer.atlassian.com/t/atlaskit-to-drop-support-for-internet-explorer-11-from-1st-july-2020/39534
 
 ### Patch Changes
@@ -1751,7 +7084,7 @@
 
 ### Minor Changes
 
-- [`64d75b8f7e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/64d75b8f7e) - Call getFieldsDefinition with extension parameters
+- [#2763](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2763) [`64d75b8f7e`](https://bitbucket.org/atlassian/atlassian-frontend/commits/64d75b8f7e) - Call getFieldsDefinition with extension parameters
 - [`a602a1a359`](https://bitbucket.org/atlassian/atlassian-frontend/commits/a602a1a359) - [FM-3814] Enables the mobile bridge to add two new blocks items: divider and expand
 
 ### Patch Changes
@@ -1802,13 +7135,13 @@
 
 ### Patch Changes
 
-- [`8566522867`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8566522867) - ED-9613 fix: prevent Android from closing keyboard when clicking placeholder-text
+- [#3070](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3070) [`8566522867`](https://bitbucket.org/atlassian/atlassian-frontend/commits/8566522867) - ED-9613 fix: prevent Android from closing keyboard when clicking placeholder-text
 
 ## 125.0.0
 
 ### Major Changes
 
-- [`b0df4dc455`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b0df4dc455) - NO-ISSUE refactor: make ContextPanel.visible required
+- [#2443](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2443) [`b0df4dc455`](https://bitbucket.org/atlassian/atlassian-frontend/commits/b0df4dc455) - NO-ISSUE refactor: make ContextPanel.visible required
   NO-ISSUE perf: do not trigger context panel state transition on textinput
 
 ### Minor Changes
@@ -1868,37 +7201,37 @@
 
 ### Patch Changes
 
-- [`fc83c36503`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc83c36503) - Update translation files via Traduki build
+- [#2576](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2576) [`fc83c36503`](https://bitbucket.org/atlassian/atlassian-frontend/commits/fc83c36503) - Update translation files via Traduki build
 
 ## 124.0.4
 
 ### Patch Changes
 
-- [`859ad12010`](https://bitbucket.org/atlassian/atlassian-frontend/commits/859ad12010) - ED-9622: fix breakout tables that were appearing cut off when nested inside bodied elements (expand, layout, etc)
+- [#3010](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/3010) [`859ad12010`](https://bitbucket.org/atlassian/atlassian-frontend/commits/859ad12010) - ED-9622: fix breakout tables that were appearing cut off when nested inside bodied elements (expand, layout, etc)
 
 ## 124.0.3
 
 ### Patch Changes
 
-- [`455e383cda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/455e383cda) - Use IntersectionObserver in smart-card to detect when a link enters the viewport
+- [#2984](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2984) [`455e383cda`](https://bitbucket.org/atlassian/atlassian-frontend/commits/455e383cda) - Use IntersectionObserver in smart-card to detect when a link enters the viewport
 
 ## 124.0.2
 
 ### Patch Changes
 
-- [`2cfef4d0fa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2cfef4d0fa) - HOTFIX ED-9621 Forge extensions are not appearing in quick insert menu
+- [#2957](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2957) [`2cfef4d0fa`](https://bitbucket.org/atlassian/atlassian-frontend/commits/2cfef4d0fa) - HOTFIX ED-9621 Forge extensions are not appearing in quick insert menu
 
 ## 124.0.1
 
 ### Patch Changes
 
-- [`4560b65a4f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4560b65a4f) - upgrade react-transition-group to latest
+- [#2677](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2677) [`4560b65a4f`](https://bitbucket.org/atlassian/atlassian-frontend/commits/4560b65a4f) - upgrade react-transition-group to latest
 
 ## 124.0.0
 
 ### Major Changes
 
-- [`1543651ede`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1543651ede) - ED-9174: Take control of context panel when plugins need and add smooth enter/leave transition
+- [#2137](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2137) [`1543651ede`](https://bitbucket.org/atlassian/atlassian-frontend/commits/1543651ede) - ED-9174: Take control of context panel when plugins need and add smooth enter/leave transition
 
   Products were trying to solve transition issues on their side and it was causing issues when plugins tried to open the context panel.
   This change will override any limitation we had before, taking control of the panel independent of existing panels.
@@ -2045,25 +7378,25 @@
 
 ### Patch Changes
 
-- [`e1fae67451`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1fae67451) - ED-9365 fix: fully feature-flag performance tracking
+- [#2384](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2384) [`e1fae67451`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e1fae67451) - ED-9365 fix: fully feature-flag performance tracking
 
 ## 123.0.4
 
 ### Patch Changes
 
-- [`649f69b6d7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/649f69b6d7) - Patch all packages that are used by confluence that have a broken es2019 dist
+- [#2430](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2430) [`649f69b6d7`](https://bitbucket.org/atlassian/atlassian-frontend/commits/649f69b6d7) - Patch all packages that are used by confluence that have a broken es2019 dist
 
 ## 123.0.3
 
 ### Patch Changes
 
-- [`05aafbffcb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05aafbffcb) - ED-9234 Fix date picker remaining open when date node moved or deleted
+- [#2219](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2219) [`05aafbffcb`](https://bitbucket.org/atlassian/atlassian-frontend/commits/05aafbffcb) - ED-9234 Fix date picker remaining open when date node moved or deleted
 
 ## 123.0.2
 
 ### Patch Changes
 
-- [`176ac096a8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/176ac096a8) - ED-9372 Fix issue where extensions would re-render when going from gap cursor selection to node selection
+- [#2215](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/2215) [`176ac096a8`](https://bitbucket.org/atlassian/atlassian-frontend/commits/176ac096a8) - ED-9372 Fix issue where extensions would re-render when going from gap cursor selection to node selection
 
 ## 123.0.1
 
@@ -2075,7 +7408,7 @@
 
 ### Major Changes
 
-- [`e97f14eade`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e97f14eade) - ED-9155: Rename prop `extensionParams` to `node` in the extensions api v2
+- [#1868](https://bitbucket.org/atlassian/atlassian-frontend/pull-requests/1868) [`e97f14eade`](https://bitbucket.org/atlassian/atlassian-frontend/commits/e97f14eade) - ED-9155: Rename prop `extensionParams` to `node` in the extensions api v2
 
 ### Minor Changes
 
@@ -10915,105 +16248,105 @@ Remove applicationCard node and action mark
 
 ## 87.6.1
 
-- [patch][bdc9961" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/bdc9961"
+- [patch][bdc9961](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/bdc9961"
   d):
 
   - Fixes the codeblock insert rules
 
 ## 87.6.0
 
-- [minor][bb3336a" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/bb3336a"
+- [minor][bb3336a](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/bb3336a"
   d):
 
   - Make text formatting toolbar account for different item titles legnths
 
 ## 87.5.0
 
-- [minor][d182ad9" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/d182ad9"
+- [minor][d182ad9](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/d182ad9"
   d):
 
   - Add <-> to ↔︎ convertion rule
 
 ## 87.4.3
 
-- [patch][8fb4b1e" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/8fb4b1e"
+- [patch][8fb4b1e](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/8fb4b1e"
   d):
 
   - ED-5274 Fixes tables have excessive margin above
 
 ## 87.4.2
 
-- [patch][4cc767e" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/4cc767e"
+- [patch][4cc767e](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/4cc767e"
   d):
 
   - ED-5030: Fixed gap-cursor on nodeviews in breakout mode.
 
 ## 87.4.1
 
-- [patch][abd19cd" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/abd19cd"
+- [patch][abd19cd](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/abd19cd"
   d):
 
   - ED-5616: fix inline cursor navigation
 
 ## 87.4.0
 
-- [minor][5981cec" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/5981cec"
+- [minor][5981cec](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/5981cec"
   d):
 
   - TypeAhead to preserve marks
 
 ## 87.3.2
 
-- [patch][14d581b" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/14d581b"
+- [patch][14d581b](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/14d581b"
   d):
 
   - Disable clear formatting menu when there is no formatting
 
 ## 87.3.1
 
-- [patch][52f5b51" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/52f5b51"
+- [patch][52f5b51](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/52f5b51"
   d):
 
   - ED-4366: fix text selection inside table cell on triple click
 
 ## 87.3.0
 
-- [minor][b911028" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/b911028"
+- [minor][b911028](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/b911028"
   d):
 
   - Show selected color in a table contextual menu
 
 ## 87.2.0
 
-- [minor][746c927" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/746c927"
+- [minor][746c927](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/746c927"
   d):
 
   - Add buffer to the bottom fullpage editor
 
 ## 87.1.13
 
-- [patch][f3d067d" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/f3d067d"
+- [patch][f3d067d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/f3d067d"
   d):
 
   - Fix font size for numbered column in tables with dynamic text sizing
 
 ## 87.1.12
 
-- [patch][534f6ab" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/534f6ab"
+- [patch][534f6ab](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/534f6ab"
   d):
 
   - ED-5615: Fix block element padding inside table cells.
 
 ## 87.1.11
 
-- [patch][cb4168f" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/cb4168f"
+- [patch][cb4168f](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/cb4168f"
   d):
 
   - ED-5307: make text white for selected heading menu item
 
 ## 87.1.10
 
-- [patch][db65837" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/db65837"
+- [patch][db65837](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/db65837"
   d):
 
   - ED-3762: fix setting text cursor when clicking on editor gutter
@@ -11026,7 +16359,7 @@ Remove applicationCard node and action mark
 
 ## 87.1.8
 
-- [patch][3c505aa" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/3c505aa"
+- [patch][3c505aa](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/3c505aa"
   d):
 
   - Adds Danish and Romanian translations
@@ -11039,14 +16372,14 @@ Remove applicationCard node and action mark
 
 ## 87.1.6
 
-- [patch][6201223" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/6201223"
+- [patch][6201223](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/6201223"
   d):
 
   - Add examples.
 
 ## 87.1.5
 
-- [patch][1662ae0" d](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/1662ae0"
+- [patch][1662ae0](https://bitbucket.org/atlassian/atlaskit-mk-2/commits/1662ae0"
   d):
 
   - ED-5440 convert sections to use percentages

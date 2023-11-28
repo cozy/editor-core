@@ -1,9 +1,11 @@
 import { uuid } from '@atlaskit/adf-schema';
-import {
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   layoutColumn,
@@ -14,15 +16,26 @@ import {
   taskList,
   td,
   tr,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+import type { AnalyticsEventPayload } from '@atlaskit/editor-common/analytics';
+import {
+  ACTION,
+  ACTION_SUBJECT,
+  ACTION_SUBJECT_ID,
+  EVENT_TYPE,
+  INDENT_DIRECTION,
+  INPUT_METHOD,
+  INDENT_TYPE,
+} from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   buildKeyEvent,
   testKeymap,
 } from '@atlaskit/editor-test-helpers/send-key-to-pm';
 import { MockMentionResource } from '@atlaskit/util-data-test/mock-mention-resource';
 
-import { keymapPlugin } from '../../../../../plugins/tasks-and-decisions/pm-plugins/keymaps';
+import { keymapPlugin } from '../../../pm-plugins/keymaps';
 
 import { ListTypes } from './_helpers';
 
@@ -116,7 +129,7 @@ describe('tasks and decisions - keymaps', () => {
             ),
           ),
           doc(
-            table({})(
+            table({ localId: 'local-uuid' })(
               tr(
                 td()(
                   taskList(listProps)(
@@ -137,6 +150,23 @@ describe('tasks and decisions - keymaps', () => {
       });
 
       it('can indent in a layout', () => {
+        const analyticsPayload: AnalyticsEventPayload = {
+          action: ACTION.FORMATTED,
+          actionSubject: ACTION_SUBJECT.TEXT,
+          actionSubjectId: ACTION_SUBJECT_ID.FORMAT_INDENT,
+          eventType: EVENT_TYPE.TRACK,
+          attributes: {
+            actionSubjectId: ACTION_SUBJECT_ID.FORMAT_INDENT,
+            direction: INDENT_DIRECTION.INDENT,
+            indentType: INDENT_TYPE.TASK_LIST,
+            inputMethod: INPUT_METHOD.KEYBOARD,
+            newIndentLevel: 2,
+            nodeLocation: 'taskItem',
+            previousIndentationLevel: 1,
+            selectionPosition: 'middle',
+            selectionType: 'cursor',
+          },
+        };
         testKeymap(
           editorFactory,
           doc(
@@ -167,6 +197,8 @@ describe('tasks and decisions - keymaps', () => {
           ),
 
           ['Tab'],
+
+          analyticsPayload,
         );
       });
 
@@ -356,6 +388,39 @@ describe('tasks and decisions - keymaps', () => {
           ['Tab'],
         );
       });
+
+      it('should only indent task items that are visually selected', () => {
+        testKeymap(
+          editorFactory,
+          doc(
+            taskList(listProps)(
+              taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              taskList(listProps)(
+                taskItem(itemProps)("Ya'll wanna live in the dream{<}"),
+                taskItem(itemProps)("Ay-ya, ya'll never been with the team{>}"),
+                taskItem(itemProps)('Ay-ya, ya-ya-ya, ya-ya-ya'),
+                taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              ),
+            ),
+          ),
+          doc(
+            taskList(listProps)(
+              taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              taskList(listProps)(
+                taskItem(itemProps)("Ya'll wanna live in the dream{<}"),
+                taskList(listProps)(
+                  taskItem(itemProps)(
+                    "Ay-ya, ya'll never been with the team{>}",
+                  ),
+                ),
+                taskItem(itemProps)('Ay-ya, ya-ya-ya, ya-ya-ya'),
+                taskItem(itemProps)("Say ya'll wanna roll in the scene"),
+              ),
+            ),
+          ),
+          ['Tab'],
+        );
+      });
     });
   });
 
@@ -413,7 +478,9 @@ describe('tasks and decisions - keymaps', () => {
       });
 
       const plugin = keymapPlugin(editorView.state.schema, undefined, true)!;
-      expect(plugin.props.handleKeyDown!(editorView, tab)).toBe(true);
+      expect(plugin.props.handleKeyDown?.call(plugin, editorView, tab)).toBe(
+        true,
+      );
     });
 
     it('eats shift-tabs inside actions', () => {
@@ -422,8 +489,15 @@ describe('tasks and decisions - keymaps', () => {
         editorProps,
       });
 
-      const plugin = keymapPlugin(editorView.state.schema, undefined, true)!;
-      expect(plugin.props.handleKeyDown!(editorView, shiftTab)).toBe(true);
+      const plugin = keymapPlugin(
+        editorView.state.schema,
+        undefined,
+        undefined,
+        true,
+      )!;
+      expect(
+        plugin.props.handleKeyDown?.call(plugin, editorView, shiftTab),
+      ).toBe(true);
     });
 
     it('does nothing with tab outside actions', () => {
@@ -433,7 +507,9 @@ describe('tasks and decisions - keymaps', () => {
       });
 
       const plugin = keymapPlugin(editorView.state.schema, undefined, true)!;
-      expect(plugin.props.handleKeyDown!(editorView, tab)).toBe(false);
+      expect(plugin.props.handleKeyDown?.call(plugin, editorView, tab)).toBe(
+        false,
+      );
     });
 
     it('does nothing with shift-tab outside actions', () => {
@@ -443,7 +519,9 @@ describe('tasks and decisions - keymaps', () => {
       });
 
       const plugin = keymapPlugin(editorView.state.schema, undefined, true)!;
-      expect(plugin.props.handleKeyDown!(editorView, shiftTab)).toBe(false);
+      expect(
+        plugin.props.handleKeyDown?.call(plugin, editorView, shiftTab),
+      ).toBe(false);
     });
   });
 });

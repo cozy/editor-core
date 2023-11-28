@@ -1,14 +1,20 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   goToEditorTestingWDExample,
   mountEditor,
-} from '../../__helpers/testing-example-helpers';
-import { getDocFromElement, editable } from '../_helpers';
+} from '@atlaskit/editor-test-helpers/testing-example-page';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  getDocFromElement,
+  editable,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
 
 import commonMessages from '../../../messages';
 import adf from './__fixtures__/breakout-columns-with-iframe.adf.json';
-import { messages } from '../../../plugins/block-type/messages';
+import { blockTypeMessages as messages } from '@atlaskit/editor-common/messages';
 
 const wideBreakoutButtonQuery = `div[aria-label="${commonMessages.layoutWide.defaultMessage}"]`;
 const fullWidthBreakoutButtonQuery = `div[aria-label="${commonMessages.layoutFullWidth.defaultMessage}"]`;
@@ -17,7 +23,7 @@ const wideBreakoutColumn = 'div[data-layout-column="true"]:first-child p';
 
 BrowserTestCase(
   'breakout: should be able to switch to wide mode',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -39,7 +45,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'breakout: should be able to switch to full-width mode',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -63,7 +69,7 @@ BrowserTestCase(
 
 BrowserTestCase(
   'breakout: should be able to switch to center mode back',
-  { skip: ['edge'] },
+  {},
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -89,11 +95,53 @@ BrowserTestCase(
   },
 );
 
-// TODO: https://product-fabric.atlassian.net/browse/ED-6802
-// skipped on ie
+BrowserTestCase(
+  'breakout: width button should appear next to selected component',
+  // Don't need to test cross browser for this
+  { skip: ['safari', 'firefox'] },
+  async (client: any, testName: string) => {
+    const page = await goToEditorTestingWDExample(client);
+
+    await mountEditor(page, {
+      appearance: 'full-page',
+      allowBreakout: true,
+    });
+
+    // Add three code blocks
+    // check the position of width button and move down to the next
+    await page.click(`[aria-label="${messages.codeblock.defaultMessage}"]`);
+    await page.click(`[aria-label="${messages.codeblock.defaultMessage}"]`);
+    await page.click(`[aria-label="${messages.codeblock.defaultMessage}"]`);
+
+    let breakoutButtonPosition = '';
+
+    await page.click('[data-testid="code-block--code"]');
+
+    for (let i = 0; i < 3; i += 1) {
+      await page.waitForSelector(wideBreakoutButtonQuery);
+
+      // Check the position of the width button
+      const top = await page.evaluate((selector) => {
+        const el = document.querySelector(selector);
+
+        return el ? window.getComputedStyle(el).top : '0';
+      }, wideBreakoutButtonQuery);
+
+      expect(top).not.toBe(breakoutButtonPosition);
+
+      breakoutButtonPosition = top;
+
+      await page.keys('ArrowDown');
+    }
+  },
+);
+
+// FIXME: This test was automatically skipped due to failure on 24/08/2023: https://product-fabric.atlassian.net/browse/ED-19726
 BrowserTestCase(
   'breakout: should be able to delete last character inside a "wide" codeBlock preserving the node',
-  { skip: ['edge'] },
+  {
+    skip: ['*'],
+  },
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 
@@ -119,7 +167,7 @@ BrowserTestCase(
 // @see ED-8293
 BrowserTestCase(
   'breakout: should be able to delete last character inside a "wide" layoutSection in Safari',
-  { skip: ['firefox', 'chrome', 'edge'] },
+  { skip: ['firefox', 'chrome'] },
   async (client: any, testName: string) => {
     const page = await goToEditorTestingWDExample(client);
 

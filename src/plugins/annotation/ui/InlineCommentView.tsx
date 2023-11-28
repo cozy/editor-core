@@ -1,13 +1,16 @@
 import React from 'react';
-import { EditorView } from 'prosemirror-view';
-import { Selection } from 'prosemirror-state';
-import { findDomRefAtPos } from 'prosemirror-utils';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { Selection } from '@atlaskit/editor-prosemirror/state';
+import { findDomRefAtPos } from '@atlaskit/editor-prosemirror/utils';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
 import { AnnotationViewWrapper } from './AnnotationViewWrapper';
-import { AnnotationProviders, AnnotationTestIds } from '../types';
+import type { AnnotationProviders } from '../types';
+import { AnnotationTestIds } from '../types';
 import {
   getAnnotationViewKey,
   getSelectionPositions,
   getPluginState,
+  getAllAnnotations,
 } from '../utils';
 import {
   removeInlineCommentNearSelection,
@@ -22,16 +25,14 @@ import {
   ACTION_SUBJECT,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
-} from '../../analytics';
-import {
+} from '@atlaskit/editor-common/analytics';
+import type {
   AnalyticsEventPayload,
   DispatchAnalyticsEvent,
-  CONTENT_COMPONENT,
-} from '../../analytics/types';
-import {
-  RESOLVE_METHOD,
-  AnnotationAEP,
-} from '../../analytics/types/inline-comment-events';
+} from '@atlaskit/editor-common/analytics';
+import { CONTENT_COMPONENT } from '@atlaskit/editor-common/analytics';
+import type { AnnotationAEP } from '@atlaskit/editor-common/analytics';
+import { RESOLVE_METHOD } from '@atlaskit/editor-common/analytics';
 
 const findPosForDOM = (sel: Selection) => {
   const { $from, from } = sel;
@@ -56,24 +57,26 @@ const findPosForDOM = (sel: Selection) => {
 interface InlineCommentViewProps {
   providers: AnnotationProviders;
   editorView: EditorView;
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined;
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
 }
 
 export function InlineCommentView({
   providers,
   editorView,
+  editorAnalyticsAPI,
   dispatchAnalyticsEvent,
 }: InlineCommentViewProps) {
   // As inlineComment is the only annotation present, this function is not generic
   const { inlineComment: inlineCommentProvider } = providers;
   const { state, dispatch } = editorView;
 
-  const {
-    createComponent: CreateComponent,
-    viewComponent: ViewComponent,
-  } = inlineCommentProvider;
+  const { createComponent: CreateComponent, viewComponent: ViewComponent } =
+    inlineCommentProvider;
   const inlineCommentState = getPluginState(state);
-  const { bookmark, selectedAnnotations, annotations } = inlineCommentState;
+  const { bookmark, selectedAnnotations, annotations } =
+    inlineCommentState || {};
+  const annotationsList = getAllAnnotations(editorView.state.doc);
 
   const selection = getSelectionPositions(state, inlineCommentState);
   const position = findPosForDOM(selection);
@@ -83,7 +86,7 @@ export function InlineCommentView({
       position,
       editorView.domAtPos.bind(editorView),
     ) as HTMLElement;
-  } catch (error) {
+  } catch (error: any) {
     // eslint-disable-next-line no-console
     console.warn(error);
     if (dispatchAnalyticsEvent) {
@@ -97,6 +100,8 @@ export function InlineCommentView({
           position,
           docSize: editorView.state.doc.nodeSize,
           error: error.toString(),
+        },
+        nonPrivacySafeAttributes: {
           errorStack: error.stack || undefined,
         },
       };
@@ -117,16 +122,22 @@ export function InlineCommentView({
     //getting all text between bookmarked positions
     const textSelection = state.doc.textBetween(selection.from, selection.to);
     return (
-      <div data-testid={AnnotationTestIds.floatingComponent}>
+      <div
+        data-testid={AnnotationTestIds.floatingComponent}
+        data-editor-popup="true"
+      >
         <CreateComponent
           dom={dom}
           textSelection={textSelection}
           onCreate={(id) => {
-            createAnnotation(id)(editorView.state, editorView.dispatch);
+            createAnnotation(editorAnalyticsAPI)(id)(
+              editorView.state,
+              editorView.dispatch,
+            );
             !editorView.hasFocus() && editorView.focus();
           }}
           onClose={() => {
-            setInlineCommentDraftState(false)(
+            setInlineCommentDraftState(editorAnalyticsAPI)(false)(
               editorView.state,
               editorView.dispatch,
             );
@@ -138,9 +149,10 @@ export function InlineCommentView({
   }
 
   // View Component
-  const activeAnnotations = selectedAnnotations.filter(
-    (mark) => annotations[mark.id] === false,
-  );
+  const activeAnnotations =
+    selectedAnnotations?.filter(
+      (mark) => annotations && annotations[mark.id] === false,
+    ) || [];
   if (!ViewComponent || activeAnnotations.length === 0) {
     return null;
   }
@@ -168,16 +180,18 @@ export function InlineCommentView({
 
   return (
     <AnnotationViewWrapper
+      data-editor-popup="true"
       data-testid={AnnotationTestIds.floatingComponent}
       key={getAnnotationViewKey(activeAnnotations)}
       onViewed={onAnnotationViewed}
     >
       <ViewComponent
+        annotationsList={annotationsList}
         annotations={activeAnnotations}
         dom={dom}
         onDelete={(id) => removeInlineCommentNearSelection(id)(state, dispatch)}
         onResolve={(id) =>
-          updateInlineCommentResolvedState(
+          updateInlineCommentResolvedState(editorAnalyticsAPI)(
             { [id]: true },
             RESOLVE_METHOD.COMPONENT,
           )(editorView.state, editorView.dispatch)

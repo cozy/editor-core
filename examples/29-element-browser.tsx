@@ -1,16 +1,46 @@
-import React, { useCallback } from 'react';
-import styled from 'styled-components';
-import { IntlProvider, injectIntl, InjectedIntlProps } from 'react-intl';
-import {
-  AnalyticsEventPayload,
-  AnalyticsListener,
-} from '@atlaskit/analytics-next';
-import { QuickInsertItem } from '@atlaskit/editor-common/provider-factory';
-import ElementBrowser from '../src/ui/ElementBrowser';
-import { getCategories } from '../src/ui/ElementBrowser/categories';
+/** @jsx jsx */
+import { useCallback } from 'react';
+import { css, jsx } from '@emotion/react';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { IntlProvider, injectIntl } from 'react-intl-next';
+import type { AnalyticsEventPayload } from '@atlaskit/analytics-next';
+import { AnalyticsListener } from '@atlaskit/analytics-next';
+import type { QuickInsertItem } from '@atlaskit/editor-common/provider-factory';
+import { ElementBrowser } from '@atlaskit/editor-common/element-browser';
+
+import { default as EditorContext } from '../src/ui/EditorContext';
+import { getCategories } from '../example-helpers/quick-insert-categories';
 import { useDefaultQuickInsertGetItems } from '../example-helpers/use-default-quickinsert-get-items';
 
-export default () => {
+const wrapper = css`
+  display: flex;
+  height: 100%;
+`;
+
+const onInsertItem = (item: QuickInsertItem) => {
+  console.log('Inserting item ', item);
+};
+const RenderElementBrowser = (
+  props: {
+    getItems: (query?: string, category?: string) => QuickInsertItem[];
+  } & WrappedComponentProps,
+) => (
+  <div css={wrapper}>
+    <ElementBrowser
+      categories={getCategories(props.intl)}
+      getItems={props.getItems}
+      showSearch={true}
+      showCategories={true}
+      mode="full"
+      defaultCategory="all"
+      onInsertItem={onInsertItem}
+    />
+  </div>
+);
+
+const ElementBrowserWithIntl = injectIntl(RenderElementBrowser);
+
+const ElementBrowserComp = () => {
   const getItems = useDefaultQuickInsertGetItems();
   const handleAnalytics = useCallback((event: AnalyticsEventPayload) => {
     console.groupCollapsed('gasv3 event:', event.payload.action);
@@ -27,31 +57,8 @@ export default () => {
   );
 };
 
-const RenderElementBrowser = (
-  props: {
-    getItems: (query?: string, category?: string) => QuickInsertItem[];
-  } & InjectedIntlProps,
-) => (
-  <Wrapper>
-    <ElementBrowser
-      categories={getCategories(props.intl)}
-      getItems={props.getItems}
-      showSearch={true}
-      showCategories={true}
-      mode="full"
-      defaultCategory="all"
-      onInsertItem={onInsertItem}
-    />
-  </Wrapper>
+export default () => (
+  <EditorContext>
+    <ElementBrowserComp />
+  </EditorContext>
 );
-
-const Wrapper = styled.div`
-  display: flex;
-  height: 100%;
-`;
-
-const onInsertItem = (item: QuickInsertItem) => {
-  console.log('Inserting item ', item);
-};
-
-const ElementBrowserWithIntl = injectIntl(RenderElementBrowser);

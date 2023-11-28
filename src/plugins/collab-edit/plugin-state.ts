@@ -1,15 +1,25 @@
-import { Transaction, Selection } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Step, ReplaceStep } from 'prosemirror-transform';
+import type { ReadonlyTransaction } from '@atlaskit/editor-prosemirror/state';
+import { Selection } from '@atlaskit/editor-prosemirror/state';
+import type { Decoration } from '@atlaskit/editor-prosemirror/view';
+import { DecorationSet } from '@atlaskit/editor-prosemirror/view';
+import type { Step } from '@atlaskit/editor-prosemirror/transform';
+import { ReplaceStep } from '@atlaskit/editor-prosemirror/transform';
+import { browser } from '@atlaskit/editor-common/utils';
 
-import {
+import type {
   CollabParticipant,
   CollabEventConnectionData,
   CollabEventPresenceData,
-  CollabEventTelepointerData,
-} from './types';
-import { Participants, ReadOnlyParticipants } from './participants';
-import { findPointers, createTelepointers } from './utils';
+  CollabTelepointerPayload,
+} from '@atlaskit/editor-common/collab';
+
+import type { ReadOnlyParticipants } from './participants';
+import { Participants } from './participants';
+import {
+  findPointers,
+  createTelepointers,
+  getPositionOfTelepointer,
+} from './utils';
 
 const isReplaceStep = (step: Step) => step instanceof ReplaceStep;
 
@@ -18,16 +28,20 @@ export const TELEPOINTER_DIM_CLASS = 'telepointer-dim';
 /**
  * Returns position where it's possible to place a decoration.
  */
-const getValidPos = (tr: Transaction, pos: number) => {
-  const resolvedPos = tr.doc.resolve(pos);
-  const backwardSelection = Selection.findFrom(resolvedPos, -1, true);
-  // if there's no correct cursor position before the `pos`, we try to find it after the `pos`
-  const forwardSelection = Selection.findFrom(resolvedPos, 1, true);
-  return backwardSelection
-    ? backwardSelection.from
-    : forwardSelection
-    ? forwardSelection.from
-    : pos;
+export const getValidPos = (tr: ReadonlyTransaction, pos: number) => {
+  const endOfDocPos = tr.doc.nodeSize - 2;
+  if (pos <= endOfDocPos) {
+    const resolvedPos = tr.doc.resolve(pos);
+    const backwardSelection = Selection.findFrom(resolvedPos, -1, true);
+    // if there's no correct cursor position before the `pos`, we try to find it after the `pos`
+    const forwardSelection = Selection.findFrom(resolvedPos, 1, true);
+    return backwardSelection
+      ? backwardSelection.from
+      : forwardSelection
+      ? forwardSelection.from
+      : pos;
+  }
+  return endOfDocPos;
 };
 export class PluginState {
   private decorationSet: DecorationSet;
@@ -68,13 +82,13 @@ export class PluginState {
     return participant ? participant.name.substring(0, 1).toUpperCase() : 'X';
   }
 
-  apply(tr: Transaction) {
+  apply(tr: ReadonlyTransaction) {
     let { participants, sid, isReady } = this;
 
     const presenceData = tr.getMeta('presence') as CollabEventPresenceData;
     const telepointerData = tr.getMeta(
       'telepointer',
-    ) as CollabEventTelepointerData;
+    ) as CollabTelepointerPayload;
     const sessionIdData = tr.getMeta('sessionId') as CollabEventConnectionData;
     let collabInitialised = tr.getMeta('collabInitialised');
 
@@ -119,11 +133,20 @@ export class PluginState {
           remove = remove.concat(oldPointers);
         }
 
-        const { anchor, head } = telepointerData.selection;
-        const rawFrom = anchor < head ? anchor : head;
-        const rawTo = anchor >= head ? anchor : head;
-        const isSelection = rawTo - rawFrom > 0;
+        const endOfDocPos = tr.doc.nodeSize - 2;
+        const anchor = telepointerData.selection.anchor as number;
+        const head = telepointerData.selection.head as number;
+        let rawFrom = anchor < head ? anchor : head;
+        let rawTo = anchor >= head ? anchor : head;
 
+        if (rawFrom > endOfDocPos) {
+          rawFrom = endOfDocPos;
+        }
+        if (rawTo > endOfDocPos) {
+          rawTo = endOfDocPos;
+        }
+
+        const isSelection = rawTo - rawFrom > 0;
         let from = 1;
         let to = 1;
 
@@ -134,7 +157,7 @@ export class PluginState {
           );
           to = isSelection ? getValidPos(tr, rawTo) : from;
         } catch (err) {
-          this.onError(err);
+          this.onError(err as Error);
         }
 
         add = add.concat(
@@ -155,7 +178,11 @@ export class PluginState {
         this.decorationSet = this.decorationSet.map(tr.mapping, tr.doc, {
           // Reapplies decorators those got removed by the state change
           onRemove: (spec) => {
-            if (spec.pointer && spec.pointer.sessionId) {
+            if (
+              spec.pointer &&
+              spec.pointer.sessionId &&
+              spec.key === `telepointer-${spec.pointer.sessionId}`
+            ) {
               const step = tr.steps.filter(isReplaceStep)[0];
               if (step) {
                 const { sessionId } = spec.pointer;
@@ -186,12 +213,12 @@ export class PluginState {
           },
         });
       } catch (err) {
-        this.onError(err);
+        this.onError(err as Error);
       }
 
       // Remove any selection decoration within the change range,
       // takes care of the issue when after pasting we end up with a dead selection
-      tr.steps.filter(isReplaceStep).forEach((s) => {
+      tr.steps.filter(isReplaceStep).forEach((s: Step) => {
         const { from, to } = s as any;
         this.decorationSet.find(from, to).forEach((deco: any) => {
           // `type` is private, `from` and `to` are public in latest version
@@ -215,7 +242,12 @@ export class PluginState {
             deco.type.toDOM.classList.add(TELEPOINTER_DIM_CLASS);
           }
 
-          deco.type.side = -1;
+          // Browser condition here to fix ED-14722 where telepointer
+          // decorations with side -1 in Firefox causes backspace issues.
+          // This is likely caused by contenteditable quirks in Firefox
+          if (!browser.gecko) {
+            deco.type.side = -1;
+          }
         } else {
           if (hasTelepointerDimClass) {
             deco.type.toDOM.classList.remove(TELEPOINTER_DIM_CLASS);
@@ -231,6 +263,24 @@ export class PluginState {
 
     if (add.length) {
       this.decorationSet = this.decorationSet.add(tr.doc, add);
+    }
+
+    // This piece needs to be after the decorationSet adjustments,
+    // otherwise it's always one step behind where the cursor is
+    if (telepointerData) {
+      const { sessionId } = telepointerData;
+      if (participants.get(sessionId)) {
+        const positionForScroll = getPositionOfTelepointer(
+          sessionId,
+          this.decorationSet,
+        );
+        if (positionForScroll) {
+          participants = participants.updateCursorPos(
+            sessionId,
+            positionForScroll,
+          );
+        }
+      }
     }
 
     const nextState = new PluginState(

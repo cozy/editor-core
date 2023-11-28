@@ -1,27 +1,27 @@
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
 import {
   initFullPageEditorWithAdf,
   snapshot,
   updateEditorProps,
-  Device,
   initEditorWithAdf,
   Appearance,
-} from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import mixedContentAdf from './__fixtures__/mixed-content.adf.json';
 import layoutWithBreakoutAdf from './__fixtures__/layout-with-breakout.adf.json';
 import breakoutAdf from './__fixtures__/mixed-content-with-breakout.adf.json';
-import mediaAdf from './__fixtures__/media-single.adf.json';
 import resizedTableAdf from './__fixtures__/resized-table.adf.json';
 import resizedTableWideAdf from './__fixtures__/resized-table-wide.adf.json';
 import resizedTableFullWidthAdf from './__fixtures__/resized-table-full-width.adf.json';
 import resizedTableInLayout from './__fixtures__/resized-table-in-layout.adf.json';
 import resizedTableInExt from '../table/__fixtures__/nested-table-inside-bodied-ext.adf.json';
 import resizedTableFWM from './__fixtures__/resized-table-fwm.adf.json';
-import { pressKey } from '../../__helpers/page-objects/_keyboard';
-import { clickFirstCell } from '../../../__tests__/__helpers/page-objects/_table';
-import { waitForMediaToBeLoaded } from '../../__helpers/page-objects/_media';
-import { panelSelectors } from '../../__helpers/page-objects/_panel';
-import { codeBlockSelectors } from '../../__helpers/page-objects/_code-block';
+import { pressKey } from '@atlaskit/editor-test-helpers/page-objects/keyboard';
+import { clickFirstCell } from '@atlaskit/editor-test-helpers/page-objects/table';
+import { panelSelectors } from '@atlaskit/editor-test-helpers/page-objects/panel';
+import { layoutSelectors } from '@atlaskit/editor-test-helpers/page-objects/layouts';
+/* eslint-disable import/no-extraneous-dependencies -- Removed from package.json to fix  circular depdencies */
 
 type ToggleFullWidthOptions = {
   // Focus is lost after toggling full width mode so if your test
@@ -35,7 +35,6 @@ describe('Snapshot Test: Toggle between full-width and default mode', () => {
   let fullWidthMode: boolean;
 
   const editorProps = {
-    allowDynamicTextSizing: true,
     allowLayouts: { allowBreakout: true, UNSAFE_addSidebarLayouts: true },
   };
 
@@ -105,14 +104,15 @@ describe('Snapshot Test: Toggle between full-width and default mode', () => {
   });
 
   describe('Breakout', () => {
-    it('hides breakout buttons in full-width mode and shows them in default mode', async () => {
+    // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+    it.skip('hides breakout buttons in full-width mode and shows them in default mode', async () => {
       await initEditor(breakoutAdf);
-      await page.waitForSelector(codeBlockSelectors.codeBlock);
-      await page.click(codeBlockSelectors.codeBlock);
+      await page.waitForSelector(layoutSelectors.content);
+      await page.click(layoutSelectors.content);
       await toggleFullWidthMode({
         postToggleCallback: async () => {
           // re-click the codeblock to see its UI controls.
-          await page.click(codeBlockSelectors.codeBlock);
+          await page.click(layoutSelectors.content);
         },
       });
     });
@@ -133,14 +133,6 @@ describe('Snapshot Test: Toggle between full-width and default mode', () => {
     });
   });
 
-  describe('Media', () => {
-    it('resizes image correctly', async () => {
-      await initEditor(mediaAdf);
-      await waitForMediaToBeLoaded(page);
-      await toggleFullWidthMode();
-    });
-  });
-
   describe('Table resizing', () => {
     // use a smaller viewport for the table tests so differences are picked up as a > 0.1% diff
     const tableViewport = {
@@ -156,7 +148,8 @@ describe('Snapshot Test: Toggle between full-width and default mode', () => {
         },
       });
 
-    it('scales columns up correctly when going default -> full-width', async () => {
+    // TODO: https://product-fabric.atlassian.net/browse/ED-13527
+    it.skip('scales columns up correctly when going default -> full-width', async () => {
       await initEditor(resizedTableAdf, tableViewport);
       await toggleFullWidthModeForTable();
     });

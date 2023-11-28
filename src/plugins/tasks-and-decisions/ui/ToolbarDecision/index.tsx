@@ -1,18 +1,21 @@
 import React, { PureComponent } from 'react';
 
-import { EditorView } from 'prosemirror-view';
-import { InjectedIntlProps, injectIntl } from 'react-intl';
-
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { WrappedComponentProps } from 'react-intl-next';
+import { injectIntl } from 'react-intl-next';
+import type { ExtractInjectionAPI } from '@atlaskit/editor-common/types';
 import DecisionIcon from '@atlaskit/icon/glyph/editor/decision';
 
-import ToolbarButton, { TOOLBAR_BUTTON } from '../../../../ui/ToolbarButton';
-import { messages } from '../../../insert-block/ui/ToolbarInsertBlock/messages';
-import { insertTaskDecision } from '../../commands';
+import { TOOLBAR_BUTTON, ToolbarButton } from '@atlaskit/editor-common/ui-menu';
+import { toolbarInsertBlockMessages as messages } from '@atlaskit/editor-common/messages';
+import { insertTaskDecisionCommand } from '../../commands';
+import type { TaskAndDecisionsPlugin } from '../../types';
 
 export interface Props {
   editorView?: EditorView;
   isDisabled?: boolean;
   isReducedSpacing?: boolean;
+  editorAPI: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined;
 }
 
 export interface State {
@@ -20,7 +23,7 @@ export interface State {
 }
 
 export class ToolbarDecision extends PureComponent<
-  Props & InjectedIntlProps,
+  Props & WrappedComponentProps,
   State
 > {
   state: State = { disabled: false };
@@ -42,17 +45,18 @@ export class ToolbarDecision extends PureComponent<
         disabled={disabled || isDisabled}
         spacing={isReducedSpacing ? 'none' : 'default'}
         title={`${label} <>`}
+        aria-keyshortcuts="Shift+, Shift+. space"
         iconBefore={<DecisionIcon label={label} />}
       />
     );
   }
 
   private handleInsertDecision = (): boolean => {
-    const { editorView } = this.props;
+    const { editorView, editorAPI } = this.props;
     if (!editorView) {
       return false;
     }
-    insertTaskDecision(editorView, 'decisionList')(
+    insertTaskDecisionCommand(editorAPI?.analytics?.actions)('decisionList')(
       editorView.state,
       editorView.dispatch,
     );

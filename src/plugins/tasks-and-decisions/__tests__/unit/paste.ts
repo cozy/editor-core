@@ -1,14 +1,22 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import dispatchPasteEvent from '@atlaskit/editor-test-helpers/dispatch-paste-event';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
   Preset,
-  LightEditorPlugin,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 
-import { pluginKey } from '../../../../plugins/card/pm-plugins/main';
-import hyperlinkPlugin from '../../../hyperlink';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+// eslint-disable-next-line @atlassian/tangerine/import/entry-points
+import { pluginKey } from '@atlaskit/editor-plugin-card/src/pm-plugins/main';
+import { hyperlinkPlugin } from '@atlaskit/editor-plugin-hyperlink';
 import tasksAndDecisionsPlugin from '../..';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
 
 const pasteContent = {
   action: `<meta http-equiv="content-type" content="text/html; charset=utf-8" /><div
@@ -103,6 +111,8 @@ describe('Tasks and decisions', () => {
       doc,
       pluginKey,
       preset: new Preset<LightEditorPlugin>()
+        .add([featureFlagsPlugin, {}])
+        .add([analyticsPlugin, {}])
         .add(tasksAndDecisionsPlugin)
         .add(hyperlinkPlugin),
     });

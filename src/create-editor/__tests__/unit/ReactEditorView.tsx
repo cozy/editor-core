@@ -1,67 +1,130 @@
 const mockStopMeasureDuration = 1234;
-jest.mock('@atlaskit/editor-common', () => ({
-  ...jest.requireActual<Object>('@atlaskit/editor-common'),
+const mockStartTime = 1;
+const mockResponseTime = 200;
+jest.mock('@atlaskit/editor-common/utils', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/utils'),
   startMeasure: jest.fn(),
-  measureRender: jest.fn(),
+  measureRender: jest.fn(async (name: string, callback: Function) => {
+    await Promise.resolve(0);
+    callback({
+      duration: mockStopMeasureDuration,
+      startTime: mockStartTime,
+      distortedDuration: false,
+    });
+  }),
   stopMeasure: jest.fn(
     (
       measureName: string,
-      onMeasureComplete?: (duration: number, startTime: number) => void,
+      onMeasureComplete?: (measurement: {
+        duration: number;
+        startTime: number;
+        distortedDuration: boolean;
+      }) => void,
     ) => {
-      onMeasureComplete && onMeasureComplete(mockStopMeasureDuration, 1);
+      onMeasureComplete &&
+        onMeasureComplete({
+          duration: mockStopMeasureDuration,
+          startTime: mockStartTime,
+          distortedDuration: false,
+        });
     },
   ),
   isPerformanceAPIAvailable: jest.fn(() => true),
+  getResponseEndTime: jest.fn(() => mockResponseTime),
+}));
+
+const mockStore = {
+  get: jest.fn(),
+  getAll: jest.fn(),
+  start: jest.fn(),
+  addMetadata: jest.fn(),
+  mark: jest.fn(),
+  success: jest.fn(),
+  fail: jest.fn(),
+  abort: jest.fn(),
+  failAll: jest.fn(),
+  abortAll: jest.fn(),
+};
+jest.mock('@atlaskit/editor-common/ufo', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/ufo'),
+  ExperienceStore: {
+    getInstance: () => mockStore,
+  },
+}));
+
+jest.mock('@atlaskit/editor-common/analytics', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/analytics'),
+  fireAnalyticsEvent: jest.fn(),
 }));
 
 import React from 'react';
-import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
-import { EditorView } from 'prosemirror-view';
+import { screen } from '@testing-library/react';
+import { mountWithIntl } from '../../../__tests__/__helpers/enzyme';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { renderWithIntl } from '@atlaskit/editor-test-helpers/rtl';
+import { EditorView } from '@atlaskit/editor-prosemirror/view';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
-import {
-  measureRender,
-  ProviderFactory,
-  SEVERITY,
-} from '@atlaskit/editor-common';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import { measureRender, SEVERITY } from '@atlaskit/editor-common/utils';
 import { toJSON } from '../../../utils';
-import ReactEditorView, { shouldReconfigureState } from '../../ReactEditorView';
-import { EditorConfig } from '../../../types/editor-config';
-import { ReactWrapper, shallow } from 'enzyme';
-import { TextSelection } from 'prosemirror-state';
+import { ReactEditorView } from '../../ReactEditorView';
+import { editorMessages } from '../../messages';
+import type { EditorConfig } from '../../../types/editor-config';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { mount, ReactWrapper } from 'enzyme';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import patchEditorViewForJSDOM from '@atlaskit/editor-test-helpers/jsdom-fixtures';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   media,
   mediaGroup,
   mention,
 } from '@atlaskit/editor-test-helpers/doc-builder';
 import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
-import { MentionProvider } from '@atlaskit/mention/resource';
-import { EventDispatcher } from '../../../event-dispatcher';
-
+import type { MentionProvider } from '@atlaskit/mention/resource';
+import { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
 import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
-  addAnalytics,
-  AnalyticsEventPayload,
-  DispatchAnalyticsEvent,
   EVENT_TYPE,
   INPUT_METHOD,
-} from '../../../plugins/analytics';
-import { EditorAppearance, EditorProps } from '../../../types';
-import {
-  analyticsEventKey,
-  editorAnalyticsChannel,
-} from '../../../plugins/analytics/consts';
+  fireAnalyticsEvent,
+} from '@atlaskit/editor-common/analytics';
+import type { EditorAppearance, EditorProps } from '../../../types';
+import type { PublicPluginAPI } from '@atlaskit/editor-common/types';
+import { FabricChannel } from '@atlaskit/analytics-listeners';
+import { analyticsEventKey } from '@atlaskit/editor-common/utils';
+
+import type { AnalyticsPlugin } from '@atlaskit/editor-plugin-analytics';
 import {
   PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
   PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
 } from '../../consts';
+import type {
+  FireAnalyticsEvent,
+  AnalyticsEventPayload,
+  DispatchAnalyticsEvent,
+} from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
+import {
+  EditorExperience,
+  RELIABILITY_INTERVAL,
+} from '@atlaskit/editor-common/ufo';
+import { createIntl } from 'react-intl-next';
+import { createPreset } from '../../create-preset';
+import PluginSlot from '../../../ui/PluginSlot';
 
-import * as FireAnalyticsEvent from '../../../plugins/analytics/fire-analytics-event';
+export const editorAnalyticsChannel = FabricChannel.editor;
 
 const portalProviderAPI: any = {
   render() {},
@@ -74,6 +137,8 @@ const requiredProps = () => ({
   onEditorCreated: () => {},
   onEditorDestroyed: () => {},
   editorProps: {},
+  intl: createIntl({ locale: 'en' }),
+  preset: createPreset({}),
 });
 
 const analyticsProps = () => ({
@@ -94,23 +159,21 @@ type Props = {
   config: EditorConfig;
 };
 describe('@atlaskit/editor-core', () => {
-  let mockFire: ReturnType<typeof FireAnalyticsEvent.fireAnalyticsEvent>;
+  let mockFire: ReturnType<FireAnalyticsEvent>;
 
   beforeEach(() => {
     mockFire = jest.fn();
-    jest
-      .spyOn(FireAnalyticsEvent, 'fireAnalyticsEvent')
-      .mockReturnValue(mockFire);
+    (fireAnalyticsEvent as jest.Mock).mockReturnValue(mockFire);
   });
 
   afterEach(() => {
-    (FireAnalyticsEvent.fireAnalyticsEvent as jest.Mock).mockRestore();
+    jest.clearAllMocks();
   });
 
   describe('<ReactEditorView />', () => {
     it('should place the initial selection at the end of the document', () => {
       const document = doc(p('hello{endPos}'))(defaultSchema);
-      const wrapper = shallow(
+      const wrapper = mountWithIntl(
         <ReactEditorView
           {...requiredProps()}
           editorProps={{ defaultValue: toJSON(document) }}
@@ -124,7 +187,7 @@ describe('@atlaskit/editor-core', () => {
 
     it('should place the initial selection at the start of the document when in full-page appearance', () => {
       const document = doc(p('{startPos}hello'))(defaultSchema);
-      const wrapper = shallow(
+      const wrapper = mountWithIntl(
         <ReactEditorView
           {...requiredProps()}
           editorProps={{
@@ -141,7 +204,7 @@ describe('@atlaskit/editor-core', () => {
 
     it('should place the initial selection at the start/end when document is empty', () => {
       const document = doc(p('{endPos}'))(defaultSchema);
-      const wrapper = shallow(<ReactEditorView {...requiredProps()} />);
+      const wrapper = mountWithIntl(<ReactEditorView {...requiredProps()} />);
       const { editorState } = wrapper.instance() as ReactEditorView;
       const cursorPos = (editorState.selection as TextSelection).$cursor!.pos;
       expect(cursorPos).toEqual(document.refs.endPos);
@@ -205,6 +268,130 @@ describe('@atlaskit/editor-core', () => {
         }),
       });
       wrapper.unmount();
+    });
+
+    it('should NOT trigger editor started analytics event if startedTracking is disabled in performanceTracking flag', () => {
+      const wrapper = mountWithIntl(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          editorProps={{
+            performanceTracking: { startedTracking: { enabled: false } },
+          }}
+        />,
+      );
+
+      expect(mockFire).toHaveBeenCalledTimes(0);
+      wrapper.unmount();
+    });
+
+    it('triggers ACTION.UFO_SESSION_COMPLETE analytics with predefined interval when ufo enabled', () => {
+      jest.useFakeTimers();
+      const wrapper = mountWithIntl(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          editorProps={{ featureFlags: { ufo: true } }}
+        />,
+      );
+
+      const payload = {
+        action: ACTION.UFO_SESSION_COMPLETE,
+        actionSubject: ACTION_SUBJECT.EDITOR,
+        attributes: { interval: RELIABILITY_INTERVAL },
+        eventType: EVENT_TYPE.OPERATIONAL,
+      };
+      expect(mockFire).not.toHaveBeenCalledWith({ payload });
+      jest.advanceTimersByTime(RELIABILITY_INTERVAL);
+      expect(mockFire).toHaveBeenCalledWith({ payload });
+
+      (mockFire as jest.Mock).mockClear();
+
+      jest.advanceTimersByTime(RELIABILITY_INTERVAL);
+      expect(mockFire).toHaveBeenCalledWith({ payload });
+
+      wrapper.unmount();
+      jest.useRealTimers();
+    });
+
+    it('should set and update aria-label of editor ProseMirror div with passed assistiveLabel prop. ', () => {
+      const label =
+        'Description field: Main content area, start typing to enter text.';
+
+      const { rerender } = renderWithIntl(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          editorProps={{
+            assistiveLabel: label,
+          }}
+        />,
+      );
+
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+
+      const newLabel = 'Page comment editor';
+      rerender(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          editorProps={{
+            assistiveLabel: newLabel,
+          }}
+        />,
+      );
+
+      expect(screen.getByLabelText(newLabel)).toBeInTheDocument();
+    });
+
+    it('should not recreate editor if assistiveLabel prop is not changed between re-renders. ', () => {
+      const label =
+        'Description field: Main content area, start typing to enter text.';
+
+      const renderMock = jest.fn((editor) => <div />);
+      const { rerender } = renderWithIntl(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          editorProps={{
+            assistiveLabel: label,
+          }}
+          render={renderMock}
+        />,
+      );
+
+      expect(renderMock).toHaveBeenCalledTimes(1);
+
+      rerender(
+        <ReactEditorView
+          {...requiredProps()}
+          {...analyticsProps()}
+          onEditorCreated={() => {}}
+          editorProps={{
+            assistiveLabel: label,
+          }}
+          render={renderMock}
+        />,
+      );
+
+      const isNewEditorCreated =
+        renderMock.mock.calls[0][0].editor !==
+        renderMock.mock.calls[1][0].editor;
+
+      expect(renderMock).toHaveBeenCalledTimes(2);
+      expect(isNewEditorCreated).toEqual(false);
+    });
+
+    it('should render editor ProseMirror div with default aria-label.', () => {
+      const { getByRole } = renderWithIntl(
+        <ReactEditorView {...requiredProps()} {...analyticsProps()} />,
+      );
+
+      expect(
+        getByRole('textbox', {
+          name: editorMessages.editorAssistiveLabel.defaultMessage,
+        }),
+      ).toBeInTheDocument();
     });
 
     describe('when a transaction is dispatched', () => {
@@ -361,6 +548,7 @@ describe('@atlaskit/editor-core', () => {
         let wrapper: ReactWrapper;
         const setupEditor = (
           trackValidTransactions: EditorProps['trackValidTransactions'],
+          additionalProps: EditorProps = {},
         ) => {
           let validTr;
           wrapper = mountWithIntl(
@@ -371,6 +559,7 @@ describe('@atlaskit/editor-core', () => {
                 allowDate: true,
                 ...analyticsProps(),
                 ...(trackValidTransactions && { trackValidTransactions }),
+                ...additionalProps,
               }}
             />,
           );
@@ -441,6 +630,17 @@ describe('@atlaskit/editor-core', () => {
           dispatchValidTransactionNthTimes(120);
           expect(mockFire).toHaveBeenCalledTimes(0);
         });
+        it('does not send V3 analytics event on valid transactions if transaction tracking is explicitly disabled on performanceTracking flag', () => {
+          const trackValidTransactions = true;
+          const { dispatchValidTransactionNthTimes } = setupEditor(
+            trackValidTransactions,
+            {
+              performanceTracking: { transactionTracking: { enabled: false } },
+            },
+          );
+          dispatchValidTransactionNthTimes(120);
+          expect(mockFire).toHaveBeenCalledTimes(0);
+        });
       });
     });
 
@@ -463,26 +663,42 @@ describe('@atlaskit/editor-core', () => {
       let wrapper: ReactWrapper;
       let editor: any;
       let invalidTr;
+      let editorAPI: PublicPluginAPI<[AnalyticsPlugin]>;
 
-      beforeEach(() => {
+      const setupEditor = (additionalProps: EditorProps = {}) => {
+        const editorProps = {
+          allowDate: true,
+          ...analyticsProps(),
+          ...additionalProps,
+        };
         wrapper = mountWithIntl(
           <ReactEditorView
             {...requiredProps()}
             {...analyticsProps()}
-            editorProps={{
-              allowDate: true,
-              ...analyticsProps(),
+            setEditorApi={(api) => (editorAPI = api)}
+            editorProps={editorProps}
+            preset={createPreset(editorProps)}
+            render={({ editor, view, config: { pluginHooks } }) => {
+              return (
+                <>
+                  {editor}
+                  {/* @ts-ignore We just need the hooks to render for analytics */}
+                  <PluginSlot editorView={view} pluginHooks={pluginHooks} />
+                </>
+              );
             }}
           />,
         );
         editor = wrapper.instance() as ReactEditorView;
-      });
+      };
 
       it('should not throw error', () => {
+        setupEditor();
         expect(() => dispatchInvalidTransaction()).not.toThrowError();
       });
 
       it('sends V3 analytics event with info on failed transaction', () => {
+        setupEditor();
         const analyticsEventPayload: AnalyticsEventPayload = {
           action: ACTION.CLICKED,
           actionSubject: ACTION_SUBJECT.BUTTON,
@@ -491,16 +707,18 @@ describe('@atlaskit/editor-core', () => {
           eventType: EVENT_TYPE.UI,
         };
 
+        const tr = editor.view.state.tr;
+
+        editorAPI?.analytics?.actions?.attachAnalyticsEvent(
+          analyticsEventPayload,
+        )(tr);
+
         // @ts-ignore This violated type definition upgrade of @types/jest to v24.0.18 & ts-jest v24.1.0.
         //See BUILDTOOLS-210-clean: https://bitbucket.org/atlassian/atlaskit-mk-2/pull-requests/7178/buildtools-210-clean/diff
         mockFire.mockClear();
         dispatchInvalidTransaction(
           // add v3 analytics meta to transaction as we want to check this info is sent on
-          addAnalytics(
-            editor.view.state,
-            editor.view.state.tr,
-            analyticsEventPayload,
-          ),
+          tr,
         );
         expect(mockFire).toHaveBeenCalledWith({
           payload: {
@@ -520,7 +738,36 @@ describe('@atlaskit/editor-core', () => {
         });
       });
 
+      it('does not send V3 analytics event if transaction tracking is explicitly disabled on performanceTracking flag', () => {
+        setupEditor({
+          performanceTracking: { transactionTracking: { enabled: false } },
+        });
+        const analyticsEventPayload: AnalyticsEventPayload = {
+          action: ACTION.CLICKED,
+          actionSubject: ACTION_SUBJECT.BUTTON,
+          actionSubjectId: ACTION_SUBJECT_ID.BUTTON_HELP,
+          attributes: { inputMethod: INPUT_METHOD.SHORTCUT },
+          eventType: EVENT_TYPE.UI,
+        };
+
+        const tr = editor.view.state.tr;
+
+        editorAPI?.analytics?.actions?.attachAnalyticsEvent(
+          analyticsEventPayload,
+        )(tr);
+
+        // @ts-ignore This violated type definition upgrade of @types/jest to v24.0.18 & ts-jest v24.1.0.
+        //See BUILDTOOLS-210-clean: https://bitbucket.org/atlassian/atlaskit-mk-2/pull-requests/7178/buildtools-210-clean/diff
+        mockFire.mockClear();
+        dispatchInvalidTransaction(
+          // add v3 analytics meta to transaction as we want to check this info is sent on
+          tr,
+        );
+        expect(mockFire).toHaveBeenCalledTimes(0);
+      });
+
       it('does not apply the transaction', () => {
+        setupEditor();
         const originalState = editor.editorState;
         dispatchInvalidTransaction();
         expect(editor.editorState).toEqual(originalState);
@@ -543,6 +790,7 @@ describe('@atlaskit/editor-core', () => {
         eventDispatcher: expect.any(EventDispatcher),
         config: {
           contentComponents: expect.anything(),
+          pluginHooks: expect.anything(),
           marks: expect.anything(),
           nodes: expect.anything(),
           pmPlugins: expect.anything(),
@@ -571,6 +819,7 @@ describe('@atlaskit/editor-core', () => {
         eventDispatcher: expect.any(EventDispatcher),
         config: {
           contentComponents: expect.anything(),
+          pluginHooks: expect.anything(),
           marks: expect.anything(),
           nodes: expect.anything(),
           pmPlugins: expect.anything(),
@@ -605,7 +854,7 @@ describe('@atlaskit/editor-core', () => {
     describe('when re-creating the editor view after a props change', () => {
       it('should call onEditorDestroyed', () => {
         let handleEditorDestroyed = jest.fn();
-        const wrapper = mountWithIntl(
+        const wrapper = mount(
           <ReactEditorView
             {...requiredProps()}
             editorProps={{ appearance: 'comment' }}
@@ -626,6 +875,7 @@ describe('@atlaskit/editor-core', () => {
           eventDispatcher: expect.any(EventDispatcher),
           config: {
             contentComponents: expect.anything(),
+            pluginHooks: expect.anything(),
             marks: expect.anything(),
             nodes: expect.anything(),
             pmPlugins: expect.anything(),
@@ -638,7 +888,7 @@ describe('@atlaskit/editor-core', () => {
 
       it('should call destroy on the old EditorView', () => {
         let editorViewDestroy: jest.SpyInstance | undefined;
-        const wrapper = mountWithIntl(
+        const wrapper = mount(
           <ReactEditorView
             {...requiredProps()}
             onEditorCreated={({ view }) => {
@@ -721,7 +971,7 @@ describe('@atlaskit/editor-core', () => {
 
     describe('when appearance changes to full width', () => {
       const initFullWidthEditor = (appearance: EditorAppearance) =>
-        mountWithIntl(
+        mount(
           <ReactEditorView
             {...requiredProps()}
             {...analyticsProps()}
@@ -806,12 +1056,260 @@ describe('@atlaskit/editor-core', () => {
           payload,
         });
       });
+    });
 
-      it('should NOT call event dispatcher if it is NOT allowed to call analytics', () => {
-        const { dispatch, eventDispatcher } = setupDispatchAnalyticsTest(false);
+    describe('ufo', () => {
+      afterEach(() => {
+        jest.clearAllMocks();
+      });
 
-        dispatch(payload);
-        expect(eventDispatcher.emit).not.toHaveBeenCalled();
+      describe('load', () => {
+        describe('when feature flag enabled', () => {
+          beforeEach(async () => {
+            mountWithIntl(
+              <ReactEditorView
+                {...requiredProps()}
+                editorProps={{ featureFlags: { ufo: true } }}
+              />,
+            );
+            await flushPromises();
+          });
+
+          it('adds prosemirror rendered mark to editor load experience', () => {
+            expect(mockStore.mark).toHaveBeenCalledWith(
+              EditorExperience.loadEditor,
+              'proseMirrorRendered',
+              mockStopMeasureDuration + mockStartTime,
+            );
+          });
+
+          it('adds metadata for ttfb and nodes to editor load experience', () => {
+            expect(mockStore.addMetadata).toHaveBeenCalledWith(
+              EditorExperience.loadEditor,
+              {
+                ttfb: mockResponseTime,
+                nodes: { paragraph: 1 },
+              },
+            );
+          });
+        });
+
+        describe('when feature flag not enabled', () => {
+          it("doesn't interact with experience at all", () => {
+            expect(mockStore.mark).not.toHaveBeenCalled();
+            expect(mockStore.addMetadata).not.toHaveBeenCalled();
+          });
+        });
+      });
+
+      describe('interaction', () => {
+        describe('when feature flag enabled', () => {
+          let editor: any;
+
+          describe('and valid transaction is applied', () => {
+            beforeEach(async () => {
+              const wrapper = mountWithIntl(
+                <ReactEditorView
+                  {...requiredProps()}
+                  editorProps={{
+                    featureFlags: { ufo: true },
+                    performanceTracking: {
+                      transactionTracking: { enabled: true, samplingRate: 1 },
+                    },
+                    onChange: () => {},
+                    allowDate: true,
+                  }}
+                />,
+              );
+              await flushPromises();
+
+              // trigger a transaction
+              editor = wrapper.instance() as ReactEditorView;
+              editor.view.dispatch(editor.view.state.tr.insertText('hello'));
+            });
+
+            it('starts new interaction experience', () => {
+              expect(mockStore.start).toHaveBeenCalledWith(
+                EditorExperience.interaction,
+              );
+            });
+
+            it.each([
+              'stateApply',
+              'viewUpdateState',
+              'onEditorViewStateUpdated',
+              'onChange',
+              'dispatchTransaction',
+            ])('adds %s mark to interaction experience', (mark) => {
+              expect(mockStore.mark).toHaveBeenCalledWith(
+                EditorExperience.interaction,
+                mark,
+                expect.any(Number),
+              );
+            });
+
+            it('succeeds interaction experience', () => {
+              expect(mockStore.success).toHaveBeenCalledWith(
+                EditorExperience.interaction,
+              );
+            });
+          });
+
+          describe('and invalid transaction is applied', () => {
+            it('fails interaction experience if an invalid transaction is applied', async () => {
+              const editorProps = {
+                featureFlags: { ufo: true },
+                performanceTracking: {
+                  transactionTracking: { enabled: true, samplingRate: 1 },
+                },
+                onChange: () => {},
+                allowDate: true,
+              };
+              const wrapper = mountWithIntl(
+                <ReactEditorView
+                  {...requiredProps()}
+                  preset={createPreset(editorProps)}
+                  editorProps={editorProps}
+                />,
+              );
+              await flushPromises();
+
+              // invalid transaction with date node as child of code block
+              editor = wrapper.instance() as ReactEditorView;
+              const { date, codeBlock } = editor.view.state.schema.nodes;
+              editor.view.dispatch(
+                editor.view.state.tr.replaceSelectionWith(
+                  codeBlock.create({}, date.create()),
+                ),
+              );
+
+              expect(mockStore.success).not.toHaveBeenCalled();
+              expect(mockStore.fail).toHaveBeenCalledWith(
+                EditorExperience.interaction,
+                {
+                  reason: 'invalid transaction',
+                  invalidNodes: 'codebl(date())',
+                },
+              );
+            });
+          });
+        });
+
+        describe('when feature flag not enabled', () => {
+          it("doesn't start new interaction experience", async () => {
+            const wrapper = mountWithIntl(
+              <ReactEditorView
+                {...requiredProps()}
+                editorProps={{
+                  performanceTracking: {
+                    transactionTracking: { enabled: true, samplingRate: 1 },
+                  },
+                }}
+              />,
+            );
+            await flushPromises();
+
+            // trigger a transaction
+            const editor: any = wrapper.instance() as ReactEditorView;
+            editor.view.dispatch(editor.view.state.tr.insertText('hello'));
+
+            expect(mockStore.start).not.toHaveBeenCalledWith(
+              EditorExperience.interaction,
+            );
+          });
+        });
+      });
+
+      describe('editSession', () => {
+        beforeEach(() => {
+          jest.clearAllTimers();
+        });
+        const mountEditor = async (ufoEnabled: boolean) => {
+          mountWithIntl(
+            <ReactEditorView
+              {...requiredProps()}
+              {...analyticsProps()}
+              editorProps={{ featureFlags: { ufo: ufoEnabled } }}
+            />,
+          );
+          await flushPromises();
+        };
+        const mountEditorAndAdvanceTime = async (
+          ufoEnabled: boolean,
+          ms: number,
+        ) => {
+          jest.useFakeTimers();
+          await mountEditor(ufoEnabled);
+          await flushPromises();
+          jest.advanceTimersByTime(ms);
+          jest.useRealTimers();
+        };
+
+        describe('when feature flag enabled', () => {
+          describe(`and editor has just mounted`, () => {
+            beforeEach(async () => {
+              await mountEditor(true);
+            });
+            it('starts new editSession experience', () => {
+              expect(mockStore.start).toHaveBeenCalledWith(
+                EditorExperience.editSession,
+              );
+            });
+            it('adds metadata for editSession experience interval (ms)', () => {
+              expect(mockStore.addMetadata).toHaveBeenCalledWith(
+                EditorExperience.editSession,
+                {
+                  reliabilityInterval: RELIABILITY_INTERVAL,
+                },
+              );
+            });
+          });
+
+          describe(`and ${RELIABILITY_INTERVAL}ms has passed`, () => {
+            beforeEach(async () => {
+              await mountEditorAndAdvanceTime(true, RELIABILITY_INTERVAL);
+            });
+            it('succeeds editSession experience', () => {
+              expect(mockStore.success).toHaveBeenCalledWith(
+                EditorExperience.editSession,
+              );
+            });
+          });
+
+          describe(`and ${RELIABILITY_INTERVAL}ms has passed and previous editSession settles`, () => {
+            beforeEach(async () => {
+              const prevEditSession = async () => true;
+              mockStore.success.mockImplementation(prevEditSession);
+              await mountEditorAndAdvanceTime(true, RELIABILITY_INTERVAL);
+            });
+            it('starts new editSession experience', () => {
+              expect(mockStore.start.mock.calls).toEqual([
+                [EditorExperience.editSession],
+                [EditorExperience.editSession],
+              ]);
+            });
+            it('adds metadata for editSession experience interval (ms)', () => {
+              expect(mockStore.addMetadata).toHaveBeenCalledTimes(3);
+              expect(mockStore.addMetadata).toHaveBeenLastCalledWith(
+                EditorExperience.editSession,
+                {
+                  reliabilityInterval: RELIABILITY_INTERVAL,
+                },
+              );
+            });
+          });
+        });
+
+        describe('when feature flag not enabled', () => {
+          beforeEach(async () => {
+            await mountEditor(false);
+          });
+          it("doesn't start new editSession experience", () => {
+            expect(mockStore.start).not.toHaveBeenCalledWith(
+              EditorExperience.editSession,
+            );
+          });
+        });
       });
     });
   });
@@ -826,14 +1324,16 @@ describe('@atlaskit/editor-core', () => {
     );
 
     it('mentions should be sanitized when sanitizePrivateContent true', () => {
-      const wrapper = shallow(
+      const editorProps = {
+        defaultValue: toJSON(document),
+        mentionProvider,
+        sanitizePrivateContent: true,
+      };
+      const wrapper = mountWithIntl(
         <ReactEditorView
           {...requiredProps()}
-          editorProps={{
-            defaultValue: toJSON(document),
-            mentionProvider,
-            sanitizePrivateContent: true,
-          }}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
           providerFactory={ProviderFactory.create({ mentionProvider })}
         />,
       );
@@ -849,14 +1349,16 @@ describe('@atlaskit/editor-core', () => {
     });
 
     it('mentions should not be sanitized when sanitizePrivateContent false', () => {
-      const wrapper = shallow(
+      const editorProps = {
+        defaultValue: toJSON(document),
+        sanitizePrivateContent: false,
+        mentionProvider,
+      };
+      const wrapper = mountWithIntl(
         <ReactEditorView
           {...requiredProps()}
-          editorProps={{
-            defaultValue: toJSON(document),
-            sanitizePrivateContent: false,
-            mentionProvider,
-          }}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
           providerFactory={ProviderFactory.create({ mentionProvider })}
         />,
       );
@@ -868,13 +1370,15 @@ describe('@atlaskit/editor-core', () => {
     });
 
     it('mentions should not be sanitized when no collabEdit options', () => {
-      const wrapper = shallow(
+      const editorProps = {
+        defaultValue: toJSON(document),
+        mentionProvider,
+      };
+      const wrapper = mountWithIntl(
         <ReactEditorView
           {...requiredProps()}
-          editorProps={{
-            defaultValue: toJSON(document),
-            mentionProvider,
-          }}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
           providerFactory={ProviderFactory.create({ mentionProvider })}
         />,
       );
@@ -953,6 +1457,7 @@ describe('@atlaskit/editor-core', () => {
           tr.insertText('a', 2);
           view!.dispatch(tr);
         };
+
         const wrapper = mountWithIntl(
           <ReactEditorView
             {...requiredProps()}
@@ -976,11 +1481,14 @@ describe('@atlaskit/editor-core', () => {
           tr.setMeta('isRemote', 'true');
           view!.dispatch(tr);
         };
+
+        const editorProps = { defaultValue: toJSON(document), onChange };
         const wrapper = mountWithIntl(
           <ReactEditorView
             {...requiredProps()}
             onEditorCreated={onEditorCreated}
-            editorProps={{ defaultValue: toJSON(document), onChange }}
+            preset={createPreset(editorProps)}
+            editorProps={editorProps}
           />,
         );
         wrapper.unmount();
@@ -1001,97 +1509,58 @@ describe('@atlaskit/editor-core', () => {
       ({ condition, threshold, severity }) => {
         (measureRender as any).mockImplementationOnce(
           (name: any, callback: any) => {
-            callback && callback(threshold, 1);
+            callback && callback({ duration: threshold, startTime: 1 });
           },
         );
+        const editorProps = {
+          performanceTracking: {
+            proseMirrorRenderedTracking: {
+              trackSeverity: true,
+              severityNormalThreshold:
+                PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
+              severityDegradedThreshold:
+                PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
+            },
+          },
+        };
 
         const wrapper = mountWithIntl(
           <ReactEditorView
             {...requiredProps()}
             {...analyticsProps()}
             allowAnalyticsGASV3={true}
-            editorProps={{
-              performanceTracking: {
-                proseMirrorRenderedTracking: {
-                  trackSeverity: true,
-                  severityNormalThreshold: PROSEMIRROR_RENDERED_NORMAL_SEVERITY_THRESHOLD,
-                  severityDegradedThreshold: PROSEMIRROR_RENDERED_DEGRADED_SEVERITY_THRESHOLD,
-                },
-              },
-            }}
+            preset={createPreset(editorProps)}
+            editorProps={editorProps}
           />,
         );
 
-        expect(wrapper.instance().proseMirrorRenderedSeverity).toBe(severity);
+        expect(
+          (wrapper.instance() as ReactEditorView).proseMirrorRenderedSeverity,
+        ).toBe(severity);
       },
     );
   });
 
-  describe('shouldReconfigureState', () => {
-    const props: EditorProps = {
-      appearance: 'full-width',
-    };
+  describe('resetEditorState', () => {
+    it('should call createEditorState', () => {
+      const wrapper = mountWithIntl(<ReactEditorView {...requiredProps()} />);
 
-    it('should return TRUE when appearance changed', () => {
-      const nextProps: EditorProps = {
-        ...props,
-        appearance: 'full-page',
-      };
+      const instance = wrapper.instance() as ReactEditorView;
+      const mock = jest.spyOn(instance, 'createEditorState');
 
-      const actual = shouldReconfigureState(props, nextProps);
+      instance.resetEditorState({ doc: '', shouldScrollToBottom: false });
 
-      expect(actual).toBe(true);
+      expect(mock).toHaveBeenCalled();
     });
 
-    it('should return TRUE when UNSAFE_allowUndoRedoButtons is changed', () => {
-      const nextProps: EditorProps = {
-        ...props,
-        UNSAFE_allowUndoRedoButtons: true,
-      };
+    it('should not create a new schema when resetting editorState', () => {
+      const wrapper = mountWithIntl(<ReactEditorView {...requiredProps()} />);
+      const instance = wrapper.instance() as ReactEditorView;
+      const schema = instance.view?.state.schema;
+      expect(schema).not.toBeNull();
+      instance.resetEditorState({ doc: '', shouldScrollToBottom: false });
 
-      const actual = shouldReconfigureState(props, nextProps);
-
-      expect(actual).toBe(true);
-    });
-
-    it('should return TRUE when persistScrollGutter changed', () => {
-      const nextProps: EditorProps = {
-        ...props,
-        persistScrollGutter: true,
-      };
-
-      const actual = shouldReconfigureState(props, nextProps);
-
-      expect(actual).toBe(true);
-    });
-
-    it('should return FALSE when relevant properties is not changed', () => {
-      const nextProps = {
-        ...props,
-        inputSamplingLimit: 5,
-      };
-
-      const actual = shouldReconfigureState(props, nextProps);
-
-      expect(actual).toBe(false);
-    });
-  });
-
-  describe('dangerouslyAppendPlugins', () => {
-    it('should call pmPlugins factory of passed plugin', () => {
-      const pmPlugins = jest.fn(() => []);
-      const __plugins = [{ name: 'dangerouslyAppendPlugins', pmPlugins }];
-
-      mountWithIntl(
-        <ReactEditorView
-          {...requiredProps()}
-          editorProps={{
-            dangerouslyAppendPlugins: { __plugins },
-          }}
-        />,
-      );
-
-      expect(pmPlugins).toHaveBeenCalled();
+      expect(schema === instance.view?.state.schema).toBeTruthy();
     });
   });
 });

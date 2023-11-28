@@ -1,110 +1,142 @@
-jest.mock('../../../plugins/text-formatting/pm-plugins/input-rule');
 import React from 'react';
-import { mountWithIntl } from '@atlaskit/editor-test-helpers/enzyme';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { renderWithIntl } from '@atlaskit/editor-test-helpers/rtl';
 import ReactEditorView from '../../ReactEditorView';
-import createAnalyticsEventMock from '@atlaskit/editor-test-helpers/create-analytics-event-mock';
-import textFormattingInputRulePlugin from '../../../plugins/text-formatting/pm-plugins/input-rule';
-import * as FireAnalyticsEvent from '../../../plugins/analytics/fire-analytics-event';
-const portalProviderAPI: any = {
-  render() {},
-  remove() {},
-};
-const requiredProps = () => ({
-  providerFactory: ProviderFactory.create({}),
-  portalProviderAPI,
-  onEditorCreated: () => {},
-  onEditorDestroyed: () => {},
-  editorProps: {},
-});
-const analyticsProps = () => ({
-  allowAnalyticsGASV3: true,
-  createAnalyticsEvent: createAnalyticsEventMock() as any,
-});
+import * as FeatureFlagsPlugin from '@atlaskit/editor-plugin-feature-flags';
+import { createPreset } from '../../create-preset';
+
+jest.mock('@atlaskit/editor-plugin-feature-flags', () => ({
+  ...jest.requireActual('@atlaskit/editor-plugin-feature-flags'),
+  featureFlagsPlugin: jest.fn(() => ({
+    name: 'featureFlags',
+    sharedState: {
+      currentState: () => ({}),
+    },
+  })),
+}));
+
 describe('ReactEditorView/reconfigureState', () => {
-  let mockFire: ReturnType<typeof FireAnalyticsEvent.fireAnalyticsEvent>;
-  beforeEach(() => {
-    mockFire = jest.fn();
-    jest
-      .spyOn(FireAnalyticsEvent, 'fireAnalyticsEvent')
-      .mockReturnValue(mockFire);
-  });
-  afterEach(() => {
-    (FireAnalyticsEvent.fireAnalyticsEvent as jest.Mock).mockRestore();
-    jest.resetAllMocks();
-  });
+  const defaultProps = {
+    providerFactory: ProviderFactory.create({}),
+    portalProviderAPI: {} as any,
+    onEditorCreated: () => {},
+    onEditorDestroyed: () => {},
+  };
+  const featureFlagsCurrentStateSpy = jest.spyOn(
+    FeatureFlagsPlugin,
+    'featureFlagsPlugin',
+  );
+
+  afterEach(jest.clearAllMocks);
+
   describe('when the component is created', () => {
     it('should send the feature flag', () => {
-      mountWithIntl(
-        <ReactEditorView
-          {...requiredProps()}
-          {...analyticsProps()}
-          editorProps={{
-            featureFlags: {
-              useUnpredictableInputRule: true,
-            },
-          }}
-        />,
-      );
-      expect(textFormattingInputRulePlugin).toHaveBeenNthCalledWith(
-        1,
-        expect.anything(),
-        expect.objectContaining({ useUnpredictableInputRule: true }),
-      );
-    });
-  });
-  describe('when the editor props flag changes', () => {
-    it('should reconfigure the state using new UNSAFE_allowUndoRedoButtons', () => {
-      const wrapper = mountWithIntl(
-        <ReactEditorView
-          {...requiredProps()}
-          {...analyticsProps()}
-          editorProps={{
-            UNSAFE_allowUndoRedoButtons: false,
-          }}
-        />,
-      );
-      wrapper.setProps({
-        editorProps: {
-          UNSAFE_allowUndoRedoButtons: true,
+      const editorProps = {
+        featureFlags: {
+          ufo: true,
         },
-      });
-      expect(textFormattingInputRulePlugin).toHaveBeenNthCalledWith(
-        2,
-        expect.anything(),
-        expect.objectContaining({ undoRedoButtons: true }),
+      };
+
+      renderWithIntl(
+        <ReactEditorView
+          {...defaultProps}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
+        />,
       );
-      wrapper.unmount();
+
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledTimes(1);
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledWith({
+        config: expect.objectContaining({ ufo: true }),
+        api: expect.objectContaining({}),
+      });
     });
   });
+
+  describe('when the editor props flag changes', () => {
+    it('should reconfigure the state using new allowUndoRedoButtons', () => {
+      const editorProps = {
+        allowUndoRedoButtons: false,
+      };
+      const { rerender, unmount } = renderWithIntl(
+        <ReactEditorView
+          {...defaultProps}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
+        />,
+      );
+
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledTimes(1);
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledWith({
+        config: expect.objectContaining({ undoRedoButtons: false }),
+        api: expect.objectContaining({}),
+      });
+
+      const nextEditorProps = {
+        allowUndoRedoButtons: true,
+      };
+      rerender(
+        <ReactEditorView
+          {...defaultProps}
+          editorProps={nextEditorProps}
+          preset={createPreset(nextEditorProps)}
+        />,
+      );
+
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledTimes(2);
+      expect(featureFlagsCurrentStateSpy).toHaveBeenNthCalledWith(2, {
+        config: expect.objectContaining({ undoRedoButtons: true }),
+        api: expect.objectContaining({}),
+      });
+
+      unmount();
+    });
+  });
+
   describe('when the editor props flag changes on mobile appearance', () => {
     it('should reconfigure the state using the new feature flag', () => {
-      const wrapper = mountWithIntl(
+      const editorProps = {
+        featureFlags: {
+          ufo: true,
+        },
+        appearance: 'mobile',
+      } as any;
+      const { rerender, unmount } = renderWithIntl(
         <ReactEditorView
-          {...requiredProps()}
-          {...analyticsProps()}
-          editorProps={{
-            featureFlags: {
-              useUnpredictableInputRule: true,
-            },
-            appearance: 'mobile',
-          }}
+          {...defaultProps}
+          editorProps={editorProps}
+          preset={createPreset(editorProps)}
         />,
       );
-      wrapper.setProps({
-        editorProps: {
-          featureFlags: {
-            useUnpredictableInputRule: false,
-            appearance: 'mobile',
-          },
-        },
+
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledTimes(1);
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledWith({
+        config: expect.objectContaining({ ufo: true }),
+        api: expect.objectContaining({}),
       });
-      expect(textFormattingInputRulePlugin).toHaveBeenNthCalledWith(
-        2,
-        expect.anything(),
-        expect.objectContaining({ useUnpredictableInputRule: false }),
+
+      const nextEditorProps = {
+        featureFlags: {
+          ufo: false,
+          appearance: 'mobile',
+        },
+      };
+      rerender(
+        <ReactEditorView
+          {...defaultProps}
+          editorProps={nextEditorProps}
+          preset={createPreset(nextEditorProps)}
+        />,
       );
-      wrapper.unmount();
+
+      expect(featureFlagsCurrentStateSpy).toHaveBeenCalledTimes(2);
+      expect(featureFlagsCurrentStateSpy).toHaveBeenNthCalledWith(2, {
+        config: expect.objectContaining({ ufo: false }),
+        api: expect.objectContaining({}),
+      });
+
+      unmount();
     });
   });
 });

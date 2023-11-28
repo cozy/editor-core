@@ -1,5 +1,6 @@
-import React, { ComponentClass, HTMLAttributes } from 'react';
-import styled from 'styled-components';
+/** @jsx jsx */
+import React, { useMemo } from 'react';
+import { css, jsx } from '@emotion/react';
 import { WidthObserver } from '@atlaskit/width-detector';
 import { akEditorMobileMaxWidth } from '@atlaskit/editor-shared-styles';
 import { useElementWidth } from './hooks';
@@ -7,14 +8,10 @@ import { ToolbarWithSizeDetectorProps } from './toolbar-types';
 import { widthToToolbarSize, toolbarSizeToWidth } from './toolbar-size';
 import { Toolbar } from './Toolbar';
 import { ToolbarSize } from './types';
+import { isFullPage } from '../../utils/is-full-page';
 
-const StyledToolBar: ComponentClass<
-  HTMLAttributes<{}> & {
-    minWidth?: string;
-  }
-> = styled.div`
+const toolbar = css`
   width: 100%;
-  min-width: ${({ minWidth }) => minWidth};
   position: relative;
   @media (max-width: ${akEditorMobileMaxWidth}px) {
     grid-column: 1 / 2;
@@ -24,9 +21,9 @@ const StyledToolBar: ComponentClass<
   }
 `;
 
-export const ToolbarWithSizeDetector: React.FunctionComponent<ToolbarWithSizeDetectorProps> = (
-  props,
-) => {
+export const ToolbarWithSizeDetector: React.FunctionComponent<
+  ToolbarWithSizeDetectorProps
+> = (props) => {
   const ref = React.createRef<HTMLDivElement>();
   const [width, setWidth] = React.useState<number | undefined>(undefined);
   const elementWidth = useElementWidth(ref, {
@@ -38,18 +35,26 @@ export const ToolbarWithSizeDetector: React.FunctionComponent<ToolbarWithSizeDet
       ? undefined
       : widthToToolbarSize((width || elementWidth)!, props.appearance);
 
-  const toolbarMinWidth = toolbarSizeToWidth(ToolbarSize.M, props.appearance);
+  const toolbarStyle = useMemo(() => {
+    const toolbarWidth =
+      isFullPage(props.appearance) && props.twoLineEditorToolbar
+        ? ToolbarSize.S
+        : ToolbarSize.M;
+    const toolbarMinWidth = toolbarSizeToWidth(toolbarWidth, props.appearance);
+    const minWidth = `min-width: ${
+      props.hasMinWidth ? toolbarMinWidth : '254'
+    }px`;
+    return [toolbar, minWidth];
+  }, [props.appearance, props.hasMinWidth, props.twoLineEditorToolbar]);
 
   return (
-    <StyledToolBar
-      minWidth={props.hasMinWidth ? `${toolbarMinWidth}px` : '254px'}
-    >
+    <div css={toolbarStyle}>
       <WidthObserver setWidth={setWidth} />
       {props.editorView && toolbarSize ? (
         <Toolbar {...props} toolbarSize={toolbarSize} />
       ) : (
         <div ref={ref} />
       )}
-    </StyledToolBar>
+    </div>
   );
 };

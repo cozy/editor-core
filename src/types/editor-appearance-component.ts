@@ -1,17 +1,26 @@
-import { EditorView } from 'prosemirror-view';
-import { RefObject } from 'react';
-import { ProviderFactory, ExtensionHandlers } from '@atlaskit/editor-common';
-import { EventDispatcher } from '../event-dispatcher';
-import EditorActions from '../actions';
-import { UIComponentFactory } from '../types/ui-components';
-import { ReactComponents } from '../types/editor-props';
-import { ToolbarUIComponentFactory } from '../ui/Toolbar/types';
-import { CollabEditOptions } from '../plugins/collab-edit/types';
-import { DispatchAnalyticsEvent } from '../plugins/analytics';
-import { EditorAppearance } from './editor-appearance';
-import { MenuItem } from '../ui/DropdownMenu/types';
-import { ReactElement } from 'react';
-import { FeatureFlags } from './feature-flags';
+import type { RefObject, ReactElement } from 'react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+import type { ExtensionHandlers } from '@atlaskit/editor-common/extensions';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type { ReactHookFactory } from '@atlaskit/editor-common/types';
+
+import type EditorActions from '../actions';
+import type { EventDispatcher } from '../event-dispatcher';
+import type { CollabEditOptions } from '@atlaskit/editor-common/collab';
+import type {
+  PrimaryToolbarComponents,
+  ReactComponents,
+} from '../types/editor-props';
+import type { UseStickyToolbarType } from '@atlaskit/editor-common/ui';
+import type { UIComponentFactory } from '../types/ui-components';
+
+import type { MenuItem } from '@atlaskit/editor-common/ui-menu';
+import type { ToolbarUIComponentFactory } from '../ui/Toolbar/types';
+
+import type { EditorAppearance } from './editor-appearance';
+import type { FeatureFlags } from './feature-flags';
 
 export interface EditorAppearanceComponentProps {
   appearance?: EditorAppearance;
@@ -27,14 +36,16 @@ export interface EditorAppearanceComponentProps {
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
 
   maxHeight?: number;
+  minHeight?: number;
 
   contentComponents?: UIComponentFactory[];
+  pluginHooks?: ReactHookFactory[];
   primaryToolbarComponents?: ToolbarUIComponentFactory[];
   primaryToolbarIconBefore?: ReactElement;
   secondaryToolbarComponents?: UIComponentFactory[];
 
   customContentComponents?: ReactComponents;
-  customPrimaryToolbarComponents?: ReactComponents;
+  customPrimaryToolbarComponents?: PrimaryToolbarComponents;
   customSecondaryToolbarComponents?: ReactComponents;
   insertMenuItems?: MenuItem[];
   contextPanel?: ReactComponents;
@@ -49,12 +60,13 @@ export interface EditorAppearanceComponentProps {
 
   collabEdit?: CollabEditOptions;
 
-  allowDynamicTextSizing?: boolean;
-  allowAnnotation?: boolean;
   persistScrollGutter?: boolean;
 
   enableToolbarMinWidth?: boolean;
 
-  featureFlags?: FeatureFlags;
-  useStickyToolbar?: boolean | RefObject<HTMLElement>;
+  featureFlags: FeatureFlags;
+  useStickyToolbar?: UseStickyToolbarType;
+
+  innerRef?: RefObject<HTMLDivElement>;
+  hideAvatarGroup?: boolean;
 }

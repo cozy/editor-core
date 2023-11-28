@@ -1,23 +1,25 @@
+/** @jsx jsx */
 import React from 'react';
-import styled from 'styled-components';
-import { EditorView } from 'prosemirror-view';
-import { ProviderFactory } from '@atlaskit/editor-common';
-import { EditorAppearance, UIComponentFactory } from '../../types';
-import { EventDispatcher } from '../../event-dispatcher';
-import EditorActions from '../../actions';
-import {
-  DispatchAnalyticsEvent,
-  ACTION_SUBJECT,
-} from '../../plugins/analytics';
+import { css, jsx } from '@emotion/react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+import type { EditorAppearance, UIComponentFactory } from '../../types';
+import type { EventDispatcher } from '../../event-dispatcher';
+import type EditorActions from '../../actions';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+import { ACTION_SUBJECT } from '@atlaskit/editor-common/analytics';
 import { whichTransitionEvent } from '../../utils';
 import { ErrorBoundary } from '../ErrorBoundary';
+import { MountPluginHooks } from './mount-plugin-hooks';
+import type { ReactHookFactory } from '@atlaskit/editor-common/types';
 
-const PluginsComponentsWrapper = styled.div`
+const pluginsComponentsWrapper = css`
   display: flex;
 `;
 
 export interface Props {
-  items?: Array<UIComponentFactory>;
+  items?: UIComponentFactory[];
+  pluginHooks?: ReactHookFactory[];
   editorView?: EditorView;
   editorActions?: EditorActions;
   eventDispatcher?: EventDispatcher;
@@ -30,6 +32,7 @@ export interface Props {
   disabled: boolean;
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
   contentArea?: HTMLElement;
+  wrapperElement: HTMLElement | null;
 }
 
 export default class PluginSlot extends React.Component<Props, any> {
@@ -49,6 +52,7 @@ export default class PluginSlot extends React.Component<Props, any> {
       popupsScrollableElement,
       containerElement,
       disabled,
+      wrapperElement,
     } = this.props;
 
     return !(
@@ -61,7 +65,8 @@ export default class PluginSlot extends React.Component<Props, any> {
       nextProps.popupsBoundariesElement === popupsBoundariesElement &&
       nextProps.popupsScrollableElement === popupsScrollableElement &&
       nextProps.containerElement === containerElement &&
-      nextProps.disabled === disabled
+      nextProps.disabled === disabled &&
+      nextProps.wrapperElement === wrapperElement
     );
   }
 
@@ -124,9 +129,11 @@ export default class PluginSlot extends React.Component<Props, any> {
       containerElement,
       disabled,
       dispatchAnalyticsEvent,
+      wrapperElement,
+      pluginHooks,
     } = this.props;
 
-    if (!items || !editorView) {
+    if ((!items && !pluginHooks) || !editorView) {
       return null;
     }
 
@@ -135,8 +142,13 @@ export default class PluginSlot extends React.Component<Props, any> {
         component={ACTION_SUBJECT.PLUGIN_SLOT}
         fallbackComponent={null}
       >
-        <PluginsComponentsWrapper>
-          {items.map((component, key) => {
+        <MountPluginHooks
+          editorView={editorView}
+          pluginHooks={pluginHooks}
+          containerElement={containerElement}
+        />
+        <div css={pluginsComponentsWrapper}>
+          {items?.map((component, key) => {
             const props: any = { key };
             const element = component({
               editorView: editorView as EditorView,
@@ -150,10 +162,11 @@ export default class PluginSlot extends React.Component<Props, any> {
               popupsScrollableElement,
               containerElement,
               disabled,
+              wrapperElement,
             });
             return element && React.cloneElement(element, props);
           })}
-        </PluginsComponentsWrapper>
+        </div>
       </ErrorBoundary>
     );
   }

@@ -2,11 +2,19 @@ import {
   waitForLoadedImageElements,
   waitForElementCount,
   evaluateTeardownMockDate,
+  waitForElementCountTimeouts,
 } from '@atlaskit/visual-regression/helper';
-import { snapshot, initFullPageEditorWithAdf, Device } from '../_utils';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initFullPageEditorWithAdf,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import adf from './__fixtures__/embed-card-layouts-adf.json';
 import containerADF from './__fixtures__/embed-containers.adf.json';
 import embedSeperatorADF from './__fixtures__/embed-card-inside-expand.adf.json';
+import embedTableADF from './__fixtures__/embed-card-inside-table.adf.json';
 import {
   embedCardSelector,
   embedCombinationsWithTitle,
@@ -39,14 +47,22 @@ describe('Embed Cards:', () => {
       true,
     );
     await evaluateTeardownMockDate(page);
-    await waitForElementCount(page, embedCardSelector(), 6);
+    await waitForElementCount(page, embedCardSelector(), 6, {
+      timeout: waitForElementCountTimeouts.LONG,
+    });
     await waitForSuccessfullyResolvedEmbedCard(page, 6);
-    await waitForLoadedImageElements(page, 3000);
+    await waitForLoadedImageElements(page, waitForElementCountTimeouts.LONG);
 
     // wait for iframes to be loaded
-    await waitForElementCount(page, '[originalheight="282"]', 5);
-    await waitForElementCount(page, '[originalheight="319"]', 1);
-    await waitForElementCount(page, '[data-iframe-loaded="true"]', 6);
+    await waitForElementCount(page, '[originalheight="282"]', 5, {
+      timeout: waitForElementCountTimeouts.LONG,
+    });
+    await waitForElementCount(page, '[originalheight="316"]', 1, {
+      timeout: waitForElementCountTimeouts.LONG,
+    });
+    await waitForElementCount(page, '[data-iframe-loaded="true"]', 6, {
+      timeout: waitForElementCountTimeouts.LONG,
+    });
     await snapshot(page);
   });
 
@@ -115,9 +131,38 @@ describe('Embed Cards:', () => {
       },
     ),
   );
+
+  it('displays embed card in table correctly', async () => {
+    const { page } = global;
+
+    await initFullPageEditorWithAdf(
+      page,
+      embedTableADF,
+      Device.LaptopHiDPI,
+      {
+        width: 1440,
+        height: 1500,
+      },
+      {
+        smartLinks: {
+          resolveBeforeMacros: ['jira'],
+          allowBlockCards: true,
+          allowEmbeds: true,
+        },
+      },
+      undefined,
+      undefined,
+      true,
+    );
+    await evaluateTeardownMockDate(page);
+
+    await waitForSuccessfullyResolvedEmbedCard(page);
+    await waitForLoadedImageElements(page, 3000);
+    await snapshot(page);
+  });
 });
-// FIXME: Test became inconsistent after Puppeteer's upgrade
-it.skip('Seperators are in correct locations in the toolbar', async () => {
+
+it('Seperators are in correct locations in the toolbar', async () => {
   const page = global.page;
 
   await initFullPageEditorWithAdf(

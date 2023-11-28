@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -11,8 +12,9 @@ import {
   extension,
   expand,
   bodiedExtension,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
 
 const docWithNestedExtensions = () =>
@@ -105,10 +107,6 @@ describe('data consumer plugin', () => {
     return createEditor({
       doc,
       editorProps: {
-        featureFlags: {
-          'local-id-generation-on-tables': true,
-          'data-consumer-mark': true,
-        },
         allowExtension: true,
         allowTables: true,
         allowLayouts: true,

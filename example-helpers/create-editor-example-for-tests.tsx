@@ -1,10 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { IntlProvider, addLocaleData } from 'react-intl';
-import { EditorView } from 'prosemirror-view';
-import { Step } from 'prosemirror-transform';
+import { IntlProvider } from 'react-intl-next';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { Step } from '@atlaskit/editor-prosemirror/transform';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
-import { AtlaskitThemeProvider } from '@atlaskit/theme/components';
+// eslint-disable-next-line @atlassian/tangerine/import/entry-points
+import DeprecatedThemeProvider from '@atlaskit/theme/deprecated-provider-please-do-not-use';
+import { ThemeProvider } from '@emotion/react';
 import {
   getEmojiProvider,
   currentUser,
@@ -12,38 +15,53 @@ import {
 import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { createCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
-import { ExtensionHandlers } from '@atlaskit/editor-common';
+import type { ExtensionHandlers } from '@atlaskit/editor-common/extensions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { cardProvider } from '@atlaskit/editor-test-helpers/card-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyMediaProviderFactory } from '@atlaskit/editor-test-helpers/media-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { extensionHandlers as exampleExtensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   ExampleCreateInlineCommentComponent,
   ExampleViewInlineCommentComponent,
 } from '@atlaskit/editor-test-helpers/example-inline-comment-component';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorMediaMock } from '@atlaskit/editor-test-helpers/media-mock';
-import { TestExtensionProviders } from '@atlaskit/editor-test-helpers/vr-utils';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { TestExtensionProviders } from '@atlaskit/editor-test-helpers/vr-utils';
+import { setBooleanFeatureFlagResolver } from '@atlaskit/platform-feature-flags';
 
-import {
-  JSONTransformer,
-  JSONDocNode,
-} from '@atlaskit/editor-json-transformer';
+import type { JSONDocNode } from '@atlaskit/editor-json-transformer';
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
 import { MockActivityResource } from './activity-provider';
 import ClipboardHelper from '../examples/1-clipboard-helper';
-import EditorActions from '../src/actions';
+import type EditorActions from '../src/actions';
 import { withSidebarContainer } from './SidebarContainer';
 import quickInsertProviderFactory from './quick-insert-provider';
 
-import { EditorProps } from '../src';
-import { createTestExtensionProvider } from '../src/plugins/floating-toolbar/__tests__/_helpers';
+import type { EditorProps } from '../src';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { createTestExtensionProvider } from '@atlaskit/editor-test-helpers/create-test-extension-provider';
 import { createExtensionFramesProvider } from '../src/__tests__/visual-regression/common/__helpers__/extensionFrameManifest';
+import { getConfluenceMacrosExtensionProvider } from './confluence-macros';
+import {
+  mockAssetsClientFetchRequests,
+  mockDatasourceFetchRequests,
+} from '@atlaskit/link-test-helpers/datasource';
+import { DefaultExtensionProvider } from '@atlaskit/editor-common/extensions';
+import { manifest as jiraCreate } from '@atlassian/editor-extension-link-create';
 
 const mediaMockServer = createEditorMediaMock();
 /**
  * Creates an example editor for VR or Integration tests.
  */
-export function createEditorExampleForTests<T>(
+export function createEditorExampleForTests<T extends EditorProps>(
   render: EditorExampleRenderFunction<T>,
   { clipboard = true },
 ) {
@@ -56,7 +74,7 @@ export function createEditorExampleForTests<T>(
   );
 }
 
-function createEditorWindowBindings<T>(
+function createEditorWindowBindings<T extends EditorProps>(
   win: WindowWithExtensionsForTesting,
   render: EditorExampleRenderFunction<T>,
 ) {
@@ -64,14 +82,32 @@ function createEditorWindowBindings<T>(
     return;
   }
 
-  createLoadReactIntlLocale(win);
   const internalMediaMock = createMediaMockEnableOnce();
 
   const mountEditor: (
     props: T,
     opts: MountEditorOptions,
     MaybeWrapper?: EditorExampleComponent<T>,
-  ) => void = (props, options = {}, MaybeWrapper) => {
+    platformFeatureFlags?: Record<string, boolean>,
+  ) => void = (props, options = {}, MaybeWrapper, platformFeatureFlags) => {
+    if (platformFeatureFlags) {
+      setBooleanFeatureFlagResolver((ffName) => {
+        return platformFeatureFlags[ffName] ?? false;
+      });
+    }
+
+    if (options.datasourceMocks) {
+      mockDatasourceFetchRequests({
+        initialVisibleColumnKeys:
+          options.datasourceMocks.initialVisibleColumnKeys,
+        shouldMockORSBatch: options.datasourceMocks.shouldMockORSBatch,
+        delayedResponse: false,
+      });
+      if (options.datasourceMocks.shouldMockAssets) {
+        mockAssetsClientFetchRequests({ delayedResponse: false });
+      }
+    }
+
     const target = document.getElementById('editor-container');
 
     if (!target) {
@@ -84,9 +120,17 @@ function createEditorWindowBindings<T>(
     }
 
     options.providers = mapPropsToProviders(options.providers, props);
+
+    // If extensions are allowed and withLinkCreateJira is allowed, enable extension providers
+    if (options.withLinkCreateJira) {
+      options.providers.extensionProviders = true;
+    }
+
     const providers = createProviders(options.providers, {
       editorProps: {},
       withTestExtensionProviders: options.withTestExtensionProviders,
+      withConfluenceMacrosExtensionProvider:
+        options.withConfluenceMacrosExtensionProvider,
     });
 
     const Wrapper = MaybeWrapper || createWrappers(options, render);
@@ -111,11 +155,15 @@ function createEditorWindowBindings<T>(
           providers,
           extensionHandlers,
           withContextPanel: options.withContextPanel,
+          withLinkPickerOptions: options.withLinkPickerOptions,
+          withTitleFocusHandler: options.withTitleFocusHandler,
         }}
         lifeCycleHandlers={{
           onMount(actions: any) {
             const view = actions._privateGetEditorView();
             win.__editorView = view;
+            // @ts-ignore
+            win.__TextSelection = TextSelection;
             win.__documentToJSON = function () {
               const transform = new JSONTransformer();
               const doc = view!.state.doc;
@@ -229,8 +277,10 @@ function createProviders(
   opts: Record<string, any> = {},
   {
     withTestExtensionProviders = {},
+    withConfluenceMacrosExtensionProvider = false,
     editorProps: props = {},
   }: {
+    withConfluenceMacrosExtensionProvider?: boolean;
     withTestExtensionProviders?: TestExtensionProviders;
     editorProps?: EditorProps;
   },
@@ -249,11 +299,13 @@ function createProviders(
   };
 
   if (opts.media || (props && props.media)) {
-    providers.mediaProvider = storyMediaProviderFactory({
-      useMediaPickerAuthProvider: false,
-    });
+    providers.mediaProvider = storyMediaProviderFactory();
   }
-  if (opts.cards || (props && (props.smartLinks || props.UNSAFE_cards))) {
+  if (
+    opts.cards ||
+    (props &&
+      (props.linking?.smartLinks || props.smartLinks || props.UNSAFE_cards))
+  ) {
     providers.cardsProvider = Promise.resolve(cardProvider);
   }
   if (opts.collab) {
@@ -261,7 +313,10 @@ function createProviders(
   }
 
   if (opts.extensionProviders) {
-    const extensionProvidersArr = [];
+    const extensionProvidersArr: (
+      | DefaultExtensionProvider<any>
+      | Promise<DefaultExtensionProvider<any>>
+    )[] = [];
     if (withTestExtensionProviders.extensionFrameManifest) {
       extensionProvidersArr.push(createExtensionFramesProvider());
     }
@@ -269,7 +324,22 @@ function createProviders(
       extensionProvidersArr.push(createTestExtensionProvider(() => {}));
     }
 
+    const jiraCreateExtensionProvider = new DefaultExtensionProvider<any>([
+      jiraCreate({
+        intlLocale: 'en',
+        defaultCloudId: 'DUMMY-123',
+        location: 'confluence-page',
+      }),
+    ]);
+
+    extensionProvidersArr.push(jiraCreateExtensionProvider);
     providers.extensionProviders = extensionProvidersArr;
+  }
+
+  if (withConfluenceMacrosExtensionProvider) {
+    providers.extensionProviders = [
+      getConfluenceMacrosExtensionProvider(undefined),
+    ];
   }
 
   return providers;
@@ -282,7 +352,10 @@ export function mapPropsToProviders(
   providers: Record<string, boolean> = {},
   props: EditorProps,
 ): Record<string, boolean> {
-  if (props && (props.smartLinks || props.UNSAFE_cards)) {
+  if (
+    props &&
+    (props.linking?.smartLinks || props.smartLinks || props.UNSAFE_cards)
+  ) {
     providers.cards = true;
   }
 
@@ -318,6 +391,16 @@ export function mapProvidersToProps(
     props.UNSAFE_cards = {
       ...props.UNSAFE_cards,
       provider: providers.cardsProvider,
+    };
+  }
+
+  if (props && props.linking?.smartLinks) {
+    props.linking = {
+      ...props.linking,
+      smartLinks: {
+        ...props.linking.smartLinks,
+        provider: providers.cardsProvider,
+      },
     };
   }
 
@@ -380,9 +463,9 @@ function withDarkMode(
   Wrapper: EditorExampleComponent<any>,
 ): EditorExampleComponent<any> {
   return (props) => (
-    <AtlaskitThemeProvider mode={'dark'}>
+    <DeprecatedThemeProvider provider={ThemeProvider} mode="dark">
       <Wrapper {...props} />
-    </AtlaskitThemeProvider>
+    </DeprecatedThemeProvider>
   );
 }
 
@@ -395,25 +478,6 @@ function withI18n(
       <Wrapper {...props} />
     </IntlProvider>
   );
-}
-
-function createLoadReactIntlLocale(win: WindowWithExtensionsForTesting) {
-  win.__loadReactIntlLocale = (
-    locales: Array<string>,
-    done: (value?: any) => any,
-  ) => {
-    const modulesToLoad = locales.map(
-      (locale) => import(`react-intl/locale-data/${locale}`),
-    );
-    Promise.all(modulesToLoad)
-      .then((localeData) => {
-        localeData.forEach((data) => addLocaleData(data.default));
-        done();
-      })
-      .catch(() => {
-        done();
-      });
-  };
 }
 
 function createUpdateEditorProps<T>(
@@ -450,11 +514,8 @@ type WindowWithExtensionsForTesting = Window & {
     MaybeWrapper?: EditorExampleComponent<any>,
   ) => void;
   __updateEditorProps?: (props: any, opts: any) => void;
-  __loadReactIntlLocale?: (
-    locales: Array<string>,
-    done: (value?: any) => any,
-  ) => void;
   __editorView?: EditorView;
+  __TextSelection?: TextSelection;
   __applyRemoteSteps?: (__applyRemoteSteps: Array<string>) => void;
   __documentToJSON?: () => JSONDocNode;
   onChangeCounter?: number;
@@ -470,6 +531,8 @@ type EditorExampleComponentProps<T> = {
     providers?: Record<string, any>;
     extensionHandlers?: ExtensionHandlers;
     withContextPanel?: boolean;
+    withLinkPickerOptions?: boolean;
+    withTitleFocusHandler?: boolean;
   };
   lifeCycleHandlers: {
     onChange?: any;
@@ -497,4 +560,14 @@ export type MountEditorOptions = {
   extensionHandlers?: boolean;
   invalidAltTextValues?: string[];
   withCollab?: boolean;
+  withLinkPickerOptions?: boolean;
+  withConfluenceMacrosExtensionProvider?: boolean;
+  withTitleFocusHandler?: boolean;
+  withLinkCreateJira?: boolean;
+  /** Api mock configurations */
+  datasourceMocks?: {
+    initialVisibleColumnKeys?: string[];
+    shouldMockORSBatch?: boolean;
+    shouldMockAssets?: boolean;
+  };
 };

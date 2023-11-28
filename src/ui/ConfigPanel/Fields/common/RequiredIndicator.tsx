@@ -1,6 +1,7 @@
-import styled from 'styled-components';
+import { css } from '@emotion/react';
 import { R500 } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 
-export const RequiredIndicator = styled.span`
-  color: ${R500};
+export const requiredIndicator = css`
+  color: ${token('color.text.danger', R500)};
 `;

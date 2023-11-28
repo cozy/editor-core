@@ -1,9 +1,15 @@
+/** @jsx jsx */
 import React from 'react';
+import { jsx } from '@emotion/react';
+
 import Find from './Find';
 import Replace from './Replace';
-import { Rule, Wrapper } from './styles';
-import { TRIGGER_METHOD, DispatchAnalyticsEvent } from '../../analytics/types';
-import { MatchCaseProps } from '../types';
+import { ruleStyles, wrapperStyles } from './styles';
+import type {
+  TRIGGER_METHOD,
+  DispatchAnalyticsEvent,
+} from '@atlaskit/editor-common/analytics';
+import type { MatchCaseProps } from '../types';
 
 export type FindReplaceProps = {
   findText?: string;
@@ -88,7 +94,7 @@ class FindReplace extends React.PureComponent<FindReplaceProps> {
     } = this.props;
 
     return (
-      <Wrapper>
+      <div css={wrapperStyles}>
         <Find
           allowMatchCase={allowMatchCase}
           shouldMatchCase={shouldMatchCase}
@@ -104,7 +110,7 @@ class FindReplace extends React.PureComponent<FindReplaceProps> {
           onCancel={onCancel}
           onArrowDown={this.setFocusToReplace}
         />
-        <Rule />
+        <hr css={ruleStyles} id="replace-hr-element" />
         <Replace
           canReplace={count.total > 0}
           replaceText={replaceText}
@@ -114,7 +120,7 @@ class FindReplace extends React.PureComponent<FindReplaceProps> {
           onArrowUp={this.setFocusToFind}
           dispatchAnalyticsEvent={dispatchAnalyticsEvent}
         />
-      </Wrapper>
+      </div>
     );
   }
 }

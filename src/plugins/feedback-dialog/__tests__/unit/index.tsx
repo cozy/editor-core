@@ -1,14 +1,15 @@
-import { EditorView } from 'prosemirror-view';
-import { doc, p, DocBuilder } from '@atlaskit/editor-test-helpers/doc-builder';
-import sendKeyToPm from '@atlaskit/editor-test-helpers/send-key-to-pm';
-import { insertText } from '@atlaskit/editor-test-helpers/transactions';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { doc, p } from '@atlaskit/editor-test-helpers/doc-builder';
+import type { DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  LightEditorPlugin,
   Preset,
   createProsemirrorEditorFactory,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
 
-import {
+import type {
   CreateUIAnalyticsEvent,
   UIAnalyticsEvent,
 } from '@atlaskit/analytics-next';
@@ -17,9 +18,12 @@ import * as LoadJiraCollectorDialogScript from '../../loadJiraCollectorDialogScr
 
 // Editor plugins
 import feedbackDialogPlugin, { openFeedbackDialog } from '../../index';
-import analyticsPlugin from '../../../analytics';
-import typeAheadPlugin from '../../../type-ahead';
-import quickInsertPlugin from '../../../quick-insert';
+import { analyticsPlugin } from '@atlaskit/editor-plugin-analytics';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
+import { quickInsertPlugin } from '@atlaskit/editor-plugin-quick-insert';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+
+const coreVersion = process.env._PACKAGE_VERSION_;
 
 describe('feedbackDialogPlugin', () => {
   const createEditor = createProsemirrorEditorFactory();
@@ -38,6 +42,7 @@ describe('feedbackDialogPlugin', () => {
     return createEditor({
       doc,
       preset: new Preset<LightEditorPlugin>()
+        .add([featureFlagsPlugin, {}])
         .add([
           feedbackDialogPlugin,
           {
@@ -62,22 +67,19 @@ describe('feedbackDialogPlugin', () => {
       window.jQuery = { ajax: () => {} };
     });
 
-    beforeEach(() => {
-      ({ editorView, sel } = editor(doc(p('{<>}'))));
+    beforeEach(async () => {
+      const { typeAheadTool } = editor(doc(p('{<>}')));
 
       loadJiraCollectorDialogScript.mockClear();
-      insertText(editorView, '/bug', sel);
-      sendKeyToPm(editorView, 'Enter');
-    });
 
-    let editorView: EditorView;
-    let sel: number;
+      await typeAheadTool.searchQuickInsert('bug')?.insert({ index: 0 });
+    });
 
     it('should call "loadJiraCollectorDialogScript" with correct params', () => {
       expect(loadJiraCollectorDialogScript).toHaveBeenCalledWith(
         ['bitbucket', 'atlaskit-comment-bitbucket'],
         'editor',
-        '999.9.9',
+        coreVersion,
         '666.6.6',
         '',
         '',
@@ -129,7 +131,7 @@ describe('feedbackDialogPlugin', () => {
         expect(loadJiraCollectorDialogScript).toHaveBeenCalledWith(
           ['jira', 'label1'],
           'package1',
-          '999.9.9',
+          coreVersion,
           '111.222.333',
           '',
           '',
@@ -149,7 +151,7 @@ describe('feedbackDialogPlugin', () => {
           expect(loadJiraCollectorDialogScript).toHaveBeenCalledWith(
             ['jira', 'label1'],
             'package1',
-            '999.9.9',
+            coreVersion,
             '111.222.333',
             '',
             '',
@@ -158,7 +160,7 @@ describe('feedbackDialogPlugin', () => {
           expect(loadJiraCollectorDialogScript).toHaveBeenCalledWith(
             ['bitbucket', 'label2'],
             'package2',
-            '999.9.9',
+            coreVersion,
             '444.555.666',
             '',
             '',
@@ -186,7 +188,7 @@ describe('feedbackDialogPlugin', () => {
         expect(loadJiraCollectorDialogScript).toHaveBeenCalledWith(
           ['confluence', 'label3'],
           'package3',
-          '999.9.9',
+          coreVersion,
           '777.888.999',
           'sessionId',
           'contentId',

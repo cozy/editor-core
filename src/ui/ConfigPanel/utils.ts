@@ -1,10 +1,6 @@
-import {
-  Option,
-  FieldDefinition,
-  Parameters,
-} from '@atlaskit/editor-common/extensions';
+import { Option, FieldDefinition } from '@atlaskit/editor-common/extensions';
 
-import { ValidationError, Entry } from './types';
+import { ValidationError } from './types';
 
 export const validate = <T>(
   field: Partial<FieldDefinition>,
@@ -12,21 +8,6 @@ export const validate = <T>(
 ): ValidationError | undefined => {
   return validateRequired<T>(field, value);
 };
-
-export const fromEntries = <T>(iterable: Entry<T>[]): Parameters => {
-  return [...iterable].reduce<{ [key: string]: T }>((obj, [key, val]) => {
-    obj[key] = val;
-    return obj;
-  }, {});
-};
-
-export const toEntries = (parameters: Parameters): [string, unknown][] =>
-  Array.isArray(parameters)
-    ? parameters.reduce<[string, unknown][]>(
-        (prev, curr) => [...prev, ...Object.entries(curr)],
-        [],
-      )
-    : Object.entries(parameters);
 
 const isEmptyString = <T>(value: T) =>
   typeof value === 'string' && value === '';
@@ -87,14 +68,3 @@ export const isDuplicateField = (key: string) => duplicateFieldRegex.test(key);
 
 export const getNameFromDuplicateField = (key: string) =>
   key.replace(duplicateFieldRegex, '');
-
-/* 
-    ColorPickerButton only accepts 8 digit hex alpha values, for example:
-    #123fffaa (8 digits, hex alpha)
-    */
-
-export const isValidHex = (color: string): boolean => {
-  const hexRegexPattern = new RegExp('^#([a-fA-F0-9]{8})$');
-
-  return hexRegexPattern.test(color);
-};

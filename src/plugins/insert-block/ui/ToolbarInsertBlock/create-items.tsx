@@ -1,18 +1,17 @@
 import React from 'react';
-import { InjectedIntlProps } from 'react-intl';
+import type { WrappedComponentProps } from 'react-intl-next';
 import memoize from 'lodash/memoize';
 import memoizeOne from 'memoize-one';
-import { Schema } from 'prosemirror-model';
+import type { Schema } from '@atlaskit/editor-prosemirror/model';
 
-import { EmojiProvider } from '@atlaskit/emoji/resource';
+import type { EmojiProvider } from '@atlaskit/emoji/resource';
 
 import { messages } from './messages';
-import { messages as blockTypeMessages } from '../../../block-type/messages';
+import { blockTypeMessages } from '@atlaskit/editor-common/messages';
+import type { BlockType } from '@atlaskit/editor-plugin-block-type';
 
-import { BlockType } from '../../../block-type/types';
-import { ToolTipContent } from '../../../../keymaps';
-import { MenuItem } from '../../../../ui/DropdownMenu/types';
-import { MacroProvider } from '../../../macro';
+import { ToolTipContent } from '@atlaskit/editor-common/keymaps';
+import type { MenuItem } from '@atlaskit/editor-common/ui-menu';
 import { sortItems } from './sort-items';
 import {
   action,
@@ -44,6 +43,7 @@ export interface CreateItemsConfig {
   imageUploadSupported?: boolean;
   imageUploadEnabled?: boolean;
   mentionsSupported?: boolean;
+  mentionsDisabled?: boolean;
   availableWrapperBlockTypes?: BlockType[];
   actionSupported?: boolean;
   decisionSupported?: boolean;
@@ -58,11 +58,10 @@ export interface CreateItemsConfig {
   showElementBrowserLink?: boolean;
   expandEnabled?: boolean;
   insertMenuItems?: MenuItem[];
-  macroProvider?: MacroProvider | null;
   emojiProvider?: Promise<EmojiProvider>;
   schema: Schema;
   numberOfButtons: number;
-  formatMessage: InjectedIntlProps['intl']['formatMessage'];
+  formatMessage: WrappedComponentProps['intl']['formatMessage'];
   isNewMenuEnabled?: boolean;
 }
 
@@ -82,15 +81,14 @@ const buttonToItem: (button: MenuItem) => BlockMenuItem = memoize(
   }),
 );
 
-const buttonToDropdownItem = memoizeOne((title: string): ((
-  button: MenuItem,
-) => BlockMenuItem) =>
-  memoize(
-    (button: MenuItem): BlockMenuItem => ({
-      ...button,
-      title: <ToolTipContent description={title} shortcutOverride="/" />,
-    }),
-  ),
+const buttonToDropdownItem = memoizeOne(
+  (title: string): ((button: MenuItem) => BlockMenuItem) =>
+    memoize(
+      (button: MenuItem): BlockMenuItem => ({
+        ...button,
+        title: <ToolTipContent description={title} shortcutOverride="/" />,
+      }),
+    ),
 );
 
 const createInsertBlockItems = (
@@ -104,6 +102,7 @@ const createInsertBlockItems = (
     imageUploadSupported,
     imageUploadEnabled,
     mentionsSupported,
+    mentionsDisabled,
     availableWrapperBlockTypes,
     actionSupported,
     decisionSupported,
@@ -143,6 +142,7 @@ const createInsertBlockItems = (
         content: formatMessage(messages.link),
         tooltipDescription: formatMessage(messages.linkDescription),
         disabled: !!linkDisabled,
+        'aria-haspopup': 'dialog',
       }),
     );
   }
@@ -150,8 +150,8 @@ const createInsertBlockItems = (
   if (mediaSupported && mediaUploadsEnabled) {
     items.push(
       media({
-        content: formatMessage(messages.filesAndImages),
-        tooltipDescription: formatMessage(messages.filesAndImagesDescription),
+        content: formatMessage(messages.addMediaFiles),
+        tooltipDescription: formatMessage(messages.mediaFilesDescription),
         disabled: false,
       }),
     );
@@ -171,7 +171,8 @@ const createInsertBlockItems = (
       mention({
         content: formatMessage(messages.mention),
         tooltipDescription: formatMessage(messages.mentionDescription),
-        disabled: !isTypeAheadAllowed,
+        disabled: !isTypeAheadAllowed || !!mentionsDisabled,
+        'aria-haspopup': 'listbox',
       }),
     );
   }
@@ -182,6 +183,7 @@ const createInsertBlockItems = (
         content: formatMessage(messages.emoji),
         tooltipDescription: formatMessage(messages.emojiDescription),
         disabled: emojiDisabled || !isTypeAheadAllowed,
+        'aria-haspopup': 'dialog',
       }),
     );
   }
@@ -327,9 +329,8 @@ const createInsertBlockItems = (
   const buttonItems = items.slice(0, numberOfButtons).map(buttonToItem);
 
   const remainingItems = items.slice(numberOfButtons);
-  const dropdownItems = (!isNewMenuEnabled
-    ? sortItems(remainingItems)
-    : remainingItems
+  const dropdownItems = (
+    !isNewMenuEnabled ? sortItems(remainingItems) : remainingItems
   ).map(buttonToDropdownItem(formatMessage(messages.insertMenu)));
 
   return [buttonItems, dropdownItems] as const;

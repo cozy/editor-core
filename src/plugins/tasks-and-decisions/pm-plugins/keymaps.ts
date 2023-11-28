@@ -1,35 +1,52 @@
-import { autoJoin, chainCommands } from 'prosemirror-commands';
-import { keymap } from 'prosemirror-keymap';
-import { Fragment, Node, ResolvedPos, Schema, Slice } from 'prosemirror-model';
-import {
+import { autoJoin, chainCommands } from '@atlaskit/editor-prosemirror/commands';
+import { keymap } from '@atlaskit/editor-prosemirror/keymap';
+import type {
+  Node,
+  ResolvedPos,
+  Schema,
+} from '@atlaskit/editor-prosemirror/model';
+import { Fragment, Slice } from '@atlaskit/editor-prosemirror/model';
+import type {
   EditorState,
-  Plugin,
-  TextSelection,
   Transaction,
-} from 'prosemirror-state';
-import { findParentNodeOfTypeClosestToPos } from 'prosemirror-utils';
+} from '@atlaskit/editor-prosemirror/state';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
+import { SetAttrsStep } from '@atlaskit/adf-schema/steps';
+import type { SafePlugin } from '@atlaskit/editor-common/safe-plugin';
+import {
+  findParentNodeOfType,
+  findParentNodeOfTypeClosestToPos,
+} from '@atlaskit/editor-prosemirror/utils';
 
 import { uuid } from '@atlaskit/adf-schema';
 
-import { Command } from '../../../types';
 import {
-  filter,
-  isEmptySelectionAtEnd,
+  filterCommand as filter,
   isEmptySelectionAtStart,
-} from '../../../utils/commands';
+  isEmptySelectionAtEnd,
+  deleteEmptyParagraphAndMoveBlockUp,
+} from '@atlaskit/editor-common/utils';
+
+import type {
+  ExtractInjectionAPI,
+  Command,
+} from '@atlaskit/editor-common/types';
+import type {
+  AnalyticsEventPayload,
+  EditorAnalyticsAPI,
+} from '@atlaskit/editor-common/analytics';
 import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
-  AnalyticsEventPayload,
   EVENT_TYPE,
   INDENT_DIRECTION,
   INDENT_TYPE,
   INPUT_METHOD,
-  withAnalytics,
-} from '../../analytics';
+} from '@atlaskit/editor-common/analytics';
+import { withAnalytics } from '@atlaskit/editor-common/editor-analytics';
 import { insertTaskDecisionWithAnalytics } from '../commands';
-import { TaskDecisionListType } from '../types';
+import type { TaskDecisionListType, TaskAndDecisionsPlugin } from '../types';
 
 import { joinAtCut, liftSelection, wrapSelectionInTaskList } from './commands';
 import {
@@ -41,21 +58,26 @@ import {
   isInsideTask,
   isInsideTaskOrDecisionItem,
   liftBlock,
-  subtreeHeight,
   walkOut,
+  getTaskItemIndex,
+  isInsideDecision,
   isTable,
 } from './helpers';
+import { normalizeTaskItemsSelection } from '../utils';
+import { toggleTaskItemCheckbox } from '../../../keymaps';
 
+type IndentationInputMethod = INPUT_METHOD.KEYBOARD | INPUT_METHOD.TOOLBAR;
 const indentationAnalytics = (
   curIndentLevel: number,
   direction: INDENT_DIRECTION,
+  inputMethod: IndentationInputMethod,
 ): AnalyticsEventPayload => ({
   action: ACTION.FORMATTED,
   actionSubject: ACTION_SUBJECT.TEXT,
   actionSubjectId: ACTION_SUBJECT_ID.FORMAT_INDENT,
   eventType: EVENT_TYPE.TRACK,
   attributes: {
-    inputMethod: INPUT_METHOD.KEYBOARD,
+    inputMethod,
     previousIndentationLevel: curIndentLevel,
     newIndentLevel:
       direction === INDENT_DIRECTION.OUTDENT
@@ -74,6 +96,14 @@ const actionDecisionFollowsOrNothing = ($pos: ResolvedPos) => {
 };
 
 const joinTaskDecisionFollowing: Command = (state, dispatch) => {
+  // only run if selection is at end of text, and inside a task or decision item
+  if (
+    !isEmptySelectionAtEnd(state) ||
+    !isInsideTaskOrDecisionItem(state) ||
+    !dispatch
+  ) {
+    return false;
+  }
   // look for the node after this current one
   const $next = walkOut(state.selection.$from);
 
@@ -103,7 +133,6 @@ const joinTaskDecisionFollowing: Command = (state, dispatch) => {
     // If the item we are joining is a list
     if ($next.parent.type === bulletList || $next.parent.type === orderedList) {
       // If the list has an item
-
       if (
         $next.parent.firstChild &&
         $next.parent.firstChild.type === listItem
@@ -135,102 +164,68 @@ const joinTaskDecisionFollowing: Command = (state, dispatch) => {
   return false;
 };
 
-const unindent = filter(isInsideTask, (state, dispatch) => {
+export const getUnindentCommand =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  (inputMethod: IndentationInputMethod = INPUT_METHOD.KEYBOARD) =>
+    filter(isInsideTask, (state, dispatch) => {
+      const normalizedSelection = normalizeTaskItemsSelection(state.selection);
+
+      const curIndentLevel = getCurrentIndentLevel(normalizedSelection);
+      if (!curIndentLevel || curIndentLevel === 1) {
+        return false;
+      }
+      return withAnalytics(
+        editorAnalyticsAPI,
+        indentationAnalytics(
+          curIndentLevel,
+          INDENT_DIRECTION.OUTDENT,
+          inputMethod,
+        ),
+      )(autoJoin(liftSelection, ['taskList']))(state, dispatch);
+    });
+
+// if selection is decision item or first action item in table cell
+// then dont consume the Tab, as table-keymap should tab to the next cell
+const shouldLetTabThroughInTable = (state: EditorState) => {
   const curIndentLevel = getCurrentIndentLevel(state.selection);
-  if (!curIndentLevel || curIndentLevel === 1) {
-    return false;
-  }
+  const curIndex = getTaskItemIndex(state);
+  const { tableCell, tableHeader } = state.schema.nodes;
+  const cell = findParentNodeOfType([tableCell, tableHeader])(state.selection)!;
 
-  return withAnalytics(
-    indentationAnalytics(curIndentLevel, INDENT_DIRECTION.OUTDENT),
-  )(autoJoin(liftSelection, ['taskList']))(state, dispatch);
-});
-
-const indent = filter(isInsideTask, (state, dispatch) => {
-  // limit ui indentation to 6 levels
-  const curIndentLevel = getCurrentIndentLevel(state.selection);
-  if (!curIndentLevel || curIndentLevel >= 6) {
-    return true;
-  }
-
-  const { taskList, taskItem } = state.schema.nodes;
-  const { $from, $to } = state.selection;
-  const maxDepth = subtreeHeight($from, $to, [taskList, taskItem]);
-  if (maxDepth >= 6) {
-    return true;
-  }
-
-  return withAnalytics(
-    indentationAnalytics(curIndentLevel, INDENT_DIRECTION.INDENT),
-  )(autoJoin(wrapSelectionInTaskList, ['taskList']))(state, dispatch);
-});
-
-const backspaceFrom = ($from: ResolvedPos): Command => (state, dispatch) => {
-  // previous was empty, just delete backwards
-  const taskBefore = $from.doc.resolve($from.before());
   if (
-    taskBefore.nodeBefore &&
-    isActionOrDecisionItem(taskBefore.nodeBefore) &&
-    taskBefore.nodeBefore.nodeSize === 2
+    ((curIndentLevel === 1 && curIndex === 0) || isInsideDecision(state)) &&
+    cell
   ) {
-    return false;
-  }
-
-  // if nested, just unindent
-  const { taskList, paragraph } = state.schema.nodes;
-  if ($from.node($from.depth - 2).type === taskList) {
-    return unindent(state, dispatch);
-  }
-
-  // bottom level, should "unwrap" taskItem contents into paragraph
-  // we achieve this by slicing the content out, and replacing
-  if (actionDecisionFollowsOrNothing($from)) {
-    if (dispatch) {
-      const taskContent = state.doc.slice($from.start(), $from.end()).content;
-
-      // might be end of document after
-      const slice = taskContent.size
-        ? paragraph.createChecked(undefined, taskContent)
-        : paragraph.createChecked();
-
-      dispatch(splitListItemWith(state.tr, slice, $from, true));
-    }
-
     return true;
   }
-
   return false;
 };
 
-const backspace = filter(
-  isEmptySelectionAtStart,
-  autoJoin(
-    chainCommands(
-      (state, dispatch) => joinAtCut(state.selection.$from)(state, dispatch),
-      filter(isInsideTaskOrDecisionItem, (state, dispatch) =>
-        backspaceFrom(state.selection.$from)(state, dispatch),
-      ),
-    ),
-    ['taskList', 'decisionList'],
-  ),
-);
+export const getIndentCommand =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  (inputMethod: IndentationInputMethod = INPUT_METHOD.KEYBOARD) =>
+    filter(isInsideTask, (state, dispatch) => {
+      const normalizedSelection = normalizeTaskItemsSelection(state.selection);
+      const curIndentLevel = getCurrentIndentLevel(normalizedSelection);
+      if (!curIndentLevel || curIndentLevel >= 6) {
+        return true;
+      }
+      return withAnalytics(
+        editorAnalyticsAPI,
+        indentationAnalytics(
+          curIndentLevel,
+          INDENT_DIRECTION.INDENT,
+          inputMethod,
+        ),
+      )(autoJoin(wrapSelectionInTaskList, ['taskList']))(state, dispatch);
+    });
 
-const deleteHandler = filter(
-  [isInsideTaskOrDecisionItem, isEmptySelectionAtEnd],
-  chainCommands(joinTaskDecisionFollowing, (state, dispatch) => {
-    // look for the node after this current one
-    const $next = walkOut(state.selection.$from);
-
-    const { taskList, paragraph, doc } = state.schema.nodes;
-
-    // this is a top-level node it wont have $next.before()
-    if (!$next.parent || $next.parent.type === doc) {
-      return false;
-    }
-
+const backspaceFrom =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  ($from: ResolvedPos): Command =>
+  (state, dispatch) => {
     // previous was empty, just delete backwards
-    const taskBefore = $next.doc.resolve($next.before());
-
+    const taskBefore = $from.doc.resolve($from.before());
     if (
       taskBefore.nodeBefore &&
       isActionOrDecisionItem(taskBefore.nodeBefore) &&
@@ -240,47 +235,117 @@ const deleteHandler = filter(
     }
 
     // if nested, just unindent
-    if (
-      $next.node($next.depth - 2).type === taskList ||
-      // this is for the case when we are on a non-nested item and next one is nested
-      ($next.node($next.depth - 1).type === taskList &&
-        $next.parent.type === taskList)
-    ) {
-      const tr = liftBlock(state.tr, $next, $next);
-      if (dispatch && tr) {
-        dispatch(tr);
-      }
-
-      return true;
-    }
-
-    // if located inside of a table, don't delete forward
-    if (isTable(taskBefore.nodeBefore)) {
-      return false;
+    const { taskList, paragraph } = state.schema.nodes;
+    if ($from.node($from.depth - 2).type === taskList) {
+      return getUnindentCommand(editorAnalyticsAPI)()(state, dispatch);
     }
 
     // bottom level, should "unwrap" taskItem contents into paragraph
     // we achieve this by slicing the content out, and replacing
-    if (actionDecisionFollowsOrNothing(state.selection.$from)) {
+    if (actionDecisionFollowsOrNothing($from)) {
       if (dispatch) {
-        const taskContent = state.doc.slice($next.start(), $next.end()).content;
+        const taskContent = state.doc.slice($from.start(), $from.end()).content;
 
         // might be end of document after
         const slice = taskContent.size
           ? paragraph.createChecked(undefined, taskContent)
-          : [];
+          : paragraph.createChecked();
 
-        dispatch(splitListItemWith(state.tr, slice, $next, false));
+        dispatch(splitListItemWith(state.tr, slice, $from, true));
       }
 
       return true;
     }
 
     return false;
-  }),
-);
+  };
 
-const deleteForwards = autoJoin(deleteHandler, ['taskList', 'decisionList']);
+const backspace = (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  filter(
+    isEmptySelectionAtStart,
+    autoJoin(
+      chainCommands(
+        (state, dispatch) => joinAtCut(state.selection.$from)(state, dispatch),
+        filter(isInsideTaskOrDecisionItem, (state, dispatch) =>
+          backspaceFrom(editorAnalyticsAPI)(state.selection.$from)(
+            state,
+            dispatch,
+          ),
+        ),
+      ),
+      ['taskList', 'decisionList'],
+    ),
+  );
+
+const unindentTaskOrUnwrapTaskDecisionFollowing: Command = (
+  state,
+  dispatch,
+) => {
+  const {
+    selection: { $from },
+    schema: {
+      nodes: { taskList, doc, paragraph },
+    },
+    tr,
+  } = state;
+
+  // only run if cursor is at the end of the node
+  if (!isEmptySelectionAtEnd(state) || !dispatch) {
+    return false;
+  }
+
+  // look for the node after this current one
+  const $next = walkOut($from);
+
+  // this is a top-level node it wont have $next.before()
+  if (!$next.parent || $next.parent.type === doc) {
+    return false;
+  }
+
+  // if nested, just unindent
+  if (
+    $next.node($next.depth - 2).type === taskList ||
+    // this is for the case when we are on a non-nested item and next one is nested
+    ($next.node($next.depth - 1).type === taskList &&
+      $next.parent.type === taskList)
+  ) {
+    liftBlock(tr, $next, $next);
+    dispatch(tr);
+
+    return true;
+  }
+
+  // if next node is of same type, remove the node wrapping and create paragraph
+  if (
+    !isTable($next.nodeAfter) &&
+    isActionOrDecisionItem($from.parent) &&
+    actionDecisionFollowsOrNothing($from) &&
+    // only forward delete if the node is same type
+    $next.node().type.name === $from.node().type.name
+  ) {
+    const taskContent = state.doc.slice($next.start(), $next.end()).content;
+
+    // might be end of document after
+    const slice = taskContent.size
+      ? paragraph.createChecked(undefined, taskContent)
+      : [];
+
+    dispatch(splitListItemWith(tr, slice, $next, false));
+
+    return true;
+  }
+
+  return false;
+};
+
+const deleteForwards = autoJoin(
+  chainCommands(
+    deleteEmptyParagraphAndMoveBlockUp(isActionOrDecisionList),
+    joinTaskDecisionFollowing,
+    unindentTaskOrUnwrapTaskDecisionFollowing,
+  ),
+  ['taskList', 'decisionList'],
+);
 
 const splitListItemWith = (
   tr: Transaction,
@@ -377,72 +442,118 @@ const splitListItem = (
   return false;
 };
 
-const enter: Command = filter(
-  isInsideTaskOrDecisionItem,
-  chainCommands(
-    filter(isEmptyTaskDecision, chainCommands(unindent, splitListItem)),
-    (state, dispatch) => {
-      const { selection, schema } = state;
-      const { taskItem } = schema.nodes;
-      const { $from, $to } = selection;
-      const node = $from.node($from.depth);
-      const nodeType = node && node.type;
-      const listType: TaskDecisionListType =
-        nodeType === taskItem ? 'taskList' : 'decisionList';
+const enter = (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  filter(
+    isInsideTaskOrDecisionItem,
+    chainCommands(
+      filter(
+        isEmptyTaskDecision,
+        chainCommands(getUnindentCommand(editorAnalyticsAPI)(), splitListItem),
+      ),
+      (state, dispatch) => {
+        const { selection, schema } = state;
+        const { taskItem } = schema.nodes;
+        const { $from, $to } = selection;
+        const node = $from.node($from.depth);
+        const nodeType = node && node.type;
+        const listType: TaskDecisionListType =
+          nodeType === taskItem ? 'taskList' : 'decisionList';
 
-      const addItem = ({
-        tr,
-        itemLocalId,
-      }: {
-        tr: Transaction;
-        itemLocalId?: string;
-      }) => {
-        // ED-8932: When cursor is at the beginning of a task item, instead of split, we insert above.
-        if ($from.pos === $to.pos && $from.parentOffset === 0) {
-          const newTask = nodeType.createAndFill({ localId: itemLocalId });
-          if (newTask) {
-            // Current position will point to text node, but we want to insert above the taskItem node
-            return tr.insert($from.pos - 1, newTask);
+        const addItem = ({
+          tr,
+          itemLocalId,
+        }: {
+          tr: Transaction;
+          itemLocalId?: string;
+        }) => {
+          // ED-8932: When cursor is at the beginning of a task item, instead of split, we insert above.
+          if ($from.pos === $to.pos && $from.parentOffset === 0) {
+            const newTask = nodeType.createAndFill({ localId: itemLocalId });
+            if (newTask) {
+              // Current position will point to text node, but we want to insert above the taskItem node
+              return tr.insert($from.pos - 1, newTask);
+            }
           }
+
+          return tr.split($from.pos, 1, [
+            { type: nodeType, attrs: { localId: itemLocalId } },
+          ]);
+        };
+
+        const insertTr = insertTaskDecisionWithAnalytics(editorAnalyticsAPI)(
+          state,
+          listType,
+          INPUT_METHOD.KEYBOARD,
+          addItem,
+        );
+
+        if (insertTr && dispatch) {
+          insertTr.scrollIntoView();
+          dispatch(insertTr);
         }
 
-        return tr.split($from.pos, 1, [
-          { type: nodeType, attrs: { localId: itemLocalId } },
-        ]);
-      };
+        return true;
+      },
+    ),
+  );
 
-      const insertTr = insertTaskDecisionWithAnalytics(
-        state,
-        listType,
-        INPUT_METHOD.KEYBOARD,
-        addItem,
+const cmdOptEnter: Command = filter(
+  isInsideTaskOrDecisionItem,
+  (state, dispatch) => {
+    const { selection, schema } = state;
+    const { taskItem } = schema.nodes;
+    const { $from } = selection;
+    const node = $from.node($from.depth);
+    const nodeType = node && node.type;
+    const nodePos = $from.before($from.depth);
+    if (nodeType === taskItem) {
+      const tr = state.tr;
+      tr.step(
+        new SetAttrsStep(nodePos, {
+          state: node.attrs.state === 'TODO' ? 'DONE' : 'TODO',
+          localId: node.attrs.localId,
+        }),
       );
-
-      if (insertTr && dispatch) {
-        insertTr.scrollIntoView();
-        dispatch(insertTr);
+      if (tr && dispatch) {
+        dispatch(tr);
       }
-
-      return true;
-    },
-  ),
+    }
+    return true;
+  },
 );
 
 export function keymapPlugin(
   schema: Schema,
+  api: ExtractInjectionAPI<TaskAndDecisionsPlugin> | undefined,
   allowNestedTasks?: boolean,
   consumeTabs?: boolean,
-): Plugin | undefined {
+): SafePlugin | undefined {
   const indentHandlers = {
-    'Shift-Tab': consumeTabs
-      ? chainCommands(unindent, isInsideTaskOrDecisionItem)
-      : unindent,
-    Tab: consumeTabs
-      ? chainCommands(indent, isInsideTaskOrDecisionItem)
-      : indent,
+    'Shift-Tab': filter(
+      [
+        isInsideTaskOrDecisionItem,
+        (state) => !shouldLetTabThroughInTable(state),
+      ],
+      (state, dispatch) =>
+        getUnindentCommand(api?.analytics?.actions)(INPUT_METHOD.KEYBOARD)(
+          state,
+          dispatch,
+        ) || !!consumeTabs,
+    ),
+    Tab: filter(
+      [
+        isInsideTaskOrDecisionItem,
+        (state) => !shouldLetTabThroughInTable(state),
+      ],
+      (state, dispatch) =>
+        getIndentCommand(api?.analytics?.actions)(INPUT_METHOD.KEYBOARD)(
+          state,
+          dispatch,
+        ) || !!consumeTabs,
+    ),
   };
 
-  const defaultHandlers = consumeTabs
+  const defaultHandlers: { [key: string]: Command } = consumeTabs
     ? {
         'Shift-Tab': isInsideTaskOrDecisionItem,
         Tab: isInsideTaskOrDecisionItem,
@@ -450,15 +561,17 @@ export function keymapPlugin(
     : {};
 
   const keymaps = {
-    Backspace: backspace,
+    Backspace: backspace(api?.analytics?.actions),
     Delete: deleteForwards,
+    'Ctrl-d': deleteForwards,
 
-    Enter: enter,
+    Enter: enter(api?.analytics?.actions),
+    [toggleTaskItemCheckbox.common!]: cmdOptEnter,
 
     ...(allowNestedTasks ? indentHandlers : defaultHandlers),
   };
 
-  return keymap(keymaps);
+  return keymap(keymaps) as SafePlugin;
 }
 
 export default keymapPlugin;

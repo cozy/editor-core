@@ -1,25 +1,43 @@
 import { BrowserTestCase } from '@atlaskit/webdriver-runner/runner';
-import Page from '@atlaskit/webdriver-runner/wd-wrapper';
+import type Page from '@atlaskit/webdriver-runner/wd-wrapper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   getDocFromElement,
   editable,
-  copyToClipboard,
-  gotoEditor,
-} from '../../_helpers';
+  fullpage,
+} from '@atlaskit/editor-test-helpers/integration/helpers';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  goToEditorTestingWDClipboardExample,
+  mountEditor,
+} from '@atlaskit/editor-test-helpers/testing-example-page';
 import { waitForInlineCardSelection } from '@atlaskit/media-integration-test-helpers';
 
 BrowserTestCase(
   `card: unlinking an Inline Link should replace it with text corresponding to the title of the previously linked page`,
   {
-    skip: ['safari', 'edge'],
+    skip: ['safari'],
   },
   async (client: ConstructorParameters<typeof Page>[0], testName: string) => {
-    const page = new Page(client);
-
-    // Copy stuff to clipboard
-    await copyToClipboard(page, 'https://www.atlassian.com');
-
-    await gotoEditor(page);
+    // Copy stuff to clipboard and go to editor
+    const page = await goToEditorTestingWDClipboardExample(
+      client,
+      'https://www.atlassian.com',
+    );
+    await mountEditor(
+      page,
+      {
+        appearance: fullpage.appearance,
+        smartLinks: {
+          allowEmbeds: true,
+        },
+      },
+      {
+        providers: {
+          cards: true,
+        },
+      },
+    );
 
     // Paste the link
     await page.paste();

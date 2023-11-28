@@ -1,13 +1,18 @@
+/** @jsx jsx */
+import { token } from '@atlaskit/tokens';
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
+import { jsx } from '@emotion/react';
 import React from 'react';
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
 import { mentionResourceProvider } from '@atlaskit/util-data-test/mention-story-data';
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { ReactRenderer } from '@atlaskit/renderer';
 
-import { Content } from './styles';
+import { content } from './styles';
 import { toJSON } from '../src/utils';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 
 const emojiProvider = getEmojiProvider({
@@ -61,24 +66,30 @@ export default class ToolsDrawer extends React.Component<any, State> {
       };
       return (
         <div>
-          <div style={{ color: '#ccc', marginBottom: '8px' }}>
+          <div
+            style={{ color: '#ccc', marginBottom: token('space.100', '8px') }}
+          >
             &lt;Renderer&gt;
           </div>
           <ReactRenderer {...props} />
-          <div style={{ color: '#ccc', marginTop: '8px' }}>
+          <div style={{ color: '#ccc', marginTop: token('space.100', '8px') }}>
             &lt;/Renderer&gt;
           </div>
         </div>
       );
     } catch (ex) {
-      return <pre>Invalid document: {ex.stack}</pre>;
+      return (
+        <pre>
+          Invalid document: {ex instanceof Error ? ex.stack : String(ex)}
+        </pre>
+      );
     }
   }
 
   render() {
     const { reloadEditor, jsonDocument } = this.state;
     return (
-      <Content>
+      <div css={content}>
         {reloadEditor
           ? ''
           : this.props.renderEditor({
@@ -90,7 +101,7 @@ export default class ToolsDrawer extends React.Component<any, State> {
             })}
         <legend>Renderer:</legend>
         {this.renderRenderer(jsonDocument)}
-      </Content>
+      </div>
     );
   }
 }

@@ -1,14 +1,17 @@
 import {
   startMeasure as startMeasureWithMark,
   stopMeasure as stopMeasureWithMark,
-} from '@atlaskit/editor-common';
+} from '@atlaskit/editor-common/utils';
 import { TransactionTracker } from '../../track-transactions';
-import * as timingUtils from '../../get-performance-timing';
+import { getTimeSince } from '@atlaskit/editor-common/utils';
 
-jest.mock('@atlaskit/editor-common', () => ({
-  ...jest.requireActual<Object>('@atlaskit/editor-common'),
+jest.mock('@atlaskit/editor-common/utils', () => ({
+  ...jest.requireActual<Object>('@atlaskit/editor-common/utils'),
   isPerformanceAPIAvailable: () => true,
+  getTimeSince: jest.fn(),
 }));
+
+const mockGetTimeSince = getTimeSince as jest.Mock;
 
 describe('bumpDispatchCounter', () => {
   let tracker: TransactionTracker;
@@ -122,20 +125,16 @@ describe('shouldTrackTransaction', () => {
 describe('getMeasureHelpers', () => {
   it('should return noops if tracking is disabled', () => {
     const tracker = new TransactionTracker();
-    const {
-      startMeasure: resultStart,
-      stopMeasure: resultStop,
-    } = tracker.getMeasureHelpers({ enabled: false });
+    const { startMeasure: resultStart, stopMeasure: resultStop } =
+      tracker.getMeasureHelpers({ enabled: false });
 
     expect(resultStart).toEqual(resultStop);
   });
 
   it('should return simple methods by default', () => {
     const tracker = new TransactionTracker();
-    const {
-      startMeasure: resultStart,
-      stopMeasure: resultStop,
-    } = tracker.getMeasureHelpers({ enabled: true });
+    const { startMeasure: resultStart, stopMeasure: resultStop } =
+      tracker.getMeasureHelpers({ enabled: true });
 
     expect(resultStart).not.toEqual(startMeasureWithMark);
     expect(resultStop).not.toEqual(stopMeasureWithMark);
@@ -143,13 +142,11 @@ describe('getMeasureHelpers', () => {
 
   it('should return simple methods when usePerformanceMarks is false', () => {
     const tracker = new TransactionTracker();
-    const {
-      startMeasure: resultStart,
-      stopMeasure: resultStop,
-    } = tracker.getMeasureHelpers({
-      enabled: true,
-      usePerformanceMarks: false,
-    });
+    const { startMeasure: resultStart, stopMeasure: resultStop } =
+      tracker.getMeasureHelpers({
+        enabled: true,
+        usePerformanceMarks: false,
+      });
 
     expect(resultStart).not.toEqual(startMeasureWithMark);
     expect(resultStop).not.toEqual(stopMeasureWithMark);
@@ -157,14 +154,12 @@ describe('getMeasureHelpers', () => {
 
   it('should return performance API mark measure methods when usePerformanceMarks is true', () => {
     const tracker = new TransactionTracker();
-    const {
-      startMeasure: resultStart,
-      stopMeasure: resultStop,
-    } = tracker.getMeasureHelpers({
-      enabled: true,
-      usePerformanceMarks: true,
-      samplingRate: 0,
-    });
+    const { startMeasure: resultStart, stopMeasure: resultStop } =
+      tracker.getMeasureHelpers({
+        enabled: true,
+        usePerformanceMarks: true,
+        samplingRate: 0,
+      });
 
     expect(resultStart).toEqual(startMeasureWithMark);
     expect(resultStop).toEqual(stopMeasureWithMark);
@@ -173,22 +168,17 @@ describe('getMeasureHelpers', () => {
 
 describe('simple startMeasure and stopMeasure', () => {
   const tracker = new TransactionTracker();
-  const {
-    startMeasure: simpleStartMeasure,
-    stopMeasure: simpleStopMeasure,
-  } = tracker.getMeasureHelpers({ enabled: true, samplingRate: 0 });
+  const { startMeasure: simpleStartMeasure, stopMeasure: simpleStopMeasure } =
+    tracker.getMeasureHelpers({ enabled: true, samplingRate: 0 });
 
   it('should measure timing between function calls', () => {
     const timeInMs = 8;
-    const getTimeSinceMock = jest.spyOn(timingUtils, 'getTimeSince');
-    getTimeSinceMock.mockImplementation((startTime) => timeInMs);
+    mockGetTimeSince.mockImplementation((startTime) => timeInMs);
 
     simpleStartMeasure('test1');
     simpleStopMeasure('test1', (duration: number, startTime: number) => {
       expect(duration).toEqual(timeInMs);
     });
-
-    getTimeSinceMock.mockClear();
   });
 
   it('should not call measured callback if mismatched name', () => {

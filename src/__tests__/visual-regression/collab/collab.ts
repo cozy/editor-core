@@ -1,15 +1,14 @@
-import {
-  PuppeteerPage,
-  waitForElementCount,
-  waitForLoadedBackgroundImages,
-} from '@atlaskit/visual-regression/helper';
-import { mainToolbarSelector } from '../../__helpers/page-objects/_toolbar';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+import { waitForElementCount } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { mainToolbarSelector } from '@atlaskit/editor-test-helpers/page-objects/toolbar';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   snapshot,
   editorSelector,
   initEditorWithAdf,
   Appearance,
-} from '../_utils';
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 
 async function waitForCollabAvatars(page: PuppeteerPage) {
   // Wait for both editors (and their toolbars)
@@ -17,15 +16,14 @@ async function waitForCollabAvatars(page: PuppeteerPage) {
 
   // Wait for avatar image downloads
   const avatarSelectors = [
-    `span[aria-label="Rick Sanchez"][role="img"]`,
-    `span[aria-label="Morty Smith"][role="img"]`,
-    `span[aria-label="Summer Smith"][role="img"]`,
+    `img[alt="Rick Sanchez"]`,
+    `img[alt="Morty Smith"]`,
+    `img[alt="Summer Smith"]`,
   ];
 
-  avatarSelectors.forEach(async (selector) => {
+  for (const selector of avatarSelectors) {
     await waitForElementCount(page, selector, 2);
-    await waitForLoadedBackgroundImages(page, selector);
-  });
+  }
 }
 
 describe('Collab', () => {

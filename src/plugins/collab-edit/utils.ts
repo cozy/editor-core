@@ -1,18 +1,37 @@
-import { EditorState, Selection, TextSelection } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Node as PMNode } from 'prosemirror-model';
+import type { EditorState } from '@atlaskit/editor-prosemirror/state';
+import { Selection, TextSelection } from '@atlaskit/editor-prosemirror/state';
+import type {
+  EditorView,
+  DecorationSet,
+} from '@atlaskit/editor-prosemirror/view';
+import { Decoration } from '@atlaskit/editor-prosemirror/view';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
 import * as themeColors from '@atlaskit/theme/colors';
 
 import { hexToRgba } from '@atlaskit/adf-schema';
-import { ZERO_WIDTH_SPACE } from '@atlaskit/editor-common';
+import { ZERO_WIDTH_JOINER } from '@atlaskit/editor-common/utils';
+import type {
+  AnalyticsEventPayload,
+  EditorAnalyticsAPI,
+} from '@atlaskit/editor-common/analytics';
+import {
+  EVENT_TYPE,
+  ACTION,
+  ACTION_SUBJECT,
+} from '@atlaskit/editor-common/analytics';
 
-import { CollabEditOptions } from './types';
+import type {
+  CollabParticipant,
+  CollabEditOptions,
+} from '@atlaskit/editor-common/collab';
 
 export interface Color {
   solid: string;
   selection: string;
 }
 
+// TODO: https://product-fabric.atlassian.net/browse/DSP-7269
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
 export const colors: Color[] = [
   themeColors.R100,
   themeColors.R300,
@@ -39,6 +58,7 @@ export const colors: Color[] = [
   solid,
   selection: hexToRgba(solid, 0.2)!,
 }));
+/* eslint-enable @atlaskit/design-system/ensure-design-token-usage */
 
 export const getAvatarColor = (str: string) => {
   let hash = 0;
@@ -94,17 +114,35 @@ export const createTelepointers = (
     );
   }
 
+  const spaceJoinerBefore = document.createElement('span');
+  spaceJoinerBefore.textContent = ZERO_WIDTH_JOINER;
+  const spaceJoinerAfter = document.createElement('span');
+  spaceJoinerAfter.textContent = ZERO_WIDTH_JOINER;
+
   const cursor = document.createElement('span');
-  cursor.textContent = ZERO_WIDTH_SPACE;
+  cursor.textContent = ZERO_WIDTH_JOINER;
   cursor.className = `telepointer color-${color} telepointer-selection-badge`;
   cursor.style.cssText = `${style({ color: avatarColor.color.solid })};`;
   cursor.setAttribute('data-initial', initial);
-  return decorations.concat(
-    (Decoration as any).widget(to, cursor, {
-      pointer: { sessionId },
-      key: `telepointer-${sessionId}`,
-    }),
-  );
+  return decorations
+    .concat(
+      (Decoration as any).widget(to, spaceJoinerAfter, {
+        pointer: { sessionId },
+        key: `telepointer-${sessionId}-zero`,
+      }),
+    )
+    .concat(
+      (Decoration as any).widget(to, cursor, {
+        pointer: { sessionId },
+        key: `telepointer-${sessionId}`,
+      }),
+    )
+    .concat(
+      (Decoration as any).widget(to, spaceJoinerBefore, {
+        pointer: { sessionId },
+        key: `telepointer-${sessionId}-zero`,
+      }),
+    );
 };
 
 export const replaceDocument = (
@@ -146,4 +184,48 @@ export const replaceDocument = (
   }
 
   return tr;
+};
+
+export const scrollToCollabCursor = (
+  editorView: EditorView,
+  participants: CollabParticipant[],
+  sessionId: string | undefined,
+  // analytics: AnalyticsEvent | undefined,
+  index: number,
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined,
+) => {
+  const selectedUser = participants[index];
+  if (
+    selectedUser &&
+    selectedUser.cursorPos !== undefined &&
+    selectedUser.sessionId !== sessionId
+  ) {
+    const { state } = editorView;
+    let tr = state.tr;
+    const analyticsPayload: AnalyticsEventPayload = {
+      action: ACTION.MATCHED,
+      actionSubject: ACTION_SUBJECT.SELECTION,
+      eventType: EVENT_TYPE.TRACK,
+    };
+    tr.setSelection(Selection.near(tr.doc.resolve(selectedUser.cursorPos)));
+    editorAnalyticsAPI?.attachAnalyticsEvent(analyticsPayload)(tr);
+    tr.scrollIntoView();
+    editorView.dispatch(tr);
+    if (!editorView.hasFocus()) {
+      editorView.focus();
+    }
+  }
+};
+
+export const getPositionOfTelepointer = (
+  sessionId: string,
+  decorationSet: DecorationSet,
+): undefined | number => {
+  let scrollPosition;
+  decorationSet.find().forEach((deco: any) => {
+    if (deco.type.spec.pointer.sessionId === sessionId) {
+      scrollPosition = deco.from;
+    }
+  });
+  return scrollPosition;
 };

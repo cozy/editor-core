@@ -1,5 +1,10 @@
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import extensionFrame from './__fixtures__/extension-frame.adf.json';
 
 describe('Extension frame:', () => {
@@ -23,9 +28,6 @@ describe('Extension frame:', () => {
         allowExtension: {
           // trigger extension providers scaffolding
           allowExtendFloatingToolbars: true,
-        },
-        featureFlags: {
-          'data-consumer-mark': true,
         },
       },
       adf,

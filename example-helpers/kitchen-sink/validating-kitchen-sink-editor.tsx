@@ -1,38 +1,52 @@
 import React from 'react';
-import { Schema } from 'prosemirror-model';
+import type { Schema } from '@atlaskit/editor-prosemirror/model';
 
-import { EditorView } from 'prosemirror-view';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { customInsertMenuItems } from '@atlaskit/editor-test-helpers/mock-insert-menu';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { extensionHandlers } from '@atlaskit/editor-test-helpers/extensions';
 import { exampleMediaFeatureFlags } from '@atlaskit/media-test-helpers/exampleMediaFeatureFlags';
-import {
-  ADFEntity,
+import type {
   ErrorCallback,
   ValidationError,
-  validator,
-} from '@atlaskit/adf-utils';
-import { Provider as SmartCardProvider } from '@atlaskit/smart-card';
-import { mentionResourceProviderWithTeamMentionHighlight } from '@atlaskit/util-data-test/mention-story-data';
+} from '@atlaskit/adf-utils/validatorTypes';
+import { validator } from '@atlaskit/adf-utils/validator';
+import type { ADFEntity } from '@atlaskit/adf-utils/types';
+import { SmartCardProvider } from '@atlaskit/link-provider';
+import {
+  mentionResourceProviderWithResolver,
+  mentionResourceProvider,
+} from '@atlaskit/util-data-test/mention-story-data';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { ConfluenceCardClient } from '@atlaskit/editor-test-helpers/confluence-card-client';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { ConfluenceCardProvider } from '@atlaskit/editor-test-helpers/confluence-card-provider';
-import Editor from '../../src/editor';
-import { EditorAppearance, EditorPlugin, EditorProps } from '../../src/types';
-import { EditorActions } from '../../src';
+import { Editor } from '../../src';
+import type {
+  EditorAppearance,
+  EditorPlugin,
+  EditorProps,
+} from '../../src/types';
+import type { EditorActions } from '../../src';
 
 import {
   mediaProvider,
-  providers,
+  getProviders,
   quickInsertProvider,
 } from '../../examples/5-full-page';
-import { Error } from '../ErrorReport';
-import { validationErrorHandler } from '@atlaskit/editor-common';
+import type { Error } from '../ErrorReport';
+import { validationErrorHandler } from '@atlaskit/editor-common/utils';
+
+// import { tablesPlugin } from '@atlaskit/editor-plugin-table';
 
 export type ValidatingKitchenSinkEditorProps = {
   actions: EditorActions;
   appearance: EditorAppearance;
   adf?: object;
   disabled?: boolean;
+  sanitizePrivateContent?: boolean;
   primaryToolbarComponents: React.ReactElement<any>;
   popupMountPoint?: HTMLElement;
   validationTimeout?: number;
@@ -50,6 +64,43 @@ export type ValidatingKitchenSinkEditorState = {
 const smartCardClient = new ConfluenceCardClient('stg');
 const DEFAULT_VALIDATION_TIMEOUT = 500;
 const EMPTY: EditorPlugin[] = [];
+// TODO ED-15449: mimic old defaults
+// const tableOptions = {
+//   advanced: true,
+//   allowBackgroundColor: true,
+//   allowColumnResizing: true,
+//   allowColumnSorting: false,
+//   allowDistributeColumns: true,
+//   allowHeaderColumn: true,
+//   allowHeaderRow: true,
+//   allowMergeCells: true,
+//   allowNumberColumn: true,
+//   allowControls: true,
+//   permittedLayouts: 'all' as any,
+//   // Sticky headers don't demonstrate well with the kitchen sink wrapper
+//   stickyHeaders: false,
+//   // stickyHeaders: true,
+// };
+
+// TODO: restore when using new table plugin in editor-core
+// Plugins must be created outside
+// let moduleTablePlugin: EditorPlugin | undefined;
+// const getKitchenSinkPlugins = (
+//   props: ValidatingKitchenSinkEditorProps,
+// ): EditorPlugin[] => {
+//   const isMobile = props.appearance === 'mobile';
+//   const tablePlugin =
+//     moduleTablePlugin ||
+//     tablesPlugin({
+//       tableOptions,
+//       breakoutEnabled: props.appearance === 'full-page',
+//       allowContextualMenu: !isMobile,
+//       fullWidthEnabled: props.appearance === 'full-width',
+//       // wasFullWidthEnabled: prevProps && prevProps.appearance === 'full-width',
+//     });
+//   moduleTablePlugin = tablePlugin;
+//   return [tablePlugin];
+// };
 
 export class ValidatingKitchenSinkEditor extends React.Component<
   ValidatingKitchenSinkEditorProps,
@@ -62,6 +113,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
 
   private validatorTimeout?: number;
   private editorView?: EditorView;
+  private providers = getProviders();
 
   render() {
     const {
@@ -72,23 +124,36 @@ export class ValidatingKitchenSinkEditor extends React.Component<
       primaryToolbarComponents,
       popupMountPoint,
       extensionProviders,
+      sanitizePrivateContent,
     } = this.props;
 
     return (
       <SmartCardProvider client={smartCardClient}>
         <Editor
+          elementBrowser={{
+            showModal: true,
+            replacePlusMenu: true,
+          }}
           appearance={appearance}
+          allowAnalyticsGASV3
           quickInsert={{
             provider: this.quickInsertProviderPromise,
           }}
-          UNSAFE_allowUndoRedoButtons={true}
+          allowUndoRedoButtons={true}
+          allowFragmentMark={true}
+          allowBorderMark={true}
           allowTextColor={true}
           allowTables={{
             advanced: true,
+            allowDistributeColumns: true,
           }}
+          // allowTables={false}
           allowBreakout={true}
           allowJiraIssue={true}
-          allowPanel={true}
+          allowPanel={{
+            allowCustomPanel: true,
+            allowCustomPanelEdit: true,
+          }}
           allowExtension={{
             allowBreakout: true,
             allowAutoSave: true,
@@ -99,6 +164,7 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           allowLayouts={{
             allowBreakout: true,
             UNSAFE_addSidebarLayouts: true,
+            UNSAFE_allowSingleColumnLayout: true,
           }}
           allowTextAlignment={true}
           allowIndentation={true}
@@ -108,23 +174,31 @@ export class ValidatingKitchenSinkEditor extends React.Component<
             allowBlockCards: true,
             allowEmbeds: true,
           }}
+          linking={{ smartLinks: { allowDatasource: true } }}
           allowExpand={{ allowInsertion: true }}
           allowStatus={true}
           allowNestedTasks
-          codeBlock={{ allowCopyToClipboard: true }}
-          {...providers}
+          codeBlock={{ allowCopyToClipboard: true, appearance }}
+          {...this.providers}
           mentionProvider={Promise.resolve(
-            mentionResourceProviderWithTeamMentionHighlight,
+            sanitizePrivateContent ?? false
+              ? mentionResourceProviderWithResolver
+              : mentionResourceProvider,
           )} // enable highlight only for kitchen sink example
+          sanitizePrivateContent={sanitizePrivateContent ?? false}
           media={{
             provider: mediaProvider,
             allowMediaSingle: true,
+            enableDownloadButton: true,
             allowResizing: true,
-            allowAnnotation: true,
             allowLinking: true,
             allowResizingInTables: true,
             allowAltTextOnImages: true,
-            featureFlags: { ...exampleMediaFeatureFlags, captions: true },
+            allowCaptions: true,
+            featureFlags: {
+              ...exampleMediaFeatureFlags,
+              mediaInline: true,
+            },
           }}
           insertMenuItems={customInsertMenuItems}
           extensionHandlers={extensionHandlers}
@@ -136,15 +210,21 @@ export class ValidatingKitchenSinkEditor extends React.Component<
           onChange={() => this.onEditorChanged(actions)}
           popupsMountPoint={popupMountPoint}
           primaryToolbarComponents={primaryToolbarComponents}
+          showIndentationButtons={true}
           featureFlags={{
-            'local-id-generation-on-tables': true,
-            'data-consumer-mark': true,
-            // Spread here as we want to make sure we can still override flags added above
+            'safer-dispatched-transactions': true,
+            'restart-numbered-lists': true,
             ...this.props.featureFlags,
           }}
           dangerouslyAppendPlugins={{
             __plugins: this.props.editorPlugins ?? EMPTY,
           }}
+          // dangerouslyAppendPlugins={{
+          //   __plugins: [
+          //     ...(this.props.editorPlugins || []),
+          //     ...getKitchenSinkPlugins(this.props),
+          //   ],
+          // }}
         />
       </SmartCardProvider>
     );

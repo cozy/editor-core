@@ -1,6 +1,6 @@
-import React from 'react';
-import { AnnotationTypes } from '@atlaskit/adf-schema';
-import { AnnotationUpdateEmitter } from './update-provider';
+import type React from 'react';
+import type { AnnotationTypes } from '@atlaskit/adf-schema';
+import type { AnnotationUpdateEmitter } from './update-provider';
 
 export type AnnotationInfo = {
   id: string;
@@ -46,6 +46,10 @@ export type InlineCommentViewComponentProps = AnnotationComponentProps & {
    * Removes the annotation from the document
    */
   onDelete?: (id: string) => void;
+  /**
+   * Ordered list of annotation ids as shown in the document
+   */
+  annotationsList?: string[];
 };
 
 export interface AnnotationState<Type, State> {
@@ -91,4 +95,11 @@ export const AnnotationTestIds = {
   floatingToolbarCreateButton: `${prefix}-toolbar-create-button`,
   componentSave: `${prefix}-dummy-save-button`,
   componentClose: `${prefix}-dummy-close-button`,
+};
+
+export type CoordsAtPos = {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
 };

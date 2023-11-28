@@ -1,12 +1,16 @@
 import React from 'react';
 import { annotation } from '@atlaskit/adf-schema';
-import { EditorPlugin } from '../../types';
-import WithPluginState from '../../ui/WithPluginState';
-import { stateKey as reactPluginKey } from '../../plugins/base/pm-plugins/react-nodeview';
-import { FloatingToolbarConfig } from '../floating-toolbar/types';
+import type {
+  NextEditorPlugin,
+  ExtractInjectionAPI,
+  FloatingToolbarConfig,
+  SelectionToolbarGroup,
+  OptionalPlugin,
+} from '@atlaskit/editor-common/types';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import { keymapPlugin } from './pm-plugins/keymap';
 import { inlineCommentPlugin } from './pm-plugins/inline-comment';
-import {
+import type {
   AnnotationProviders,
   InlineCommentAnnotationProvider,
   AnnotationInfo,
@@ -16,14 +20,30 @@ import {
   InlineCommentViewComponentProps,
   AnnotationTypeProvider,
 } from './types';
-import { UpdateEvent, AnnotationUpdateEmitter } from './update-provider';
-import { getPluginState, inlineCommentPluginKey } from './utils';
+import type { UpdateEvent } from './update-provider';
+import { AnnotationUpdateEmitter } from './update-provider';
+import { getPluginState } from './utils';
 import { buildToolbar } from './toolbar';
 import { InlineCommentView } from './ui/InlineCommentView';
+import { useSharedPluginState } from '@atlaskit/editor-common/hooks';
+import type { InlineCommentPluginState } from './pm-plugins/types';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+import { getBooleanFF } from '@atlaskit/platform-feature-flags';
+import type { AnalyticsPlugin } from '@atlaskit/editor-plugin-analytics';
 
-const annotationPlugin = (
-  annotationProviders?: AnnotationProviders,
-): EditorPlugin => {
+export type AnnotationPlugin = NextEditorPlugin<
+  'annotation',
+  {
+    pluginConfiguration: AnnotationProviders | undefined;
+    sharedState: InlineCommentPluginState | undefined;
+    dependencies: [OptionalPlugin<AnalyticsPlugin>];
+  }
+>;
+
+const annotationPlugin: AnnotationPlugin = ({
+  config: annotationProviders,
+  api,
+}) => {
   return {
     name: 'annotation',
 
@@ -36,6 +56,13 @@ const annotationPlugin = (
       ];
     },
 
+    getSharedState(editorState) {
+      if (!editorState) {
+        return undefined;
+      }
+      return getPluginState(editorState) || undefined;
+    },
+
     pmPlugins: () => [
       {
         name: 'annotation',
@@ -46,6 +73,7 @@ const annotationPlugin = (
               portalProviderAPI,
               eventDispatcher,
               provider: annotationProviders.inlineComment,
+              editorAnalyticsAPI: api?.analytics?.actions,
             });
           }
 
@@ -56,7 +84,7 @@ const annotationPlugin = (
         name: 'annotationKeymap',
         plugin: () => {
           if (annotationProviders) {
-            return keymapPlugin();
+            return keymapPlugin(api?.analytics?.actions);
           }
           return;
         },
@@ -65,7 +93,10 @@ const annotationPlugin = (
 
     pluginsOptions: {
       floatingToolbar(state, intl): FloatingToolbarConfig | undefined {
-        if (!annotationProviders) {
+        if (
+          getBooleanFF('platform.editor.enable-selection-toolbar_ucdwd') ||
+          !annotationProviders
+        ) {
           return;
         }
 
@@ -77,7 +108,34 @@ const annotationPlugin = (
           !pluginState.mouseData.isSelecting
         ) {
           const { isToolbarAbove } = annotationProviders.inlineComment;
-          return buildToolbar(state, intl, isToolbarAbove);
+          return buildToolbar(api?.analytics?.actions)(
+            state,
+            intl,
+            isToolbarAbove,
+          );
+        }
+      },
+      selectionToolbar(state, intl): SelectionToolbarGroup | undefined {
+        if (
+          !getBooleanFF('platform.editor.enable-selection-toolbar_ucdwd') ||
+          !annotationProviders
+        ) {
+          return;
+        }
+
+        const pluginState = getPluginState(state);
+        if (
+          pluginState &&
+          pluginState.isVisible &&
+          !pluginState.bookmark &&
+          !pluginState.mouseData.isSelecting
+        ) {
+          const { isToolbarAbove } = annotationProviders.inlineComment;
+          return buildToolbar(api?.analytics?.actions)(
+            state,
+            intl,
+            isToolbarAbove,
+          ) as SelectionToolbarGroup;
         }
       },
     },
@@ -86,31 +144,49 @@ const annotationPlugin = (
       if (!annotationProviders) {
         return null;
       }
-
       return (
-        <WithPluginState
-          plugins={{
-            selectionState: reactPluginKey,
-            inlineCommentState: inlineCommentPluginKey,
-          }}
-          render={({ inlineCommentState }) => {
-            if (inlineCommentState && !inlineCommentState.isVisible) {
-              return null;
-            }
-
-            return (
-              <InlineCommentView
-                providers={annotationProviders}
-                editorView={editorView}
-                dispatchAnalyticsEvent={dispatchAnalyticsEvent}
-              />
-            );
-          }}
+        <AnnotationContentComponent
+          api={api}
+          editorView={editorView}
+          annotationProviders={annotationProviders}
+          dispatchAnalyticsEvent={dispatchAnalyticsEvent}
         />
       );
     },
   };
 };
+
+interface AnnotationContentComponentProps {
+  api: ExtractInjectionAPI<typeof annotationPlugin> | undefined;
+  editorView: EditorView;
+  annotationProviders: AnnotationProviders;
+  dispatchAnalyticsEvent: DispatchAnalyticsEvent | undefined;
+}
+
+function AnnotationContentComponent({
+  api,
+  editorView,
+  annotationProviders,
+  dispatchAnalyticsEvent,
+}: AnnotationContentComponentProps) {
+  const { annotationState: inlineCommentState } = useSharedPluginState(api, [
+    'annotation',
+  ]);
+  if (inlineCommentState && !inlineCommentState.isVisible) {
+    return null;
+  }
+
+  return (
+    <div data-editor-popup="true">
+      <InlineCommentView
+        providers={annotationProviders}
+        editorView={editorView}
+        dispatchAnalyticsEvent={dispatchAnalyticsEvent}
+        editorAnalyticsAPI={api?.analytics?.actions}
+      />
+    </div>
+  );
+}
 
 export default annotationPlugin;
 export { AnnotationUpdateEmitter };

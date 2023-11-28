@@ -1,57 +1,115 @@
-import { closeHistory } from 'prosemirror-history';
+import { closeHistory } from '@atlaskit/editor-prosemirror/history';
 import {
   Fragment,
+  Node as PMNode,
+  Slice,
+} from '@atlaskit/editor-prosemirror/model';
+import type {
   Mark,
   MarkType,
-  Node as PMNode,
   Schema,
-  Slice,
-} from 'prosemirror-model';
+} from '@atlaskit/editor-prosemirror/model';
 import {
+  TextSelection,
+  NodeSelection,
+} from '@atlaskit/editor-prosemirror/state';
+import type {
   EditorState,
   Selection,
-  TextSelection,
   Transaction,
-} from 'prosemirror-state';
+} from '@atlaskit/editor-prosemirror/state';
 import {
+  canInsert,
   findParentNodeOfType,
+  findParentNodeOfTypeClosestToPos,
   hasParentNodeOfType,
   safeInsert,
-} from 'prosemirror-utils';
-import { EditorView } from 'prosemirror-view';
+} from '@atlaskit/editor-prosemirror/utils';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import uuid from 'uuid/v4';
 
-import { MentionAttributes } from '@atlaskit/adf-schema';
-import { ExtensionAutoConvertHandler } from '@atlaskit/editor-common/extensions';
-import { CardAdf, CardAppearance } from '@atlaskit/smart-card';
+import type { MentionAttributes } from '@atlaskit/adf-schema';
+import type { ExtensionAutoConvertHandler } from '@atlaskit/editor-common/extensions';
+import type {
+  CardAdf,
+  DatasourceAdf,
+  CardAppearance,
+} from '@atlaskit/smart-card';
+import { replaceSelectedTable } from '@atlaskit/editor-tables/utils';
 
-import { Command, CommandDispatch } from '../../types';
+import type { Command, CommandDispatch } from '@atlaskit/editor-common/types';
 import {
-  compose,
-  insideTable,
+  canLinkBeCreatedInRange,
+  insideTableCell,
+  isInListItem,
+  isLinkMark,
+  isListItemNode,
+  isListNode,
   isParagraph,
   isText,
-  isLinkMark,
-  processRawValue,
-} from '../../utils';
-import { mapSlice } from '../../utils/slice';
-import { InputMethodInsertMedia, INPUT_METHOD } from '../analytics';
-import { insertCard, queueCardsFromChangedTr } from '../card/pm-plugins/doc';
-import { CardOptions } from '@atlaskit/editor-common';
-import { GapCursorSelection, Side } from '../selection/gap-cursor-selection';
-import { linkifyContent } from '../hyperlink/utils';
-import { runMacroAutoConvert } from '../macro';
-import { insertMediaAsMediaSingle } from '../media/utils/media-single';
-import {
-  pluginKey as textFormattingPluginKey,
-  TextFormattingState,
-} from '../text-formatting/pm-plugins/main';
-import { replaceSelectedTable } from '../table/transforms/replace-table';
+  linkifyContent,
+  mapSlice,
+} from '@atlaskit/editor-common/utils';
+import { insideTable } from '@atlaskit/editor-common/core-utils';
+import type {
+  InputMethodInsertMedia,
+  EditorAnalyticsAPI,
+} from '@atlaskit/editor-common/analytics';
+import { INPUT_METHOD } from '@atlaskit/editor-common/analytics';
+import { GapCursorSelection, Side } from '@atlaskit/editor-common/selection';
+// TODO: ED-20519 Needs Macro extraction
+import type { RunMacroAutoConvert } from '@atlaskit/editor-plugin-extension';
+import type { InsertMediaAsMediaSingle } from '@atlaskit/editor-plugin-media/types';
 
-import { applyTextMarksToSlice, hasOnlyNodesOfType } from './util';
-import { isListNode, isListItemNode } from '../list/utils/node';
-import { canLinkBeCreatedInRange } from '../hyperlink/pm-plugins/main';
+import {
+  addReplaceSelectedTableAnalytics,
+  applyTextMarksToSlice,
+  hasOnlyNodesOfType,
+} from './util';
 
 import { insertSliceForLists } from './edge-cases';
+import {
+  startTrackingPastedMacroPositions,
+  stopTrackingPastedMacroPositions,
+} from './commands';
+import { getPluginState as getPastePluginState } from './pm-plugins/plugin-factory';
+import type {
+  QueueCardsFromTransactionAction,
+  CardOptions,
+} from '@atlaskit/editor-common/card';
+import { anyMarkActive } from '@atlaskit/editor-common/mark';
+import type { FindRootParentListNode } from '@atlaskit/editor-plugin-list';
+
+/** Helper type for single arg function */
+type Func<A, B> = (a: A) => B;
+
+/**
+ * Compose 1 to n functions.
+ * @param func first function
+ * @param funcs additional functions
+ */
+function compose<
+  F1 extends Func<any, any>,
+  FN extends Array<Func<any, any>>,
+  R extends FN extends []
+    ? F1
+    : FN extends [Func<infer A, any>]
+    ? (a: A) => ReturnType<F1>
+    : FN extends [any, Func<infer A, any>]
+    ? (a: A) => ReturnType<F1>
+    : FN extends [any, any, Func<infer A, any>]
+    ? (a: A) => ReturnType<F1>
+    : FN extends [any, any, any, Func<infer A, any>]
+    ? (a: A) => ReturnType<F1>
+    : FN extends [any, any, any, any, Func<infer A, any>]
+    ? (a: A) => ReturnType<F1>
+    : Func<any, ReturnType<F1>>, // Doubtful we'd ever want to pipe this many functions, but in the off chance someone does, we can still infer the return type
+>(func: F1, ...funcs: FN): R {
+  const allFuncs = [func, ...funcs];
+  return function composed(raw: any) {
+    return allFuncs.reduceRight((memo, func) => func(memo), raw);
+  } as R;
+}
 
 // remove text attribute from mention for copy/paste (GDPR)
 export function handleMention(slice: Slice, schema: Schema): Slice {
@@ -65,7 +123,10 @@ export function handleMention(slice: Slice, schema: Schema): Slice {
   });
 }
 
-export function handlePasteIntoTaskAndDecision(slice: Slice): Command {
+export function handlePasteIntoTaskOrDecisionOrPanel(
+  slice: Slice,
+  queueCardsFromChangedTr: QueueCardsFromTransactionAction | undefined,
+): Command {
   return (state: EditorState, dispatch?: CommandDispatch): boolean => {
     const {
       schema,
@@ -76,23 +137,66 @@ export function handlePasteIntoTaskAndDecision(slice: Slice): Command {
       marks: { code: codeMark },
       nodes: {
         decisionItem,
-        decisionList,
         emoji,
         hardBreak,
         mention,
         paragraph,
-        taskList,
         taskItem,
         text,
+        panel,
+        bulletList,
+        orderedList,
+        taskList,
+        listItem,
+        expand,
+        heading,
       },
     } = schema;
 
+    const selectionIsValidNode =
+      state.selection instanceof NodeSelection &&
+      ['decisionList', 'decisionItem', 'taskList', 'taskItem'].includes(
+        state.selection.node.type.name,
+      );
+    const selectionHasValidParentNode = hasParentNodeOfType([
+      decisionItem,
+      taskItem,
+      panel,
+    ])(state.selection);
+    const selectionIsPanel = hasParentNodeOfType([panel])(state.selection);
+
+    // Some types of content should be handled by the default handler, not this function.
+    // Check through slice content to see if it contains an invalid node.
+    let sliceIsInvalid = false;
+    slice.content.nodesBetween(0, slice.content.size, (node) => {
+      if (
+        node.type === bulletList ||
+        node.type === orderedList ||
+        node.type === expand ||
+        node.type === heading ||
+        node.type === listItem
+      ) {
+        sliceIsInvalid = true;
+      }
+
+      if (selectionIsPanel && node.type === taskList) {
+        sliceIsInvalid = true;
+      }
+    });
+
+    // If the selection is a panel,
+    // and the slice's first node is a paragraph
+    // and it is not from a depth that would indicate it being from inside from another node (e.g. text from a decision)
+    // then we can rely on the default behaviour.
+    const sliceIsAPanelReceivingLowDepthText =
+      selectionIsPanel &&
+      slice.content.firstChild?.type === paragraph &&
+      slice.openEnd < 2;
+
     if (
-      !decisionItem ||
-      !decisionList ||
-      !taskList ||
-      !taskItem ||
-      !hasParentNodeOfType([decisionItem, taskItem])(state.selection)
+      sliceIsInvalid ||
+      sliceIsAPanelReceivingLowDepthText ||
+      (!selectionIsValidNode && !selectionHasValidParentNode)
     ) {
       return false;
     }
@@ -102,27 +206,295 @@ export function handlePasteIntoTaskAndDecision(slice: Slice): Command {
 
     const selectionMarks = selection.$head.marks();
 
-    const textFormattingState: TextFormattingState = textFormattingPluginKey.getState(
-      state,
-    );
-
     if (
       selection instanceof TextSelection &&
       Array.isArray(selectionMarks) &&
       selectionMarks.length > 0 &&
       hasOnlyNodesOfType(paragraph, text, emoji, mention, hardBreak)(slice) &&
-      (!codeMark.isInSet(selectionMarks) || textFormattingState.codeActive) // for codeMarks let's make sure mark is active
+      (!codeMark.isInSet(selectionMarks) || anyMarkActive(state, codeMark)) // check if there is a code mark anywhere in the selection
     ) {
       filters.push(applyTextMarksToSlice(schema, selection.$head.marks()));
     }
 
     const transformedSlice = compose.apply(null, filters)(slice);
 
-    const tr = closeHistory(state.tr)
-      .replaceSelection(transformedSlice)
-      .scrollIntoView();
+    const tr = closeHistory(state.tr);
 
-    queueCardsFromChangedTr(state, tr, INPUT_METHOD.CLIPBOARD);
+    const transformedSliceIsValidNode =
+      transformedSlice.content.firstChild.type.inlineContent ||
+      ([
+        'decisionList',
+        'decisionItem',
+        'taskList',
+        'taskItem',
+        'panel',
+      ].includes(transformedSlice.content.firstChild.type.name) &&
+        !isInListItem(state));
+    // If the slice or the selection are valid nodes to handle,
+    // and the slice is not a whole node (i.e. openStart is 1 and openEnd is 0)
+    // or the slice's first node is a paragraph,
+    // then we can replace the selection with our slice.
+    if (
+      ((transformedSliceIsValidNode || selectionIsValidNode) &&
+        !(
+          (transformedSlice.openStart === 1 &&
+            transformedSlice.openEnd === 0) ||
+          // Whole codeblock node has reverse slice depths.
+          (transformedSlice.openStart === 0 && transformedSlice.openEnd === 1)
+        )) ||
+      transformedSlice.content.firstChild?.type === paragraph
+    ) {
+      tr.replaceSelection(transformedSlice).scrollIntoView();
+    } else {
+      // This maintains both the selection (destination) and the slice (paste content).
+      safeInsert(transformedSlice.content)(tr).scrollIntoView();
+    }
+
+    queueCardsFromChangedTr?.(state, tr, INPUT_METHOD.CLIPBOARD);
+    if (dispatch) {
+      dispatch(tr);
+    }
+    return true;
+  };
+}
+
+export function handlePasteNonNestableBlockNodesIntoList(
+  slice: Slice,
+): Command {
+  return (state: EditorState, dispatch?: CommandDispatch): boolean => {
+    const { tr } = state;
+    const { selection } = tr;
+    const { $from, $to, from, to } = selection;
+    const { orderedList, bulletList, listItem } = state.schema.nodes;
+
+    // Selected nodes
+    const selectionParentListItemNode =
+      findParentNodeOfType(listItem)(selection);
+    const selectionParentListNodeWithPos = findParentNodeOfType([
+      bulletList,
+      orderedList,
+    ])(selection);
+    const selectionParentListNode = selectionParentListNodeWithPos?.node;
+
+    // Slice info
+    const sliceContent = slice.content;
+    const sliceIsListItems =
+      isListNode(sliceContent.firstChild) && isListNode(sliceContent.lastChild);
+
+    // Find case of slices that can be inserted into a list item
+    // (eg. paragraphs, list items, code blocks, media single)
+    // These scenarios already get handled elsewhere and don't need to split the list
+    let sliceContainsBlockNodesOtherThanThoseAllowedInListItem = false;
+    slice.content.forEach((child) => {
+      if (child.isBlock && !listItem.spec.content?.includes(child.type.name)) {
+        sliceContainsBlockNodesOtherThanThoseAllowedInListItem = true;
+      }
+    });
+
+    if (
+      !selectionParentListItemNode ||
+      !sliceContent ||
+      canInsert($from, sliceContent) || // eg. inline nodes that can be inserted in a list item
+      !sliceContainsBlockNodesOtherThanThoseAllowedInListItem ||
+      sliceIsListItems ||
+      !selectionParentListNodeWithPos
+    ) {
+      return false;
+    }
+
+    // Offsets
+    const listWrappingOffset =
+      $to.depth - selectionParentListNodeWithPos.depth + 1; // difference in depth between to position and list node
+    const listItemWrappingOffset =
+      $to.depth - selectionParentListNodeWithPos.depth; // difference in depth between to position and list item node
+
+    // Anything to do with nested lists should safeInsert and not be handled here
+    const grandParentListNode = findParentNodeOfTypeClosestToPos(
+      tr.doc.resolve(selectionParentListNodeWithPos.pos),
+      [bulletList, orderedList],
+    );
+    const selectionIsInNestedList = !!grandParentListNode;
+    let selectedListItemHasNestedList = false;
+    selectionParentListItemNode.node.content.forEach((child) => {
+      if (isListNode(child)) {
+        selectedListItemHasNestedList = true;
+      }
+    });
+    if (selectedListItemHasNestedList || selectionIsInNestedList) {
+      return false;
+    }
+
+    // Node after the insert position
+    const nodeAfterInsertPositionIsListItem =
+      tr.doc.nodeAt(to + listItemWrappingOffset)?.type.name === 'listItem';
+
+    // Get the next list items position (used later to find the split out ordered list)
+    const indexOfNextListItem = $to.indexAfter(
+      $to.depth - listItemWrappingOffset,
+    );
+    const positionOfNextListItem = tr.doc
+      .resolve(selectionParentListNodeWithPos.pos + 1)
+      .posAtIndex(indexOfNextListItem);
+
+    // These nodes paste as plain text by default so need to be handled differently
+    const sliceContainsNodeThatPastesAsPlainText =
+      sliceContent.firstChild &&
+      ['taskItem', 'taskList', 'heading', 'blockquote'].includes(
+        sliceContent.firstChild.type.name,
+      );
+
+    // Work out position to replace up to
+    let replaceTo;
+    if (
+      sliceContainsNodeThatPastesAsPlainText &&
+      nodeAfterInsertPositionIsListItem
+    ) {
+      replaceTo = to + listItemWrappingOffset;
+    } else if (
+      sliceContainsNodeThatPastesAsPlainText ||
+      !nodeAfterInsertPositionIsListItem
+    ) {
+      replaceTo = to;
+    } else {
+      replaceTo = to + listWrappingOffset;
+    }
+
+    // handle the insertion of the slice
+    if (
+      sliceContainsNodeThatPastesAsPlainText ||
+      nodeAfterInsertPositionIsListItem ||
+      (sliceContent.childCount > 1 &&
+        sliceContent.firstChild?.type.name !== 'paragraph')
+    ) {
+      tr.replaceWith(from, replaceTo, sliceContent).scrollIntoView();
+    } else {
+      // When the selection is not at the end of a list item
+      // eg. middle of list item, start of list item
+      tr.replaceSelection(slice).scrollIntoView();
+    }
+
+    // Find the ordered list node after the pasted content so we can set it's order
+    const mappedPositionOfNextListItem = tr.mapping.map(positionOfNextListItem);
+    if (mappedPositionOfNextListItem > tr.doc.nodeSize) {
+      return false;
+    }
+    const nodeAfterPastedContentResolvedPos = findParentNodeOfTypeClosestToPos(
+      tr.doc.resolve(mappedPositionOfNextListItem),
+      [orderedList],
+    );
+
+    // Work out the new split out lists 'order' (the number it starts from)
+    const originalParentOrderedListNodeOrder =
+      selectionParentListNode?.attrs.order;
+    const numOfListItemsInOriginalList = findParentNodeOfTypeClosestToPos(
+      tr.doc.resolve(from - 1),
+      [orderedList],
+    )?.node.childCount;
+
+    // Set the new split out lists order attribute
+    if (
+      typeof originalParentOrderedListNodeOrder === 'number' &&
+      numOfListItemsInOriginalList &&
+      nodeAfterPastedContentResolvedPos
+    ) {
+      tr.setNodeMarkup(nodeAfterPastedContentResolvedPos.pos, orderedList, {
+        ...nodeAfterPastedContentResolvedPos.node.attrs,
+        order:
+          originalParentOrderedListNodeOrder + numOfListItemsInOriginalList,
+      });
+    }
+
+    // dispatch transaction
+    if (tr.docChanged) {
+      if (dispatch) {
+        dispatch(tr);
+      }
+      return true;
+    }
+
+    return false;
+  };
+}
+
+export const doesSelectionWhichStartsOrEndsInListContainEntireList = (
+  selection: Selection,
+  findRootParentListNode: FindRootParentListNode | undefined,
+) => {
+  const { $from, $to, from, to } = selection;
+  const selectionParentListItemNodeResolvedPos = findRootParentListNode
+    ? findRootParentListNode($from) || findRootParentListNode($to)
+    : null;
+
+  const selectionParentListNode =
+    selectionParentListItemNodeResolvedPos?.parent;
+
+  if (!selectionParentListItemNodeResolvedPos || !selectionParentListNode) {
+    return false;
+  }
+
+  const startOfEntireList =
+    $from.pos < $to.pos
+      ? selectionParentListItemNodeResolvedPos.pos + $from.depth - 1
+      : selectionParentListItemNodeResolvedPos.pos + $to.depth - 1;
+  const endOfEntireList =
+    $from.pos < $to.pos
+      ? selectionParentListItemNodeResolvedPos.pos +
+        selectionParentListNode.nodeSize -
+        $to.depth -
+        1
+      : selectionParentListItemNodeResolvedPos.pos +
+        selectionParentListNode.nodeSize -
+        $from.depth -
+        1;
+
+  if (!startOfEntireList || !endOfEntireList) {
+    return false;
+  }
+
+  if (from < to) {
+    return startOfEntireList >= $from.pos && endOfEntireList <= $to.pos;
+  } else if (from > to) {
+    return startOfEntireList >= $to.pos && endOfEntireList <= $from.pos;
+  } else {
+    return false;
+  }
+};
+
+export function handlePastePanelOrDecisionContentIntoList(
+  slice: Slice,
+  findRootParentListNode: FindRootParentListNode | undefined,
+): Command {
+  return (state: EditorState, dispatch?: CommandDispatch): boolean => {
+    const { schema, tr } = state;
+    const { selection } = tr;
+    // Check this pasting action is related to copy content from panel node into a selected the list node
+    const blockNode = slice.content.firstChild;
+    const isSliceWholeNode = slice.openStart === 0 && slice.openEnd === 0;
+    const selectionParentListItemNode = selection.$to.node(
+      selection.$to.depth - 1,
+    );
+
+    const sliceIsWholeNodeButShouldNotReplaceSelection =
+      isSliceWholeNode &&
+      !doesSelectionWhichStartsOrEndsInListContainEntireList(
+        selection,
+        findRootParentListNode,
+      );
+
+    if (
+      !selectionParentListItemNode ||
+      selectionParentListItemNode?.type !== schema.nodes.listItem ||
+      !blockNode ||
+      !['panel', 'decisionList'].includes(blockNode?.type.name) ||
+      slice.content.childCount > 1 ||
+      blockNode?.content.firstChild === undefined ||
+      sliceIsWholeNodeButShouldNotReplaceSelection
+    ) {
+      return false;
+    }
+
+    // Paste the panel node contents extracted instead of pasting the entire panel node
+    tr.replaceSelection(slice).scrollIntoView();
     if (dispatch) {
       dispatch(tr);
     }
@@ -152,8 +524,21 @@ export function handlePasteLinkOnSelectedText(slice: Slice): Command {
         isText(paragraph.content.child(0), schema)
       ) {
         const text = paragraph.content.child(0);
+
+        // If pasteType is plain text, then
+        //  @atlaskit/editor-markdown-transformer in getMarkdownSlice decode
+        //  url before setting text property of text node.
+        //  However href of marks will be without decoding.
+        //  So, if there is character (e.g space) in url eligible escaping then
+        //  mark.attrs.href will not be equal to text.text.
+        //  That's why decoding mark.attrs.href before comparing.
+        // However, if pasteType is richText, that means url in text.text
+        //  and href in marks, both won't be decoded.
         linkMark = text.marks.find(
-          (mark) => isLinkMark(mark, schema) && mark.attrs.href === text.text,
+          (mark) =>
+            isLinkMark(mark, schema) &&
+            (mark.attrs.href === text.text ||
+              decodeURI(mark.attrs.href) === text.text),
         );
       }
     }
@@ -179,22 +564,37 @@ export function handlePasteLinkOnSelectedText(slice: Slice): Command {
 export function handlePasteAsPlainText(
   slice: Slice,
   _event: ClipboardEvent,
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined,
 ): Command {
   return (state: EditorState, dispatch?, view?: EditorView): boolean => {
+    if (!view) {
+      return false;
+    }
+
+    // prosemirror-bump-fix
+    // Yes, this is wrong by default. But, we need to keep the private PAI usage to unblock the prosemirror bump
+    // So, this code will make sure we are checking for both version (current and the newest prosemirror-view version
+    const isShiftKeyPressed =
+      (view as any).shiftKey || (view as any).input?.shiftKey;
     // In case of SHIFT+CMD+V ("Paste and Match Style") we don't want to run the usual
     // fuzzy matching of content. ProseMirror already handles this scenario and will
     // provide us with slice containing paragraphs with plain text, which we decorate
     // with "stored marks".
     // @see prosemirror-view/src/clipboard.js:parseFromClipboard()).
     // @see prosemirror-view/src/input.js:doPaste().
-    if (view && (view as any).shiftKey) {
+    if (isShiftKeyPressed) {
       let tr = closeHistory(state.tr);
+
       const { selection } = tr;
 
       // <- using the same internal flag that prosemirror-view is using
 
       // if user has selected table we need custom logic to replace the table
-      tr = replaceSelectedTable(state, slice, INPUT_METHOD.CLIPBOARD);
+      tr = replaceSelectedTable(state, slice);
+
+      // add analytics after replacing selected table
+      tr = addReplaceSelectedTableAnalytics(state, tr, editorAnalyticsAPI);
+
       // otherwise just replace the selection
       if (!tr.docChanged) {
         tr.replaceSelection(slice);
@@ -213,7 +613,10 @@ export function handlePasteAsPlainText(
   };
 }
 
-export function handlePastePreservingMarks(slice: Slice): Command {
+export function handlePastePreservingMarks(
+  slice: Slice,
+  queueCardsFromChangedTr: QueueCardsFromTransactionAction | undefined,
+): Command {
   return (state: EditorState, dispatch?): boolean => {
     const {
       schema,
@@ -244,13 +647,9 @@ export function handlePastePreservingMarks(slice: Slice): Command {
       return false;
     }
 
-    const textFormattingState: TextFormattingState = textFormattingPluginKey.getState(
-      state,
-    );
-
     // special case for codeMark: will preserve mark only if codeMark is currently active
     // won't preserve mark if cursor is on the edge on the mark (namely inactive)
-    if (codeMark.isInSet(selectionMarks) && !textFormattingState.codeActive) {
+    if (codeMark.isInSet(selectionMarks) && !anyMarkActive(state, codeMark)) {
       return false;
     }
 
@@ -271,7 +670,7 @@ export function handlePastePreservingMarks(slice: Slice): Command {
         .setStoredMarks(selectionMarks)
         .scrollIntoView();
 
-      queueCardsFromChangedTr(state, tr, INPUT_METHOD.CLIPBOARD);
+      queueCardsFromChangedTr?.(state, tr, INPUT_METHOD.CLIPBOARD);
       if (dispatch) {
         dispatch(tr);
       }
@@ -303,7 +702,7 @@ export function handlePastePreservingMarks(slice: Slice): Command {
         .setStoredMarks(selectionMarks)
         .scrollIntoView();
 
-      queueCardsFromChangedTr(state, tr, INPUT_METHOD.CLIPBOARD);
+      queueCardsFromChangedTr?.(state, tr, INPUT_METHOD.CLIPBOARD);
       if (dispatch) {
         dispatch(tr);
       }
@@ -314,11 +713,11 @@ export function handlePastePreservingMarks(slice: Slice): Command {
   };
 }
 
-async function isLinkSmart(
+async function getSmartLinkAdf(
   text: string,
   type: CardAppearance,
   cardOptions: CardOptions,
-): Promise<CardAdf> {
+): Promise<CardAdf | DatasourceAdf> {
   if (!cardOptions.provider) {
     throw Error('No card provider found');
   }
@@ -330,13 +729,21 @@ function insertAutoMacro(
   slice: Slice,
   macro: PMNode,
   view?: EditorView,
+  from?: number,
+  to?: number,
 ): boolean {
   if (view) {
     // insert the text or linkified/md-converted clipboard data
     const selection = view.state.tr.selection;
-
-    const tr = view.state.tr.replaceSelection(slice);
-    const before = tr.mapping.map(selection.from, -1);
+    let tr: Transaction;
+    let before: number;
+    if (typeof from === 'number' && typeof to === 'number') {
+      tr = view.state.tr.replaceRange(from, to, slice);
+      before = tr.mapping.map(from, -1);
+    } else {
+      tr = view.state.tr.replaceSelection(slice);
+      before = tr.mapping.map(selection.from, -1);
+    }
     view.dispatch(tr);
 
     // replace the text with the macro as a separate transaction
@@ -354,12 +761,14 @@ function insertAutoMacro(
 export function handleMacroAutoConvert(
   text: string,
   slice: Slice,
+  queueCardsFromChangedTr: QueueCardsFromTransactionAction | undefined,
+  runMacroAutoConvert: RunMacroAutoConvert | undefined,
   cardsOptions?: CardOptions,
   extensionAutoConverter?: ExtensionAutoConvertHandler,
 ): Command {
   return (
     state: EditorState,
-    _dispatch?: CommandDispatch,
+    dispatch?: CommandDispatch,
     view?: EditorView,
   ) => {
     let macro: PMNode | null = null;
@@ -374,7 +783,7 @@ export function handleMacroAutoConvert(
 
     // then try from macro provider (which will be removed some time in the future)
     if (!macro) {
-      macro = runMacroAutoConvert(state, text);
+      macro = runMacroAutoConvert?.(state, text) ?? null;
     }
 
     if (macro) {
@@ -392,22 +801,49 @@ export function handleMacroAutoConvert(
           return insertAutoMacro(slice, macro, view);
         }
 
-        isLinkSmart(text, 'inline', cardsOptions)
-          .then((cardData) => {
-            if (!view) {
-              throw new Error('Missing view');
+        if (!view) {
+          throw new Error('View is missing');
+        }
+
+        const trackingId = uuid();
+        const trackingFrom = `handleMacroAutoConvert-from-${trackingId}`;
+        const trackingTo = `handleMacroAutoConvert-to-${trackingId}`;
+
+        startTrackingPastedMacroPositions({
+          [trackingFrom]: state.selection.from,
+          [trackingTo]: state.selection.to,
+        })(state, dispatch);
+
+        getSmartLinkAdf(text, 'inline', cardsOptions)
+          .then(() => {
+            // we use view.state rather than state because state becomes a stale
+            // state reference after getSmartLinkAdf's async work
+            const { pastedMacroPositions } = getPastePluginState(view.state);
+            if (dispatch) {
+              handleMarkdown(
+                slice,
+                queueCardsFromChangedTr,
+                pastedMacroPositions[trackingFrom],
+                pastedMacroPositions[trackingTo],
+              )(view.state, dispatch);
             }
-
-            const { schema, tr } = view.state;
-            const cardAdf = processRawValue(schema, cardData);
-
-            if (!cardAdf) {
-              throw new Error('Received invalid ADF from CardProvider');
-            }
-
-            view.dispatch(insertCard(tr, cardAdf, schema));
           })
-          .catch(() => insertAutoMacro(slice, macro as PMNode, view));
+          .catch(() => {
+            const { pastedMacroPositions } = getPastePluginState(view.state);
+            insertAutoMacro(
+              slice,
+              macro as PMNode,
+              view,
+              pastedMacroPositions[trackingFrom],
+              pastedMacroPositions[trackingTo],
+            );
+          })
+          .finally(() => {
+            stopTrackingPastedMacroPositions([trackingFrom, trackingTo])(
+              view.state,
+              dispatch,
+            );
+          });
         return true;
       }
 
@@ -422,6 +858,7 @@ export function handleCodeBlock(text: string): Command {
     const { codeBlock } = state.schema.nodes;
     if (text && hasParentNodeOfType(codeBlock)(state.selection)) {
       const tr = closeHistory(state.tr);
+
       tr.scrollIntoView();
       if (dispatch) {
         dispatch(tr.insertText(text));
@@ -448,15 +885,20 @@ function isOnlyMediaSingle(state: EditorState, slice: Slice) {
   );
 }
 
-export function handleMediaSingle(inputMethod: InputMethodInsertMedia) {
+export function handleMediaSingle(
+  inputMethod: InputMethodInsertMedia,
+  insertMediaAsMediaSingle: InsertMediaAsMediaSingle | undefined,
+) {
   return function (slice: Slice): Command {
     return (state, dispatch, view) => {
       if (view) {
         if (isOnlyMedia(state, slice)) {
-          return insertMediaAsMediaSingle(
-            view,
-            slice.content.firstChild!,
-            inputMethod,
+          return (
+            insertMediaAsMediaSingle?.(
+              view,
+              slice.content.firstChild!,
+              inputMethod,
+            ) ?? false
           );
         }
 
@@ -478,9 +920,21 @@ export function handleMediaSingle(inputMethod: InputMethodInsertMedia) {
   };
 }
 
-export function handleExpand(slice: Slice): Command {
+const checkExpand = (slice: Slice): boolean => {
+  let hasExpand = false;
+  slice.content.forEach((node: PMNode) => {
+    if (node.type.name === 'expand') {
+      hasExpand = true;
+    }
+  });
+  return hasExpand;
+};
+
+export function handleExpandPasteInTable(slice: Slice): Command {
   return (state, dispatch) => {
-    if (!insideTable(state)) {
+    // Do not handle expand if it's not being pasted into a table
+    // OR if it's nested within another node when being pasted into a table
+    if (!insideTable(state) || !checkExpand(slice)) {
       return false;
     }
 
@@ -517,17 +971,33 @@ export function handleExpand(slice: Slice): Command {
       }
       return true;
     }
-
     return false;
   };
 }
 
-export function handleMarkdown(markdownSlice: Slice): Command {
+export function handleMarkdown(
+  markdownSlice: Slice,
+  queueCardsFromChangedTr: QueueCardsFromTransactionAction | undefined,
+  from?: number,
+  to?: number,
+): Command {
   return (state, dispatch) => {
     const tr = closeHistory(state.tr);
-    tr.replaceSelection(markdownSlice);
+    const pastesFrom = typeof from === 'number' ? from : tr.selection.from;
 
-    queueCardsFromChangedTr(state, tr, INPUT_METHOD.CLIPBOARD);
+    if (typeof from === 'number' && typeof to === 'number') {
+      tr.replaceRange(from, to, markdownSlice);
+    } else {
+      tr.replaceSelection(markdownSlice);
+    }
+
+    const textPosition = tr.doc.resolve(
+      Math.min(pastesFrom + markdownSlice.size, tr.doc.content.size),
+    );
+
+    tr.setSelection(TextSelection.near(textPosition, -1));
+
+    queueCardsFromChangedTr?.(state, tr, INPUT_METHOD.CLIPBOARD);
     if (dispatch) {
       dispatch(tr.scrollIntoView());
     }
@@ -699,33 +1169,16 @@ export function flattenNestedListInSlice(slice: Slice) {
   return new Slice(contentWithFlattenedList, slice.openEnd, slice.openEnd);
 }
 
-export function insertIntoPanel(tr: Transaction, slice: Slice, panel: any) {
-  let panelParentOverCurrentSelection = findParentNodeOfType(panel)(
-    tr.selection,
-  );
-  if (
-    tr.selection.$from === tr.selection.$to &&
-    panelParentOverCurrentSelection &&
-    !panelParentOverCurrentSelection.node.textContent
-  ) {
-    tr = safeInsert(slice.content, tr.selection.$to.pos)(tr);
-    // set selection to end of inserted content
-    const panelNode = findParentNodeOfType(panel)(tr.selection);
-    if (panelNode) {
-      tr.setSelection(
-        TextSelection.near(
-          tr.doc.resolve(panelNode.pos + panelNode.node.nodeSize),
-        ),
-      );
-    }
-  } else {
-    tr.replaceSelection(slice);
-  }
-}
-
-export function handleRichText(slice: Slice): Command {
+export function handleRichText(
+  slice: Slice,
+  queueCardsFromChangedTr: QueueCardsFromTransactionAction | undefined,
+): Command {
   return (state, dispatch) => {
-    const { codeBlock, panel } = state.schema.nodes;
+    const { codeBlock, heading, paragraph, panel } = state.schema.nodes;
+    const { selection, schema } = state;
+    const firstChildOfSlice = slice.content?.firstChild;
+    const lastChildOfSlice = slice.content?.lastChild;
+
     // In case user is pasting inline code,
     // any backtick ` immediately preceding it should be removed.
     let tr = state.tr;
@@ -739,22 +1192,75 @@ export function handleRichText(slice: Slice): Command {
 
     closeHistory(tr);
 
+    const isFirstChildListNode = isListNode(firstChildOfSlice);
+    const isLastChildListNode = isListNode(lastChildOfSlice);
+    const isSliceContentListNodes = isFirstChildListNode || isLastChildListNode;
+
+    const isFirstChildTaskListNode =
+      firstChildOfSlice?.type?.name === 'taskList';
+    const isLastChildTaskListNode = lastChildOfSlice?.type?.name === 'taskList';
+    const isSliceContentTaskListNodes =
+      isFirstChildTaskListNode || isLastChildTaskListNode;
+
+    // We want to use safeInsert to insert invalid content, as it inserts at the closest non schema violating position
+    // rather than spliting the selection parent node in half (which is what replaceSelection does)
+    // Exception is paragraph and heading nodes, these should be split, provided their parent supports the pasted content
+    const textNodes = [heading, paragraph];
+    const selectionParent = selection.$to.node(selection.$to.depth - 1);
+    const noNeedForSafeInsert =
+      selection.$to.node().type.validContent(slice.content) ||
+      (textNodes.includes(selection.$to.node().type) &&
+        selectionParent.type.validContent(slice.content));
+
     let panelParentOverCurrentSelection = findParentNodeOfType(panel)(
       tr.selection,
     );
-
-    const isFirstChildListNode = isListNode(slice.content.firstChild);
-    const isLastChildListNode = isListNode(slice.content.lastChild);
-    const isSliceContentListNodes = isFirstChildListNode || isLastChildListNode;
     const isTargetPanelEmpty =
       panelParentOverCurrentSelection &&
       panelParentOverCurrentSelection.node?.content.size === 2;
 
-    if (isSliceContentListNodes || isTargetPanelEmpty) {
-      insertSliceForLists({ tr, slice });
+    if (
+      !isSliceContentTaskListNodes &&
+      (isSliceContentListNodes || isTargetPanelEmpty)
+    ) {
+      insertSliceForLists({ tr, slice, schema });
+    } else if (noNeedForSafeInsert) {
+      tr.replaceSelection(slice);
+      // when cursor is inside a table cell, and slice.content.lastChild is a panel, expand, or decisionList
+      // need to make sure the cursor position is is right after the panel, expand, or decisionList
+      // still in the same table cell, see issue: https://product-fabric.atlassian.net/browse/ED-17862
+      const shouldUpdateCursorPosAfterPaste = [
+        'panel',
+        'nestedExpand',
+        'decisionList',
+      ].includes(slice.content.lastChild?.type?.name || '');
+      if (insideTableCell(state) && shouldUpdateCursorPosAfterPaste) {
+        const nextPos = tr.doc.resolve(tr.mapping.map(selection.$from.pos));
+        tr.setSelection(new GapCursorSelection(nextPos, Side.RIGHT));
+      }
     } else {
-      // if inside an empty panel, try and insert content inside it rather than replace it
-      insertIntoPanel(tr, slice, panel);
+      // need to scan the slice if there's a block node or list items inside it
+      let sliceHasList = false;
+      slice.content.nodesBetween(0, slice.content.size, (node, start) => {
+        if (node.type === state.schema.nodes.listItem) {
+          sliceHasList = true;
+          return false;
+        }
+      });
+
+      if (
+        (insideTableCell(state) &&
+          isInListItem(state) &&
+          canInsert(selection.$from, slice.content) &&
+          canInsert(selection.$to, slice.content)) ||
+        sliceHasList
+      ) {
+        tr.replaceSelection(slice);
+      } else {
+        // need safeInsert rather than replaceSelection, so that nodes aren't split in half
+        // e.g. when pasting a layout into a table, replaceSelection splits the table in half and adds the layout in the middle
+        tr = safeInsert(slice.content, tr.selection.$to.pos)(tr);
+      }
     }
 
     tr.setStoredMarks([]);
@@ -764,23 +1270,46 @@ export function handleRichText(slice: Slice): Command {
     tr.scrollIntoView();
 
     // queue link cards, ignoring any errors
+    queueCardsFromChangedTr?.(state, tr, INPUT_METHOD.CLIPBOARD);
     if (dispatch) {
-      dispatch(queueCardsFromChangedTr(state, tr, INPUT_METHOD.CLIPBOARD));
+      dispatch(tr);
     }
     return true;
   };
 }
 
-export const handleSelectedTable = (slice: Slice): Command => (
-  state,
-  dispatch,
-) => {
-  const tr = replaceSelectedTable(state, slice, INPUT_METHOD.CLIPBOARD);
-  if (tr.docChanged) {
-    if (dispatch) {
-      dispatch(tr);
+export function handlePasteIntoCaption(slice: Slice): Command {
+  return (state, dispatch) => {
+    const { caption } = state.schema.nodes;
+    const tr = state.tr;
+    if (hasParentNodeOfType(caption)(state.selection)) {
+      // We let PM replace the selection and it will insert as text where it can't place the node
+      // This is totally fine as caption is just a simple block that only contains inline contents
+      // And it is more in line with WYSIWYG expectations
+      tr.replaceSelection(slice).scrollIntoView();
+      if (dispatch) {
+        dispatch(tr);
+      }
+      return true;
     }
-    return true;
-  }
-  return false;
-};
+    return false;
+  };
+}
+
+export const handleSelectedTable =
+  (editorAnalyticsAPI: EditorAnalyticsAPI | undefined) =>
+  (slice: Slice): Command =>
+  (state, dispatch) => {
+    let tr = replaceSelectedTable(state, slice);
+
+    // add analytics after replacing selected table
+    tr = addReplaceSelectedTableAnalytics(state, tr, editorAnalyticsAPI);
+
+    if (tr.docChanged) {
+      if (dispatch) {
+        dispatch(tr);
+      }
+      return true;
+    }
+    return false;
+  };

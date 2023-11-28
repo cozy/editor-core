@@ -1,15 +1,10 @@
 /* eslint-disable no-console */
-
-import styled from 'styled-components';
+/** @jsx jsx */
+import { css, jsx } from '@emotion/react';
 import React from 'react';
-import ButtonGroup from '@atlaskit/button/button-group';
-import Button from '@atlaskit/button/standard-button';
 import { borderRadius } from '@atlaskit/theme/constants';
-import {
-  ShareDialogContainer,
-  ShareResponse,
-  ConfigResponse,
-} from '@atlaskit/share';
+import type { ShareResponse, ConfigResponse } from '@atlaskit/share';
+import { ShareDialogContainer } from '@atlaskit/share';
 
 import { getEmojiProvider } from '@atlaskit/util-data-test/get-emoji-provider';
 import {
@@ -19,7 +14,7 @@ import {
 import { getMockTaskDecisionResource } from '@atlaskit/util-data-test/task-decision-story-data';
 import { userPickerData } from '@atlaskit/util-data-test/user-picker-data';
 
-import { OptionData, User } from '@atlaskit/user-picker';
+import type { OptionData, User } from '@atlaskit/smart-user-picker';
 import { cardProviderStaging } from '@atlaskit/editor-test-helpers/card-provider';
 import { storyContextIdentifierProviderFactory } from '@atlaskit/editor-test-helpers/context-identifier-provider';
 import quickInsertProviderFactory from '../example-helpers/quick-insert-provider';
@@ -32,20 +27,29 @@ import {
   akEditorCodeFontFamily,
 } from '@atlaskit/editor-shared-styles';
 
-import Editor, { EditorProps } from './../src/editor';
+import type { EditorProps } from './../src';
+import { Editor } from './../src';
 import EditorContext from './../src/ui/EditorContext';
-import WithEditorActions from './../src/ui/WithEditorActions';
 
 import { createCollabEditProvider } from '@atlaskit/synchrony-test-helpers';
 import { TitleInput } from '../example-helpers/PageElements';
-import { EditorActions, MediaProvider, MentionProvider } from '../src';
-import { InviteToEditComponentProps } from '../src/plugins/collab-edit/types';
-import { ResolvingMentionProvider } from '@atlaskit/mention/resource';
+import type { MentionProvider } from '../src';
+import type { MediaProvider } from '@atlaskit/editor-common/provider-factory';
+import type { InviteToEditComponentProps } from '../src/plugins/collab-edit/types';
+import type { ResolvingMentionProvider } from '@atlaskit/mention/resource';
 
 import { macroProvider } from '@atlaskit/editor-test-helpers/mock-macro-provider';
 import { getExampleExtensionProviders } from '../example-helpers/get-example-extension-providers';
+import type { ExtensionPlugin } from '@atlaskit/editor-plugin-extension';
+import type {
+  PublicPluginAPI,
+  OptionalPlugin,
+} from '@atlaskit/editor-common/types';
+import { usePresetContext } from '../src/presets/context';
 
-export const Content = styled.div`
+type StackPlugins = [OptionalPlugin<ExtensionPlugin>];
+
+export const content = css`
   padding: 0 20px;
   height: 100vh;
   background: #fff;
@@ -60,46 +64,19 @@ export const Content = styled.div`
     }
   }
 `;
-Content.displayName = 'Content';
 
-export const Columns = styled.div`
+export const columns = css`
   display: flex;
   flex-direction: row;
 `;
 
-export const Column = styled.div`
+export const column = css`
   flex: 1 1 0;
 `;
 
 const quickInsertProvider = quickInsertProviderFactory();
 
-const SaveAndCancelButtons = (props: { editorActions: EditorActions }) => (
-  <ButtonGroup>
-    <Button
-      appearance="primary"
-      onClick={() =>
-        props.editorActions.getValue().then((value) => console.log(value))
-      }
-    >
-      Publish
-    </Button>
-    <Button appearance="subtle" onClick={() => props.editorActions.clear()}>
-      Close
-    </Button>
-  </ButtonGroup>
-);
-
 const shareClient = {
-  getConfig: () =>
-    new Promise<ConfigResponse>((resolve) => {
-      setTimeout(() => {
-        resolve({
-          allowComment: true,
-          allowedDomains: [],
-          mode: 'ANYONE',
-        });
-      }, 1000);
-    }),
   share: () =>
     new Promise<ShareResponse>((resolve) => {
       setTimeout(
@@ -108,6 +85,16 @@ const shareClient = {
             shareRequestId: 'c41e33e5-e622-4b38-80e9-a623c6e54cdd',
           }),
         3000,
+      );
+    }),
+  getConfig: () =>
+    new Promise<ConfigResponse>((resolve) => {
+      setTimeout(
+        () =>
+          resolve({
+            disableSharingToEmails: false,
+          }),
+        500,
       );
     }),
 };
@@ -178,18 +165,18 @@ class DropzoneEditorWrapper extends React.Component<
 > {
   dropzoneContainer: HTMLElement | null = null;
 
-  handleRef = (node: HTMLElement) => {
+  handleRef = (node: HTMLDivElement) => {
     this.dropzoneContainer = node;
     this.forceUpdate();
   };
 
   render() {
     return (
-      <Content innerRef={this.handleRef}>
+      <div css={content} ref={this.handleRef}>
         {this.dropzoneContainer
           ? this.props.children(this.dropzoneContainer)
           : null}
-      </Content>
+      </div>
     );
   }
 }
@@ -208,6 +195,7 @@ interface PropOptions {
   inviteHandler?: (event: React.MouseEvent<HTMLElement>) => void;
   parentContainer: any;
   inviteToEditComponent?: React.ComponentType<InviteToEditComponentProps>;
+  editorApi: PublicPluginAPI<[OptionalPlugin<ExtensionPlugin>]> | undefined;
 }
 
 const editorProps = ({
@@ -217,6 +205,7 @@ const editorProps = ({
   inviteHandler,
   inviteToEditComponent,
   parentContainer,
+  editorApi,
 }: PropOptions): EditorProps => ({
   appearance: 'full-page',
   allowAnalyticsGASV3: true,
@@ -224,6 +213,7 @@ const editorProps = ({
   allowLayouts: {
     allowBreakout: true,
     UNSAFE_addSidebarLayouts: true,
+    UNSAFE_allowSingleColumnLayout: true,
   },
   allowRule: true,
   allowStatus: true,
@@ -231,16 +221,17 @@ const editorProps = ({
   allowDate: true,
   allowPanel: true,
   allowFindReplace: true,
+  hideAvatarGroup: true,
   featureFlags: {
     showAvatarGroupAsPlugin: true,
-    'local-id-generation-on-tables': true,
-    'data-consumer-mark': true,
+    collabAvatarScroll: true,
+    twoLineEditorToolbar: true,
   },
   allowTables: {
     advanced: true,
   },
   extensionProviders: (editorActions) => [
-    getExampleExtensionProviders(editorActions),
+    getExampleExtensionProviders(editorApi, editorActions),
   ],
   allowExtension: { allowAutoSave: true, allowBreakout: true },
   macroProvider: Promise.resolve(macroProvider),
@@ -253,6 +244,9 @@ const editorProps = ({
     provider: mediaProvider,
     allowMediaSingle: true,
     customDropzoneContainer: parentContainer,
+    featureFlags: {
+      mediaInline: true,
+    },
   },
   emojiProvider: getEmojiProvider(),
   mentionProvider: Promise.resolve(
@@ -271,55 +265,70 @@ const editorProps = ({
   shouldFocus: false,
   quickInsert: { provider: Promise.resolve(quickInsertProvider) },
   contentComponents: <TitleInput innerRef={(ref) => ref && ref.focus()} />,
-  primaryToolbarComponents: (
-    <WithEditorActions
-      render={(actions) => <SaveAndCancelButtons editorActions={actions} />}
-    />
-  ),
+  primaryToolbarComponents: undefined,
   insertMenuItems: customInsertMenuItems,
   extensionHandlers: extensionHandlers,
 });
 
-export default class Example extends React.Component<Props> {
+const Comp = ({ parentContainer }: { parentContainer: HTMLElement }) => {
+  const editorApi = usePresetContext<StackPlugins>();
+  return (
+    <Editor
+      {...editorProps({
+        sessionId: 'morty',
+        mediaProvider: mediaProvider2,
+        mentionProvider: mentionProvider2,
+        parentContainer,
+        inviteToEditComponent: InviteToEditButton,
+        editorApi,
+      })}
+    />
+  );
+};
+
+const Comp2 = ({ parentContainer }: { parentContainer: HTMLElement }) => {
+  const editorApi = usePresetContext<StackPlugins>();
+
+  return (
+    <Editor
+      {...editorProps({
+        sessionId: 'rick',
+        mediaProvider: mediaProvider1,
+        parentContainer,
+        inviteToEditComponent: InviteToEditButton,
+        editorApi,
+      })}
+    />
+  );
+};
+
+class Example extends React.Component<Props> {
   render() {
     return (
       <div>
-        <Columns>
-          <Column>
+        <div css={columns} id="left">
+          <div css={column}>
             <DropzoneEditorWrapper>
               {(parentContainer) => (
                 <EditorContext>
-                  <Editor
-                    {...editorProps({
-                      sessionId: 'rick',
-                      mediaProvider: mediaProvider1,
-                      parentContainer,
-                      inviteToEditComponent: InviteToEditButton,
-                    })}
-                  />
+                  <Comp2 parentContainer={parentContainer} />
                 </EditorContext>
               )}
             </DropzoneEditorWrapper>
-          </Column>
-          <Column>
+          </div>
+          <div css={column} id="right">
             <DropzoneEditorWrapper>
               {(parentContainer) => (
                 <EditorContext>
-                  <Editor
-                    {...editorProps({
-                      sessionId: 'morty',
-                      mediaProvider: mediaProvider2,
-                      mentionProvider: mentionProvider2,
-                      parentContainer,
-                      inviteToEditComponent: InviteToEditButton,
-                    })}
-                  />
+                  <Comp parentContainer={parentContainer} />
                 </EditorContext>
               )}
             </DropzoneEditorWrapper>
-          </Column>
-        </Columns>
+          </div>
+        </div>
       </div>
     );
   }
 }
+
+export default Example;

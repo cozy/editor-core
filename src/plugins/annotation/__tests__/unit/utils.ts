@@ -1,5 +1,7 @@
-import { Decoration } from 'prosemirror-view';
-import { AnnotationSharedClassNames } from '@atlaskit/editor-common';
+import { Decoration } from '@atlaskit/editor-prosemirror/view';
+import { AnnotationSharedClassNames } from '@atlaskit/editor-common/styles';
+import type { RefsNode, DocBuilder } from '@atlaskit/editor-common/types';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   annotation,
   doc,
@@ -11,15 +13,17 @@ import {
   media,
   code_block,
   hardBreak,
-  RefsNode,
   panel,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import type { LightEditorPlugin } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   createProsemirrorEditorFactory,
-  LightEditorPlugin,
   Preset,
 } from '@atlaskit/editor-test-helpers/create-prosemirror-editor';
+import { focusPlugin } from '@atlaskit/editor-plugin-focus';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import defaultSchema from '@atlaskit/editor-test-helpers/schema';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
 import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
@@ -31,7 +35,7 @@ import {
   getAnnotationViewKey,
   inlineCommentPluginKey,
   hasInvalidNodes,
-  hasWhitespaceNode,
+  hasInvalidWhitespaceNode,
   isSelectionValid,
   hasAnnotationMark,
   annotationExists,
@@ -39,31 +43,62 @@ import {
   stripNonExistingAnnotations,
   findAnnotationsInSelection,
 } from '../../utils';
-import { AnnotationInfo, AnnotationSelectionType } from '../../types';
+import type { AnnotationInfo } from '../../types';
+import { AnnotationSelectionType } from '../../types';
 
 import annotationPlugin from '../..';
-import emojiPlugin from '../../../emoji';
+import { textFormattingPlugin } from '@atlaskit/editor-plugin-text-formatting';
+import { emojiPlugin } from '@atlaskit/editor-plugin-emoji';
+import { typeAheadPlugin } from '@atlaskit/editor-plugin-type-ahead';
 import { inlineCommentProvider } from '../_utils';
-import mediaPlugin from '../../../media';
-import codeBlockPlugin from '../../../code-block';
-import blockTypePlugin from '../../../block-type';
-import panelPlugin from '../../../panel';
-import {
+import { mediaPlugin } from '@atlaskit/editor-plugin-media';
+import { codeBlockPlugin } from '@atlaskit/editor-plugin-code-block';
+import { compositionPlugin } from '@atlaskit/editor-plugin-composition';
+import { blockTypePlugin } from '@atlaskit/editor-plugin-block-type';
+import { copyButtonPlugin } from '@atlaskit/editor-plugin-copy-button';
+import { floatingToolbarPlugin } from '@atlaskit/editor-plugin-floating-toolbar';
+import { widthPlugin } from '@atlaskit/editor-plugin-width';
+import { guidelinePlugin } from '@atlaskit/editor-plugin-guideline';
+import { gridPlugin } from '@atlaskit/editor-plugin-grid';
+import { panelPlugin } from '@atlaskit/editor-plugin-panel';
+import { editorDisabledPlugin } from '@atlaskit/editor-plugin-editor-disabled';
+import { selectionPlugin } from '@atlaskit/editor-plugin-selection';
+
+import type {
   InlineCommentMap,
   InlineCommentPluginState,
 } from '../../pm-plugins/types';
-import { EditorState } from 'prosemirror-state';
-import { Slice, Fragment, Schema } from 'prosemirror-model';
+import type {
+  EditorState,
+  TextSelection,
+} from '@atlaskit/editor-prosemirror/state';
+import type { Schema } from '@atlaskit/editor-prosemirror/model';
+import { Slice, Fragment } from '@atlaskit/editor-prosemirror/model';
+import { featureFlagsPlugin } from '@atlaskit/editor-plugin-feature-flags';
+import { decorationsPlugin } from '@atlaskit/editor-plugin-decorations';
 
 const annotationPreset = new Preset<LightEditorPlugin>()
+  .add([featureFlagsPlugin, {}])
   .add([
     annotationPlugin,
     { inlineComment: { ...inlineCommentProvider, disallowOnWhitespace: true } },
   ])
+  .add(textFormattingPlugin)
+  .add(typeAheadPlugin)
   .add(emojiPlugin)
+  .add(decorationsPlugin)
   .add(panelPlugin)
-  .add(codeBlockPlugin)
+  .add(compositionPlugin)
+  .add([codeBlockPlugin, { appearance: 'full-page' }])
   .add(blockTypePlugin)
+  .add(widthPlugin)
+  .add(guidelinePlugin)
+  .add(gridPlugin)
+  .add(editorDisabledPlugin)
+  .add(copyButtonPlugin)
+  .add(floatingToolbarPlugin)
+  .add(focusPlugin)
+  .add(selectionPlugin)
   .add([
     mediaPlugin,
     {
@@ -83,6 +118,7 @@ function mockCommentsStateWithAnnotations(
     mouseData: { isSelecting: false },
     disallowOnWhitespace: false,
     isVisible: true,
+    skipSelectionHandling: false,
   };
 
   const testInlineCommentState: InlineCommentPluginState = {
@@ -334,7 +370,7 @@ describe('annotation', () => {
     });
   });
 
-  describe('hasWhitespaceNode', () => {
+  describe('hasInvalidWhitespaceNode', () => {
     test.each([
       ['no whitespace', doc(p('{<}Corsair smartly{>}')), false],
       [
@@ -354,10 +390,20 @@ describe('annotation', () => {
         doc(p('{<}Corsair smartly'), p('     '), p('Trysail Sail{>}')),
         true,
       ],
+      [
+        'with trailing newline ',
+        doc(p('{<}Corsair smartly'), p('{>}Trysail Sail')),
+        false,
+      ],
     ])('%s', (_, inputDoc, expected) => {
       const { editorView } = editor(inputDoc);
 
-      expect(hasWhitespaceNode(editorView.state.selection)).toBe(expected);
+      expect(
+        hasInvalidWhitespaceNode(
+          editorView.state.selection as TextSelection,
+          editorView.state.schema,
+        ),
+      ).toBe(expected);
     });
   });
 
@@ -404,6 +450,40 @@ describe('annotation', () => {
           'text',
           doc(p('{<}Corsair smartly{>}')),
           AnnotationSelectionType.VALID,
+        ],
+        [
+          'text with mark prepend whitespace',
+          doc(p('{<}Corsair smartly ', strike('hello'), ' {>}')),
+          AnnotationSelectionType.VALID,
+        ],
+        [
+          'text with mark append whitespace',
+          doc(p('{<} ', strike('hello'), '{>}')),
+          AnnotationSelectionType.VALID,
+        ],
+        [
+          'emoji{<}  {>}emoji',
+          doc(
+            p(
+              emoji({ shortName: ':smiley:' })(),
+              '{<}  {>}',
+              emoji({ shortName: ':smiley:' })(),
+            ),
+          ),
+          AnnotationSelectionType.INVALID,
+        ],
+        [
+          '{<}emoji  emoji{>}',
+          doc(
+            p(
+              '{<}',
+              emoji({ shortName: ':smiley:' })(),
+              '  ',
+              emoji({ shortName: ':smiley:' })(),
+              '{>}',
+            ),
+          ),
+          AnnotationSelectionType.DISABLED,
         ],
         [
           'inline node',

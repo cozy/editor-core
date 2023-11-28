@@ -1,4 +1,6 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { MockPerformanceEntry } from '@atlaskit/editor-test-helpers/mock-performance-entry';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { MockPerformanceObserverEntryList } from '@atlaskit/editor-test-helpers/mock-performance-observer-entry-list';
 import { PluginPerformanceReport } from '../../plugin-performance-report';
 import {
@@ -175,12 +177,10 @@ describe('PluginPerformanceReport.prototype.withEntryList', () => {
   it('updates the slowPlugins field', () => {
     const fastSeries = [0.1, 0.15, 0.1, 0.01, 0.1, 0.1, 0.1];
     const slowSeries = [0.1, 0.15, 0.1, 0.01, 1, 3, 30];
-    const fastEntryList = MockPerformanceObserverEntryList.fromSeries(
-      fastSeries,
-    );
-    const slowEntryList = MockPerformanceObserverEntryList.fromSeries(
-      slowSeries,
-    );
+    const fastEntryList =
+      MockPerformanceObserverEntryList.fromSeries(fastSeries);
+    const slowEntryList =
+      MockPerformanceObserverEntryList.fromSeries(slowSeries);
 
     const entry = MockPerformanceEntry.fromSeries(slowSeries);
 

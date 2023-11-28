@@ -1,34 +1,47 @@
+/** @jsx jsx */
 import React from 'react';
-import { HTMLAttributes, ComponentClass } from 'react';
-import styled from 'styled-components';
-import { EditorView } from 'prosemirror-view';
+import { css, jsx } from '@emotion/react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import { clickAreaClickHandler } from '../click-area-helper';
 
-const ClickWrapper: ComponentClass<HTMLAttributes<{}>> = styled.div`
+const clickWrapper = css`
   flex-grow: 1;
   height: 100%;
 `;
-ClickWrapper.displayName = 'ClickWrapper';
 
 export interface Props {
   editorView?: EditorView;
   children?: any;
+  editorDisabled?: boolean;
 }
 
-export default class ClickAreaBlock extends React.Component<Props> {
-  private handleClick = (event: React.MouseEvent<any>) => {
-    const { editorView: view } = this.props;
-    if (!view) {
-      return;
-    }
-    clickAreaClickHandler(view, event);
-  };
+export const ClickAreaBlock: React.FC<Props> = ({
+  editorView,
+  editorDisabled,
+  children,
+}) => {
+  const handleMouseDown = React.useCallback(
+    (event) => {
+      if (!editorView) {
+        return;
+      }
 
-  render() {
-    return (
-      <ClickWrapper onClick={this.handleClick}>
-        {this.props.children}
-      </ClickWrapper>
-    );
-  }
-}
+      if (!editorDisabled) {
+        clickAreaClickHandler(editorView, event);
+      }
+    },
+    [editorView, editorDisabled],
+  );
+
+  return (
+    <div
+      data-testid="click-wrapper"
+      css={clickWrapper}
+      onMouseDown={handleMouseDown}
+    >
+      {children}
+    </div>
+  );
+};
+
+export default ClickAreaBlock;

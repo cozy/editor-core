@@ -1,14 +1,21 @@
-import { INPUT_METHOD } from '../../../analytics/types';
-import { EditorView } from 'prosemirror-view';
-import EditorActions from '../../../../actions';
-import { Command } from '../../../../types/command';
-import { EmojiProvider } from '@atlaskit/emoji';
-import { BlockType } from '../../../block-type/types';
-import { MacroProvider } from '@atlaskit/editor-common/provider-factory';
-import { MenuItem } from '../../../../ui/DropdownMenu/types';
-import { Node as PMNode } from 'prosemirror-model';
-import { DispatchAnalyticsEvent } from '../../../analytics';
-import { BlockMenuItem } from './create-items';
+import type { DispatchAnalyticsEvent } from '@atlaskit/editor-common/analytics';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import type {
+  EditorActionsOptions as EditorActions,
+  FeatureFlags,
+  ImageUploadPluginReferenceEvent,
+  Command,
+  PluginInjectionAPIWithDependencies,
+} from '@atlaskit/editor-common/types';
+import type { EmojiProvider } from '@atlaskit/emoji';
+import type { BlockType } from '@atlaskit/editor-plugin-block-type';
+import type { MacroProvider } from '@atlaskit/editor-common/provider-factory';
+
+import type { MenuItem } from '@atlaskit/editor-common/ui-menu';
+import type { Node as PMNode } from '@atlaskit/editor-prosemirror/model';
+import type { BlockMenuItem } from './create-items';
+
+import type { InsertBlockPluginDependencies } from '../../types';
 
 export interface Props {
   buttons: number;
@@ -21,12 +28,11 @@ export interface Props {
   actionSupported?: boolean;
   decisionSupported?: boolean;
   mentionsSupported?: boolean;
-  insertMentionQuery?: () => void;
   mediaUploadsEnabled?: boolean;
   mediaSupported?: boolean;
   imageUploadSupported?: boolean;
   imageUploadEnabled?: boolean;
-  handleImageUpload?: (event?: Event) => Command;
+  handleImageUpload?: (event?: ImageUploadPluginReferenceEvent) => Command;
   dateEnabled?: boolean;
   horizontalRuleEnabled?: boolean;
   placeholderTextEnabled?: boolean;
@@ -41,7 +47,6 @@ export interface Props {
   popupsMountPoint?: HTMLElement;
   popupsBoundariesElement?: HTMLElement;
   popupsScrollableElement?: HTMLElement;
-  macroProvider?: MacroProvider | null;
   insertMenuItems?: MenuItem[];
   showElementBrowserLink?: boolean;
   showSeparator?: boolean;
@@ -54,7 +59,9 @@ export interface Props {
     isEditing?: boolean,
   ) => (view: EditorView) => void;
   dispatchAnalyticsEvent?: DispatchAnalyticsEvent;
-  allowLocalIdGenerationOnTables?: boolean;
+  featureFlags: FeatureFlags;
+  pluginInjectionApi?: PluginInjectionAPIWithDependencies<InsertBlockPluginDependencies>;
+  mentionsDisabled?: boolean;
 }
 
 export interface State {
@@ -62,6 +69,5 @@ export interface State {
   emojiPickerOpen: boolean;
   buttons: BlockMenuItem[];
   dropdownItems: BlockMenuItem[];
+  isOpenedByKeyboard: boolean;
 }
-
-export type TOOLBAR_MENU_TYPE = INPUT_METHOD.TOOLBAR | INPUT_METHOD.INSERT_MENU;

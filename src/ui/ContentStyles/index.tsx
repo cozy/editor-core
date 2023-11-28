@@ -1,5 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
+/** @jsx jsx */
+import React, { useMemo } from 'react';
+import type { SerializedStyles } from '@emotion/react';
+import { jsx, css, useTheme } from '@emotion/react';
 import {
   whitespaceSharedStyles,
   paragraphSharedStyles,
@@ -7,64 +9,203 @@ import {
   indentationSharedStyles,
   blockMarksSharedStyles,
   shadowSharedStyle,
-  inlineNodeSharedStyle,
   dateSharedStyle,
   tasksAndDecisionsStyles,
   annotationSharedStyles,
   smartCardSharedStyles,
-} from '@atlaskit/editor-common';
-import { editorFontSize } from '@atlaskit/editor-shared-styles';
+  textColorStyles,
+  resizerStyles,
+  gridStyles,
+  smartCardStyles,
+  embedCardStyles,
+  codeBlockInListSafariFix,
+  unsupportedStyles,
+} from '@atlaskit/editor-common/styles';
+import type { ThemeProps } from '@atlaskit/theme/types';
 
-import { unsupportedStyles } from '../../plugins/unsupported-content/styles';
-import { telepointerStyle } from '../../plugins/collab-edit/styles';
-import { gapCursorStyles } from '../../plugins/selection/gap-cursor/styles';
-import { tableStyles } from '../../plugins/table/ui/common-styles.css';
-import { placeholderStyles } from '../../plugins/placeholder/styles';
-import { blocktypeStyles } from '../../plugins/block-type/styles';
 import {
-  codeBlockStyles,
-  highlightingCodeBlockStyles,
-} from '../../plugins/code-block/styles';
-import { listsStyles } from '../../plugins/list/styles';
-import { ruleStyles } from '../../plugins/rule/styles';
-import { mediaStyles } from '../../plugins/media/styles';
-import { layoutStyles } from '../../plugins/layout/styles';
-import { panelStyles } from '../../plugins/panel/styles';
-import { fakeCursorStyles } from '../../plugins/fake-text-cursor/styles';
-import { mentionsStyles } from '../../plugins/mentions/styles';
-import { emojiStyles, emojiStylesNext } from '../../plugins/emoji/styles';
-import { textFormattingStyles } from '../../plugins/text-formatting/styles';
-import { placeholderTextStyles } from '../../plugins/placeholder-text/styles';
-import { gridStyles } from '../../plugins/grid/styles';
-import { linkStyles } from '../../plugins/hyperlink/styles';
-import { extensionStyles } from '../../plugins/extension/ui/styles';
-import { expandStyles } from '../../plugins/expand/ui/styles';
-import { ClassNames } from '../../plugins/media/pm-plugins/alt-text/style';
+  akEditorSelectedBorderSize,
+  akEditorDeleteBorder,
+  akEditorDeleteBackgroundWithOpacity,
+  akEditorSelectedNodeClassName,
+  blockNodesVerticalMargin,
+  editorFontSize,
+  getSelectionStyles,
+  SelectionStyle,
+  akEditorLineHeight,
+  akEditorSelectedBorderColor,
+} from '@atlaskit/editor-shared-styles';
+import { MentionSharedCssClassName } from '@atlaskit/editor-common/mention';
+import { token } from '@atlaskit/tokens';
+
+import { telepointerStyle } from '../../plugins/collab-edit/styles';
+import { tableStyles } from '@atlaskit/editor-plugin-table/ui/common-styles';
+import { blocktypeStyles } from '@atlaskit/editor-plugin-block-type/styles';
+import { textHighlightStyle } from '@atlaskit/editor-plugin-paste-options-toolbar/styles';
+import { codeBlockStyles } from './code-block';
+import { mediaStyles } from './media';
+import { layoutStyles } from './layout';
+import { panelStyles } from './panel';
+import { placeholderTextStyles } from '@atlaskit/editor-plugin-placeholder-text/styles';
+import { extensionStyles } from './extension';
+import { expandStyles } from './expand';
+import { MediaSharedClassNames } from '@atlaskit/editor-common/styles';
 import { findReplaceStyles } from '../../plugins/find-replace/styles';
-import { taskDecisionStyles } from '../../plugins/tasks-and-decisions/styles';
-import { statusStyles } from '../../plugins/status/styles';
-import { smartCardStyles } from '../../plugins/card/styles';
-import { dateStyles } from '../../plugins/date/styles';
-import { embedCardStyles } from '../../plugins/card/ui/styled';
+import { taskDecisionStyles } from './tasks-and-decisions';
+import { statusStyles } from './status';
+import { dateStyles } from './date';
 import type { FeatureFlags } from '../../types/feature-flags';
-import { useFeatureFlags } from '../../plugins/feature-flags-context';
+import { InlineNodeViewSharedStyles } from '../../nodeviews/getInlineNodeViewProducer.styles';
+import {
+  linkSharedStyle,
+  codeMarkSharedStyles,
+  ruleSharedStyles,
+} from '@atlaskit/editor-common/styles';
+import { browser } from '@atlaskit/editor-common/utils';
+import { EmojiSharedCssClassName } from '@atlaskit/editor-common/emoji';
+
+import { N500, N30A, N200 } from '@atlaskit/theme/colors';
+import { gapCursorStyles } from '@atlaskit/editor-common/selection';
+
+export const linkStyles = css`
+  .ProseMirror {
+    ${linkSharedStyle}
+  }
+`;
 
 type ContentStylesProps = {
   theme?: any;
-  allowAnnotation?: boolean;
   featureFlags?: FeatureFlags;
 };
 
-const ContentStyles = styled.div<ContentStylesProps>`
+const ruleStyles = (props: ThemeProps) => css`
+  .ProseMirror {
+    ${ruleSharedStyles(props)};
+
+    hr {
+      cursor: pointer;
+      padding: ${token('space.050', '4px')} 0;
+      margin: calc(${akEditorLineHeight}em - 4px) 0;
+      background-clip: content-box;
+
+      &.${akEditorSelectedNodeClassName} {
+        outline: none;
+        background-color: ${token(
+          'color.border.selected',
+          akEditorSelectedBorderColor,
+        )};
+      }
+    }
+  }
+`;
+
+const mentionsStyles = css`
+  .${MentionSharedCssClassName.MENTION_CONTAINER} {
+    &.${akEditorSelectedNodeClassName} [data-mention-id] > span {
+      ${getSelectionStyles([
+        SelectionStyle.BoxShadow,
+        SelectionStyle.Background,
+      ])}
+
+      /* need to specify dark text colour because personal mentions
+         (in dark blue) have white text by default */
+      color: ${token('color.text.subtle', N500)};
+    }
+  }
+
+  .danger {
+    .${MentionSharedCssClassName.MENTION_CONTAINER}.${akEditorSelectedNodeClassName}
+      > span
+      > span
+      > span {
+      box-shadow: 0 0 0 ${akEditorSelectedBorderSize}px ${akEditorDeleteBorder};
+      background-color: ${token(
+        'color.background.danger',
+        akEditorDeleteBackgroundWithOpacity,
+      )};
+    }
+    .${MentionSharedCssClassName.MENTION_CONTAINER} > span > span > span {
+      background-color: ${token('color.background.neutral', N30A)};
+      color: ${token('color.text.subtle', N500)};
+    }
+  }
+`;
+
+const listsStyles = css`
+  .ProseMirror {
+    li {
+      position: relative;
+
+      > p:not(:first-child) {
+        margin: ${token('space.050', '4px')} 0 0 0;
+      }
+
+      // In SSR the above rule will apply to all p tags because first-child would be a style tag.
+      // The following rule resets the first p tag back to its original margin
+      // defined in packages/editor/editor-common/src/styles/shared/paragraph.ts
+      > style:first-child + p {
+        margin-top: ${blockNodesVerticalMargin};
+      }
+    }
+
+    & :not([data-node-type='decisionList']) > li {
+      ${browser.safari ? codeBlockInListSafariFix : ''}
+    }
+  }
+`;
+
+const emojiStyles = css`
+  .${EmojiSharedCssClassName.EMOJI_CONTAINER} {
+    display: inline-block;
+
+    .${EmojiSharedCssClassName.EMOJI_NODE} {
+      cursor: pointer;
+
+      &.${EmojiSharedCssClassName.EMOJI_IMAGE} > span {
+        /** needed for selection style to cover custom emoji image properly */
+        display: flex;
+      }
+    }
+
+    &.${akEditorSelectedNodeClassName} {
+      .${EmojiSharedCssClassName.EMOJI_SPRITE},
+        .${EmojiSharedCssClassName.EMOJI_IMAGE} {
+        border-radius: 2px;
+        ${getSelectionStyles([
+          SelectionStyle.Blanket,
+          SelectionStyle.BoxShadow,
+        ])}
+      }
+    }
+  }
+`;
+
+export const placeholderStyles = css`
+  .ProseMirror .placeholder-decoration {
+    color: ${token('color.text.subtlest', N200)};
+    width: 100%;
+    pointer-events: none;
+    user-select: none;
+
+    .placeholder-android {
+      pointer-events: none;
+      outline: none;
+      user-select: none;
+      position: absolute;
+    }
+  }
+`;
+
+const contentStyles = (props: ContentStylesProps) => css`
   .ProseMirror {
     outline: none;
-    font-size: ${editorFontSize}px;
+    font-size: ${editorFontSize({ theme: props.theme })}px;
     ${whitespaceSharedStyles};
     ${paragraphSharedStyles};
     ${listsSharedStyles};
     ${indentationSharedStyles};
     ${shadowSharedStyle};
-    ${inlineNodeSharedStyle};
+    ${InlineNodeViewSharedStyles};
   }
 
   .ProseMirror[contenteditable='false'] .taskItemView-content-wrap {
@@ -85,51 +226,44 @@ const ContentStyles = styled.div<ContentStylesProps>`
   }
 
   .ProseMirror-selectednode:empty {
-    outline: 2px solid #8cf;
+    outline: 2px solid ${token('color.border.focused', '#8cf')};
   }
 
-  ${blocktypeStyles}
-  ${textFormattingStyles}
   ${placeholderTextStyles}
   ${placeholderStyles}
-  ${({
-    featureFlags,
-  }) =>
-    featureFlags?.codeBlockSyntaxHighlighting
-      ? highlightingCodeBlockStyles
-      : codeBlockStyles}
+  ${codeBlockStyles(props)}
+
+  ${blocktypeStyles(props)}
+  ${codeMarkSharedStyles(props)}
+  ${textColorStyles}
   ${listsStyles}
-  ${ruleStyles}
+  ${ruleStyles(props)}
   ${mediaStyles}
-  ${layoutStyles}
+  ${layoutStyles(props)}
   ${telepointerStyle}
   ${gapCursorStyles};
-  ${tableStyles}
-  ${panelStyles}
-  ${fakeCursorStyles}
+  ${tableStyles(props)}
+  ${panelStyles(props)}
   ${mentionsStyles}
-  ${({
-    featureFlags,
-  }) =>
-    featureFlags?.nextEmojiNodeView
-      ? emojiStylesNext
-      : emojiStyles}
+  ${emojiStyles}
   ${tasksAndDecisionsStyles}
   ${gridStyles}
   ${linkStyles}
   ${blockMarksSharedStyles}
   ${dateSharedStyle}
   ${extensionStyles}
-  ${expandStyles}
+  ${expandStyles(props)}
   ${findReplaceStyles}
+  ${textHighlightStyle}
   ${taskDecisionStyles}
   ${statusStyles}
-  ${annotationSharedStyles}
+  ${annotationSharedStyles(props)}
   ${smartCardStyles}
   ${smartCardSharedStyles}
   ${dateStyles}
   ${embedCardStyles}
   ${unsupportedStyles}
+  ${resizerStyles}
 
   .panelView-content-wrap {
     box-sizing: border-box;
@@ -157,15 +291,20 @@ const ContentStyles = styled.div<ContentStylesProps>`
     text-align: center;
   }
 
-  .pm-table-header-content-wrap,
-  .pm-table-cell-content-wrap div.fabric-editor-block-mark {
-    p {
+  .pm-table-header-content-wrap :not(.fabric-editor-alignment),
+  .pm-table-header-content-wrap
+    :not(p, .fabric-editor-block-mark)
+    + div.fabric-editor-block-mark,
+  .pm-table-cell-content-wrap
+    :not(p, .fabric-editor-block-mark)
+    + div.fabric-editor-block-mark {
+    p:first-of-type {
       margin-top: 0;
     }
   }
 
   .hyperlink-floating-toolbar,
-  .${ClassNames.FLOATING_TOOLBAR_COMPONENT} {
+  .${MediaSharedClassNames.FLOATING_TOOLBAR_COMPONENT} {
     padding: 0;
   }
 
@@ -182,23 +321,27 @@ const ContentStyles = styled.div<ContentStylesProps>`
   }
 `;
 
-export default React.forwardRef(
-  (
-    props: Omit<
-      ContentStylesProps & {
-        className?: string;
-      },
-      'featureFlags'
-    >,
-    ref,
-  ) => {
-    const featureFlags = useFeatureFlags();
-    return (
-      <ContentStyles
-        {...props}
-        innerRef={ref as any}
-        featureFlags={featureFlags}
-      />
+type Props = ContentStylesProps & React.HTMLProps<HTMLDivElement>;
+
+export const createEditorContentStyle = (styles?: SerializedStyles) => {
+  return React.forwardRef<HTMLDivElement, Props>((props, ref) => {
+    const { className, children, featureFlags } = props;
+    const theme = useTheme();
+    const memoizedStyle = useMemo(
+      () =>
+        contentStyles({
+          theme,
+          featureFlags,
+        }),
+      [theme, featureFlags],
     );
-  },
-);
+
+    return (
+      <div className={className} ref={ref as any} css={[memoizedStyle, styles]}>
+        {children}
+      </div>
+    );
+  });
+};
+
+export default createEditorContentStyle();

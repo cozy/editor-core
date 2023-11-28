@@ -1,11 +1,20 @@
-import { mount, ReactWrapper } from 'enzyme';
-import { EditorView } from 'prosemirror-view';
-import { TextSelection, Selection } from 'prosemirror-state';
-import { ProviderFactory } from '@atlaskit/editor-common';
+import { render } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { TextSelection, Selection } from '@atlaskit/editor-prosemirror/state';
+import { ProviderFactory } from '@atlaskit/editor-common/provider-factory';
 import { AnnotationTypes } from '@atlaskit/adf-schema';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorFactory } from '@atlaskit/editor-test-helpers/create-editor';
-import * as prosemirrorUtils from 'prosemirror-utils';
+import * as prosemirrorUtils from '@atlaskit/editor-prosemirror/utils';
 
+import type {
+  Refs,
+  DocBuilder,
+  ExtractInjectionAPI,
+} from '@atlaskit/editor-common/types';
+import type { EditorAnalyticsAPI } from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   annotation,
   code_block,
@@ -14,41 +23,60 @@ import {
   p,
   panel,
   hardBreak,
-  Refs,
-  DocBuilder,
 } from '@atlaskit/editor-test-helpers/doc-builder';
-import { EventDispatcher } from '../../../../event-dispatcher';
-import { inlineCommentProvider, nullComponent, selectorById } from '../_utils';
+import { EventDispatcher } from '@atlaskit/editor-common/event-dispatcher';
+import { getState } from '../_utils';
 import {
   removeInlineCommentNearSelection,
   setInlineCommentDraftState,
 } from '../../commands';
-import { InlineCommentPluginState } from '../../pm-plugins/types';
-import annotationPlugin, {
-  InlineCommentAnnotationProvider,
-  AnnotationUpdateEmitter,
-} from '../..';
-import { UIAnalyticsEvent } from '@atlaskit/analytics-next';
+import type { InlineCommentPluginState } from '../../pm-plugins/types';
+import type { InlineCommentAnnotationProvider } from '../..';
+import annotationPlugin, { AnnotationUpdateEmitter } from '../..';
+import type { UIAnalyticsEvent } from '@atlaskit/analytics-next';
 import {
   ACTION,
   ACTION_SUBJECT,
   EVENT_TYPE,
   ACTION_SUBJECT_ID,
   CONTENT_COMPONENT,
-} from '../../../analytics/types/enums';
-import { flushPromises } from '../../../../__tests__/__helpers/utils';
-import { AnnotationTestIds } from '../../types';
-import { RESOLVE_METHOD } from '../../../analytics/types/inline-comment-events';
+  RESOLVE_METHOD,
+} from '@atlaskit/editor-common/analytics';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { flushPromises } from '@atlaskit/editor-test-helpers/e2e-helpers';
 import * as commands from '../../commands/index';
 import { inlineCommentPluginKey, getPluginState } from '../../utils';
 import { getAnnotationViewClassname } from '../../nodeviews';
+import type { AnnotationPlugin } from '../../index';
+
+jest.mock('@atlaskit/editor-prosemirror/utils', () => {
+  // Unblock prosemirror bump:
+  // Workaround to enable spy on prosemirror-utils cjs bundle
+  const originalModule = jest.requireActual(
+    '@atlaskit/editor-prosemirror/utils',
+  );
+
+  return {
+    __esModule: true,
+    ...originalModule,
+  };
+});
 
 describe('annotation', () => {
   const createEditor = createEditorFactory();
   const eventDispatcher = new EventDispatcher();
   const providerFactory = new ProviderFactory();
-  let contentComponent: ReactWrapper;
+  let contentComponent: RenderResult;
   let createAnalyticsEvent = jest.fn(() => ({ fire() {} } as UIAnalyticsEvent));
+  let inlineCommentProviderFake: InlineCommentAnnotationProvider;
+
+  beforeEach(() => {
+    inlineCommentProviderFake = {
+      getState,
+      createComponent: jest.fn().mockReturnValue(null),
+      viewComponent: jest.fn().mockReturnValue(null),
+    };
+  });
 
   const editor = (
     doc: DocBuilder,
@@ -61,16 +89,21 @@ describe('annotation', () => {
         allowPanel: true,
         allowAnalyticsGASV3: true,
         annotationProviders: {
-          inlineComment: inlineCommentOptions || inlineCommentProvider,
+          inlineComment: inlineCommentOptions || inlineCommentProviderFake,
         },
       },
       createAnalyticsEvent,
     });
 
-  function mountContentComponent(editorView: EditorView) {
-    return mount(
-      annotationPlugin({ inlineComment: inlineCommentProvider })
-        .contentComponent!({
+  function mount(
+    editorView: EditorView,
+    editorAPI?: ExtractInjectionAPI<AnnotationPlugin>,
+  ): RenderResult {
+    return render(
+      annotationPlugin({
+        config: { inlineComment: inlineCommentProviderFake },
+        api: editorAPI,
+      }).contentComponent!({
         editorView,
         editorActions: null as any,
         eventDispatcher,
@@ -79,6 +112,7 @@ describe('annotation', () => {
         disabled: false,
         containerElement: null,
         dispatchAnalyticsEvent: createAnalyticsEvent,
+        wrapperElement: null,
       })!,
     );
   }
@@ -98,6 +132,7 @@ describe('annotation', () => {
       bookmark: getBookmark(editorView, refs),
       disallowOnWhitespace: false,
       isVisible: true,
+      skipSelectionHandling: false,
     };
     jest
       .spyOn(inlineCommentPluginKey, 'getState')
@@ -107,7 +142,7 @@ describe('annotation', () => {
   afterEach(() => {
     createAnalyticsEvent.mockClear();
     jest.restoreAllMocks();
-    if (contentComponent && contentComponent.length) {
+    if (contentComponent) {
       contentComponent.unmount();
     }
   });
@@ -172,7 +207,8 @@ describe('annotation', () => {
 
   describe('component', () => {
     describe('passes selection data to annotation create and view components', () => {
-      let editorView: EditorView<any>;
+      let editorView: EditorView;
+      let editorAPI: ExtractInjectionAPI<AnnotationPlugin> | undefined;
       let bookMarkPositions: Refs;
 
       beforeEach(async () => {
@@ -193,30 +229,32 @@ describe('annotation', () => {
         // Let the getState promise resolve
         await flushPromises();
 
-        editorView = editorData.editorView;
+        ({ editorView } = editorData);
+        editorAPI =
+          editorData.editorAPI as ExtractInjectionAPI<AnnotationPlugin>;
         bookMarkPositions = editorData.refs;
       });
 
       it('passes dom based on current selection if there is no bookmarked selection', async () => {
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView, editorAPI);
 
-        const viewComponent = contentComponent.find(nullComponent);
-        const domElement = viewComponent.prop('dom');
-        expect(domElement).toBeTruthy();
+        expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalled();
+
+        const { dom: domElement } = (
+          inlineCommentProviderFake.viewComponent as jest.Mock
+        ).mock.calls[0][0];
         expect(domElement.innerText).toBe('hello');
       });
 
       it('passes dom and textSelection based on bookmarked selection if it is available', () => {
         mockPluginStateWithBookmark(editorView, bookMarkPositions);
 
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView, editorAPI);
 
-        const createComponent = contentComponent.find(nullComponent);
-        const textSelection = createComponent.prop('textSelection');
+        const { textSelection, dom: domElement } = (
+          inlineCommentProviderFake.createComponent as jest.Mock
+        ).mock.calls[0][0];
         expect(textSelection).toBe('world');
-
-        const domElement = createComponent.prop('dom');
-        expect(domElement).toBeTruthy();
         expect(domElement.innerText).toBe('world');
       });
     });
@@ -228,10 +266,11 @@ describe('annotation', () => {
 
       mockPluginStateWithBookmark(editorView, refs);
 
-      contentComponent = mountContentComponent(editorView);
+      contentComponent = mount(editorView);
 
-      const createComponent = contentComponent.find(nullComponent);
-      const textSelection = createComponent.prop('textSelection');
+      const { textSelection } = (
+        inlineCommentProviderFake.createComponent as jest.Mock
+      ).mock.calls[0][0];
       expect(textSelection).toBe('helloworld');
     });
 
@@ -239,7 +278,10 @@ describe('annotation', () => {
       beforeEach(async () => {
         const mock = jest.spyOn(prosemirrorUtils, 'findDomRefAtPos');
         mock.mockImplementation((pos, domAtPos) => {
-          throw new Error('Error message from mock');
+          const error = new Error('Error message from mock');
+          error.stack = 'stack trace';
+
+          throw error;
         });
 
         const { editorView } = editor(
@@ -256,7 +298,7 @@ describe('annotation', () => {
 
         // Let the getState promise resolve
         await flushPromises();
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView);
       });
 
       it('sends error analytics event', () => {
@@ -277,21 +319,22 @@ describe('annotation', () => {
               type: 'text',
             },
           }),
+          nonPrivacySafeAttributes: expect.objectContaining({
+            errorStack: 'stack trace',
+          }),
         });
       });
 
       it("doesn't render", () => {
-        const saveSelector = selectorById(AnnotationTestIds.componentSave);
-        expect(saveSelector).toBeTruthy();
-        const saveButton = contentComponent.find(saveSelector);
-        expect(saveButton.length).toBe(0);
-        const viewComponent = contentComponent.find(nullComponent);
-        expect(viewComponent.length).toBe(0);
+        expect(
+          inlineCommentProviderFake.createComponent,
+        ).not.toHaveBeenCalled();
       });
     });
 
     describe('view annotation', () => {
-      let editorView: EditorView<any>;
+      let editorView: EditorView;
+      let editorAPI: ExtractInjectionAPI<AnnotationPlugin> | undefined;
       let annotationPos: number;
 
       beforeEach(async () => {
@@ -306,19 +349,21 @@ describe('annotation', () => {
             p('world'),
           ),
         );
-        editorView = editorData.editorView;
+        ({ editorView } = editorData);
+        editorAPI =
+          editorData.editorAPI as ExtractInjectionAPI<AnnotationPlugin>;
         annotationPos = editorData.refs.start;
 
         // Let the getState promise resolve
         await flushPromises();
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView, editorAPI);
       });
 
       it('renders correctly', () => {
-        expect(selectorById(AnnotationTestIds.componentSave)).toBeTruthy();
-        const viewComponent = contentComponent.find(nullComponent);
-        expect(viewComponent).toBeTruthy();
-        expect(viewComponent.prop('annotations')).toEqual([
+        const { annotations } = (
+          inlineCommentProviderFake.viewComponent as jest.Mock
+        ).mock.calls[0][0];
+        expect(annotations).toEqual([
           { type: 'inlineComment', id: 'first123' },
         ]);
       });
@@ -337,57 +382,87 @@ describe('annotation', () => {
 
       describe('is closed as expected', () => {
         it('via onClose callback', async () => {
-          const viewComponent = contentComponent.find(nullComponent);
-          expect(viewComponent.exists()).toBeTruthy();
-          viewComponent.prop('onClose')();
+          const { onClose } = (
+            inlineCommentProviderFake.viewComponent as jest.Mock
+          ).mock.calls[0][0];
+
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
+          onClose();
           // force rerender
-          contentComponent.setProps(contentComponent.props());
-          expect(contentComponent.find(nullComponent).exists()).toBeFalsy();
+          mount(editorView);
+
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
         });
 
         it('when selection moved away from annotation', () => {
-          expect(contentComponent.find(nullComponent)).toBeTruthy();
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
+
           const { state } = editorView;
           editorView.dispatch(
             state.tr.setSelection(Selection.atEnd(state.doc)),
           );
-          contentComponent.setProps(contentComponent.props());
-          expect(contentComponent.find(nullComponent).exists()).toBeFalsy();
+          // force rerender
+          mount(editorView);
+
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
         });
 
         it('when annotation is deleted', async () => {
-          const viewComponent = contentComponent.find(nullComponent);
-          expect(viewComponent.exists()).toBeTruthy();
-          viewComponent.prop('onDelete')('first123');
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
+          const { onDelete } = (
+            inlineCommentProviderFake.viewComponent as jest.Mock
+          ).mock.calls[0][0];
+
+          onDelete('first123');
+
           // rerender to let onDelete update hidden state
-          contentComponent.setProps(contentComponent.props());
+          mount(editorView);
           // rerender after hidden state updated
-          contentComponent.setProps(contentComponent.props());
-          expect(contentComponent.find(nullComponent).exists()).toBeFalsy();
+          mount(editorView);
+
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
         });
 
         it('not closed when clicking same annotation', () => {
-          expect(contentComponent.find(nullComponent)).toBeTruthy();
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            1,
+          );
           const { state } = editorView;
           editorView.dispatch(
             state.tr.setSelection(
               Selection.near(state.doc.resolve(annotationPos)),
             ),
           );
-          contentComponent.setProps(contentComponent.props());
-          expect(contentComponent.find(nullComponent).exists()).toBeTruthy();
+          mount(editorView);
+          expect(inlineCommentProviderFake.viewComponent).toHaveBeenCalledTimes(
+            2,
+          );
         });
       });
 
       describe('onResolve', () => {
         beforeEach(() => {
-          const viewComponent = contentComponent.find(nullComponent);
-          viewComponent.prop('onResolve')('first123');
+          const { onResolve } = (
+            inlineCommentProviderFake.viewComponent as jest.Mock
+          ).mock.calls[0][0];
+          onResolve('first123');
         });
 
         it('resolves annotation', () => {
           const pluginState = getPluginState(editorView.state);
-          expect(pluginState.annotations).toStrictEqual({
+          expect(pluginState?.annotations).toStrictEqual({
             first123: true,
           });
         });
@@ -429,7 +504,7 @@ describe('annotation', () => {
     });
 
     describe('view nested annotations', () => {
-      let editorView: EditorView, contentComponent: ReactWrapper;
+      let editorView: EditorView;
       beforeEach(async () => {
         const editorData = editor(
           doc(
@@ -459,7 +534,7 @@ describe('annotation', () => {
         // Let the getState promise resolve
         await flushPromises();
 
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView);
       });
 
       it('sends view annotation analytics event with correct overlap value', async () => {
@@ -484,9 +559,10 @@ describe('annotation', () => {
         expect(innerNode.marks[1].attrs.id).toEqual('second');
 
         // since outer text also has 'first' mark id, we expect 'second' to appear first
-        expect(
-          contentComponent.find(nullComponent).prop('annotations'),
-        ).toEqual([
+        const { annotations } = (
+          inlineCommentProviderFake.viewComponent as jest.Mock
+        ).mock.calls[0][0];
+        expect(annotations).toEqual([
           { type: 'inlineComment', id: 'second' },
           { type: 'inlineComment', id: 'first' },
         ]);
@@ -496,14 +572,16 @@ describe('annotation', () => {
 
   describe('create annotation', () => {
     it('calls dispatch just once', () => {
-      const { editorView, refs } = editor(
+      const { editorView, refs, editorAPI } = editor(
         doc(p('Fluke {start}{<}jib scourge of the{>}{end} seven seas')),
       );
       mockPluginStateWithBookmark(editorView, refs);
 
       const dispatchSpy = jest.spyOn(editorView, 'dispatch');
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
 
       let inlineCommentTransactionCalls = 0;
       dispatchSpy.mock.calls.forEach((call) => {
@@ -515,13 +593,15 @@ describe('annotation', () => {
     });
 
     it('paragraph', () => {
-      const { editorView, refs } = editor(
+      const { editorView, refs, editorAPI } = editor(
         doc(p('Fluke {start}{<}jib scourge of the{>}{end} seven seas')),
       );
       mockPluginStateWithBookmark(editorView, refs);
 
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           p(
@@ -541,14 +621,41 @@ describe('annotation', () => {
       });
     });
 
+    it('paragraph with trailing new line', () => {
+      const { editorView, refs, editorAPI } = editor(
+        doc(p('Fluke {start}{<}jib scourge of the'), p('{>}{end}seven seas')),
+      );
+      mockPluginStateWithBookmark(editorView, refs);
+
+      const id = 'annotation-id-123';
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
+      expect(editorView.state.doc).toEqualDocument(
+        doc(
+          p(
+            'Fluke ',
+            annotation({ annotationType: AnnotationTypes.INLINE_COMMENT, id })(
+              'jib scourge of the',
+            ),
+          ),
+          p('seven seas'),
+        ),
+      );
+    });
+
     it('with only text and a hardBreak', () => {
-      const { editorView } = editor(
+      const { editorView, editorAPI } = editor(
         doc(p('Fluke {<}jib scourge', hardBreak(), ' of the{>} seven seas')),
       );
 
       const id = 'annotation-id-123';
-      setInlineCommentDraftState(true)(editorView.state, editorView.dispatch);
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      setInlineCommentDraftState(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(true)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           p(
@@ -575,17 +682,21 @@ describe('annotation', () => {
         jest.spyOn(editorView, 'hasFocus').mockReturnValue(false);
         jest.spyOn(editorView, 'focus');
         // set the draft state first before creation annotation
-        setInlineCommentDraftState(true)(editorView.state, editorView.dispatch);
+        setInlineCommentDraftState(undefined)(true)(
+          editorView.state,
+          editorView.dispatch,
+        );
       });
 
       it('after create', () => {
         const id = 'annotation-id-123';
         const previousToPos = editorView.state.selection.$to.pos;
 
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView);
 
-        const createComponent = contentComponent.find(nullComponent);
-        const onCreate = createComponent.prop('onCreate');
+        const { onCreate } = (
+          inlineCommentProviderFake.createComponent as jest.Mock
+        ).mock.calls[0][0];
         onCreate(id);
 
         expect(editorView.state.doc).toEqualDocument(
@@ -609,10 +720,11 @@ describe('annotation', () => {
         const previousFromPos = editorView.state.selection.$from.pos;
         const previousToPos = editorView.state.selection.$to.pos;
 
-        contentComponent = mountContentComponent(editorView);
+        contentComponent = mount(editorView);
 
-        const createComponent = contentComponent.find(nullComponent);
-        const onClose = createComponent.prop('onClose');
+        const { onClose } = (
+          inlineCommentProviderFake.createComponent as jest.Mock
+        ).mock.calls[0][0];
         onClose();
 
         expect(editorView.state.doc).toEqualDocument(
@@ -625,30 +737,36 @@ describe('annotation', () => {
     });
 
     it('optimistic creation', async () => {
-      const { editorView } = editor(
+      const { editorView, editorAPI } = editor(
         doc(p('Fluke {<}jib scourge of the{>} seven seas')),
       );
 
       // set the draft state first before creation annotation
-      setInlineCommentDraftState(true)(editorView.state, editorView.dispatch);
+      setInlineCommentDraftState(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(true)(editorView.state, editorView.dispatch);
 
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
 
       // Optimistic creation should create the comment in the state right away.
       const pluginState = getPluginState(editorView.state);
-      expect(Object.keys(pluginState.annotations)).toContain(id);
+      expect(Object.keys(pluginState?.annotations || {})).toContain(id);
     });
 
     it('heading', () => {
-      const { editorView, refs } = editor(
+      const { editorView, refs, editorAPI } = editor(
         doc(h1('Fluke {start}{<}jib scourge of the{>}{end} seven seas')),
       );
 
       mockPluginStateWithBookmark(editorView, refs);
 
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           h1(
@@ -663,7 +781,7 @@ describe('annotation', () => {
     });
 
     it('across panel', () => {
-      const { editorView, refs } = editor(
+      const { editorView, refs, editorAPI } = editor(
         doc(
           p('Fluke {start}{<}jib'),
           panel()(p('scourge of the{>}{end} seven seas')),
@@ -673,7 +791,9 @@ describe('annotation', () => {
       mockPluginStateWithBookmark(editorView, refs);
 
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           p(
@@ -697,7 +817,7 @@ describe('annotation', () => {
 
     it('across code_block', () => {
       // Annotation is not valid on code block
-      const { editorView, refs } = editor(
+      const { editorView, refs, editorAPI } = editor(
         doc(
           p('Fluke {start}{<}jib'),
           code_block()('scourge of the{>}{end} seven seas'),
@@ -707,7 +827,9 @@ describe('annotation', () => {
       mockPluginStateWithBookmark(editorView, refs);
 
       const id = 'annotation-id-123';
-      commands.createAnnotation(id)(editorView.state, editorView.dispatch);
+      commands.createAnnotation(
+        editorAPI?.analytics?.actions as EditorAnalyticsAPI,
+      )(id)(editorView.state, editorView.dispatch);
       expect(editorView.state.doc).toEqualDocument(
         doc(
           p(
@@ -735,8 +857,8 @@ describe('annotation', () => {
   describe('toggle visibility', () => {
     const updateSubscriber = new AnnotationUpdateEmitter();
 
-    const inlineCommentProviderWithToggle = {
-      ...inlineCommentProvider,
+    const inlineCommentProviderFakeWithToggle = {
+      ...inlineCommentProviderFake,
       updateSubscriber,
     };
 
@@ -749,17 +871,17 @@ describe('annotation', () => {
             ' of the{>}{end} seven seas',
           ),
         ),
-        inlineCommentProviderWithToggle,
+        inlineCommentProviderFakeWithToggle,
       );
 
       // default is on
       let pluginState = getPluginState(editorView.state);
-      expect(pluginState.isVisible).toBe(true);
+      expect(pluginState?.isVisible).toBe(true);
 
       // turn it off
       updateSubscriber.emit('setvisibility', false);
       pluginState = getPluginState(editorView.state);
-      expect(pluginState.isVisible).toBe(false);
+      expect(pluginState?.isVisible).toBe(false);
     });
 
     it('emitter is able to turn it on', () => {
@@ -771,7 +893,7 @@ describe('annotation', () => {
             ' of the{>}{end} seven seas',
           ),
         ),
-        inlineCommentProviderWithToggle,
+        inlineCommentProviderFakeWithToggle,
       );
 
       const { dispatch, state } = editorView;
@@ -779,12 +901,12 @@ describe('annotation', () => {
 
       // current state is off
       let pluginState = getPluginState(editorView.state);
-      expect(pluginState.isVisible).toBe(false);
+      expect(pluginState?.isVisible).toBe(false);
 
       // turn it on
       updateSubscriber.emit('setvisibility', true);
       pluginState = getPluginState(editorView.state);
-      expect(pluginState.isVisible).toBe(true);
+      expect(pluginState?.isVisible).toBe(true);
     });
   });
 });

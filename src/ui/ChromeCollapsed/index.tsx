@@ -1,13 +1,17 @@
+/** @jsx jsx */
 import React from 'react';
+import { jsx } from '@emotion/react';
 import { PureComponent } from 'react';
-import { Input } from './styles';
+import { inputStyle } from './styles';
+import { WrappedComponentProps, injectIntl } from 'react-intl-next';
+import { messages } from './messages';
 
 export interface Props {
   text?: string;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
-export default class ChromeCollapsed extends PureComponent<Props, {}> {
+class ChromeCollapsed extends PureComponent<Props & WrappedComponentProps, {}> {
   private input?: HTMLElement;
 
   private focusHandler = (evt: React.FocusEvent<HTMLInputElement>) => {
@@ -26,19 +30,25 @@ export default class ChromeCollapsed extends PureComponent<Props, {}> {
     }
   };
 
-  private handleInputRef = (ref: HTMLElement) => {
+  private handleInputRef = (ref: HTMLInputElement) => {
     this.input = ref;
   };
 
   render() {
-    const placeholder = this.props.text || 'Type something…';
+    const placeholder =
+      this.props.text ||
+      this.props.intl.formatMessage(messages.chromeCollapsedPlaceholder);
 
     return (
-      <Input
-        innerRef={this.handleInputRef}
+      <input
+        data-testid="chrome-collapsed"
+        css={inputStyle}
+        ref={this.handleInputRef}
         onFocus={this.focusHandler}
         placeholder={placeholder}
       />
     );
   }
 }
+
+export default injectIntl(ChromeCollapsed);

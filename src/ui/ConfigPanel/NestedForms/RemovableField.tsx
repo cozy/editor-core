@@ -1,32 +1,34 @@
+/** @jsx jsx */
 import React from 'react';
-import { injectIntl, InjectedIntlProps } from 'react-intl';
-import styled from 'styled-components';
-
-import { gridSize } from '@atlaskit/theme/constants';
-import { multiply } from '@atlaskit/theme/math';
+import { css, jsx } from '@emotion/react';
+import { injectIntl, WrappedComponentProps } from 'react-intl-next';
 
 import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle';
 import Tooltip from '@atlaskit/tooltip';
-import * as colors from '@atlaskit/theme/colors';
+import { N80, R300 } from '@atlaskit/theme/colors';
+import { token } from '@atlaskit/tokens';
 
 import { messages } from '../messages';
 
-const RemovableFieldWrapper = styled.div<{ hasMarginBottom: Boolean }>`
+const removableFieldWrapper = css`
   position: relative;
-  margin-bottom: ${(props) =>
-    props.hasMarginBottom ? multiply(gridSize, 2) : 0}px;
+  margin-bottom: 0;
 `;
 
-const RemoveButtonWrapper = styled.div<{ testId: string }>`
+const wrapperWithMarginBottom = css`
+  margin-bottom: ${token('space.200', '16px')};
+`;
+
+const removeButtonWrapper = css`
   position: absolute;
   right: 0;
   top: 0;
   cursor: pointer;
 
-  color: ${colors.N80};
+  color: ${token('color.icon.subtle', N80)};
 
   &:hover {
-    color: ${colors.R300};
+    color: ${token('color.icon.danger', R300)};
   }
 `;
 
@@ -36,7 +38,7 @@ type Props = {
   canRemoveField?: boolean;
   children: React.ReactElement;
   className?: string;
-} & InjectedIntlProps;
+} & WrappedComponentProps;
 
 const RemovableField = ({
   name,
@@ -54,14 +56,15 @@ const RemovableField = ({
   const hasMarginBottom = children.props.field?.type !== 'expand';
 
   return (
-    <RemovableFieldWrapper
-      hasMarginBottom={hasMarginBottom}
+    <div
+      css={[removableFieldWrapper, hasMarginBottom && wrapperWithMarginBottom]}
       className={className}
     >
       {children}
       {canRemoveField && (
-        <RemoveButtonWrapper
-          testId={`remove-field-${name}`}
+        <div
+          css={removeButtonWrapper}
+          data-testid={`remove-field-${name}`}
           onClick={onClickCallback}
         >
           <Tooltip
@@ -73,9 +76,9 @@ const RemovableField = ({
               label={intl.formatMessage(messages.removeField)}
             />
           </Tooltip>
-        </RemoveButtonWrapper>
+        </div>
       )}
-    </RemovableFieldWrapper>
+    </div>
   );
 };
 

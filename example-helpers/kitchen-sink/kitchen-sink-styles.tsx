@@ -1,16 +1,26 @@
-import { N50, background, N30 } from '@atlaskit/theme/colors';
+/* eslint-disable @atlaskit/design-system/ensure-design-token-usage */
+import { token } from '@atlaskit/tokens';
+import { N50, N30, N0, DN30 } from '@atlaskit/theme/colors';
+import { themed } from '@atlaskit/theme/components';
 import { relativeFontSizeToBase16 } from '@atlaskit/editor-shared-styles';
-import styled from 'styled-components';
-import ContentStyles from '../../src/ui/ContentStyles';
+import { css } from '@emotion/react';
+import { createEditorContentStyle } from '../../src/ui/ContentStyles';
+import { ThemeProps } from '@atlaskit/theme/types';
 
-export const Container = styled.div<{ vertical?: boolean; root?: boolean }>`
+export const container = ({
+  vertical,
+  root,
+}: {
+  vertical?: boolean;
+  root?: boolean;
+}) => css`
   display: flex;
-  position: ${(props) => (props.root ? 'relative' : 'static')};
-  margin-top: ${(props) => (props.root ? '0' : '0.5em')};
-  flex-direction: ${(props) => (props.vertical ? 'column' : 'row')};
+  position: ${root ? 'relative' : 'static'};
+  margin-top: ${root ? '0' : '0.5em'};
+  flex-direction: ${vertical ? 'column' : 'row'};
 `;
 
-export const Controls = styled.div`
+export const controls = css`
   user-select: none;
   border-bottom: 1px dashed ${N50};
   padding: 1em;
@@ -19,61 +29,74 @@ export const Controls = styled.div`
     margin-bottom: 0.5em;
   }
 
-  button {
-    margin-left: 1em;
-  }
-
   .theme-select {
     margin-left: 1em;
     width: 140px;
   }
 `;
 
-export const Column = styled.div<{ narrow?: boolean }>`
-  flex: 1;
-  margin-right: ${(props) => (props.narrow ? '360px' : '0')};
+export const kitchenSinkControl = css`
+  display: inline-block;
+  vertical-align: middle;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  margin-right: 0.5em;
 `;
 
-export const Rail = styled.div`
+export const appearanceControl = css`
+  width: 240px;
+`;
+
+export const column = ({ narrow }: { narrow?: boolean }) => css`
+  flex: 1;
+  margin-right: ${narrow ? '360px' : '0'};
+`;
+
+export const rail = (props: ThemeProps) => css`
   position: absolute;
   height: 100%;
   top: 0;
   right: 0;
   bottom: 0;
-  background: ${background};
+  background: ${themed({
+    light: token('elevation.surface', N0),
+    dark: token('elevation.surface', DN30),
+  })(props)};
 `;
 
-export const EditorColumn = styled.div<{
+export const editorColumn = ({
+  vertical,
+  narrow,
+}: {
   vertical: boolean;
   narrow: boolean;
-}>`
+}) => css`
   flex: 1;
-  margin-right: ${(props) => (props.narrow ? '360px' : '0')};
-  ${(p) =>
-    !p.vertical
-      ? `border-right: 1px solid ${N30}; min-height: 85vh; resize: horizontal;`
-      : `border-bottom: 1px solid ${N30}; resize: vertical;`};
+  margin-right: ${narrow ? '360px' : '0'};
+  ${!vertical
+    ? `border-right: 1px solid ${N30}; min-height: 85vh; resize: horizontal;`
+    : `border-bottom: 1px solid ${N30}; resize: vertical;`};
 `;
 
-export const PopupWrapper = styled.div.attrs({ className: 'popups-wrapper' })`
+export const popupWrapper = css`
   position: relative;
   height: 100%;
 `;
 
 /** Without ContentStyles some SVGs in floating toolbar are missing .hyperlink-open-link styles */
-export const PopUps = styled(ContentStyles).attrs({ className: 'popups' })`
+export const PopUps = createEditorContentStyle(css`
   z-index: 9999;
-`;
+`);
 
-export const InputPadding = styled.div`
+export const inputPadding = css`
   height: 100%;
 `;
 
-export const InputForm = styled.div`
+export const inputForm = css`
   height: 100%;
 `;
 
-export const Textarea = styled.textarea`
+export const textareaStyle = css`
   box-sizing: border-box;
   border: 1px solid lightgray;
   font-family: monospace;
@@ -83,7 +106,7 @@ export const Textarea = styled.textarea`
   height: 80%;
 `;
 
-export const RendererPadding = styled.div<{ hasPadding: boolean }>`
+export const rendererPadding = (hasPadding: boolean) => css`
   padding: 0 32px;
-  padding-top: ${(props) => (props.hasPadding ? '132px' : '0')};
+  padding-top: ${hasPadding ? '132px' : '0'};
 `;

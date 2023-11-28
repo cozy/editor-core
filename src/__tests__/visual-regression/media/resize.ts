@@ -1,17 +1,24 @@
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
-  insertMedia,
   waitForMediaToBeLoaded,
   resizeMediaInPosition,
   MediaResizeSide,
-} from '../../__helpers/page-objects/_media';
+} from '@atlaskit/editor-test-helpers/page-objects/media';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   resizeColumn,
   clickFirstCell,
-} from '../../__helpers/page-objects/_table';
-import { PuppeteerPage } from '@atlaskit/visual-regression/helper';
-import { animationFrame } from '../../__helpers/page-objects/_editor';
-import { snapshot, initEditorWithAdf, Appearance } from '../_utils';
-import defaultTableADF from '../table/__fixtures__/default-table.adf.json';
+} from '@atlaskit/editor-test-helpers/page-objects/table';
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { animationFrame } from '@atlaskit/editor-test-helpers/page-objects/editor';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  snapshot,
+  initEditorWithAdf,
+  Appearance,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
+import mediaSingleInTableAdf from './__fixtures__/mediaSingle-in-table.adf.json';
 
 describe('Snapshot Test: Media', () => {
   let page: PuppeteerPage;
@@ -20,7 +27,7 @@ describe('Snapshot Test: Media', () => {
     page = global.page;
     await initEditorWithAdf(page, {
       appearance: Appearance.fullPage,
-      adf: defaultTableADF,
+      adf: mediaSingleInTableAdf,
       editorProps: {
         media: {
           allowMediaSingle: true,
@@ -31,9 +38,7 @@ describe('Snapshot Test: Media', () => {
         },
       },
     });
-
     await clickFirstCell(page);
-    await insertMedia(page);
     await waitForMediaToBeLoaded(page);
   });
 

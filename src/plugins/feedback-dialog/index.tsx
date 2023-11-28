@@ -1,20 +1,21 @@
 import React from 'react';
-import { PluginKey } from 'prosemirror-state';
-import { EditorPlugin, FeedbackInfo } from '../../types';
-import { IconFeedback } from '../quick-insert/assets';
-import { version as coreVersion } from '../../version.json';
+import type { FeedbackInfo } from '../../types';
+import type {
+  NextEditorPlugin,
+  OptionalPlugin,
+} from '@atlaskit/editor-common/types';
+import { IconFeedback } from '@atlaskit/editor-common/quick-insert';
+import { version as coreVersion } from '../../version-wrapper';
 
 import {
-  addAnalytics,
   ACTION,
   ACTION_SUBJECT,
   INPUT_METHOD,
   EVENT_TYPE,
-} from '../analytics';
+} from '@atlaskit/editor-common/analytics';
+import type { AnalyticsPlugin } from '@atlaskit/editor-plugin-analytics';
 import loadJiraCollectorDialogScript from './loadJiraCollectorDialogScript';
-import { messages } from '../insert-block/ui/ToolbarInsertBlock/messages';
-
-export const pluginKey = new PluginKey('feedbackDialogPlugin');
+import { toolbarInsertBlockMessages as messages } from '@atlaskit/editor-common/messages';
 
 let showJiraCollectorDialog: () => void;
 let feedbackInfoHash: string;
@@ -66,8 +67,19 @@ export const openFeedbackDialog = async (feedbackInfo?: FeedbackInfo) =>
     resolve(timeoutId);
   });
 
-const feedbackDialog = (feedbackInfo: FeedbackInfo): EditorPlugin => {
-  defaultFeedbackInfo = feedbackInfo;
+export type FeedbackDialogPlugin = NextEditorPlugin<
+  'feedbackDialog',
+  {
+    pluginConfiguration: FeedbackInfo;
+    dependencies: [OptionalPlugin<AnalyticsPlugin>];
+  }
+>;
+
+const feedbackDialog: FeedbackDialogPlugin = ({
+  config: feedbackInfo,
+  api,
+}) => {
+  defaultFeedbackInfo = feedbackInfo ?? {};
   return {
     name: 'feedbackDialog',
 
@@ -84,12 +96,14 @@ const feedbackDialog = (feedbackInfo: FeedbackInfo): EditorPlugin => {
             const tr = insert('');
             openFeedbackDialog(feedbackInfo);
 
-            return addAnalytics(state, tr, {
+            api?.analytics?.actions.attachAnalyticsEvent({
               action: ACTION.OPENED,
               actionSubject: ACTION_SUBJECT.FEEDBACK_DIALOG,
               attributes: { inputMethod: INPUT_METHOD.QUICK_INSERT },
               eventType: EVENT_TYPE.UI,
-            });
+            })(tr);
+
+            return tr;
           },
         },
       ],

@@ -1,9 +1,25 @@
-import { Node, NodeType, ResolvedPos } from 'prosemirror-model';
-import { EditorState, Selection, Transaction } from 'prosemirror-state';
-import { liftTarget } from 'prosemirror-transform';
-import { hasParentNodeOfType } from 'prosemirror-utils';
+import type {
+  Node,
+  NodeType,
+  ResolvedPos,
+} from '@atlaskit/editor-prosemirror/model';
+import type {
+  EditorState,
+  Selection,
+  Transaction,
+} from '@atlaskit/editor-prosemirror/state';
+import { TextSelection } from '@atlaskit/editor-prosemirror/state';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { liftTarget } from '@atlaskit/editor-prosemirror/transform';
+import {
+  findParentNodeClosestToPos,
+  hasParentNodeOfType,
+} from '@atlaskit/editor-prosemirror/utils';
 
 import { findFarthestParentNode } from '../../../utils';
+import { stateKey } from './plugin-key';
+import type { TaskItemData } from './types';
+import { ACTIONS } from './types';
 
 export const isInsideTaskOrDecisionItem = (state: EditorState) => {
   const { decisionItem, taskItem } = state.schema.nodes;
@@ -25,7 +41,12 @@ export const isInsideTask = (state: EditorState) => {
   return hasParentNodeOfType([taskItem])(state.selection);
 };
 
-export const isTable = (node?: Node | null): Boolean => {
+export const isInsideDecision = (state: EditorState) => {
+  const { decisionItem } = state.schema.nodes;
+  return hasParentNodeOfType([decisionItem])(state.selection);
+};
+
+export const isTable = (node?: Node | null): boolean => {
   if (!node) {
     return false;
   }
@@ -69,6 +90,16 @@ export const getCurrentIndentLevel = (selection: Selection) => {
   }
 
   return $from.depth - furthestParent.depth;
+};
+
+/**
+ * Finds the index of the current task item in relation to the closest taskList
+ */
+export const getTaskItemIndex = (state: EditorState) => {
+  const $pos = state.selection.$from;
+  const isTaskList = (node: Node | undefined) => node?.type.name === 'taskList';
+  const itemAtPos = findParentNodeClosestToPos($pos, isTaskList);
+  return $pos.index(itemAtPos ? itemAtPos.depth : undefined);
 };
 
 /**
@@ -187,3 +218,118 @@ export const liftBlock = (
 
   return tr.lift(blockRange, target).scrollIntoView();
 };
+
+export function getTaskItemDataAtPos(view: EditorView) {
+  const { state } = view;
+  const { selection, schema } = state;
+  const { $from } = selection;
+  const isInTaskItem = $from.node().type === schema.nodes.taskItem;
+
+  // current selection has to be inside taskitem
+  if (isInTaskItem) {
+    const taskItemPos = $from.before();
+    return {
+      pos: taskItemPos,
+      localId: $from.node().attrs.localId,
+    };
+  }
+}
+
+export function getAllTaskItemsDataInRootTaskList(view: EditorView) {
+  const { state } = view;
+  const { schema } = state;
+  const $fromPos = state.selection.$from;
+  const isInTaskItem = $fromPos.node().type === schema.nodes.taskItem;
+  // if not inside task item then return undefined;
+  if (!isInTaskItem) {
+    return;
+  }
+
+  const { taskList, taskItem } = schema.nodes;
+  const rootTaskListData = findFarthestParentNode(
+    (node) => node.type === taskList,
+  )($fromPos);
+  if (rootTaskListData) {
+    const rootTaskList = rootTaskListData.node;
+    const rootTaskListStartPos = rootTaskListData.start;
+    const allTaskItems: Array<{ node: Node; pos: number; index: number }> = [];
+    rootTaskList.descendants((node, pos, parent, index) => {
+      if (node.type === taskItem) {
+        allTaskItems.push({
+          node,
+          pos: pos + rootTaskListStartPos,
+          index,
+        });
+      }
+    });
+    return allTaskItems;
+  }
+}
+
+export function getCurrentTaskItemIndex(
+  view: EditorView,
+  allTaskItems: Array<{ node: Node; pos: number; index: number }>,
+) {
+  const { state } = view;
+  const $fromPos = state.selection.$from;
+  const allTaskItemNodes = allTaskItems.map((nodeData) => nodeData.node);
+  const currentTaskItem = $fromPos.node($fromPos.depth);
+  const currentTaskItemIndex = allTaskItemNodes.indexOf(currentTaskItem);
+  return currentTaskItemIndex;
+}
+
+export function getTaskItemDataToFocus(
+  view: EditorView,
+  direction: 'next' | 'previous',
+) {
+  const allTaskItems = getAllTaskItemsDataInRootTaskList(view);
+  // if not inside task item then allTaskItems will be undefined;
+  if (!allTaskItems) {
+    return;
+  }
+  const currentTaskItemIndex = getCurrentTaskItemIndex(view, allTaskItems);
+  if (
+    direction === 'next'
+      ? currentTaskItemIndex === allTaskItems.length - 1
+      : currentTaskItemIndex === 0
+  ) {
+    // checkbox of first or last task item is already focused based on direction.
+    return;
+  }
+
+  const indexOfTaskItemToFocus =
+    direction === 'next' ? currentTaskItemIndex + 1 : currentTaskItemIndex - 1;
+  const taskItemToFocus = allTaskItems[indexOfTaskItemToFocus];
+  return {
+    pos: taskItemToFocus.pos,
+    localId: taskItemToFocus.node.attrs.localId,
+  };
+}
+
+export function focusCheckboxAndUpdateSelection(
+  view: EditorView,
+  taskItemData: TaskItemData,
+) {
+  const { pos, localId } = taskItemData;
+  const { state, dispatch } = view;
+  const { doc, tr } = state;
+  tr.setSelection(new TextSelection(doc.resolve(pos + 1)));
+  tr.setMeta(stateKey, {
+    action: ACTIONS.FOCUS_BY_LOCALID,
+    data: localId,
+  });
+  dispatch(tr);
+}
+
+export function removeCheckboxFocus(view: EditorView) {
+  const { state, dispatch } = view;
+  const { tr } = state;
+
+  view.focus();
+
+  dispatch(
+    tr.setMeta(stateKey, {
+      action: ACTIONS.FOCUS_BY_LOCALID,
+    }),
+  );
+}

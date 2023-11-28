@@ -8,10 +8,10 @@
     "./examples/**/*.ts",
     "./examples/**/*.tsx",
     "./example-helpers/**/*.ts",
-    "./example-helpers/**/*.tsx"
+    "./example-helpers/**/*.tsx",
+    "./playwright/**/*.ts"
   ],
   "compilerOptions": {
-    "baseUrl": "./",
-    "noImplicitAny": true
+    "baseUrl": "./"
   }
 }

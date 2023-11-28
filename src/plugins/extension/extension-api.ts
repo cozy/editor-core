@@ -1,37 +1,56 @@
-import {
+import type {
   ExtensionAPI,
   TransformBefore,
   TransformAfter,
 } from '@atlaskit/editor-common/extensions';
-import { ADFEntity } from '@atlaskit/adf-utils';
-import { Node as PMNode, NodeType, Fragment, Mark } from 'prosemirror-model';
-import type { EditorView } from 'prosemirror-view';
-import {
-  insertMacroFromMacroBrowser,
-  MacroProvider,
-  MacroState,
-} from '../macro';
-import { pluginKey as macroPluginKey } from '../macro/plugin-key';
+import { validator } from '@atlaskit/adf-utils/validator';
+import { JSONTransformer } from '@atlaskit/editor-json-transformer';
+import type { ADFEntity, ADFEntityMark } from '@atlaskit/adf-utils/types';
+import type {
+  Node as PMNode,
+  NodeType,
+  Schema as PMSchema,
+} from '@atlaskit/editor-prosemirror/model';
+import { Fragment, Mark } from '@atlaskit/editor-prosemirror/model';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
+import { NodeSelection, Selection } from '@atlaskit/editor-prosemirror/state';
+import type { MacroProvider } from '@atlaskit/editor-common/provider-factory';
+import { insertMacroFromMacroBrowser } from './pm-plugins/macro/actions';
+import { pluginKey as macroPluginKey } from './pm-plugins/macro/plugin-key';
+import { nodeToJSON } from '@atlaskit/editor-common/utils';
+
 import { setEditingContextToContextPanel } from './commands';
-import { findNodePosWithLocalId, getSelectedExtension } from './utils';
 import {
-  addAnalytics,
+  findNodePosWithLocalId,
+  getDataConsumerMark,
+  getNodeTypesReferenced,
+  getSelectedExtension,
+} from './utils';
+import type {
+  AnalyticsEventPayload,
+  EditorAnalyticsAPI,
+} from '@atlaskit/editor-common/analytics';
+import {
   ACTION,
   ACTION_SUBJECT,
   ACTION_SUBJECT_ID,
   EVENT_TYPE,
   INPUT_METHOD,
-  AnalyticsEventPayload,
-} from '../analytics';
-import { getNodeTypesReferenced, getDataConsumerMark } from './utils';
+} from '@atlaskit/editor-common/analytics';
+import type { NodeWithPos } from '@atlaskit/editor-prosemirror/utils';
+import { setTextSelection } from '@atlaskit/editor-prosemirror/utils';
+import type { ApplyChangeHandler } from '@atlaskit/editor-plugin-context-panel';
+import type { CreateExtensionAPI } from '@atlaskit/editor-plugin-extension';
 
 interface EditInLegacyMacroBrowserArgs {
   view: EditorView;
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined;
   macroProvider?: MacroProvider;
 }
 export const getEditInLegacyMacroBrowser = ({
   view,
   macroProvider,
+  editorAnalyticsAPI,
 }: EditInLegacyMacroBrowserArgs) => {
   return () => {
     if (!view) {
@@ -49,40 +68,91 @@ export const getEditInLegacyMacroBrowser = ({
       throw new Error(`Missing nodeWithPos. Can't determine position of node`);
     }
 
-    insertMacroFromMacroBrowser(macroProvider, nodeWithPos.node, true)(view);
+    insertMacroFromMacroBrowser(editorAnalyticsAPI)(
+      macroProvider,
+      nodeWithPos.node,
+      true,
+    )(view);
   };
 };
 
 interface CreateExtensionAPIOptions {
   editorView: EditorView;
+  applyChange: ApplyChangeHandler | undefined;
+  editorAnalyticsAPI: EditorAnalyticsAPI | undefined;
   editInLegacyMacroBrowser?: () => void;
 }
 
-export const createExtensionAPI = (
-  options: CreateExtensionAPIOptions,
-): ExtensionAPI => {
-  const doc = {
-    insertAfter: (localId: string, adf: ADFEntity) => {
-      const { editorView } = options;
-      const { dispatch } = editorView;
+const extensionAPICallPayload = (
+  functionName: string,
+): AnalyticsEventPayload => ({
+  action: ACTION.INVOKED,
+  actionSubject: ACTION_SUBJECT.EXTENSION,
+  actionSubjectId: ACTION_SUBJECT_ID.EXTENSION_API,
+  attributes: {
+    functionName,
+  },
+  eventType: EVENT_TYPE.TRACK,
+});
 
-      // Be extra cautious since 3rd party devs can use regular JS without type safety
-      if (typeof localId !== 'string' || localId === '') {
-        throw new Error(`insertAfter(): Invalid localId '${localId}'.`);
-      }
-      if (typeof adf !== 'object' || Array.isArray(adf)) {
+export const createExtensionAPI: CreateExtensionAPI = (
+  options: CreateExtensionAPIOptions,
+) => {
+  const {
+    editorView: {
+      state: { schema },
+    },
+    editorAnalyticsAPI,
+  } = options;
+  const nodes = Object.keys(schema.nodes);
+  const marks = Object.keys(schema.marks);
+  const validate = validator(nodes, marks, { allowPrivateAttributes: true });
+
+  /**
+   * Finds the node and its position by `localId`. Throws if the node could not be found.
+   *
+   * @returns {NodeWithPos}
+   */
+  const ensureNodePosByLocalId = (
+    localId: string,
+    { opName }: { opName: string },
+  ): NodeWithPos => {
+    // Be extra cautious since 3rd party devs can use regular JS without type safety
+    if (typeof localId !== 'string' || localId === '') {
+      throw new Error(`${opName}(): Invalid localId '${localId}'.`);
+    }
+
+    // Find the node + position matching the given ID
+    const {
+      editorView: { state },
+    } = options;
+    const nodePos = findNodePosWithLocalId(state, localId);
+
+    if (!nodePos) {
+      throw new Error(`${opName}(): Could not find node with ID '${localId}'.`);
+    }
+
+    return nodePos;
+  };
+
+  const doc: ExtensionAPI['doc'] = {
+    insertAfter: (
+      localId: string,
+      adf: ADFEntity,
+      opt?: { allowSelectionToNewNode?: boolean },
+    ) => {
+      try {
+        validate(adf);
+      } catch (e) {
         throw new Error(`insertAfter(): Invalid ADF given.`);
       }
 
-      // Find the node + position matching the given ID
-      const { state } = editorView;
-      const nodePos = findNodePosWithLocalId(state, localId);
+      const nodePos = ensureNodePosByLocalId(localId, {
+        opName: 'insertAfter',
+      });
 
-      if (!nodePos) {
-        throw new Error(
-          `insertAfter(): Could not find node with ID '${localId}'.`,
-        );
-      }
+      const { editorView } = options;
+      const { dispatch, state } = editorView;
 
       // Validate the given ADF
       const { tr, schema } = state;
@@ -104,7 +174,8 @@ export const createExtensionAPI = (
         );
       }
 
-      tr.insert(nodePos.pos + nodePos.node.nodeSize, newNode);
+      const insertPosition = nodePos.pos + nodePos.node.nodeSize;
+      tr.insert(insertPosition, newNode);
 
       // Validate if the document is valid at this point
       try {
@@ -116,17 +187,9 @@ export const createExtensionAPI = (
       }
 
       // Analytics - tracking the api call
-      const apiCallPayload: AnalyticsEventPayload = {
-        action: ACTION.INVOKED,
-        actionSubject: ACTION_SUBJECT.EXTENSION,
-        actionSubjectId: ACTION_SUBJECT_ID.EXTENSION_API,
-        attributes: {
-          functionName: 'insertAfter',
-        },
-        eventType: EVENT_TYPE.TRACK,
-      };
-
-      addAnalytics(state, tr, apiCallPayload);
+      const apiCallPayload: AnalyticsEventPayload =
+        extensionAPICallPayload('insertAfter');
+      editorAnalyticsAPI?.attachAnalyticsEvent(apiCallPayload)(tr);
 
       // Analytics - tracking node types added
       const nodesAdded: PMNode[] = [newNode];
@@ -164,8 +227,103 @@ export const createExtensionAPI = (
           eventType: EVENT_TYPE.TRACK,
         };
 
-        addAnalytics(state, tr, payload);
+        editorAnalyticsAPI?.attachAnalyticsEvent(payload)(tr);
       });
+      if (opt && opt.allowSelectionToNewNode) {
+        tr.setSelection(new NodeSelection(tr.doc.resolve(insertPosition)));
+      }
+      dispatch(tr);
+    },
+    scrollTo: (localId: string) => {
+      const nodePos = ensureNodePosByLocalId(localId, { opName: 'scrollTo' });
+
+      // Analytics - tracking the api call
+      const apiCallPayload: AnalyticsEventPayload =
+        extensionAPICallPayload('scrollTo');
+
+      const {
+        editorView: { dispatch, state },
+      } = options;
+      let { tr } = state;
+      editorAnalyticsAPI?.attachAnalyticsEvent(apiCallPayload)(tr);
+      tr = setTextSelection(nodePos.pos)(tr);
+      tr = tr.scrollIntoView();
+      dispatch(tr);
+    },
+    update: (localId, mutationCallback) => {
+      const { node, pos } = ensureNodePosByLocalId(localId, {
+        opName: 'update',
+      });
+
+      const {
+        editorView: { dispatch, state },
+      } = options;
+      const { tr, schema } = state;
+
+      const changedValues = mutationCallback({
+        content: nodeToJSON(node).content,
+        attrs: node.attrs,
+        marks: node.marks.map((pmMark) => ({
+          type: pmMark.type.name,
+          attrs: pmMark.attrs,
+        })),
+      });
+
+      const ensureValidMark = (mark: ADFEntityMark) => {
+        if (typeof mark !== 'object' || Array.isArray(mark)) {
+          throw new Error(`update(): Invalid mark given.`);
+        }
+        const { parent } = state.doc.resolve(pos);
+        // Ensure that the given mark is present in the schema
+        const markType = (schema as PMSchema).marks[mark.type];
+
+        if (!markType) {
+          throw new Error(`update(): Invalid ADF mark type '${mark.type}'.`);
+        }
+        if (!parent.type.allowsMarkType(markType)) {
+          throw new Error(
+            `update(): Parent of type '${parent.type.name}' does not allow marks of type '${mark.type}'.`,
+          );
+        }
+
+        return { mark: markType, attrs: mark.attrs };
+      };
+
+      const newMarks = changedValues.hasOwnProperty('marks')
+        ? changedValues.marks
+            ?.map(ensureValidMark)
+            .map(({ mark, attrs }) => mark.create(attrs))
+        : node.marks;
+      const newContent = changedValues.hasOwnProperty('content')
+        ? Fragment.fromJSON(schema, changedValues.content)
+        : node.content;
+      const newAttrs = changedValues.hasOwnProperty('attrs')
+        ? changedValues.attrs
+        : node.attrs;
+
+      // Validate if the new attributes, content and marks result in a valid node and adf.
+      try {
+        const newNode = node.type.createChecked(newAttrs, newContent, newMarks);
+        const newNodeAdf = new JSONTransformer().encodeNode(newNode);
+        validate(newNodeAdf);
+
+        tr.replaceWith(pos, pos + node.nodeSize, newNode);
+
+        // Keep selection if content does not change
+        if (newContent === node.content) {
+          tr.setSelection(Selection.fromJSON(tr.doc, state.selection.toJSON()));
+        }
+      } catch (err) {
+        throw new Error(
+          `update(): The given ADFEntity cannot be inserted in the current position.\n${err}`,
+        );
+      }
+
+      // Analytics - tracking the api call
+      const apiCallPayload: AnalyticsEventPayload =
+        extensionAPICallPayload('update');
+      editorAnalyticsAPI?.attachAnalyticsEvent(apiCallPayload)(tr);
+
       dispatch(tr);
     },
   };
@@ -177,11 +335,11 @@ export const createExtensionAPI = (
     ) => {
       const { editorView } = options;
 
-      setEditingContextToContextPanel(transformBefore, transformAfter)(
-        editorView.state,
-        editorView.dispatch,
-        editorView,
-      );
+      setEditingContextToContextPanel(
+        transformBefore,
+        transformAfter,
+        options.applyChange,
+      )(editorView.state, editorView.dispatch, editorView);
     },
 
     _editInLegacyMacroBrowser: () => {
@@ -189,13 +347,12 @@ export const createExtensionAPI = (
       let editInLegacy = options.editInLegacyMacroBrowser;
 
       if (!editInLegacy) {
-        const macroState: MacroState = macroPluginKey.getState(
-          editorView.state,
-        );
+        const macroState = macroPluginKey.getState(editorView.state);
 
         editInLegacy = getEditInLegacyMacroBrowser({
           view: options.editorView,
           macroProvider: macroState?.macroProvider || undefined,
+          editorAnalyticsAPI,
         });
       }
 

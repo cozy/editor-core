@@ -1,5 +1,8 @@
-import { Node, Fragment, Slice, Schema } from 'prosemirror-model';
+import type { Schema } from '@atlaskit/editor-prosemirror/model';
+import { Node, Fragment, Slice } from '@atlaskit/editor-prosemirror/model';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import { createEditorState } from '@atlaskit/editor-test-helpers/create-editor-state';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
 import {
   doc,
   p,
@@ -12,15 +15,22 @@ import {
   tr,
   table,
   td,
+  media,
 } from '@atlaskit/editor-test-helpers/doc-builder';
-
-import { temporaryMedia } from './_utils';
-import { transformSliceForMedia } from '../../../../plugins/media/utils/media-single';
+import { transformSliceForMedia } from '../../../../plugins/paste/plugins/media';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { temporaryMediaAttrs } from '@atlaskit/editor-test-helpers/media-provider';
 
 const removeRef = (node: Node) =>
   Node.fromJSON(node.type.schema, node.toJSON());
-const fragment = (...args: any) => (schema: Schema) =>
-  Fragment.from(args.map((i: any) => removeRef(i(schema))));
+const fragment =
+  (...args: any) =>
+  (schema: Schema) =>
+    Fragment.from(args.map((i: any) => removeRef(i(schema))));
+const temporaryMedia = media({
+  __mediaTraceId: expect.any(String),
+  ...temporaryMediaAttrs,
+})();
 
 describe('Media plugin', () => {
   describe('#transformSliceForMedia', () => {
@@ -89,7 +99,7 @@ describe('Media plugin', () => {
 
     it('removes mediaSingle attributes when pasted into an ordered list', () => {
       const editorState = createEditorState(
-        doc(ol(li(p('hello {<>}')), li(p('world')))),
+        doc(ol()(li(p('hello {<>}')), li(p('world')))),
       );
 
       const { selection, schema } = editorState;

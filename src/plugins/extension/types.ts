@@ -1,5 +1,4 @@
-import { ExtensionLayout } from '@atlaskit/adf-schema';
-import { ContextIdentifierProvider } from '@atlaskit/editor-common';
+import type { ContextIdentifierProvider } from '@atlaskit/editor-common/provider-factory';
 import {
   UpdateExtension,
   ExtensionProvider,
@@ -7,11 +6,12 @@ import {
   TransformBefore,
   TransformAfter,
 } from '@atlaskit/editor-common/extensions';
+import type { ApplyChangeHandler } from '@atlaskit/editor-plugin-context-panel';
 
 export type ExtensionState<T extends Parameters = Parameters> = {
-  layout: ExtensionLayout;
   localId?: string;
   autoSaveResolve?: () => void;
+  autoSaveReject?: (reason?: any) => void;
   showEditButton: boolean;
   showContextPanel: boolean;
   updateExtension?: Promise<UpdateExtension<T> | void>;
@@ -21,6 +21,7 @@ export type ExtensionState<T extends Parameters = Parameters> = {
   processParametersBefore?: TransformBefore<T>;
   processParametersAfter?: TransformAfter<T>;
   positions?: Record<number, number>;
+  applyChangeToContextPanel: ApplyChangeHandler | undefined;
 };
 
 export type ExtensionAction<T extends Parameters = Parameters> = {

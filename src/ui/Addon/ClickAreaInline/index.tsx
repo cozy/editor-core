@@ -1,29 +1,39 @@
+/** @jsx jsx */
 import React from 'react';
-import styled from 'styled-components';
-import { EditorView } from 'prosemirror-view';
+import { css, jsx } from '@emotion/react';
+import type { EditorView } from '@atlaskit/editor-prosemirror/view';
 import { createParagraphAtEnd } from '../../../commands';
 
-const ClickArea: any = styled.div`
+const clickArea = css`
   flex-grow: 1;
 `;
-ClickArea.displayName = 'ClickArea';
 
 export interface Props {
   editorView?: EditorView;
 }
 
-export default class ClickAreaInline extends React.Component<Props> {
-  private handleClick = (event: React.MouseEvent<any>) => {
-    const { editorView } = this.props;
-    if (editorView) {
+export const ClickAreaInline: React.FC<Props> = ({ editorView, children }) => {
+  const handleMouseDown = React.useCallback(
+    (event) => {
+      if (!editorView) {
+        return;
+      }
+
       if (createParagraphAtEnd()(editorView.state, editorView.dispatch)) {
         editorView.focus();
         event.stopPropagation();
       }
-    }
-  };
+    },
+    [editorView],
+  );
 
-  render() {
-    return <ClickArea onClick={this.handleClick} />;
-  }
-}
+  return (
+    <div
+      data-testid="click-wrapper"
+      css={clickArea}
+      onMouseDown={handleMouseDown}
+    />
+  );
+};
+
+export default ClickAreaInline;

@@ -1,14 +1,22 @@
+import type { PuppeteerPage } from '@atlaskit/visual-regression/helper';
 import {
   evaluateTeardownMockDate,
-  PuppeteerPage,
   waitForLoadedImageElements,
 } from '@atlaskit/visual-regression/helper';
-import { Device, initFullPageEditorWithAdf, snapshot } from '../_utils';
-import cardAdf from './__fixtures__/card-adf.json';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import { Device } from '@atlaskit/editor-test-helpers/vr-utils/device-viewport';
+// eslint-disable-next-line import/no-extraneous-dependencies -- Removed import for fixing circular dependencies
+import {
+  initFullPageEditorWithAdf,
+  snapshot,
+} from '@atlaskit/editor-test-helpers/vr-utils/base-utils';
 import cardSelectionAdf from './__fixtures__/card-selection-adf.json';
 import cardAdfRequestAccess from './__fixtures__/card-request-access.adf.json';
 import cardAdfBlock from './__fixtures__/card-adf.block.json';
+import cardAdfSupportedPlatforms from './__fixtures__/card-adf.supported-platforms.json';
 import cardAdfBlockLongTitle from './__fixtures__/card-adf-long-title.block.json';
+import cardInsideInfoAndLayout from './__fixtures__/card-inside-info-and-layout-adf.json';
+
 import {
   openPreviewState,
   waitForBlockCardSelection,
@@ -20,12 +28,7 @@ import {
   waitForResolvedInlineCard,
   waitForSuccessfullyResolvedEmbedCard,
 } from '@atlaskit/media-integration-test-helpers';
-
-const themes = ['light', 'dark'];
-
-function getMode(theme: any) {
-  return theme === 'light' ? 'light' : 'dark';
-}
+import { contexts } from './__helpers__/card-utils';
 
 describe('Cards:', () => {
   let page: PuppeteerPage;
@@ -34,59 +37,32 @@ describe('Cards:', () => {
     page = global.page;
   });
 
-  describe.each(themes)('Theme: %s', (theme) => {
-    it('displays links with correct appearance', async () => {
-      await initFullPageEditorWithAdf(
-        page,
-        cardAdf,
-        Device.LaptopHiDPI,
-        {
-          width: 800,
-          height: 4500,
-        },
-        {
-          smartLinks: {
-            resolveBeforeMacros: ['jira'],
-            allowBlockCards: true,
-            allowEmbeds: true,
+  describe.each(contexts)(
+    'displays inline link with correct appearance inside',
+    ({ name, adf }) => {
+      it(`${name}`, async () => {
+        await initFullPageEditorWithAdf(
+          page,
+          adf,
+          Device.LaptopHiDPI,
+          {
+            width: 1440,
+            height: 700,
           },
-        },
-        getMode(theme),
-        undefined,
-        true,
-      );
-      await evaluateTeardownMockDate(page);
-
-      // Render an assortment of inline cards.
-      await waitForResolvedInlineCard(page);
-      await waitForResolvedInlineCard(page, 'resolving');
-      await waitForResolvedInlineCard(page, 'unauthorized');
-      await waitForResolvedInlineCard(page, 'forbidden');
-      await waitForResolvedInlineCard(page, 'not_found');
-      await waitForResolvedInlineCard(page, 'errored');
-
-      // Render an assortment of block cards.
-      await waitForResolvedBlockCard(page);
-      await waitForResolvedBlockCard(page, 'resolving');
-      await waitForResolvedBlockCard(page, 'unauthorized');
-      await waitForResolvedBlockCard(page, 'forbidden');
-      await waitForResolvedBlockCard(page, 'not_found');
-      await waitForResolvedBlockCard(page, 'errored');
-
-      // Render an assortment of embed cards.
-      await waitForSuccessfullyResolvedEmbedCard(page);
-      await waitForResolvedEmbedCard(page, 'resolving');
-      await waitForResolvedEmbedCard(page, 'unauthorized');
-      await waitForResolvedEmbedCard(page, 'forbidden');
-      await waitForResolvedEmbedCard(page, 'not_found');
-      await waitForResolvedEmbedCard(page, 'errored');
-
-      // Ensure all images have finished loading on the page.
-      await waitForLoadedImageElements(page, 3000);
-
-      await snapshot(page);
-    });
-  });
+          {
+            smartLinks: {
+              resolveBeforeMacros: ['jira'],
+            },
+          },
+          undefined,
+          undefined,
+          true,
+        );
+        await waitForResolvedInlineCard(page);
+        await snapshot(page);
+      });
+    },
+  );
 
   it('displays request access forbidden links with correct appearance', async () => {
     await initFullPageEditorWithAdf(
@@ -219,4 +195,61 @@ describe('Cards:', () => {
       await snapshot(page);
     }),
   );
+
+  it('should show preview when supported platform matches', async () => {
+    await initFullPageEditorWithAdf(
+      page,
+      cardAdfSupportedPlatforms,
+      Device.LaptopHiDPI,
+      {
+        width: 800,
+        height: 1500,
+      },
+      {
+        smartLinks: {
+          resolveBeforeMacros: ['jira'],
+          allowBlockCards: true,
+          allowEmbeds: true,
+        },
+      },
+      undefined,
+      undefined,
+      true,
+    );
+    await evaluateTeardownMockDate(page);
+
+    await waitForResolvedBlockCard(page);
+    await snapshot(page);
+  });
+
+  it('should select card correctly when inside info and layout panel', async () => {
+    await initFullPageEditorWithAdf(
+      page,
+      cardInsideInfoAndLayout,
+      Device.LaptopHiDPI,
+      {
+        width: 800,
+        height: 400,
+      },
+      {
+        smartLinks: {
+          resolveBeforeMacros: ['jira'],
+          allowBlockCards: true,
+          allowEmbeds: true,
+        },
+      },
+      undefined,
+      undefined,
+      true,
+    );
+    await evaluateTeardownMockDate(page);
+
+    await waitForResolvedInlineCard(page);
+    await waitForInlineCardSelection(page);
+    await waitForInlineCardSelection(page);
+    await waitForInlineCardSelection(page);
+
+    await page.mouse.move(0, 0);
+    await snapshot(page);
+  });
 });
